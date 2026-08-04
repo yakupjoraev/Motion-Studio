@@ -60,9 +60,20 @@ more-vertical, external-link, panel-left, panel-right
 - Hand-authored paths. Do not paste a 400-node path from an editor — these are simple geometric
   glyphs and a 30-character path is the target.
 - `registry.ts` maps names to components for the cases needing dynamic lookup (block definitions
-  reference an `IconName`). It is the one place all icons are imported, so it must be tree-shakeable
-  — use a lazy map or accept that the registry pulls everything and only the palette imports it.
-  State which choice you made and why.
+  reference an `IconName`). **Decided: the registry imports all icons eagerly.** Each icon is a
+  ~30-character path in a ~120-byte component, so the full set is under 8 kB gzipped, and the only
+  consumers — the block palette and the icon picker — both live in the studio chunk, which already
+  carries every icon.
+
+  Two rules make that decision safe, and both are enforced:
+  1. Individual icons stay importable from the barrel, so `apps/web`'s landing and gallery pull only
+     what they render and never touch the registry.
+  2. A test asserts the registry's gzipped size stays **under 8 kB**. If the icon set grows past
+     that, the decision is revisited with a measurement — record it in `docs/DECISIONS.md`, do not
+     quietly switch to lazy loading.
+
+  A lazy map was rejected: 60 dynamic imports produce 60 chunks and 60 request waterfalls in the
+  picker, which is measurably worse than 8 kB.
 
 ## Verify
 

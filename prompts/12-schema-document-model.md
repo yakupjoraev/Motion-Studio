@@ -51,6 +51,12 @@ packages/schema/src/
 │   └── *.test.ts
 ├── sanitize/
 │   ├── sanitize.ts             the per-field table from FILE_FORMAT § Security
+│   ├── css/
+│   │   ├── validate-css.ts     structural + blocklist + normalize only (layers 1, 2, 5)
+│   │   ├── structural.ts       delimiters, length, statement shape
+│   │   ├── blocklist.ts        url(, @import, expression(, behavior:, -moz-binding, element(
+│   │   ├── normalize.ts
+│   │   └── *.test.ts           every blocklist entry gets a malicious fixture
 │   ├── __fixtures__/malicious.ts
 │   └── sanitize.test.ts
 ├── migrations/
@@ -122,6 +128,12 @@ Every rule in the `FILE_FORMAT.md` security table, with a malicious fixture for 
 `javascript:` href, `data:text/html` src, oversized data URL, `url()` in a CSS prop, `@import`,
 script-bearing rich text, a 100 kB node name. Each has an assertion that the payload is removed and
 listed in the report.
+
+CSS props go through `sanitize/css/validate-css.ts` — the three DOM-free layers (structural,
+blocklist, normalize). Prompt 48 completes the same module with the two DOM-dependent layers and
+wires the playground and inspector to it. **This is the only CSS validator in the codebase**; the
+security path and the interactive path must never be able to disagree, so there is no second
+implementation and no app-level copy.
 
 ## Verify
 

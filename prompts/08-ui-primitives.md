@@ -18,8 +18,14 @@
 tokens, plus Radix primitives wrapped with our styling, plus the density and behaviour rules from
 `UI_GUIDELINES.md`.
 
-This is a large prompt. If context runs short, stop at a clean component boundary and report which
-components remain; prompt 09 covers the value-editing controls separately.
+This is a large prompt. **Build in the deliverables order below** — it runs from the primitives
+everything else composes from, to the ones with no dependents. If context runs short, stop at a
+component boundary, report exactly which remain, and stop. Do not thin out the rest to fit: a
+half-implemented Dialog is worse than an absent one, because the next session will not know it is
+half-implemented.
+
+The order is fixed so the stopping point is predictable rather than chosen. Prompt 09 covers the
+value-editing controls separately.
 
 ## Deliverables
 

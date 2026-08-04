@@ -25,7 +25,7 @@ apps/web/src/components/studio/inspector/
 ├── inspector.tsx                 root: routes on selection state
 ├── inspector-empty.tsx           no selection → document settings (theme, canvas)
 ├── inspector-multi.tsx           multi-selection: shared props, Mixed values
-├── control-renderer.tsx          ControlDescriptor → the right control component
+├── (control-renderer lives in packages/ui — see below, not here)
 ├── control-group.tsx             collapsible section, persisted, reset affordance
 ├── universal-sections/
 │   ├── layout-section.tsx        display, direction, gap, padding, sizing, position
@@ -40,7 +40,17 @@ apps/web/src/components/studio/inspector/
 
 ## Constraints
 
-### `control-renderer.tsx`
+### `ControlRenderer` goes in `packages/ui`, not in `apps/web`
+
+Create it at `packages/ui/src/controls/control-renderer.tsx`. **Decided now, not later**, because
+prompt 52 (block gallery) renders the same controls from the same `ControlDescriptor` metadata on a
+public route. Building it inside the inspector and extracting it in prompt 52 would mean either a
+risky refactor 29 prompts later or — far more likely — a second implementation that slowly stops
+matching the studio.
+
+It takes `descriptor`, `value`, `onChange`, `onCommit` and nothing store-shaped, so both consumers
+supply their own state handling: the inspector dispatches commands, the gallery updates local state
+and the URL.
 
 A `switch` over `ControlDescriptor.kind` mapping to the components from prompt 09, exhaustive with
 `assertNever`. Adding a control kind then breaks the build until it is handled — which is the

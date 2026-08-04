@@ -51,13 +51,28 @@ runtime markdown parsing, zero client-side fetching of content. The whole route 
 Consequence: adding a doc file adds a page with no other change. Test that by adding a scratch file,
 building, and confirming the route exists — then remove it.
 
-### The nav comes from `docs/README.md`
+### Nav source, decided: frontmatter
 
-Parse the index tables in `docs/README.md` to build the sidebar groups. Do **not** hand-maintain a
-second navigation list — it would drift from the index within two commits.
+Each document gets a small YAML frontmatter block:
 
-If the parse is fragile, add a small frontmatter block to each doc (`group`, `order`) and derive from
-that instead. Either way: one source, not two. State which you chose.
+```yaml
+---
+group: Subsystems
+order: 4
+summary: Viewport maths, zoom, pan, snapping, guides, rulers, hit testing
+---
+```
+
+`build-nav.ts` reads those. **Parsing the prose tables in `docs/README.md` is rejected**: the
+criterion is robustness against ordinary edits, and a markdown table breaks the parser the first time
+someone adds a column, reorders rows, or wraps a cell — a build failure caused by editing prose is
+not acceptable.
+
+One source is still preserved in the other direction: `docs/README.md`'s index tables are
+**generated** from the frontmatter by `pnpm generate:docs-index`, with a CI check that the committed
+file matches. So the index cannot drift from the nav, and neither is hand-maintained.
+
+Add the frontmatter to all 28 documents in this prompt. It must not appear in the rendered output.
 
 ### Code blocks
 
@@ -69,14 +84,18 @@ that instead. Either way: one source, not two. State which you chose.
 
 ### The architecture diagram
 
-`ARCHITECTURE.md`'s ASCII graph rendered as a real diagram. Two acceptable approaches:
+`ARCHITECTURE.md`'s ASCII graph rendered as a real diagram. **Decided: a hand-built SVG using our
+design tokens.**
 
-1. Hand-built SVG with our tokens — full control, no dependency
-2. A build-time Mermaid render to static SVG — less control, less work
+Mermaid is rejected on a specific requirement, not on taste: the diagram must be correct in both
+colour modes, which means its strokes and fills have to resolve through `--ms-color-*` variables.
+Mermaid emits its own computed colours, so making it theme-aware requires post-processing its output
+— which is more work than authoring 30 nodes of SVG, and leaves a build dependency that can change
+its output between versions.
 
-Either way it must be: static SVG in the HTML (no client-side rendering), themed for both colour modes,
-readable at 320 px (scrolling horizontally inside its own container), and accompanied by a text
-alternative describing the structure for screen readers.
+Requirements either way: static SVG in the HTML (no client-side rendering), correct in both colour
+modes via token variables, readable at 320 px (scrolling horizontally inside its own container), and
+accompanied by a text alternative describing the structure for screen readers.
 
 The ASCII version stays in the markdown as the source of truth, so someone reading the repo directly
 still gets it.

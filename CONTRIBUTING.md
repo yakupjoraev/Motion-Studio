@@ -46,6 +46,23 @@ Scopes match package names: `web`, `ui`, `blocks`, `editor`, `canvas`, `dnd`, `c
 Commit messages describe the change and nothing else — no tooling attribution, no assistant
 mentions, no "as requested".
 
+## Decisions
+
+Read [`docs/ENGINEERING_CONTRACT.md`](docs/ENGINEERING_CONTRACT.md) § 9 before your first PR.
+
+There are three legal ways to resolve a decision: **it is already specified** in `docs/`, **it is
+decided by a threshold you stated before measuring**, or **it is escalated to the maintainer**. There
+is no fourth. "Seemed better", "was simpler", and "good enough" are not accepted in review, in
+comments, or in commit messages — not because they are impolite, but because a reader cannot check
+them, and unfalsifiable reasoning is how a codebase becomes unmaintainable.
+
+Anything not already answered by a document gets an entry in
+[`docs/DECISIONS.md`](docs/DECISIONS.md), written **before** the code that depends on it, with the
+criterion and the measurement.
+
+Cutting scope is the maintainer's decision. If you cannot finish, finish what you can and say
+precisely what remains.
+
 ## Code rules
 
 Hard requirements, enforced by lint or review:
@@ -117,6 +134,10 @@ Link the issue or the doc section.
 
 ## New dependencies
 None. (Or: name — one line on why nothing existing works.)
+
+## Decisions
+- ADR-NNN — <question> — resolved by <specification | measurement of X | maintainer>
+- (Or: "None. Every choice was already specified in <documents>.")
 ```
 
 ## Reporting bugs

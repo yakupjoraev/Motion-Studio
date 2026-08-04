@@ -61,7 +61,37 @@ rg 'TODO|FIXME|XXX|HACK' --type ts                 # each needs an issue link or
 
 Report the count for each. Any non-zero result is a finding.
 
-### 3. Documentation consistency
+### 3. Decision discipline
+
+The defect this audit exists to catch is a preference that shipped as an engineering result.
+
+```bash
+rg -i 'for simplicity|simpler (this way|for now)|good enough|seemed better|felt (right|better)' --type ts --type tsx
+rg -i 'for now|temporar|placeholder|quick fix|hack' --type ts --type tsx
+rg 'TODO|FIXME|XXX' --type ts --type tsx
+```
+
+Report the count for each. Every hit is a finding: either the comment has a criterion (rewrite it to
+state the criterion) or it does not (then the decision behind it was never made — make it now, or
+escalate).
+
+Then check `docs/DECISIONS.md`:
+
+- Every ADR has a `Criterion` and a `Measurement`, or is marked as an owner decision with the
+  owner's verbatim reason
+- No ADR was written after the code it justifies — spot-check five against `git log` dates and report
+- Every measurement threshold was stated before the number it is compared against. An ADR whose
+  criterion suspiciously matches its measurement to the digit gets flagged
+- Every superseded ADR is marked, and the superseding entry exists
+- Cross-check: for every prompt whose spec required an ADR (07 registry size, 45 worker decision, 33
+  licences, any added dependency, any accepted budget miss), the entry exists
+
+Then the harder read. Pick **ten** non-obvious implementation choices across the codebase — a
+threshold, a data structure, a library call, an algorithm. For each, ask: **can I find why?** The
+answer must be a document section, an ADR, or a comment with a criterion. Report how many of the ten
+were traceable. Anything under 10/10 is a finding, and name the untraceable ones.
+
+### 4. Documentation consistency
 
 The most likely place for divergence. For each of the 26 docs, spot-check its central claims against the
 code:
@@ -78,7 +108,7 @@ code:
 Write the shortcut/registry diff and the block/preset count checks as **tests**, so they cannot diverge
 again.
 
-### 4. Repository hygiene
+### 5. Repository hygiene
 
 ```bash
 git log --format='%s%n%b' | rg -i 'claude|copilot|ai-assisted|generated with|co-authored-by|🤖'
@@ -98,7 +128,7 @@ git count-objects -vH                              # repo size; report it
 Check: `.gitignore` covers everything; no build output committed; no `node_modules`; no `.env`; no
 large binaries beyond the demo GIFs.
 
-### 5. Design references and licences
+### 6. Design references and licences
 
 - `packages/blocks/LICENSES.md` exists, lists every reference from `docs/DESIGN_REFERENCES.md` with
   the licence **as verified** and the verification date
@@ -119,7 +149,7 @@ Then the visual bar audit, which is the point of having a reference at all:
 
 A clean report here with no findings on a project this size is not credible. Name what is weakest.
 
-### 6. Dependency audit
+### 7. Dependency audit
 
 ```bash
 pnpm audit
@@ -132,7 +162,7 @@ pnpm dedupe --check
 - Every dependency in `package.json` is actually used (`depcheck` or by hand)
 - Every dependency justified in `TECH_STACK.md` — anything not listed is a finding
 
-### 7. Dead code
+### 8. Dead code
 
 ```bash
 pnpm exec knip        # or ts-prune
@@ -141,7 +171,7 @@ pnpm exec knip        # or ts-prune
 Unused exports, unreferenced files, unused types. Five months of building always leaves some. Delete
 what is genuinely dead; report the count.
 
-### 8. Cross-browser
+### 9. Cross-browser
 
 The E2E suite covers Chromium, Firefox, and WebKit. Manually verify what automation misses:
 
@@ -152,7 +182,7 @@ The E2E suite covers Chromium, Firefox, and WebKit. Manually verify what automat
 Report anything that differs. Safari's `backdrop-filter` handling in particular is worth real attention
 given how much glass is in the design system.
 
-### 9. Cold read
+### 10. Cold read
 
 Read the codebase as a stranger would. Pick three packages you did not write most recently and read them
 top to bottom. Report:
@@ -160,7 +190,7 @@ top to bottom. Report:
 - Anything that contradicts a doc
 - Anything you would flag in review
 
-### 10. Cut features
+### 11. Cut features
 
 `ROADMAP.md` § If time runs short lists what could be cut. For anything actually cut: is it documented
 in the README as not present, rather than silently missing? A README claiming a feature that was cut is
@@ -209,6 +239,11 @@ Everything green. Every grep reported. Every acceptance criterion evidenced.
 
 - [ ] Every acceptance criterion verified with evidence, or moved to a documented limitation
 - [ ] Every contract non-negotiable verified by grep; all counts reported
+- [ ] Unfalsifiable-justification greps run; every hit resolved or escalated; counts reported
+- [ ] `DECISIONS.md` audited: criteria present, thresholds pre-stated, no post-hoc entries, required
+      ADRs all present
+- [ ] Ten non-obvious choices traced to a document, an ADR, or a criterion-bearing comment; score
+      reported, untraceable ones named
 - [ ] Doc/code divergences found and fixed; the shortcut and count checks turned into tests
 - [ ] Git history clean of tooling and assistant attribution — verified by grep, zero results
 - [ ] No secrets, no local paths, no committed build output

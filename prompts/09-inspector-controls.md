@@ -83,9 +83,17 @@ packages/ui/src/controls/
 ### `SpringEditor`
 
 Sliders for mass, stiffness, damping, plus a canvas-drawn response curve from `simulateSpring`.
-`packages/motion` owns `simulateSpring` — if prompt 30 has not run yet, define the function locally
-in `ui` with a comment saying it moves to `motion` in prompt 30, and move it there then. Say which
-you did.
+
+**`simulateSpring` is created here, in `packages/motion/src/curves/simulate.ts`**, with its tests —
+not locally in `ui` and not duplicated. `packages/ui` declares a dependency on
+`@motion-studio/motion` for it, which the dependency graph in `ARCHITECTURE.md` permits.
+
+Prompt 30 then *uses* that function rather than creating it; its spec says so. There is no
+temporary local copy and no later move, because a "move it later" instruction is how two
+implementations end up shipping.
+
+The function's contract is specified in prompt 30 § `simulateSpring` — implement it to that spec
+now, including the three damping-regime tests and the convergence assertion.
 
 ### `ControlRow`
 

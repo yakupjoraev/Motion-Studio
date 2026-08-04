@@ -12,8 +12,11 @@
 All 40+ presets from the catalogue, across five channels. Each with parameters, a reduced variant, a
 codegen fragment, inspector control metadata, and a cost class.
 
-This is a volume prompt. If context runs short, stop at a channel boundary and report which channels
-remain — the meta-tests will keep the finished ones honest.
+This is a volume prompt. **Build channels in this order: entrance → hover → continuous → scroll →
+cursor → exit.** If context runs short, stop at a channel boundary, report exactly which channels
+remain, and stop — do not thin out the remaining ones to fit. Partial-but-complete beats
+complete-but-degraded, and the order is fixed so the stopping point is predictable rather than
+chosen.
 
 ## Deliverables
 
@@ -69,8 +72,10 @@ Use the table in `ANIMATION_SYSTEM.md` § Engine selection:
 - `motion` for entrance, exit, layout, springs, in-view triggers
 - `gsap` **only** for `horizontal-scroll`, `scroll-timeline`, and `text-reveal`'s character splitting
 
-Every `gsap` preset needs a comment naming what Motion could not do. If you cannot write that
-sentence honestly, use Motion.
+**Exactly three presets use GSAP: `horizontal-scroll`, `scroll-timeline`, and `text-reveal`.** That
+count is a specification, not a guideline — a test asserts it. Each of the three carries a comment
+naming the specific capability Motion lacks. Any fourth GSAP usage is an escalation with a
+reproduction showing Motion failing, recorded in `docs/DECISIONS.md`.
 
 ### The ones with real substance
 
@@ -84,8 +89,17 @@ wrong and this is the usual mistake.
 **`marquee`** — infinite loop via duplicated content and a CSS translate animation. Must be seamless
 (no visible jump), pause on hover, and handle content narrower than the container. Test the seam.
 
-**`sticky-stack`** — cards pin and scale as they scroll past. GSAP-free if possible using
-`position: sticky` plus a scroll-driven scale; if you need GSAP, say why.
+**`sticky-stack`** — cards pin and scale as they scroll past. **Decided: `position: sticky` plus a
+scale driven by the shared scroll bus writing CSS variables. Engine `css`. GSAP is not permitted for
+this preset.**
+
+The criterion: GSAP's `ScrollTrigger` pinning is only required when an element must be pinned
+*outside* native sticky semantics — a horizontally-scrolled track, or pinning that outlives the
+scroll container. `sticky-stack` is entirely within sticky semantics, so GSAP would add 60 kB and a
+second animation engine on the element for behaviour the platform already provides.
+
+If you find a case native sticky genuinely cannot express, that is an escalation with a reproduction,
+not a switch to GSAP.
 
 **`text-reveal`** — split by line, word, or char with a mask reveal. Splitting must preserve
 accessibility: the original text stays in an `aria-label` or an `sr-only` copy, because a screen

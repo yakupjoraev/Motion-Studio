@@ -62,8 +62,16 @@ Structure:
   a network request in a file that is supposed to be self-contained. Generate only the rules actually
   used, from the IR's `usedClasses`.
 - Theme variables inlined in `:root` for both modes, with the colour-mode script.
-- Fonts: `@font-face` pointing at the Google Fonts CSS URL, or system fallbacks if the user chose
-  `assets: 'inline'`. Say which in a comment in the output.
+- **Fonts, decided:** the default emits a system font stack whose metrics match the theme's pairing,
+  plus a commented-out `@font-face` block the user can uncomment. `assets: 'inline'` instead emits a
+  base64 `woff2` subset (latin, the two used weights) inside the `@font-face`.
+
+  The criterion is the target's own promise: "opens from the filesystem, self-contained, no build
+  step". A Google Fonts URL breaks it twice — it requires a network, and it discloses every visitor's
+  IP to a third party from a file the user believes is local. Neither is acceptable as a default, so
+  neither is offered as one.
+
+  The emitted CSS carries a one-line comment stating which mode produced it and how to switch.
 
 ### Vanilla JS interactions
 

@@ -241,6 +241,26 @@ Required comments:
 Banned: commented-out code, `// TODO` without an issue link, restating the signature,
 changelog comments (git has that).
 
+Also banned, and this is the important one — comments that justify a decision without a criterion:
+
+```ts
+// ✗ every one of these is unfalsifiable
+// simpler this way
+// good enough for now
+// seemed cleaner than the alternative
+// using X because it's easier
+
+// ✓ a criterion, a number, or a pointer to where the decision is recorded
+// Semi-implicit Euler: explicit Euler diverges above ~500 N/m stiffness, which
+// SPRINGS.stiff (550) exceeds. Measured divergence at dt=1/60 in simulate.test.ts.
+
+// ✓ deferring to a recorded decision
+// Main thread, not a worker: 81ms measured on the 60-node fixture. See ADR-014.
+```
+
+If you cannot write the criterion, you have not made a decision — you have made a guess, and
+[ENGINEERING_CONTRACT.md](ENGINEERING_CONTRACT.md) § 9 says what to do instead.
+
 ## Async
 
 - `async/await`, no raw `.then` chains.
@@ -318,6 +338,10 @@ One logical change per commit. `git add -p` exists for a reason.
 
 ## Review checklist
 
+- [ ] Every non-obvious choice traces to a document section, a recorded measurement, or an ADR —
+      nothing rests on the author's preference
+- [ ] No comment justifies a decision without a criterion ("simpler", "cleaner", "good enough")
+- [ ] No silent scope reduction; anything cut was the owner's call and is recorded
 - [ ] No `any`, no unchecked casts, no `@ts-ignore`
 - [ ] No file over 300 lines
 - [ ] No cross-package deep import

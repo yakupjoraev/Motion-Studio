@@ -58,11 +58,13 @@ Time the flow yourself with a stopwatch: land on `/blocks/aurora-background`, ch
 
 ### Controls reuse the inspector system
 
-The controls are the **same** generated system from prompt 23, driven by the same `controls` metadata.
-Not a second implementation. If the inspector's control renderer needs extracting into a shared
-component to make that work, extract it and note the refactor.
+Import `ControlRenderer` from `@motion-studio/ui` — prompt 23 placed it there for exactly this
+consumer, so there is nothing to extract and nothing to refactor. Supply your own state handling:
+local state plus URL sync here, where the inspector dispatches commands.
 
-Two control systems would drift, and the gallery would slowly stop matching the studio.
+If you find yourself writing a control component in `apps/web/src/components/gallery/`, stop. Two
+control systems would drift and the gallery would slowly stop matching the studio, which is the
+specific failure this placement prevents.
 
 ### Source is generated, not written
 

@@ -48,8 +48,15 @@ packages/motion/src/
 export function simulateSpring(config: SpringConfig, dt: number, steps: number): number[]
 ```
 
-Numerically integrate a damped harmonic oscillator (semi-implicit Euler is sufficient and stable at
-`dt = 1/60`). Returns the position over time, normalised so 0 is the start and 1 is the target.
+**Created in prompt 09**, at `packages/motion/src/curves/simulate.ts`, because the spring editor
+needs it first. If it is already there and its tests pass, do not rewrite it — verify it against
+the contract below and move on. If prompt 09 was skipped, create it here to this contract.
+
+Integrate a damped harmonic oscillator using **semi-implicit (symplectic) Euler** — specified, not
+suggested: it is stable at `dt = 1/60` for every spring in `SPRINGS`, whereas explicit Euler
+diverges at the stiff end (`stiff`, 550 N/m) and RK4 costs four evaluations per step for accuracy
+nobody can see in a 240-pixel curve. Returns position over time, normalised so 0 is the start and 1
+is the target.
 
 This drives the spring curve editor's visual, so it must be *right*, not approximately right:
 - `damping` at critical value → no overshoot

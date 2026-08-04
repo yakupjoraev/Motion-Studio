@@ -167,10 +167,75 @@ Read the relevant document **before** writing code for that subsystem. Do not re
 design that is already written down, and do not contradict it — if a document is wrong, say so
 and propose an edit to the document first.
 
-## 9. Working style
+## 9. Decision discipline
+
+**There are exactly three legal ways to resolve a decision. There is no fourth.**
+
+### 1. It is already specified
+
+The answer is in `docs/`. Find it and follow it. Do not re-derive it, do not improve on it, do not
+substitute a preference for it. If a document is wrong, change the document in its own commit
+first — with the reasoning — and then write code against it.
+
+### 2. It is decided by measurement
+
+The decision has an objective criterion and a threshold stated in advance. Measure, record the
+number, and let the number decide.
+
+```
+"Measure buildIR + print + format on the 60-node fixture.
+ Under 100 ms → main thread with startTransition.
+ Over 100 ms → move to a worker.
+ Record the measured number."
+```
+
+The threshold comes before the measurement, never after. Choosing the threshold to match the number
+you got is the same defect wearing a lab coat.
+
+### 3. It is escalated to the owner
+
+Genuinely open, consequential, and not answerable by measurement. Stop, state the options with their
+real trade-offs, give a recommendation, and wait. Do not proceed on a guess and mention it later.
+
+### The banned fourth way
+
+Any of these, in any form, in code, comments, commits, or a session report:
+
+| Banned | Why it is banned |
+| --- | --- |
+| "It seemed better this way" | An unbacked preference presented as an engineering result |
+| "This was simpler" | Simpler for the author, at unmeasured cost to the reader and the product |
+| "Good enough" | Nobody defined enough, so nobody can check it |
+| "I assumed X" (unrecorded) | An assumption nobody can find is a defect nobody can fix |
+| "I chose A over B" (no criterion) | A coin flip with a justification bolted on |
+| "It works" | Working is the floor, not the standard |
+| "I'll note it as a TODO" | Deferral disguised as a decision |
+
+The problem with all seven is the same: **they cannot be checked.** A reader six months later cannot
+tell a considered decision from a shrug, so they have to re-litigate everything or trust blindly.
+Both are worse than a recorded decision they can disagree with.
+
+### Every decision leaves a record
+
+If the answer was not already in `docs/`, it goes in [`DECISIONS.md`](DECISIONS.md) **before** the
+code that depends on it. Entry format is in that file. This is not paperwork — it is what makes
+resolution #2 and #3 distinguishable from the banned fourth way after the fact.
+
+A session report that changed behaviour and lists no decisions either made none — state that — or
+hid some.
+
+### Applies to visual work too
+
+"Looks fine" is the banned fourth way in a different costume. Visual quality is judged against
+[DESIGN_REFERENCES.md](DESIGN_REFERENCES.md) by direct side-by-side comparison, and the verdict is
+reported. "Merely competent" is not done, and neither is "I think it looks good."
+
+## 10. Working style
 
 - Plan in ≤ 5 bullets before multi-file work, then execute.
 - Prefer editing an existing file over creating a new one.
 - Never rename or move files unless the task says to.
-- If a task is ambiguous in a way that changes the output, state the assumption and continue.
-- If a task is blocked, finish everything unblocked and report precisely what is left.
+- If a task is ambiguous, § 9 applies: specified, measured, or escalated. An assumption is only
+  acceptable when the alternatives produce **equivalent** output — and it is still recorded.
+- If a task is blocked, finish everything unblocked and report precisely what is left. Never
+  decide that the blocked part was unnecessary — scope is the owner's.

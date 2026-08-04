@@ -273,7 +273,11 @@ everything.
 
 ### If time runs short
 
-Cut in this order, and say so in the README rather than shipping half-done features:
+**Cutting scope is the owner's decision, never the implementer's.** A session that cannot finish
+its prompt reports precisely what remains and stops; it does not decide that the remainder was
+optional. Any cut is recorded in `DECISIONS.md` as an owner decision and stated in the README.
+
+The pre-agreed cut order, should the owner choose to use it:
 
 1. Multi-frame responsive comparison → single frame only
 2. Compare mode in the playground

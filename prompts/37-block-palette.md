@@ -69,13 +69,12 @@ apps/web/src/components/studio/left-panel/blocks/
 
 ### Insertion behaviour
 
-`Enter` on a card inserts into:
-1. The isolation container, if isolated
-2. Otherwise the selection's parent, after the selection
-3. Otherwise root, at the end
+`Enter` on a card calls **`resolveInsertTarget`** from `@motion-studio/editor` — the shared function
+created in prompt 16 with exactly this use in mind. Do not write a second resolver, and do not
+inline the branching here; if the shared function does not cover a case, that is an escalation, not
+a local reimplementation.
 
-Same resolution as paste, so use the shared `resolvePasteTarget` helper rather than a second
-implementation. If it needs generalising, generalise it and note the refactor.
+A rejected target shows the reason in a toast and does not insert.
 
 The inserted node is **selected** and **scrolled into view** on the canvas. Inserting something the
 user then has to hunt for is a small failure that adds up.

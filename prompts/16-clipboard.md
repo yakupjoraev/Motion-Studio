@@ -65,11 +65,32 @@ A pasted payload may come from another tab, another version, or a text editor. S
 
 ### Paste target
 
+Exported as `resolveInsertTarget` from `packages/editor/src/commands/resolve-insert-target.ts` —
+**not** a private helper inside the clipboard module. Prompt 37 (block palette insertion) and prompt
+33 (command palette "Insert X") both consume this exact function. Specified here so there is one
+implementation from the start; a "generalise it later if needed" instruction is how two divergent
+copies ship.
+
+```ts
+export function resolveInsertTarget(args: {
+  document: MotionDocument
+  selectionIds: readonly NodeId[]
+  isolationId: NodeId | null
+  blockId: BlockId
+  registry: BlockRegistry
+}): { parentId: NodeId; slot: string; index: number } | { rejected: string }
 ```
-1. If a container is isolated → into it, at the end
-2. Else if there is a selection → into the selection's parent, at (selection index + 1)
+
+```
+1. If a container is isolated and its slot accepts blockId → into it, at the end
+2. Else if there is a selection → into the selection's parent, at (last selection index + 1)
 3. Else → into root, at the end
+4. If the resolved slot rejects blockId → walk up to the nearest ancestor whose slot accepts it
+5. If none accepts it → { rejected: <reason> }
 ```
+
+Step 4 and 5 matter: pasting a `heading` while a `heading` is selected must land it as a sibling, not
+be rejected because a heading has no slots.
 
 `pasteInPlace` uses the source's original parent and index when that parent still exists, falling
 back to the normal resolution otherwise.

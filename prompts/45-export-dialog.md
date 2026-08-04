@@ -52,13 +52,25 @@ what changed — in practice, re-running `buildIR` is cheap and only the printer
 cache the IR separately from the printed files. Report the measured regeneration time for an option
 toggle on the full-landing fixture.
 
-### Generation off the main thread?
+### Generation off the main thread — decided by measurement
 
-Measure first. If `buildIR` + print + format on the 60-node fixture takes under 100 ms, keep it on the
-main thread with a `startTransition` — a worker adds serialisation cost and complexity. If it exceeds
-100 ms, move it to a worker.
+This is a measurement decision, and the threshold is set **before** you measure:
 
-**Report the measured number and the decision you made.** Do not add a worker speculatively.
+```
+Measure buildIR + print + format on the 60-node fixture, median of 9 runs.
+  < 100 ms  → main thread, wrapped in startTransition
+  ≥ 100 ms  → Web Worker
+```
+
+100 ms is the point at which a user perceives the dialog as blocked rather than working.
+
+**Write the result as an ADR in `docs/DECISIONS.md` before implementing** — the question, the
+threshold above, the measured numbers, the decision, and the consequences you are accepting. The
+template in that file is exactly this case.
+
+Do not add a worker speculatively, and do not skip the measurement and keep it on the main thread
+because that is less work. Both are the banned fourth way from
+`docs/ENGINEERING_CONTRACT.md` § 9.
 
 ### Warnings before code
 

@@ -8,6 +8,10 @@ code. If an implementation diverges from a document, one of the two is a bug.
 - Working on a subsystem? Read that subsystem's document **before** writing code.
 - Adding something not covered? Add the section, then build it.
 - Found a contradiction? Fix the document first, in its own commit.
+- Facing a decision no document answers? [ENGINEERING_CONTRACT.md](ENGINEERING_CONTRACT.md) § 9 gives
+  the only three legal ways to resolve it, and [DECISIONS.md](DECISIONS.md) is where the answer goes.
+  Substituting a preference for a specification is the one defect this whole directory exists to
+  prevent.
 
 Documents are deliberately narrow. Each one owns exactly one subject and links out instead of
 repeating. That is what keeps a session's context small.
@@ -26,6 +30,7 @@ repeating. That is what keeps a session's context small.
 | Document | Owns |
 | --- | --- |
 | [ENGINEERING_CONTRACT.md](ENGINEERING_CONTRACT.md) | **Start here.** The rules every change obeys. Overrides every other document |
+| [DECISIONS.md](DECISIONS.md) | Every decision not answered by another document, with the evidence that produced it |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Monorepo topology, package boundaries, dependency rules, data flow |
 | [TECH_STACK.md](TECH_STACK.md) | Every dependency, its version, and the reason it was chosen |
 | [CODE_STANDARDS.md](CODE_STANDARDS.md) | Types, naming, file layout, patterns, banned patterns |

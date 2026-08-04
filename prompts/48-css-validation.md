@@ -16,20 +16,34 @@ one that says "invalid CSS".
 
 ## Deliverables
 
+**Location is decided: this lives in `packages/schema`, not in `apps/web`.** The criterion is that
+`sanitizeDocument` is the security boundary for untrusted `.motion` files, it lives in `schema`, and
+it must call the same validator the playground uses. A copy in `apps/web` would mean the
+security-critical path and the interactive path could diverge — and the one that matters for safety
+is the one nobody is looking at.
+
 ```
-apps/web/src/lib/css/
-├── validate-css.ts           the five-layer pipeline
-├── structural-check.ts       delimiters, length, statement shape
+packages/schema/src/sanitize/css/
+├── validate-css.ts           composes all five layers; the only public entry
+├── structural.ts             layers 1–2: delimiters, length, blocklist. Pure, no DOM.
 ├── blocklist.ts              the dangerous constructs
-├── native-check.ts           CSS.supports
-├── feature-detect.ts         which modern features are used → compat notes
-├── normalize.ts              re-serialise to a canonical form
+├── native.ts                 layers 3–4: CSS.supports + feature detect. DOM-guarded.
+├── normalize.ts              layer 5: canonical re-serialisation. Pure.
 ├── css.types.ts              CssValidation, CssError, CssFeature
 ├── __fixtures__/
 │   ├── valid.ts              50+ real-world values across all eight properties
 │   └── malicious.ts          every injection vector
 └── *.test.ts
 ```
+
+`native.ts` must run in `node`, where `CSS` does not exist. **Decided:** when `CSS.supports` is
+unavailable it returns `{ ok: true, unverified: true }` and `validateCss` propagates that flag —
+layers 1, 2 and 5 still ran, so the security-relevant checks are complete; only validity is unknown.
+It must never return `ok: false` for a missing API, because that would make every document import
+fail in a `node` test, and it must never silently claim verification it did not perform.
+
+Prompt 12 created a structural-only stub for `sanitizeDocument` to call. Complete it in place —
+same module, same exported name. Do not add a parallel implementation.
 
 ## Constraints
 
@@ -81,15 +95,16 @@ export interface CssError {
 Errors are actionable: they say what, where, and imply what to do. The messages in the doc are the
 standard to match.
 
-### Reuse in the document escape hatch
+### One validator, three consumers
 
-The `css` prop on blocks (`css-field` from prompt 09, `sanitizeDocument` from prompt 12) must use
-**this same validator**. Two CSS validators would drift, and the one in the document path is the one
-that matters for security.
+`validateCss` is called by all three, with no wrapper logic of its own in any of them:
 
-Refactor `sanitizeDocument`'s CSS rules to call `validateCss`, and say so in the commit. If the shapes
-do not line up, adjust the schema-side helper to delegate — the validator lives here, the sanitizer
-calls it.
+1. `sanitizeDocument` — on `.motion` import (the security path)
+2. `css-field` in the inspector — on user entry
+3. The playground — on every keystroke
+
+A second implementation anywhere is a defect. A test asserts all three call sites resolve to the same
+module.
 
 ### `Result`, not exceptions
 
