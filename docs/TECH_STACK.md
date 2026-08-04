@@ -1,0 +1,170 @@
+# TECH_STACK
+
+Every dependency, why it is here, and what it is not allowed to do. A dependency without a
+reason in this file does not belong in `package.json`.
+
+## Runtime requirements
+
+| | Version | Note |
+| --- | --- | --- |
+| Node | `>=20.11` | LTS. Pinned in `.nvmrc` and `engines`. |
+| pnpm | `>=9` | Workspaces + strict node-linker. Enable via `corepack`. |
+
+## Core
+
+### Next.js 15 (App Router)
+Server Components for the landing, `/blocks`, and `/docs` — those pages are content and should
+ship almost no JS. Streaming with `Suspense` for the block gallery. The studio is a client
+island mounted inside a prerendered shell.
+
+Not used for: any server mutation. There is no backend. No route handlers except a static
+`/api/health` for the Docker healthcheck.
+
+### React 19
+`useOptimistic` is unused (no server state). What matters: the improved `ref` handling, the
+`use` hook for lazily reading resources in the block gallery, and the stabilised concurrent
+rendering that lets us mark canvas re-renders as non-urgent via `startTransition`.
+
+### TypeScript 5.6, strict
+`strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitOverride`,
+`verbatimModuleSyntax`. `any` is a lint error, not a style preference. The document model,
+registry, and codegen IR are all fully typed — that is the point of the project.
+
+### Tailwind CSS v4
+CSS-first configuration via `@theme`. Our design tokens generate the `@theme` block, so
+Tailwind utilities and runtime CSS variables come from a single source. v4's engine is fast
+enough to keep the studio's HMR usable with a large class surface.
+
+Rule: blocks use Tailwind utility classes because **the exported code must be Tailwind**. The
+studio chrome may use utilities too, but shared chrome patterns live in `packages/ui` as `cva`
+variants, not copy-pasted class strings.
+
+## State
+
+### Zustand 5
+One store, sliced. Chosen over Redux Toolkit (too much ceremony for a single-store app) and
+over Context (re-render storms are fatal here). The decisive feature is selector-level
+subscription: the inspector can update while the canvas does not re-render.
+
+### Immer 10
+Commands mutate a draft; we take `produceWithPatches` output and store the patches. That gives
+undo/redo for free and makes history entries small enough to keep hundreds of them.
+
+Rule: patches are the history unit. Never snapshot the whole document.
+
+### TanStack Query 5
+Only for the `/blocks` gallery and `/docs` search index — cached, deduped fetching of static
+JSON. Not used for editor state. If you reach for it inside the editor, you are wrong.
+
+### TanStack Table 8
+The data-heavy blocks (Table, Pricing comparison) and the export file list. Headless, so it
+composes with our own chrome.
+
+### TanStack Virtual 3
+Layers tree, block list, export file list. Anything that can exceed ~50 rows.
+
+## Motion
+
+### Motion (Framer Motion) 11
+Declarative variants map cleanly onto our data-driven `MotionPreset` model, and the layout
+animations are the best available. Used for: entrance, hover, tap, layout, exit, and
+`useScroll`-driven progress.
+
+### GSAP 3
+Only where Motion is the wrong tool: long scroll-scrubbed timelines with pinning, complex
+sequenced choreography, and SplitText-style character reveals. Loaded dynamically, never in the
+initial bundle. Every GSAP usage must be justified in a comment naming what Motion could not do.
+
+Rule: **do not mix both on one element.** Ownership per element is exclusive.
+
+### Lenis (optional, scroll)
+Smooth scroll for the landing page only, and disabled under `prefers-reduced-motion`. Never in
+the studio — it fights the canvas.
+
+## Interaction
+
+### dnd-kit 6
+Drag & drop for the block palette → canvas, canvas reordering, and layers tree reparenting.
+Chosen because it is accessible by default (keyboard sensors, live-region announcements) and
+does not use the HTML5 drag API, which cannot render a custom preview reliably.
+
+### Radix UI
+Dialog, Popover, Dropdown, Tooltip, Tabs, Slider, Switch, Toggle Group, Context Menu,
+Scroll Area, Collapsible. Unstyled, correct, accessible. This is the studio chrome's skeleton.
+
+### React Aria (`react-aria` / `react-stately`)
+Used where Radix does not reach: the colour picker (`useColorArea`, `useColorSlider`), number
+scrub fields (`useNumberField` for keyboard + locale), and the toolbar focus management. Also
+for `useHover`/`usePress` where pointer-event correctness matters.
+
+Rule: prefer Radix for overlays, React Aria for value-editing widgets. Do not implement both
+for the same control.
+
+### shadcn/ui
+Vendored, not installed — the components are copied into `packages/ui` and adapted to our
+tokens. That is the intended usage. Never `import from "shadcn/ui"`.
+
+### impeccable.style
+Effect vocabulary and reference implementations for the high-end surface effects. Adapted into
+`packages/blocks` as registry entries with our schema, tokens, and reduced-motion handling —
+not dropped in verbatim. Attribution stays in the block's doc comment.
+
+## Validation and data
+
+### Zod 3
+The single source of truth for shape. Block prop schemas drive both runtime validation and
+inspector generation. The `.motion` file format is a Zod schema, and import validation is that
+schema plus migrations. Types are inferred from schemas — never declared twice.
+
+### React Hook Form 7
+Only in genuine forms: the theme builder's numeric form, export options, and the Form blocks'
+own previews. Not for the inspector — the inspector is command-driven, not form-driven.
+
+## Tooling
+
+| Tool | Role | Note |
+| --- | --- | --- |
+| **Turborepo 2** | Task graph, caching | `lint`, `typecheck`, `test`, `build` per package |
+| **pnpm workspaces** | Package linking | Strict; no phantom deps |
+| **Biome 1.9** | Lint + format | Replaces ESLint + Prettier for source. One binary, fast enough for a pre-commit hook |
+| **Prettier 3** | Formatting *output* only | Used by `codegen` as a library to format generated code. Not for our source. |
+| **Storybook 8** | Component workshop | Every `ui` and `blocks` entry has a story; a11y and interaction addons enabled |
+| **Vitest 2** | Unit + component tests | `jsdom` for components, `node` for pure logic |
+| **Testing Library** | Component queries | Role-based queries only; `getByTestId` is a last resort |
+| **Playwright 1.48** | E2E | Chromium, Firefox, WebKit. Traces on failure |
+| **axe-core / @axe-core/playwright** | A11y gate | Zero violations required |
+| **Lighthouse CI** | Perf gate | Budgets in `docs/PERFORMANCE.md` |
+| **size-limit** | Bundle gate | Per-entry byte budgets |
+| **Changesets** | Versioning | Package versions + changelog |
+| **lefthook** | Git hooks | Pre-commit: format + lint changed files. Pre-push: typecheck |
+| **Docker + compose** | Local parity | Multi-stage build, standalone Next output |
+| **GitHub Actions** | CI/CD | See `docs/DEVOPS.md` |
+
+## Deliberately not used
+
+| Rejected | Why |
+| --- | --- |
+| Redux Toolkit | Ceremony without benefit for one store; patches give us history more cheaply |
+| Jotai / Valtio | Atomic model does not fit a single normalized document; harder to snapshot for undo |
+| ESLint + Prettier | Two tools, slow, config sprawl. Biome covers both for source |
+| Styled Components / Emotion | Runtime CSS-in-JS is a perf cost, and the export target is Tailwind |
+| Monaco | ~2 MB for a CSS textarea. CodeMirror 6 does the job at a fraction of the size |
+| React DnD | HTML5 drag API limitations; worse a11y story than dnd-kit |
+| Three.js | No 3D in v1. WebGL effects are done with shaders on a 2D canvas where needed |
+| Konva / Fabric | The canvas renders DOM React components, not a bitmap scene graph |
+| tRPC / Prisma / any DB | No backend. Local-first |
+| Sentry / analytics | No telemetry, by design |
+
+## Adding a dependency
+
+Answer these in the PR body. If any answer is weak, do not add it.
+
+1. What exactly does it do that we cannot do in ~50 lines?
+2. What does it cost, gzipped, in the bundle it lands in?
+3. Is it tree-shakeable, and is the used surface small?
+4. Does it ship its own types?
+5. Is it maintained (release in the last 6 months, open-issue trend)?
+6. Which bundle does it land in — and can it be dynamically imported instead?
+
+Anything above 20 kB gzip in the studio's initial chunk needs an explicit exemption recorded in
+`docs/PERFORMANCE.md`.

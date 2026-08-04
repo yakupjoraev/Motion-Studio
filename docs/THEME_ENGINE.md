@@ -1,0 +1,274 @@
+# THEME_ENGINE
+
+The theme engine turns a small config object into a full set of CSS custom properties, applied
+in one write, with **zero component re-renders**.
+
+## Why it works that way
+
+Tailwind utilities are generated to reference runtime variables:
+
+```css
+@theme {
+  --color-surface-1: var(--ms-color-surface-1);
+  --color-accent:    var(--ms-color-accent);
+  --radius-lg:       var(--ms-radius-lg);
+}
+```
+
+So `class="bg-surface-1 rounded-lg"` resolves through `--ms-*`. Change `--ms-color-surface-1` on
+the root and every element using it repaints — React is never involved. A theme change is a
+`style.setProperty` loop, not a state update.
+
+## ThemeConfig
+
+```ts
+// packages/theme/src/theme.types.ts
+export interface ThemeConfig {
+  id: string
+  name: string
+  colorMode: 'light' | 'dark' | 'system'
+
+  palette: {
+    accent: string            // OKLCH or hex; the seed
+    neutral: NeutralHue       // 'slate' | 'zinc' | 'stone' | 'gray' | 'warm' | 'cool'
+    accentHueShift: number    // -30..30, shifts generated ramp hue
+    saturation: number        // 0.5..1.5, chroma multiplier
+  }
+
+  radiusScale: 0 | 0.5 | 1 | 1.5 | 2
+  spacingScale: 0.875 | 1 | 1.125
+  motionScale: 0 | 0.5 | 1 | 1.5
+  elevationStyle: 'flat' | 'soft' | 'sharp' | 'glow'
+
+  typography: {
+    pairing: FontPairingId    // 'geist' | 'inter-mono' | 'satoshi-jet' | ...
+    baseSize: 14 | 15 | 16
+    scaleRatio: 1.2 | 1.25 | 1.333
+  }
+
+  surface: {
+    glassLevel: 'none' | 'subtle' | 'medium' | 'strong'
+    noiseLevel: 'none' | 'subtle' | 'light' | 'medium'
+    borderStyle: 'hairline' | 'solid' | 'none'
+  }
+}
+```
+
+That is the entire user-facing surface of theming. Everything else is derived.
+
+## Palette generation
+
+From one accent colour, generate a twelve-step ramp by holding the lightness ladder and the
+chroma curve from `packages/tokens` and substituting the seed's hue.
+
+```ts
+export function generateRamp(seed: string, options: RampOptions): ColorRamp {
+  const { l, c, h } = parseToOklch(seed)
+
+  return LIGHTNESS_LADDER.map((targetL, i) => {
+    const chroma = CHROMA_CURVE[i] * options.saturation * (c / REFERENCE_CHROMA)
+    const hue = h + options.hueShift * HUE_SHIFT_CURVE[i]
+    return formatOklch(targetL, clampChroma(chroma, targetL, hue), hue)
+  })
+}
+```
+
+Three details that matter:
+
+1. **`clampChroma`** pulls chroma back into sRGB gamut per lightness — otherwise mid-tones of
+   saturated hues clip to flat blocks in browsers without wide-gamut output.
+2. **`HUE_SHIFT_CURVE`** applies a small hue rotation toward the light and dark ends. Pure
+   hue-constant ramps look synthetic; a few degrees of drift reads as designed.
+3. The seed's own lightness is ignored for the ramp but used to pick which step becomes
+   `accent` — a user picking a pale colour gets step 400 as their accent, not 600.
+
+### Contrast repair
+
+After generating, the engine verifies every semantic pairing. On a failure it walks the ramp to
+the next step that passes, and records the substitution:
+
+```ts
+export interface ThemeResolution {
+  variables: Record<string, string>
+  repairs: ContrastRepair[]        // shown in the theme builder as warnings
+  warnings: string[]
+}
+```
+
+The theme builder shows repairs inline: "Accent on surface-1 was 3.2:1 — using violet-700
+instead." The user can override, and the export includes a comment noting the ratio. We never
+silently ship failing contrast, and we never silently override the user either.
+
+## Application
+
+```ts
+// packages/theme/src/apply.ts
+export function applyTheme(config: ThemeConfig, root: HTMLElement = document.documentElement) {
+  const resolved = resolveTheme(config)
+
+  // one batched write inside a single frame
+  const style = root.style
+  for (const [name, value] of Object.entries(resolved.variables)) {
+    style.setProperty(name, value)
+  }
+
+  root.dataset.colorMode = resolveColorMode(config.colorMode)
+  root.dataset.elevation = config.elevationStyle
+  root.dataset.glass = config.surface.glassLevel
+
+  return resolved
+}
+```
+
+- ~120 variables. The loop is sub-millisecond.
+- `resolveTheme` is memoised on a hash of the config, so dragging a hue slider does not
+  regenerate identical output.
+- During a slider drag the engine writes **only the affected variables**, not the whole set.
+
+### Variable groups
+
+| Prefix | Count | Source |
+| --- | --- | --- |
+| `--ms-color-*` | ~48 | Semantic colours for the active mode |
+| `--ms-radius-*` | 9 | Radius tokens × `radiusScale` |
+| `--ms-space-*` | 18 | Space tokens × `spacingScale` |
+| `--ms-font-*` | 6 | Family + size base + ratio |
+| `--ms-text-*` | 14 | Computed size/line-height pairs |
+| `--ms-shadow-*` | 8 | Elevation set for mode + `elevationStyle` |
+| `--ms-blur-*` | 8 | Blur scale |
+| `--ms-duration-*` | 7 | Durations × `motionScale` |
+| `--ms-ease-*` | 8 | Easing curves |
+| `--ms-glass-*` | 3 | Backdrop-filter, background, border for the level |
+| `--ms-noise-opacity` | 1 | |
+
+## Colour mode
+
+```ts
+const mode = config.colorMode === 'system'
+  ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+  : config.colorMode
+```
+
+- `data-color-mode` on `<html>`; CSS selects the mode's variable block.
+- A blocking inline script in `<head>` reads the stored preference and sets the attribute before
+  first paint. This is the one place a blocking script is correct — the alternative is a flash.
+- The `system` listener is a single `matchMedia` change handler that calls `applyTheme`.
+- Mode switching animates: a 180 ms `background-color`/`color` transition on the root, disabled
+  under reduced motion and disabled during the initial paint (a `data-theme-ready` attribute
+  gates the transition so page load never animates).
+
+## Elevation styles
+
+`elevationStyle` swaps the shadow set wholesale:
+
+| Style | Character |
+| --- | --- |
+| `flat` | No shadows. Borders only. |
+| `soft` | Default. Layered diffuse shadows. |
+| `sharp` | Tight, high-contrast, small offset. Editorial. |
+| `glow` | Coloured shadows derived from the accent. Neon. |
+
+`glow` derives from the accent ramp, so it re-generates when the palette changes.
+
+## Motion scale
+
+`--ms-duration-*` are all multiplied by `motionScale`. `motionScale: 0` produces `0ms` for
+every duration, which is precisely the reduced-motion behaviour — so the reduced-motion path is
+the same code path, not a separate branch.
+
+```css
+@media (prefers-reduced-motion: reduce) {
+  :root { --ms-motion-scale: 0; }
+}
+```
+
+The studio's "preview reduced motion" toggle sets the same variable, which is how a designer
+can check the reduced experience without changing OS settings.
+
+## Presets
+
+`packages/theme/src/presets/` — each a `ThemeConfig`, each contrast-tested in CI.
+
+| Preset | Character |
+| --- | --- |
+| `studio-dark` | Default. Neutral 265, violet accent, soft elevation. |
+| `studio-light` | Same palette, light mode. |
+| `midnight` | Deep blue-black, cyan accent, glow elevation. |
+| `paper` | Warm neutrals, sharp elevation, no glass. Editorial. |
+| `brutal` | Zero radius, sharp shadows, high contrast, mono display. |
+| `aurora` | Violet→cyan, strong glass, medium noise. |
+| `ember` | Warm stone neutrals, amber accent. |
+| `nord` | Cool desaturated, blue accent, flat elevation. |
+| `mono` | Pure neutral, no accent hue, radius 0.5. |
+| `candy` | High chroma, large radius, soft elevation. |
+
+## Theme builder UI
+
+Left panel, `Theme` tab:
+
+```
+Mode          [ ☀ ] [ 🌙 ] [ ⚙ ]
+Preset        [ studio-dark        ▾ ]
+
+Accent        [■] oklch(58% .18 285)
+Neutral       [ slate ▾ ]
+Hue shift     [───●────]  0
+Saturation    [────●───]  1.0
+
+Radius        [ 0 ][ ½ ][ 1 ][ 1½ ][ 2 ]
+Spacing       [ ⅞ ][ 1 ][ 1⅛ ]
+Motion        [ 0 ][ ½ ][ 1 ][ 1½ ]
+Elevation     [ flat ][ soft ][ sharp ][ glow ]
+
+Font pairing  [ Geist / Geist Mono ▾ ]
+Base size     [ 14 ][ 15 ][ 16 ]
+
+Glass         [ none ][ subtle ][ medium ][ strong ]
+Noise         [───●────]  0.03
+Borders       [ hairline ][ solid ][ none ]
+
+⚠ 1 contrast repair              [ details ]
+[ Reset ]  [ Save as preset ]  [ Export tokens ]
+```
+
+Every control writes variables immediately and dispatches a coalesced command, so the whole
+theming session is one undo step per control.
+
+## Theme in export
+
+The theme travels with the document and is emitted by every export target:
+
+| Target | Output |
+| --- | --- |
+| React | A `theme.css` with the resolved `:root` variables + a `@theme` block |
+| Next.js | Same, wired into `app/globals.css`, plus `tailwind.config.ts` if requested |
+| HTML | Variables inlined in a `<style>` in `<head>` |
+| JSON | The `ThemeConfig` verbatim, so re-import reproduces it exactly |
+
+`Export tokens` additionally offers: CSS variables, Tailwind config, JSON, and Figma Tokens
+format.
+
+## Scoped themes
+
+The block gallery renders many previews, each possibly in a different theme. `applyTheme`
+accepts any element, and `<ThemeScope>` applies the variables to a wrapper instead of the root:
+
+```tsx
+<ThemeScope theme={preset} className="rounded-xl">
+  <BlockPreview id="aurora-card" />
+</ThemeScope>
+```
+
+Because everything resolves through variables, a scoped theme just works — nested scopes
+included. This is also how the canvas can preview a theme change on the selection only.
+
+## Rules
+
+1. **No component reads `ThemeConfig` to style itself.** It uses token classes. The config is
+   read only by `resolveTheme` and the theme builder.
+2. **No hard-coded colour anywhere outside `packages/tokens`.** Lint rule: hex/rgb/oklch
+   literals are errors outside the tokens package and theme presets.
+3. **Variables are written in one batch,** never per-property across a render.
+4. **Every generated palette is contrast-verified** before it is applied.
+5. **A theme change must not trigger a React render.** Test: render counter on the canvas root,
+   switch theme, assert zero increments.
