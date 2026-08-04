@@ -229,3 +229,48 @@ nothing plugin-shaped in v1.
   than the feature.
 - Curated first-party-only extension: that is just the existing registry, so it is not a plugin API
   and should not be called one.
+
+## ADR-004 — Package tsconfigs extend the root tsconfig until the presets exist
+
+**Date** 2026-08-04 · **Prompt** 01 · **Status** Accepted
+
+### Question
+Prompt 01 requires every package's `tsconfig.json` to "extend the right config preset", but the
+presets are a deliverable of prompt 02 (`packages/config/tsconfig/{base,library,react,next}.json`).
+Where do the strict compiler flags live for the one prompt in between?
+
+### Criterion (set before choosing)
+Prompt 02 states "Then update every package's `tsconfig.json` to extend the right preset", so the
+end state is fixed and identical either way. The choice is therefore admissible without escalation
+only if both options converge to the same repository state after prompt 02 — they do. Among
+converging options, pick the one that adds no file outside prompt 01's deliverable list and states
+the strict flags exactly once, so a flag cannot drift between packages during prompt 01.
+
+### Measurement
+Option A — copy `CODE_STANDARDS.md` § Compiler configuration into each of the 16 manifests:
+17 declarations of the same flag set (16 packages/apps + root), 16 of them rewritten by prompt 02.
+Option B — root `tsconfig.json` carries the flag set; every package extends `../../tsconfig.json`:
+1 declaration, 16 two-line child files. `references` is not inherited through `extends`, so the
+root's project references do not leak into packages; `files`/`include`/`exclude` are inherited, and
+each package overrides `include` with `["src"]`.
+Option C — create `packages/config/tsconfig/*.json` now: adds four files that prompt 01 § Constraints
+forbids ("Do not create files not in the deliverable list") and takes prompt 02's deliverable.
+
+### Decision
+Option B. The root `tsconfig.json` holds exactly the flags from `CODE_STANDARDS.md` § Compiler
+configuration plus `references` to all packages; each package extends it and sets `include`.
+Prompt 02 repoints every `extends` at the real preset and the root keeps only its references.
+
+### Consequences
+- Accepted: for the duration of prompt 01 the root `tsconfig.json` has two jobs — reference list and
+  flag source. Prompt 02 removes the second one.
+- Accepted: `tsc --build` from the root is not supported, because project references require
+  `composite: true`, which requires declaration emit, which contradicts `ARCHITECTURE.md`'s
+  no-build-step rule for internal packages. Typechecking runs per package via `turbo typecheck`
+  (`tsc --noEmit`), which is what the root `typecheck` script does.
+- Avoided: sixteen copies of a flag set that must stay identical, in the one window where nothing
+  yet enforces that they do.
+
+### Alternatives rejected
+- Option A: identical end state, sixteen places for a flag to drift in between.
+- Option C: takes prompt 02's deliverables and violates prompt 01's file-list constraint.

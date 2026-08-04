@@ -51,6 +51,7 @@ Read the long version in [`docs/VISION.md`](docs/VISION.md).
 ## Quick start
 
 ```bash
+corepack enable     # uses the pnpm version pinned in package.json
 pnpm install
 pnpm dev            # http://localhost:3000
 ```

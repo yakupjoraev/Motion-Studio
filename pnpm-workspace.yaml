@@ -1,0 +1,10 @@
+packages:
+  - apps/*
+  - packages/*
+  - e2e
+
+# sharp arrives as an optional dependency of next and is what Next uses to optimise images in a
+# production build. Its native binary is selected by an install script, so without this entry pnpm
+# skips that script and prints an approval warning on every install.
+onlyBuiltDependencies:
+  - sharp

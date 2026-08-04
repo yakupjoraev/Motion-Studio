@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "noEmit": true
+  },
+  "files": [],
+  "references": [
+    { "path": "packages/config" },
+    { "path": "packages/utils" },
+    { "path": "packages/tokens" },
+    { "path": "packages/icons" },
+    { "path": "packages/schema" },
+    { "path": "packages/theme" },
+    { "path": "packages/motion" },
+    { "path": "packages/hooks" },
+    { "path": "packages/ui" },
+    { "path": "packages/blocks" },
+    { "path": "packages/editor" },
+    { "path": "packages/canvas" },
+    { "path": "packages/dnd" },
+    { "path": "packages/codegen" },
+    { "path": "apps/web" }
+  ]
+}

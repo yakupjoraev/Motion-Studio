@@ -1,0 +1,15 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": ["**/.env.*local", "tsconfig.json"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**", "storybook-static/**"]
+    },
+    "lint": { "dependsOn": ["^build"] },
+    "typecheck": { "dependsOn": ["^build"], "outputs": ["*.tsbuildinfo"] },
+    "test": { "dependsOn": ["^build"], "outputs": ["coverage/**"] },
+    "test:e2e": { "dependsOn": ["build"], "cache": false },
+    "dev": { "cache": false, "persistent": true }
+  }
+}
