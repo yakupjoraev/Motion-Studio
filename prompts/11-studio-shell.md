@@ -4,6 +4,8 @@
 
 ## Read first
 
+- `docs/DESIGN_REFERENCES.md` — § Why the chrome is the exception. Then apply the test in it:
+  screenshot the shell with a document open — your eye must go to the user's design, not the panels.
 - `docs/UI_GUIDELINES.md` — § Layout, § Density scale, § Loading and empty states, § Responsiveness of the chrome
 - `docs/PRODUCT.md` — § 1. Studio shell
 - `docs/ARCHITECTURE.md` — § Rendering strategy in `apps/web`

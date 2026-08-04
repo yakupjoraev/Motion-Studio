@@ -12,6 +12,16 @@ colourful.
 Reference points: Linear's restraint, Figma's density, Vercel's typographic discipline. Not:
 gradient-heavy dashboards, cards floating on cards, decorative illustration in chrome.
 
+**[impeccable.style](https://impeccable.style) is the product's primary design reference** and it
+applies here too — but as a standard of *craft*, not of loudness. From it the chrome takes surface
+precision, hairline treatment, glass on floating panels, micro-interaction feel, motion character,
+and typographic exactness. It does not take animated gradients, decorative glow, or cursor effects.
+See [DESIGN_REFERENCES.md](DESIGN_REFERENCES.md) § Applying it per surface — the content surfaces
+(landing, gallery, blocks, effects) apply it at full strength; the chrome applies it quietly.
+
+The test that settles any argument: screenshot the studio with a document open. Your eye should go
+to the user's design, not to our panels.
+
 Concretely:
 - Chrome is `surface-0`/`surface-1` with hairline borders. No shadows in the panels — depth
   comes from value, not from elevation.

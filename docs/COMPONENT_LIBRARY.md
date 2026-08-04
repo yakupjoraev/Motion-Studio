@@ -235,6 +235,13 @@ target with `pointer-events: none`.
 `aurora-background` · `mesh-gradient` · `noise-overlay` · `grain-overlay` · `dot-grid` ·
 `grid-lines` · `spotlight` · `beams` · `glow` · `border-beam` · `shine` · `particles` · `scanlines`
 
+The visual bar for this category is set by [impeccable.style](https://impeccable.style) and the
+other references in [DESIGN_REFERENCES.md](DESIGN_REFERENCES.md). **Read that document before
+building any effect** — it defines the look-understand-build workflow, the mandatory licence check,
+and the eight ways our version must exceed a reference implementation (schema-parameterised, live
+tunable, reduced-motion correct, within the scheduler caps, exportable, contrast-checked,
+light-and-dark, accessible).
+
 Effects have their own instance shape:
 
 ```ts

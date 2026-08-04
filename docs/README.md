@@ -38,6 +38,7 @@ repeating. That is what keeps a session's context small.
 | [UI_GUIDELINES.md](UI_GUIDELINES.md) | Studio layout, chrome, density, interaction feel, copy tone |
 | [THEME_ENGINE.md](THEME_ENGINE.md) | Runtime theming, palette generation, CSS-variable strategy |
 | [ANIMATION_SYSTEM.md](ANIMATION_SYSTEM.md) | Easings, springs, channels, preset catalogue, reduced motion |
+| [DESIGN_REFERENCES.md](DESIGN_REFERENCES.md) | Which references set the visual bar, how to use them, licence rules |
 
 ### Subsystems
 | Document | Owns |
@@ -67,6 +68,8 @@ repeating. That is what keeps a session's context small.
 **Building the editor** → EDITOR_ENGINE → STATE_MANAGEMENT → CANVAS → DRAG_AND_DROP
 
 **Building blocks** → COMPONENT_LIBRARY → DESIGN_SYSTEM → ANIMATION_SYSTEM → RESPONSIVE_ENGINE
+
+**Building effects** → DESIGN_REFERENCES → COMPONENT_LIBRARY (§ Effects) → ANIMATION_SYSTEM → PERFORMANCE
 
 **Building export** → FILE_FORMAT → EXPORT_ENGINE → COMPONENT_LIBRARY
 

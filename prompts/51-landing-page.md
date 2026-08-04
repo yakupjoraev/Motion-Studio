@@ -4,6 +4,9 @@
 
 ## Read first
 
+- `docs/DESIGN_REFERENCES.md` — § Applying it per surface. The landing page is **maximum loudness**:
+  it should be indistinguishable in quality from impeccable.style. This is the highest visual bar in
+  the project.
 - `docs/PRODUCT.md` — § 9. Landing page
 - `docs/VISION.md` — § The problem, § The product (this is the page's argument)
 - `docs/PERFORMANCE.md` — § Public pages, § Images, § Fonts
@@ -128,6 +131,12 @@ pnpm test:e2e:a11y      # axe on /
 ```
 
 Manual, and report:
+- **Open impeccable.style in one window and your landing page in another. Compare them directly.**
+  This page is the product's own showcase; if the reference looks better, the product's central claim
+  is undermined on the first screen. Report your honest judgement and what you changed.
+- Judge specifically: the hero's depth and gradient quality, scroll choreography timing, the finish
+  on the effect grid, and whether the whole page reads as one designed system rather than eight
+  sections.
 - Read the whole page. Does it make the argument in `VISION.md` clearly?
 - Drag the hero demo → does it feel like the real product?
 - With reduced motion emulated: read the page top to bottom. Is anything missing or stuck invisible?
@@ -148,4 +157,5 @@ Manual, and report:
 - [ ] Entire page coherent with zero animation — verified by reading it under reduced motion
 - [ ] Readable with JS disabled
 - [ ] Zero axe violations; full keyboard pass; screen-reader diagram alternative verified
+- [ ] Compared directly against impeccable.style and judged to hold up; changes reported
 - [ ] The page makes the product's argument — judged and reported

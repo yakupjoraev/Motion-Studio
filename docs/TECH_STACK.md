@@ -105,9 +105,18 @@ Vendored, not installed — the components are copied into `packages/ui` and ada
 tokens. That is the intended usage. Never `import from "shadcn/ui"`.
 
 ### impeccable.style
-Effect vocabulary and reference implementations for the high-end surface effects. Adapted into
-`packages/blocks` as registry entries with our schema, tokens, and reduced-motion handling —
-not dropped in verbatim. Attribution stays in the block's doc comment.
+The primary **design reference** for the high-end surface effects: aurora, mesh gradients, glass,
+spotlight, border beams, noise, shine, magnetic and tilt interactions. It defines the visual bar the
+`effects` category and the hero blocks are held to.
+
+It is a reference, not a dependency. Nothing is installed from it and nothing is imported at
+runtime. See [`docs/DESIGN_REFERENCES.md`](DESIGN_REFERENCES.md) for the required workflow —
+including the licence check that must happen **before** any code is adapted from it.
+
+The short version: study the effect, understand the technique, then implement it against our schema,
+our tokens, our motion presets, and our reduced-motion policy. A verbatim paste fails review on
+three counts — it bypasses the registry contract, it hard-codes an animation, and it may carry
+licence obligations we have not verified.
 
 ## Validation and data
 

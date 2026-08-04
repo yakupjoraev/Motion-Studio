@@ -27,6 +27,13 @@ packages/tokens/src/
 Three layers: **primitive → semantic → component**. A component never references a primitive.
 `bg-surface-2` is legal; `bg-slate-800` is not.
 
+The values in this document are calibrated against
+[impeccable.style](https://impeccable.style), the product's primary design reference — the surface
+value relationships, the elevation character, the glass recipes, the gradient presets and the
+typographic scale are all set to reach that bar. See
+[DESIGN_REFERENCES.md](DESIGN_REFERENCES.md) before changing any of them: a token that drifts
+downward in quality degrades all 62 blocks at once.
+
 ## Colour
 
 ### Primitive palette

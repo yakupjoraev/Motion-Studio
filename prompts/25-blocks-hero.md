@@ -4,6 +4,8 @@
 
 ## Read first
 
+- `docs/DESIGN_REFERENCES.md` — § Applying it per surface. Heroes are **maximum loudness**: this is
+  the surface where the reference applies at full strength.
 - `docs/COMPONENT_LIBRARY.md` — § Writing a block, § Catalogue (Hero)
 - `docs/DESIGN_SYSTEM.md` — § Typography, § Gradients, § Blur and glass
 - `docs/VISION.md` — § Design principles (specifically: beautiful by default)
@@ -110,8 +112,11 @@ Tests: meta-tests plus
 - `hero-aurora` static variant renders when reduced motion is emulated
 
 Manual — this is the important part, and report your judgement honestly:
-- Drop each hero with **defaults only** on the canvas. Look at it. Would you ship it as-is on a
-  landing page? If not, fix the defaults, not the props.
+- Open impeccable.style beside your work. For each hero, drop it with **defaults only** and compare.
+  The question is not "is this acceptable" — it is **"does this hold up next to the reference?"** If
+  not, fix the defaults, not the props, and say what you changed.
+- A hero that is merely tidy is not done. The difference is usually one of: gradient quality, depth
+  and layering, typographic tracking at display sizes, or the timing of the entrance.
 - Each hero at 360, 768, and 1440 px
 - Both colour modes; three theme presets (`studio-dark`, `paper`, `brutal`)
 - Reduced motion on: every hero still looks finished, not broken
@@ -124,7 +129,8 @@ Manual — this is the important part, and report your judgement honestly:
 - [ ] LCP element is static text in every hero, commented in each
 - [ ] `hero-aurora` is pure CSS and exports as CSS
 - [ ] Reduced-motion variant of every hero looks finished
-- [ ] Each hero looks shippable with defaults only — judged and reported
+- [ ] Each hero compared side by side with impeccable.style and judged against it — reported honestly
+- [ ] Each hero's doc comment names its design reference and explains its technique
 - [ ] Every hero checked at 360/768/1440 and in three themes
 - [ ] LCP verified on an aurora-only page; element confirmed to be text
 - [ ] Meta-tests pass; axe clean

@@ -4,6 +4,9 @@
 
 ## Read first
 
+- `docs/DESIGN_REFERENCES.md` — § Applying it per surface, and § Why the chrome is the exception.
+  Chrome is **low loudness, high craft**: take impeccable's surface precision, glass on floating
+  panels, and micro-interaction feel — not its gradients or glow.
 - `docs/UI_GUIDELINES.md` — **all of it**, especially § Density scale, § Panels, § Interaction feel
 - `docs/DESIGN_SYSTEM.md` — § Space, § Radius, § Typography
 - `docs/ACCESSIBILITY.md` — § Focus, § Dialogs
@@ -89,6 +92,18 @@ Per component, tests must cover:
 - Keyboard operation (the specific keys that component owns)
 - `axe` clean
 - Variants render distinctly (assert on the accessible state, not the class string)
+
+Then judge the craft level against the reference. Open impeccable.style and look at how its surfaces,
+borders, and overlays are finished, then look at yours. The chrome should feel like the same hand made
+it — quieter, but not cheaper. Specifically compare:
+- Value relationships between stacked surfaces
+- Hairline borders — do they catch light or just sit there?
+- The inner top highlight on dark elevated surfaces
+- Popover and dialog entrance feel
+- Press feedback
+
+Report what you found and changed. Anything that would count as loud — animated gradients,
+decorative glow, cursor effects — does not belong here regardless of how good it looks.
 
 Then in Storybook, walk every component:
 - Tab through it — focus ring visible everywhere, order sensible

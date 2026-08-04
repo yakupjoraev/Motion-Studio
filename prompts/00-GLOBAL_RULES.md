@@ -12,6 +12,31 @@ is the standing contract; this file is the working method that goes with it.
 3. **State any assumption** the prompt left open. Then proceed on it — do not stop to ask unless
    proceeding either way would waste the work.
 
+## The design bar
+
+**[impeccable.style](https://impeccable.style) is this product's primary design reference, and it
+applies to every prompt that produces something visible.** Read
+[`../docs/DESIGN_REFERENCES.md`](../docs/DESIGN_REFERENCES.md) once, before the first visual prompt.
+
+Three rules follow from it:
+
+1. **Look at the reference before you build, and look at your result afterwards.** Open
+   impeccable.style in a browser. Study the specific surface you are about to build — the value
+   relationships, the depth, the timing, the finish. Then build. Then compare side by side.
+
+2. **Loudness varies by surface; standard of finish does not.** Content surfaces (landing, gallery,
+   blocks, heroes, effects) apply it at full strength. The studio chrome applies it as craft only —
+   surface precision, glass on floating panels, micro-interaction feel — never as animated gradients
+   or decorative glow. `DESIGN_REFERENCES.md` § Applying it per surface has the table.
+
+3. **"Merely competent" is not done.** When a prompt asks you to judge whether output is shippable,
+   the bar is the reference, not the absence of bugs. If your version is only as good as a generic
+   implementation, say so and iterate rather than ticking the box.
+
+Never paste code from a reference. Understand the technique, then implement it against our schema,
+tokens, motion model, and reduced-motion policy — and run the licence check in
+`DESIGN_REFERENCES.md` § The licence check before adapting anything.
+
 ## While writing code
 
 - **The documents are the specification.** If one is wrong, say so, propose the edit, and change

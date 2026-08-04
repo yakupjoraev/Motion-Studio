@@ -61,6 +61,23 @@ Hard requirements, enforced by lint or review:
 
 Full list: [`docs/CODE_STANDARDS.md`](docs/CODE_STANDARDS.md).
 
+## Design references and licences
+
+The visual bar is set by [impeccable.style](https://impeccable.style) and the other references in
+[`docs/DESIGN_REFERENCES.md`](docs/DESIGN_REFERENCES.md). **Read that document before contributing
+anything visual.** It applies to every surface — landing, gallery, blocks, effects, and the studio
+chrome — with loudness varying by surface and the standard of finish never varying.
+
+Two hard rules:
+
+1. **Never paste code from a reference.** Study the technique, write it down in the block's doc
+   comment, then implement it against our schema, tokens, motion model and reduced-motion policy. A
+   verbatim paste fails review on three counts: it bypasses the registry contract, it hard-codes an
+   animation, and it may carry licence obligations nobody verified.
+2. **Verify the licence before adapting anything**, and record what you found in
+   `packages/blocks/LICENSES.md` with the date. If the terms are unclear, absent, or restrictive,
+   build from technique instead. CSS techniques are not copyrightable; specific source is.
+
 ## Adding a block to the registry
 
 1. `packages/blocks/src/<category>/<block-name>/` following the file layout in

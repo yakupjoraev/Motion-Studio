@@ -4,6 +4,8 @@
 
 ## Read first
 
+- `docs/DESIGN_REFERENCES.md` — § Applying it per surface. Marketing blocks are **maximum
+  loudness** — they are the product's actual output and carry the most design weight in the registry.
 - `docs/COMPONENT_LIBRARY.md` — § Catalogue (Marketing), § Writing a block
 - `docs/DESIGN_SYSTEM.md` — § Typography, § Elevation, § Radius (nested radius rule)
 - `docs/ANIMATION_SYSTEM.md` — § Preset catalogue
@@ -120,8 +122,11 @@ Tests: meta-tests plus
 - `headingLevel` prop produces the right tag
 
 Manual, and report:
-- Assemble a full landing page: navbar placeholder → hero → feature-grid → bento → pricing → 
-  testimonials → faq → cta. Look at it. Would you ship it? Fix defaults, not props.
+- Assemble a full landing page: navbar placeholder → hero → feature-grid → bento → pricing →
+  testimonials → faq → cta. Then open impeccable.style beside it. **Does the assembled page hold up
+  against the reference?** Fix defaults, not props, and say what you changed.
+- Judge specifically: card depth and layering, gradient quality, spacing rhythm between sections,
+  typographic tracking, and whether the hover states feel expensive or generic.
 - Every block at 360, 768, 1440
 - Three themes: `studio-dark`, `paper`, `brutal`
 - Reduced motion: both marquees fall back to something that looks intentional
@@ -137,5 +142,6 @@ Manual, and report:
 - [ ] `faq-accordion` JSON-LD in codegen only
 - [ ] `comparison-table` sticky on both axes, keyboard-scrollable
 - [ ] `newsletter-form` takes a handler prop with an explanatory codegen comment
-- [ ] Full-page assembly reviewed and judged; defaults fixed where needed
+- [ ] Full-page assembly compared side by side with impeccable.style and judged against it;
+      defaults fixed where needed and changes reported
 - [ ] Meta-tests pass; axe clean; usable at 360 px

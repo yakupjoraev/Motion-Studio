@@ -5,6 +5,9 @@
 ## Read first
 
 - `docs/DESIGN_SYSTEM.md` — **all of it**. This prompt implements that document literally.
+- `docs/DESIGN_REFERENCES.md` — the tokens are calibrated against impeccable.style. A token that
+  drifts downward in quality degrades all 62 blocks at once, so this is the highest-leverage visual
+  decision in the project.
 - `docs/ACCESSIBILITY.md` — § Contrast
 - `docs/THEME_ENGINE.md` — § Why it works that way, § Generated output
 

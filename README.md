@@ -130,6 +130,19 @@ TanStack Query/Table · Storybook 8 · Vitest · Playwright · Biome · Turborep
 
 Rationale per choice: [`docs/TECH_STACK.md`](docs/TECH_STACK.md).
 
+## Design references
+
+The visual bar for this project is set by [impeccable.style](https://impeccable.style), with
+secondary influence from [Aceternity UI](https://ui.aceternity.com),
+[Magic UI](https://magicui.design), and [React Bits](https://reactbits.dev). The chrome's density and
+restraint follow Linear and Figma.
+
+Effects here are implemented independently against this project's schema, tokens, motion model and
+reduced-motion policy — the techniques are studied, not the source copied. Each block's doc comment
+names its influence and explains its technique; verified licences are recorded in
+`packages/blocks/LICENSES.md`. The full workflow is in
+[`docs/DESIGN_REFERENCES.md`](docs/DESIGN_REFERENCES.md).
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). Conventional Commits, strict types, tests with

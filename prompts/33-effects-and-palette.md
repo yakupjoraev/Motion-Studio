@@ -4,6 +4,8 @@
 
 ## Read first
 
+- `docs/DESIGN_REFERENCES.md` — **all of it.** This is the prompt that sets the visual bar for the
+  whole effects category, and the prompt that runs the licence check for the first time.
 - `docs/COMPONENT_LIBRARY.md` — § Catalogue (Effects), the `EffectInstance` shape
 - `docs/PRODUCT.md` — § 2. Left panel, § 4. Inspector (Motion), § 8. Command palette
 - `docs/SHORTCUTS.md` — § Implementation (the registry), § Command palette
@@ -45,7 +47,40 @@ packages/hooks/src/shortcuts/
 
 ## Constraints
 
-### Effects
+### Before writing any effect: the licence check
+
+This is the first prompt that adapts from a visual reference, so it owns the check.
+
+1. Verify impeccable.style's current terms yourself — repository, site footer, any terms page.
+2. Create `packages/blocks/LICENSES.md` recording, for every reference in
+   `DESIGN_REFERENCES.md`: the name, the URL, the licence as you actually found it, and today's date.
+3. **If the terms are unclear, absent, or restrictive: do not adapt any code.** Implement each
+   technique from your own understanding of how the effect works. CSS techniques are not
+   copyrightable; specific source is. Note in each block's doc comment that it was built from
+   technique rather than source.
+4. Report in your session summary what you found. Do not assume any answer — including any summary
+   written in our own docs, which were authored before this check happened.
+
+Add a `## Design references` section to the root `README.md` crediting the influences openly.
+
+### Effects — the visual bar
+
+This category **is** the reference's vocabulary, so it applies at full strength. Before building
+each effect: open impeccable.style, find the closest treatment, and study the technique — which
+layers, which properties, which timing, what makes it read as expensive rather than as a CSS demo.
+
+Then write the technique down in the block's doc comment (see the template in
+`DESIGN_REFERENCES.md` § Attribution) and implement it against our constraints.
+
+Our version must additionally be all eight things from `DESIGN_REFERENCES.md` § What we are aiming
+for: schema-parameterised, live-tunable, reduced-motion correct, within the scheduler caps,
+exportable as readable source, contrast-checked, correct in light *and* dark, and accessible.
+
+The last two are where reference implementations usually fail. Most effect libraries are dark-only
+and never consider whether the effect destroys text contrast. Check every effect on a light surface
+and over real text.
+
+### Effects — mechanics
 
 An effect is an absolutely-positioned layer inside its target with `pointer-events: none`, ordered by
 `layer` (`behind`/`front`) and composited with `blendMode` and `opacity`.
@@ -136,6 +171,12 @@ Manual, and report each:
 
 ## Done when
 
+- [ ] Licence check performed and recorded in `packages/blocks/LICENSES.md` with today's date;
+      findings reported
+- [ ] `README.md` credits the design references
+- [ ] Every effect's doc comment explains its technique and its design reference
+- [ ] Every effect compared side by side with the reference, and judged — not just shipped
+- [ ] Every effect checked on a light surface and over real text for contrast damage
 - [ ] 13 effects, CSS-only except the two heavy ones, all with static reduced variants
 - [ ] Motion panel with live preset previews and working curve editors
 - [ ] Conflict chips with reasons and a resolve action

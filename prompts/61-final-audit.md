@@ -98,7 +98,28 @@ git count-objects -vH                              # repo size; report it
 Check: `.gitignore` covers everything; no build output committed; no `node_modules`; no `.env`; no
 large binaries beyond the demo GIFs.
 
-### 5. Dependency audit
+### 5. Design references and licences
+
+- `packages/blocks/LICENSES.md` exists, lists every reference from `docs/DESIGN_REFERENCES.md` with
+  the licence **as verified** and the verification date
+- Every block or preset whose design came from a reference has a doc comment naming it and explaining
+  the technique — iterate the registry and report how many are missing one
+- `README.md` has a `## Design references` section crediting the influences
+- No verbatim adaptation from a source whose licence was not verified. If any is in doubt, treat it as
+  **blocking** — a licence problem in a public MIT repo is the one finding that cannot ship.
+
+Then the visual bar audit, which is the point of having a reference at all:
+
+- Open impeccable.style beside the landing page, the block gallery, and a full assembled document.
+- For each, answer honestly: **does ours hold up?**
+- Report per surface: holds up / close / does not. For anything that does not, either fix it or record
+  it as a known limitation with a reason.
+- Screenshot the studio with a document open. Does your eye go to the user's design or to our chrome?
+  If the chrome pulls attention, it is too loud — fix it.
+
+A clean report here with no findings on a project this size is not credible. Name what is weakest.
+
+### 6. Dependency audit
 
 ```bash
 pnpm audit
@@ -111,7 +132,7 @@ pnpm dedupe --check
 - Every dependency in `package.json` is actually used (`depcheck` or by hand)
 - Every dependency justified in `TECH_STACK.md` — anything not listed is a finding
 
-### 6. Dead code
+### 7. Dead code
 
 ```bash
 pnpm exec knip        # or ts-prune
@@ -120,7 +141,7 @@ pnpm exec knip        # or ts-prune
 Unused exports, unreferenced files, unused types. Five months of building always leaves some. Delete
 what is genuinely dead; report the count.
 
-### 7. Cross-browser
+### 8. Cross-browser
 
 The E2E suite covers Chromium, Firefox, and WebKit. Manually verify what automation misses:
 
@@ -131,7 +152,7 @@ The E2E suite covers Chromium, Firefox, and WebKit. Manually verify what automat
 Report anything that differs. Safari's `backdrop-filter` handling in particular is worth real attention
 given how much glass is in the design system.
 
-### 8. Cold read
+### 9. Cold read
 
 Read the codebase as a stranger would. Pick three packages you did not write most recently and read them
 top to bottom. Report:
@@ -139,7 +160,7 @@ top to bottom. Report:
 - Anything that contradicts a doc
 - Anything you would flag in review
 
-### 9. Cut features
+### 10. Cut features
 
 `ROADMAP.md` § If time runs short lists what could be cut. For anything actually cut: is it documented
 in the README as not present, rather than silently missing? A README claiming a feature that was cut is
@@ -191,6 +212,11 @@ Everything green. Every grep reported. Every acceptance criterion evidenced.
 - [ ] Doc/code divergences found and fixed; the shortcut and count checks turned into tests
 - [ ] Git history clean of tooling and assistant attribution — verified by grep, zero results
 - [ ] No secrets, no local paths, no committed build output
+- [ ] `packages/blocks/LICENSES.md` complete with verified licences and dates; nothing adapted from an
+      unverified source
+- [ ] Every reference-derived block and preset has an attribution doc comment; missing count reported
+- [ ] Visual bar audit performed against impeccable.style per surface; verdict reported per surface
+- [ ] Chrome-loudness test performed on a real document screenshot
 - [ ] Dependency audit clean; every dependency used and justified
 - [ ] Dead code removed; count reported
 - [ ] Cross-browser manual pass performed; differences reported
