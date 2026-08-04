@@ -23,8 +23,11 @@ it does not belong in the codebase yet.
 
 ## Entry format
 
+`ADR-000` is reserved for this template and is never a real entry, so the example below cannot
+collide with a future decision. Real entries start at 001.
+
 ```markdown
-## ADR-014 — Export generation runs on the main thread
+## ADR-000 — Export generation runs on the main thread   (illustrative)
 
 **Date** 2026-04-02 · **Prompt** 45 · **Status** Accepted
 
@@ -56,6 +59,9 @@ starts, so the 81 ms is not on the interaction path.
   IR alone was 12 ms round-trip.
 - Incremental generation: no measured need; would add cache-invalidation surface.
 ```
+
+The numbers in that example are illustrative, not measured. Prompt 45 makes the real measurement and
+writes the real entry — do not copy these figures into it.
 
 For an owner decision, replace `Criterion`/`Measurement` with:
 
@@ -96,6 +102,7 @@ them without reading the reasoning first:
 | Overlays outside the scene transform | `CANVAS.md` § DOM structure |
 | CSS variables for theming, not class swapping | `THEME_ENGINE.md` § Why it works that way |
 | Tailwind as the styling and export target | `TECH_STACK.md` § Tailwind CSS v4 |
+| No styling option in export — Tailwind is the IR's model | `EXPORT_ENGINE.md` § There is no styling option |
 | Zustand + Immer over Redux / Jotai / Valtio | `TECH_STACK.md` § Deliberately not used |
 | dnd-kit over HTML5 drag and React DnD | `DRAG_AND_DROP.md` § Why dnd-kit |
 | CodeMirror over Monaco | `TECH_STACK.md` § Deliberately not used |
@@ -148,3 +155,77 @@ done-when checklist. One prompt per session.
 - One large prompt: exceeds usable context; produces invention where detail runs out.
 - Documentation alongside code: the boundaries between packages are the hardest part and are
   cheapest to get right before anything depends on them.
+
+## ADR-002 — No styling option in the export engine
+
+**Date** 2026-08-04 · **Prompt** — · **Status** Accepted
+
+### Question
+`ExportOptions` originally offered `styling: 'tailwind' | 'css-modules' | 'inline'`. Can the export
+engine honour all three?
+
+### Criterion
+An option ships only if implementing it is bounded by a new printer. Anything requiring a second IR
+pass is a roadmap item, not a switch — because an option that silently honours one value is worse
+than an absent option.
+
+### Measurement
+Traced what CSS Modules output would require against the six passes in `buildIR`. Pass 3
+(`generateClasses`) is Tailwind-specific end to end: utility vocabulary, Tailwind group ordering,
+breakpoint prefixes for responsive overrides, and build-time `tailwind-merge` conflict resolution.
+CSS Modules needs scoped name generation, a declaration model, media queries, and its own conflict
+rules — plus a parallel golden-file and compile suite. Estimated 3–5 weeks, versus roughly one week
+for a genuine printer such as the component-library target.
+
+### Decision
+Remove `styling` from `ExportOptions`. Tailwind is a stated v1 constraint. Record the real cost in
+`ROADMAP.md` § Post-v1 as v1.3.
+
+### Consequences
+- Accepted: users on CSS Modules or vanilla-extract cannot use the React/Next targets directly. The
+  HTML target gives them real CSS rules, flattened into one document.
+- Accepted: this narrows the addressable audience, and the honest framing is that it narrows it
+  *visibly* instead of via a broken switch.
+- Avoided: an option that appears to work and does not, which is the specific failure this ADR exists
+  to prevent.
+
+### Alternatives rejected
+- Ship the option honouring only `tailwind`: a documented lie.
+- Ship a naive CSS Modules path: would produce output that fails the compile test, which contradicts
+  the export engine's central guarantee.
+
+## ADR-003 — Plugin API resized from a minor release to 8–12 weeks
+
+**Date** 2026-08-04 · **Prompt** — · **Status** Accepted
+
+### Question
+`ROADMAP.md` listed a third-party plugin API as v1.2, implying a normal release. Is that estimate
+sound?
+
+### Criterion
+A post-v1 item's estimate is sound only if it accounts for the product's stated non-negotiables. Here
+that is `VISION.md`'s promise that nothing leaves the browser, and there is no telemetry.
+
+### Measurement
+Enumerated what a React error boundary actually contains: a crash. It does not prevent a
+third-party block from reading `localStorage`, calling `fetch`, reading the document from the store,
+or mutating DOM outside its subtree. Isolation therefore requires either an iframe with a serialized
+render protocol or a worker with a diff protocol — each of which changes the plugin authoring model
+from "write a React component" to "target a constrained API". Adding manifest, permissions, schema
+versioning, discovery, and host-migration handling puts the total at 8–12 weeks.
+
+### Decision
+Move to v1.5 with an explicit 8–12 week estimate and the reasoning recorded in `ROADMAP.md`. Ship
+nothing plugin-shaped in v1.
+
+### Consequences
+- Accepted: no third-party ecosystem in the medium term.
+- Accepted: user-authored custom blocks (v1.4) depend on this and inherit the delay.
+- Retained: the registry-interface seam means the *host* side is already ready, so the estimate covers
+  the guest side only. That seam is worth keeping regardless of whether plugins ever ship.
+
+### Alternatives rejected
+- Plugins without isolation: contradicts the local-first promise, and the promise is more valuable
+  than the feature.
+- Curated first-party-only extension: that is just the existing registry, so it is not a plugin API
+  and should not be called one.

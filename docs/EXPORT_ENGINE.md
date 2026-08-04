@@ -303,7 +303,6 @@ format.
 export interface ExportOptions {
   target: 'react' | 'next' | 'html' | 'json' | 'tokens'
   language: 'ts' | 'js'
-  styling: 'tailwind' | 'css-modules' | 'inline'
   singleFile: boolean
   includeMotion: boolean
   includeTheme: boolean
@@ -318,6 +317,25 @@ export interface ExportOptions {
 `scope: 'selection'` is what powers **Copy React** on a single node — the same pipeline, one
 subtree. There is exactly one code path, so the button in the context menu cannot drift from the
 export dialog.
+
+### There is no styling option, and that is a structural fact
+
+Tailwind is not a formatting preference applied at print time — it is the model the IR is built on.
+`generateClasses` (pass 3) resolves props and responsive overrides directly into Tailwind's class
+vocabulary and its group ordering, and `tailwind-merge` semantics resolve conflicts at build time so
+the output needs no runtime helper.
+
+CSS Modules or vanilla-extract output would need a different pass 3 entirely: scoped class-name
+generation, a declaration model instead of a utility vocabulary, media queries instead of breakpoint
+prefixes, and its own conflict resolution. That is a second IR pass, not a second printer.
+
+So the honest statement is: **Tailwind is a v1 constraint, not a v1 option.** The HTML target already
+proves the alternative is reachable — it generates real CSS rules from `usedClasses` — but it does so
+by flattening to a single document, which is not what a CSS Modules consumer wants.
+
+Anyone who wants this later should read [ROADMAP.md](ROADMAP.md) § Post-v1 for the actual scope
+before promising it to someone. Offering a `styling` option that silently only honours one value
+would be worse than not offering it.
 
 ## Formatting
 

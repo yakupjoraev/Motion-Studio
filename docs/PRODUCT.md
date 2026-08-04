@@ -170,8 +170,14 @@ See [EXPORT_ENGINE.md](EXPORT_ENGINE.md). Four targets:
 | **JSON** | `.motion` document, portable and re-importable |
 
 Export dialog shows a diff-style preview with syntax highlighting, a file tree for
-multi-file targets, per-file copy, and download-as-zip. Options: TypeScript/JavaScript,
-Tailwind/plain CSS, include theme tokens, include motion, format with Prettier.
+multi-file targets, per-file copy, and download-as-zip. Options: TypeScript/JavaScript, include
+theme tokens, include motion, extract props, single-file, image component, format with Prettier.
+
+**Styling output is Tailwind, and it is not an option.** The React and Next targets emit Tailwind
+classes; the HTML target emits real CSS rules generated from the classes actually used. There is no
+CSS-Modules switch, because Tailwind is the model the code generator is built on rather than a
+formatting choice made at print time — see [EXPORT_ENGINE.md](EXPORT_ENGINE.md) § There is no styling
+option, and [ROADMAP.md](ROADMAP.md) § Post-v1 for what adding one would actually cost.
 
 **Done when:** each target's output compiles in a fresh scaffold with zero manual edits, and a
 golden-file test suite locks the output for every block.

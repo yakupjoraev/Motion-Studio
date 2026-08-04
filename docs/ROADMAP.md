@@ -292,11 +292,57 @@ standards is worse than a smaller one that meets them.
 
 ## Post-v1
 
-Not scoped, listed so the v1 boundary is deliberate rather than accidental:
+Listed so the v1 boundary is deliberate rather than accidental, and **sized honestly** — an
+underestimate here is how a roadmap turns into a promise nobody can keep.
 
-- **v1.1** — user-authored custom blocks via a sandboxed schema
-- **v1.2** — plugin API for third-party blocks and presets
-- **v1.3** — Figma import (frames → blocks, best-effort)
-- **v1.4** — collaborative editing (Yjs; the normalized document model is already CRDT-friendly)
-- **v1.5** — a component-library export target (publishable npm package output)
-- **v2.0** — a hosted variant with accounts and sharing, if there is demand
+| | Item | Real size | What makes it that size |
+| --- | --- | --- | --- |
+| v1.1 | Figma import (frames → blocks, best-effort) | 2–3 weeks | Mapping an unconstrained node tree onto a constrained registry. Inherently lossy; the work is in the heuristics and in communicating what was dropped. |
+| v1.2 | Component-library export target (publishable npm package) | 1–2 weeks | Mostly a new printer plus a package scaffold. The IR already carries what is needed. |
+| v1.3 | Non-Tailwind styling output (CSS Modules / vanilla-extract) | 3–5 weeks | **A second `generateClasses` pass, not a printer.** Scoped class-name generation, a declaration model instead of a utility vocabulary, media queries instead of breakpoint prefixes, its own conflict resolution, and a parallel golden-file + compile suite. See `EXPORT_ENGINE.md` § There is no styling option. |
+| v1.4 | User-authored custom blocks | 4–6 weeks | Requires the sandbox below. Without it, a user-authored block is arbitrary code with full access to the page. |
+| v1.5 | Plugin API for third-party blocks and presets | **8–12 weeks** | See below. This is the one most likely to be underestimated. |
+| v2.0 | Collaborative editing (Yjs) | 6–10 weeks | The normalized document is genuinely CRDT-friendly, which is the hard half already solved. The rest is identity on every operation, presence, conflict UX, and infrastructure. |
+| v2.x | Hosted variant with accounts and sharing | A separate project | No backend exists. This is not an extension, it is a second system attached to this one. |
+
+### Why the plugin API is 8–12 weeks, not a release note
+
+The roadmap originally listed this as a minor version. That was wrong, and the reason is worth
+stating so nobody re-makes the estimate.
+
+Running third-party code in the canvas means solving isolation, and React error boundaries do not
+provide it. A boundary catches a crash; it does not stop a block from reading `localStorage`, calling
+`fetch`, reading the whole document off the store, or mutating the DOM outside its subtree. For a
+local-first tool whose premise is "nothing leaves your browser", shipping a plugin system without
+isolation would break the product's central promise.
+
+Real isolation needs one of:
+
+- **An iframe per plugin block** with a serialized render protocol — the plugin returns a description,
+  the host renders it. Costs: a message-passing layer, a constrained render vocabulary, per-frame
+  overhead, and events crossing the boundary. Interaction feel suffers.
+- **A worker with a virtual-DOM diff protocol** — better perf than iframes, more protocol to design,
+  and no DOM access at all in the plugin, which rules out most interesting effects.
+
+Both mean the plugin authoring model is **not** "write a React component". That is the part that
+makes this expensive: it is a new, smaller, documented API surface — not an opening of the existing one.
+
+Then, on top of isolation: a manifest format, a permission model, versioning against our schema,
+discovery, a review process if anything is distributed, and a migration story when the host's schema
+changes underneath installed plugins.
+
+**The registry-interface seam does make this possible** — `editor` already talks to an injected
+registry rather than importing blocks, so the host side is genuinely ready. That is worth something.
+It is the *guest* side that is 8–12 weeks.
+
+### What v1 deliberately keeps out of the way
+
+None of the above requires an architectural change now, which is the useful part:
+
+- Normalized document + patches → CRDT is reachable
+- Registry as an injected interface → a third-party registry is reachable
+- Schema-driven inspector → a plugin gets its UI free, once it can run safely
+- IR + printers → new framework targets are cheap
+- Migrations from v1 → schema evolution will not lose anyone's work
+
+So the correct v1 decision is to build none of it and break nothing that would make it possible.
