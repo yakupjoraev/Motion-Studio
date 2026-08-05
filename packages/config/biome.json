@@ -54,6 +54,7 @@
         "useConst": "error"
       },
       "correctness": { "noUnusedImports": "error", "noUnusedVariables": "error" },
+      "complexity": { "useLiteralKeys": "off" },
       "a11y": { "recommended": true },
       "nursery": {
         "useSortedClasses": { "level": "warn", "options": { "functions": ["cn", "cva"] } }

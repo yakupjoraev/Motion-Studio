@@ -16,5 +16,9 @@
     "@motion-studio/config": "workspace:*",
     "@vitest/coverage-v8": "^2.1.9",
     "vitest": "^2.1.9"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.6.1"
   }
 }

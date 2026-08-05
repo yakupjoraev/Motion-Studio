@@ -679,3 +679,170 @@ holds a hole.
   `FILE_FORMAT.md` § Testing asserts against.
 - Set the index to `null`: silently changes the array's length semantics from "n items" to "n slots",
   and every consumer would need a null check the schema does not describe.
+
+## ADR-014 — `assertDefined` returns the value; `invariant` narrows in place
+
+**Date** 2026-08-05 · **Prompt** 03 · **Status** Accepted
+
+### Question
+Prompt 03 lists `assertNever`, `invariant`, and `assertDefined` without signatures. TypeScript offers
+two shapes for the last one: an `asserts value is T` predicate, or a function returning `T`.
+
+### Criterion
+`noUncheckedIndexedAccess` is on and stays on (`CODE_STANDARDS.md` § Compiler configuration), so the
+dominant shape in this codebase is narrowing the result of an index access — `doc.nodes[id]`,
+`ladder[i]`, `ramp[step]`. The signature that serves that shape without forcing an intermediate
+variable wins. Where both work, prefer the one that composes.
+
+### Measurement
+An `asserts` signature cannot narrow an expression: `assertDefined(nodes[id], '…')` narrows nothing,
+because there is no name to narrow. It requires `const node = nodes[id]` first, at which point
+`if (!node) throw …` — the pattern `CODE_STANDARDS.md` § Banned already prescribes for the `!`
+exception — is shorter than the assertion call. A returning signature works in both positions:
+`const node = assertDefined(nodes[id], '…')`.
+
+The statement position is not left uncovered: `invariant(condition, message): asserts condition`
+handles narrowing a name, which is what an `asserts` signature is good at.
+
+### Decision
+```ts
+export function assertDefined<T>(value: T | null | undefined, message: string): T
+export function invariant(condition: unknown, message: string): asserts condition
+```
+
+### Consequences
+- Accepted: two functions that overlap in what they can express. They do not overlap in where they
+  can be used, which is the reason both exist.
+- Accepted: `assertDefined` is not an assertion function, so it will not narrow a variable in the
+  enclosing scope. `invariant` is there for that.
+
+### Alternatives rejected
+- `assertDefined` as `asserts value is NonNullable<T>`: cannot be applied to an index access, which
+  is the case it exists for.
+- Only `invariant`: every index access would need an intermediate variable, which is the boilerplate
+  `noUncheckedIndexedAccess` is already blamed for.
+
+## ADR-015 — The colour helpers take and return colour strings, not an RGB type
+
+**Date** 2026-08-05 · **Prompt** 03 · **Status** Accepted
+
+### Question
+`relativeLuminance` is WCAG-defined on sRGB channel values. Does `packages/utils` export an `Rgb`
+type for it, or does the function take a colour string like its neighbours?
+
+### Criterion
+A public type is justified by a caller that holds a value of that type. Prompt 00 § Do not forbids
+abstraction without one.
+
+### Measurement
+Grepped `docs/` for every documented call into this module: `contrastRatio(tokens[mode][fg],
+tokens[mode][bg])` (`ACCESSIBILITY.md` § Contrast tests — CSS colour strings from the token set),
+and `parseOklch(seed)` / `formatOklch(l, c, h)` / `clampChroma(c, l, h)`
+(`THEME_ENGINE.md` § Palette generation). No document holds an RGB triple, and no consumer package
+produces one — sRGB exists inside this module only as the space WCAG luminance is defined in.
+
+### Decision
+`relativeLuminance(color: string): number` and `contrastRatio(a: string, b: string): number`. The
+`Oklch` interface is exported, because `parseOklch` returns one and `THEME_ENGINE.md` destructures it.
+The sRGB conversion is module-private.
+
+### Consequences
+- Accepted: `relativeLuminance` re-parses its input on every call, so `contrastRatio` parses twice.
+  Two parses of a short string per contrast check, against a token set of ~48 colours checked once per
+  theme resolution, which `THEME_ENGINE.md` § Application already memoises on a config hash.
+- Accepted: a future caller that genuinely holds sRGB channels — a canvas pixel probe, say — would
+  need the private converter exported. That is a one-line change when a caller exists.
+
+### Alternatives rejected
+- Export `Rgb` and have `relativeLuminance` take it: adds a third colour representation to the public
+  surface with no caller, and makes the documented `contrastRatio(string, string)` call sites in
+  `ACCESSIBILITY.md` compose two functions instead of one.
+
+## ADR-016 — `deepEqual` compares JSON-shaped values with `Object.is` at the leaves
+
+**Date** 2026-08-05 · **Prompt** 03 · **Status** Accepted
+
+### Question
+`deepEqual` has no specified scope. Does it handle `Date`, `Map`, `Set`, `RegExp`, cyclic references,
+and class instances? And is `NaN` equal to `NaN`?
+
+### Criterion
+The values this function compares are document values. `FILE_FORMAT.md` defines the `.motion` file as
+JSON and § Testing requires `parse(serialize(doc))` to deep-equal `doc`. So the scope is exactly what
+survives a JSON round-trip; anything wider is a branch with no caller, and every branch has to be
+covered to hold the package's 90 % branch floor.
+
+### Measurement
+What JSON round-trips: `null`, boolean, number, string, array, plain object. What does not: `Date`
+(becomes a string), `Map`, `Set` (become `{}`), `RegExp` (becomes `{}`), `undefined` (dropped from
+objects, becomes `null` in arrays), a cycle (throws). `NaN` and `Infinity` serialise to `null`, so a
+document containing either is already invalid before `deepEqual` sees it.
+
+### Decision
+Compare `null`, booleans, numbers, strings, arrays, and plain objects. Leaves compare with
+`Object.is`, so `NaN` equals `NaN` and `+0` does not equal `-0`. Any other object type compares by
+reference, which is what `Object.is` gives it, and there is no cycle detection.
+
+### Consequences
+- Accepted: `deepEqual(new Date(0), new Date(0))` is `false`. A caller comparing dates is comparing
+  something that is not in the document model, and getting `false` is louder than getting a silently
+  date-aware answer from a function documented as JSON-shaped.
+- Accepted: a cyclic input overflows the stack rather than returning a result. Cycles cannot reach
+  this function from a parsed document, because `JSON.parse` cannot produce one.
+- Accepted: `Object.is` at the leaves means `+0 !== -0`. Both serialise to `0`, so a round-tripped
+  document never distinguishes them; a caller comparing pre-serialisation values can.
+
+### Alternatives rejected
+- Structural comparison of `Date`/`Map`/`Set`/`RegExp`: four branches, no caller, and each one has to
+  be tested to hold the branch floor — coverage bought for a case the document model cannot contain.
+- `===` at the leaves: makes `deepEqual(NaN, NaN)` false, so a document that somehow held `NaN` would
+  never compare equal to itself, which is a worse failure than the `-0` asymmetry.
+
+## ADR-017 — Biome's `useLiteralKeys` is off: it contradicts `noPropertyAccessFromIndexSignature`
+
+**Date** 2026-08-05 · **Prompt** 03 · **Status** Accepted
+
+### Question
+`complexity/useLiteralKeys`, on by default in Biome's recommended set, reported
+`nodes['a']` as simplifiable to `nodes.a`. Which of the two tools is right?
+
+### Criterion
+`CODE_STANDARDS.md` § Compiler configuration fixes `noPropertyAccessFromIndexSignature: true`, and
+prompt 02 § Constraints requires `base.json` to hold exactly those flags. A lint rule that
+contradicts a fixed compiler flag cannot be satisfied, so the question is not which is better but
+whether the contradiction is real.
+
+### Measurement
+Wrote the form the lint rule asks for and compiled it:
+
+```ts
+const nodes: Record<string, { id: string }> = { a: { id: 'a' } }
+export const value = nodes.a
+```
+
+```
+error TS4111: Property 'a' comes from an index signature, so it must be accessed with ['a'].
+```
+
+The rule's fix does not compile. Biome 1.9 offers no option to exempt index-signature types from the
+rule, so it cannot be narrowed — only turned off.
+
+### Decision
+`complexity/useLiteralKeys: "off"` in `packages/config/biome.json`.
+
+### Consequences
+- Accepted: `obj['literal']` on a type *without* an index signature is no longer flagged, so a
+  needlessly bracketed access can now reach `main`. `noPropertyAccessFromIndexSignature` does not
+  object to it either, so nothing catches it but review.
+- Accepted: the rule is off everywhere rather than in tests only. The document model is
+  `Record<NodeId, Node>` (`EDITOR_ENGINE.md` § Why normalized), so index-signature access is the
+  common shape in source as well as in tests, and a test-only override would be the narrower half of
+  the same contradiction.
+
+### Alternatives rejected
+- Drop `noPropertyAccessFromIndexSignature`: it is one of the flags `CODE_STANDARDS.md` fixes, and it
+  is the one that makes a missing key visible at the call site. Removing a compiler check to satisfy a
+  style rule inverts their value.
+- Restructure the code the rule flagged to use a `Map`: it was a test asserting that `assertDefined`
+  narrows an index access, which is the case the function exists for. Changing the subject of a test
+  to satisfy a lint rule tests the lint rule.
