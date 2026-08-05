@@ -325,7 +325,7 @@ pre-commit:
 pre-push:
   commands:
     typecheck: { run: pnpm typecheck }
-    unit:      { run: pnpm test:unit }
+    unit:      { run: pnpm test:unit }   # = turbo test; see below
 
 commit-msg:
   commands:
@@ -346,8 +346,14 @@ as the overrides for `app/` default exports and config files.
 `check:commit-msg` enforces Conventional Commits and rejects messages containing tooling or
 assistant attribution — the repository history should read as the work of its author.
 
-Hooks never run the full suite. A pre-commit hook that takes 40 seconds gets bypassed with
+Hooks never run a *slow* suite. A pre-commit hook that takes 40 seconds gets bypassed with
 `--no-verify`, and then it protects nothing.
+
+`test:unit` runs `turbo test` — every package's own suite, at each package's own configured environment.
+It does **not** force `--environment=node` across the workspace: that override silently reconfigures
+Vitest for packages that need `jsdom`, and it broke the moment `packages/theme` arrived with component
+tests. Measured, the whole suite is 4.9 s cold and 0.35 s on a warm Turborepo cache, so the split the
+override was reaching for buys nothing a hook would notice. See ADR-028.
 
 ## Dependabot
 

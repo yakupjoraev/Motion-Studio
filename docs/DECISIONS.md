@@ -1439,3 +1439,47 @@ twelve opaque `oklch()` strings.
   the gate over ten. Cutting eight is the owner's decision, not the implementer's.
 - Pick values that need repair and let the engine fix them: it would demonstrate the repair path, and it
   would ship ten presets that each raise a warning chip in the theme builder on load.
+
+## ADR-028 — `test:unit` stops forcing the node environment
+
+**Date** 2026-08-05 · **Prompt** 06 · **Status** Accepted
+
+### Question
+The root `test:unit` script was `turbo test -- --environment=node`, and `docs/DEVOPS.md` § Git hooks runs
+it on pre-push. `packages/theme` is the first package with component tests, which need `jsdom`. The
+override made its whole suite fail with `ReferenceError: document is not defined`, and the failing hook
+is what blocked the push.
+
+### Criterion (set before measuring)
+A pre-push hook has to be fast enough that nobody reaches for `--no-verify` — the reason the document
+gives for keeping the full suite out of hooks. So: if running every package's own suite is fast enough to
+stay in a hook, the override has no purpose and goes. If it is not, the split has to be preserved some
+other way.
+
+### Measurement
+`turbo test` across all 17 packages: **4.91 s cold, 0.35 s on a warm cache**. The pre-push hook as a
+whole, typecheck included, measured 9.05 s cold and 3.3 s warm.
+
+Nothing here is near the threshold the document is protecting against, and the override was buying no
+measurable time: it ran the same suites, only in the wrong environment.
+
+### Decision
+`test:unit` becomes `turbo test`. Each package's `vitest.config.ts` already declares its environment —
+`nodeConfig` for the pure packages, `reactConfig` for the ones that render — and that declaration is the
+single place the decision belongs. `docs/DEVOPS.md` § Git hooks is amended with the reasoning and the
+numbers.
+
+### Consequences
+- Accepted: the pre-push hook now runs every package's tests rather than a "unit" subset. At 0.35 s warm
+  that is not a cost, and it means a push cannot carry a red suite.
+- Accepted: `TESTING.md` § CI ordering still describes `unit` and `component` as separate stages. They are
+  not separate scripts today, because no package separates its test files by kind yet. When one does, the
+  split belongs in that package's config, not in a workspace-wide flag.
+- Accepted: a package that misconfigures its own environment now fails only its own suite, instead of
+  being overridden into passing or failing by a root script.
+
+### Alternatives rejected
+- Keep the override and exclude the jsdom packages by filter: a hand-maintained list of package names in
+  a root script, wrong again the next time a package changes environment.
+- Drop tests from pre-push and leave them to CI: the hook's whole value is catching a red suite before it
+  reaches a branch, and at 0.35 s there is nothing to trade away.
