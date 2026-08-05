@@ -1,0 +1,163 @@
+import { readFileSync, readdirSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { gzipSync } from 'node:zlib'
+import { render } from '@testing-library/react'
+import { describe, expect, it } from 'vitest'
+
+import { ICON_NAMES, type IconName } from './icon-name'
+import { ICON_REGISTRY } from './registry'
+
+/** The groups `prompts/07-icons.md` § The set enumerates, so a missing group fails rather than goes unnoticed. */
+const GROUPS: Readonly<Record<string, readonly IconName[]>> = {
+  editor: [
+    'cursor',
+    'hand',
+    'move',
+    'resize',
+    'duplicate',
+    'delete',
+    'lock',
+    'unlock',
+    'eye',
+    'eye-off',
+    'undo',
+    'redo',
+    'copy',
+    'paste',
+    'scissors',
+    'group',
+    'ungroup',
+  ],
+  layout: [
+    'layout-grid',
+    'layout-columns',
+    'layout-rows',
+    'align-left',
+    'align-center-h',
+    'align-right',
+    'align-top',
+    'align-center-v',
+    'align-bottom',
+    'distribute-h',
+    'distribute-v',
+    'padding',
+    'margin',
+    'gap',
+  ],
+  style: [
+    'palette',
+    'droplet',
+    'gradient',
+    'blur',
+    'shadow',
+    'border',
+    'radius',
+    'opacity',
+    'type',
+    'sparkles',
+    'noise',
+  ],
+  motion: [
+    'play',
+    'pause',
+    'replay',
+    'zap',
+    'wave',
+    'spring',
+    'curve',
+    'timeline',
+    'cursor-follow',
+  ],
+  navigation: [
+    'chevron-up',
+    'chevron-down',
+    'chevron-left',
+    'chevron-right',
+    'plus',
+    'minus',
+    'x',
+    'check',
+    'search',
+    'settings',
+    'more-horizontal',
+    'more-vertical',
+    'external-link',
+    'panel-left',
+    'panel-right',
+  ],
+  blocks: [
+    'hero',
+    'grid',
+    'card',
+    'list',
+    'table',
+    'form',
+    'navbar',
+    'footer',
+    'image',
+    'video',
+    'code',
+  ],
+  files: ['file', 'folder', 'download', 'upload', 'save', 'export', 'history'],
+  status: ['info', 'warning', 'error', 'success', 'loading'],
+}
+
+const SOURCE_DIR = dirname(fileURLToPath(import.meta.url))
+
+const iconModules = (): string[] =>
+  readdirSync(SOURCE_DIR)
+    .filter((file) => file.endsWith('.tsx'))
+    .filter((file) => !file.endsWith('.test.tsx') && file !== 'create-icon.tsx')
+    .map((file) => file.replace('.tsx', ''))
+
+describe('ICON_REGISTRY', () => {
+  it.each(ICON_NAMES)('renders %s without throwing', (name) => {
+    const Icon = ICON_REGISTRY[name]
+    const { container } = render(<Icon />)
+
+    expect(container.querySelector('svg')).not.toBeNull()
+  })
+
+  it('has an entry for every icon module on disk', () => {
+    // The half a derived type cannot check: a new file that nobody registered.
+    expect([...iconModules()].sort()).toEqual([...ICON_NAMES].sort())
+  })
+
+  it('carries the 89 icons the prompt enumerates', () => {
+    expect(ICON_NAMES).toHaveLength(89)
+  })
+
+  it.each(Object.entries(GROUPS))('covers every %s icon', (_group, names) => {
+    for (const name of names) {
+      expect(ICON_REGISTRY[name], name).toBeDefined()
+    }
+  })
+
+  it('accounts for every name in exactly one group', () => {
+    const grouped = Object.values(GROUPS).flat()
+
+    expect(new Set(grouped).size).toBe(grouped.length)
+    expect([...grouped].sort()).toEqual([...ICON_NAMES].sort())
+  })
+})
+
+describe('the eager registry stays affordable', () => {
+  it('keeps the whole set under 8 kB gzipped', () => {
+    // Source, not bundle: source carries the comments and formatting a bundler strips, so this is a
+    // conservative bound on the shipped size. Prompt 07 makes the 8 kB budget the condition on the eager
+    // decision — if it is ever exceeded, the decision is revisited with a measurement, not silently
+    // switched to lazy loading.
+    const sources = [...iconModules(), 'registry', 'create-icon']
+      .map((name) => {
+        const extension = name === 'registry' ? '.ts' : '.tsx'
+
+        return readFileSync(join(SOURCE_DIR, `${name}${extension}`), 'utf8')
+      })
+      .join('\n')
+
+    const gzipped = gzipSync(Buffer.from(sources)).byteLength
+
+    expect(gzipped, `${gzipped} bytes`).toBeLessThan(8 * 1024)
+  })
+})
