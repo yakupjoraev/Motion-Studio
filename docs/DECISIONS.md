@@ -1068,3 +1068,374 @@ rewrite would break that comparison in a way the diff makes hard to see.
   would have to carry a git-config instruction that a gate cannot check.
 - Relax Biome to accept either line ending: the formatter would then produce different bytes on
   different platforms, and `pnpm lint` would stop being a statement about the repository.
+
+## ADR-021 — The theme's motion scale and the environment's are two variables
+
+**Date** 2026-08-05 · **Prompt** 06 · **Status** Accepted
+
+### Question
+`THEME_ENGINE.md` § Motion scale had the reduced-motion media query and `applyTheme` writing the same
+custom property, `--ms-motion-scale`. `applyTheme` writes with `style.setProperty` on the root
+element. Does the media query still win?
+
+### Criterion (set before measuring)
+`ENGINEERING_CONTRACT.md` § 1.6: `prefers-reduced-motion` is honoured everywhere, no exceptions. So:
+with the OS preference set to reduce, a resolved duration must be `0` **after** a theme is applied. If
+it is not, the single-variable design is wrong regardless of how it reads.
+
+### Measurement
+Chrome headless with `--force-prefers-reduced-motion`, `matchMedia('(prefers-reduced-motion: reduce)')`
+confirming `true`, reading `getComputedStyle` after an inline `setProperty`:
+
+| Form | Resolved duration |
+| --- | --- |
+| One shared `--ms-motion-scale`, media query sets `0`, theme writes `1` inline | `calc(240ms * 1)` |
+| Two factors: theme writes `--ms-motion-scale: 1`, media query sets `--ms-reduced-motion: 0` | `calc(240ms * 1 * 0)` |
+
+The first form fails the criterion outright: an inline declaration outranks every author rule,
+including one inside a media query, so applying *any* theme returned a reduced-motion user to full
+animation — silently, and on the very code path the document called "not a separate branch".
+
+### Decision
+Durations are `calc(<base>ms * var(--ms-motion-scale) * var(--ms-reduced-motion))`.
+`--ms-motion-scale` is the theme's factor and is what `applyTheme` writes. `--ms-reduced-motion`
+defaults to `1` in `:root` and is set to `0` by the media query; the theme engine never writes it.
+`THEME_ENGINE.md` § Motion scale and its § Variable groups table are corrected to match, and
+`packages/tokens/src/build/to-css.ts` emits the factored form.
+
+### Consequences
+- Accepted: two variables where the document described one, and a `calc()` with two multiplications in
+  every duration. The cost is one extra custom property; the alternative was a broken accessibility
+  guarantee.
+- Accepted: the studio's "preview reduced motion" toggle writes `--ms-reduced-motion: 0` inline, and
+  that inline write is *also* the only way to override an OS preference in the other direction. That
+  is deliberate and confined to the preview toggle.
+- Accepted: `motionScale: 0` and the media query now zero durations independently. Either alone is
+  sufficient, which is the property the document wanted.
+
+### Alternatives rejected
+- Have `applyTheme` read `matchMedia` and fold the environment into the value it writes: the engine
+  would then have to re-resolve and rewrite on every preference change, and a scoped `<ThemeScope>`
+  would need the same listener. CSS already does this correctly for free.
+- Write the variable on a class or attribute instead of inline: `applyTheme` accepts any element for
+  scoped themes, so the values have to be inline on that element. Not available.
+
+## ADR-022 — Hue angles and chroma for the six `NeutralHue` families
+
+**Date** 2026-08-05 · **Prompt** 06 · **Status** Accepted
+
+### Question
+`THEME_ENGINE.md` § ThemeConfig names six neutral families — `slate`, `zinc`, `stone`, `gray`, `warm`,
+`cool` — and no document gives any of them a hue angle. `packages/tokens` ships exactly one neutral
+ramp, at hue 265. What are the other five?
+
+### Criterion (set before measuring)
+1. `slate` **is** the shipped `NEUTRAL` ramp, because `studio-dark` is the default preset and the
+   default must not change what prompt 04 already generated and contrast-verified.
+2. No two families may resolve to the same twelve strings — a name that renders identically to another
+   name is a control with no effect.
+3. Every family must pass the full `TEXT_PAIRS` and `UI_PAIRS` gate in both modes, at every step the
+   semantic map references. A family that needs contrast repair to be usable is not a neutral.
+4. The set must cover both temperature directions, since the names promise it: at least two families
+   warmer than `slate` and at least two cooler or equal.
+
+### Measurement
+Hue at neutral chroma is a small effect by construction — `REFERENCE_CHROMA.neutral` is 0.014 — so
+criterion 2 is met by hue *or* by chroma. `gray` takes chroma 0, which makes it the one family that is
+achromatic at every step and therefore distinct from all five others regardless of angle.
+
+Assigned, then verified against criteria 2 and 3 by `resolve/neutral.test.ts`:
+
+| Family | Hue | Chroma multiplier | Reads as |
+| --- | --- | --- | --- |
+| `slate` | 265 | 1 | The shipped ramp. Cool blue-grey |
+| `cool` | 230 | 1.15 | Distinctly cool, toward cyan |
+| `zinc` | 285 | 0.7 | Barely cool, toward violet |
+| `gray` | 0 | 0 | Achromatic |
+| `stone` | 75 | 0.7 | Barely warm |
+| `warm` | 45 | 1.15 | Distinctly warm, toward amber |
+
+The warm/cool pairs mirror each other in strength (0.7 for the subtle pair, 1.15 for the pronounced
+one), so the control reads as a temperature axis with a neutral centre rather than six unrelated names.
+All six pass the gate in both modes; the measured minima are in the test's own assertions.
+
+### Consequences
+- Accepted: these are the implementer's angles, not the owner's. The criteria are stated, so a
+  disagreement lands on one row and re-derives that family rather than the whole table.
+- Accepted: `gray` at chroma 0 cannot express `accentHueShift` on its neutrals — there is no chroma to
+  shift. That is what "achromatic" means, and it is the point of offering it.
+- Accepted: the differences between `zinc`, `slate` and `stone` are deliberately small. At 0.014 peak
+  chroma no neutral family can be loud, and one that were would stop being a neutral.
+
+### Alternatives rejected
+- Copy Tailwind's neutral hues: their scales are tuned in a different colour space against a different
+  lightness ladder, so the numbers would not transfer and the names would imply a match we had not
+  verified.
+- Offer one neutral and drop the control: it is in `ThemeConfig` in the document, and cutting a
+  documented control is the owner's decision, not the implementer's.
+
+## ADR-023 — A seed carries relative saturation, not absolute chroma
+
+**Date** 2026-08-05 · **Prompt** 06 · **Status** Accepted
+
+### Question
+`THEME_ENGINE.md` § Palette generation says the seed's lightness picks which step becomes `accent` and
+is otherwise ignored, and its snippet derives chroma as `CHROMA_CURVE[i] * saturation *
+(c / REFERENCE_CHROMA)`. Two problems. The snippet is dimensionless where `clampChroma` wants absolute
+chroma — at `c = REFERENCE_CHROMA` it asks for chroma 1.0 and every step clips to the boundary. And
+`REFERENCE_CHROMA` is a per-hue table for the seven shipped hues, while a seed may be any hue at all.
+What does the seed's chroma actually mean?
+
+### Criterion (set before measuring)
+1. Seeding with a step of a shipped ramp must reproduce that ramp, to the three decimals the tables in
+   `DESIGN_SYSTEM.md` carry. The document asserts this property — "the shipped ramps and a generated
+   palette have the same character" — so it is testable, not aspirational.
+2. Both accent steps the semantic table fixes must be reachable from a legal seed by the
+   seed-lightness rule: **600** in light and **400** in dark (ADR-019).
+3. The rule must be defined for any hue, without a per-hue table.
+
+### Measurement
+The gamut ceiling moves with lightness far more than the curve does: at 70 % lightness the widest
+violet is 0.164 and at 58 % it is 0.241. `violet.400` and `violet.500` are therefore *both* as
+saturated as their own lightness allows while differing by 0.073 in absolute chroma. Read absolutely,
+the same colour picked from the light end of a ramp generates a duller ramp than picked from the middle
+— which fails criterion 1 by construction.
+
+Reading it relatively — `seedSaturation = chroma / (0.95 × gamutBoundary(lightness, hue))` — and then
+deriving `chroma[i] = min(seedSaturation × 0.95 × gamutBoundary(L₅₀₀, hue) × CHROMA_CURVE[i],
+0.95 × gamutBoundary(Lᵢ, hue))`, measured worst-case chroma delta against the shipped ramps:
+
+| Seed | Relative saturation | Accent step | Worst Δchroma vs shipped |
+| --- | --- | --- | --- |
+| `violet.400` | 1.000 | 400 | 0.0005 |
+| `violet.500` | 1.000 | 500 | 0.0005 |
+| `oklch(46.5% 0.2592 285)` | 1.000 | 600 | 0.0005 |
+| `oklch(70% 0.156 285)` | 1.000 | 400 | 0.0005 |
+| slate neutral | 0.064 | — | 0.00000 |
+
+0.0005 is one unit in the last digit the shipped tables carry, so those are the same numbers. The
+neutral family reproduces `NEUTRAL` exactly. An earlier form that rode the ceiling at every step and
+dropped `CHROMA_CURVE` was measured at 0.030 and discarded.
+
+`REFERENCE_CHROMA[hue]` falls out as a special case: it *is* `0.95 × gamutBoundary(L₅₀₀, hue)`, which is
+how `DESIGN_SYSTEM.md` defines it. The generalised form needs no table.
+
+### Decision
+`generateRamp` extracts three things from a seed: its hue, its **relative** saturation, and — through
+`accentStepFor` — the step nearest its lightness. The peak chroma is that relative saturation applied
+to the hue's own reference chroma, and each step is the curve through that peak, clamped to its own
+ceiling. `packages/theme/src/resolve/generate-ramp.ts` states the reasoning next to the code.
+
+The two studio presets take seeds that are fully saturated for their lightness, so each selects its
+documented accent step while reproducing `VIOLET`: `oklch(46.5% 0.2592 285)` for light,
+`oklch(70% 0.156 285)` for dark.
+
+### Consequences
+- Accepted: `studio-light` and `studio-dark` carry different seed strings although
+  `THEME_ENGINE.md` § Presets calls them "same palette, light mode". They generate the *same ramp* —
+  the seeds differ only in the lightness that selects the accent step, which is precisely what the
+  document says lightness is for.
+- Accepted: a seed that is not fully saturated for its lightness generates a proportionally duller
+  ramp. `violet.600` measures 0.883 and produces a visibly duller violet than the shipped table. That
+  is correct behaviour, not a defect: it *is* less saturated than its lightness allows.
+- Accepted: the document's snippet is superseded by this. `THEME_ENGINE.md` § Palette generation keeps
+  its three numbered details, which are what the function actually implements.
+
+### Alternatives rejected
+- Take the snippet literally: every generated ramp rides the gamut boundary and no seed's saturation
+  survives. Measured at 0.030 worst-case delta and visibly wrong.
+- Keep `REFERENCE_CHROMA` as a lookup and fall back to violet's for unlisted hues: a seed's ramp would
+  then depend on whether its hue happened to be one of seven, which nothing could explain to a user.
+
+## ADR-024 — `scaleRatio` and `borderStyle` are exposed but do not regenerate the scale
+
+**Date** 2026-08-05 · **Prompt** 06 · **Status** Accepted
+
+### Question
+`ThemeConfig.typography` carries `baseSize` and `scaleRatio`, and `ThemeConfig.surface` carries
+`borderStyle`. `THEME_ENGINE.md` § Variable groups lists `--ms-font-*` as "Family + size base + ratio"
+and `--ms-text-*` as "Computed size/line-height pairs", and lists no variable at all for border style.
+What do these three controls actually change?
+
+### Criterion (set before measuring)
+`DESIGN_SYSTEM.md` § Scale is the specification for the type scale. A control may not contradict it. So:
+if a control can be implemented without changing any value that document fixes, implement it; if it
+cannot, expose the value and escalate rather than invent a formula.
+
+### Measurement
+The shipped scale is not a constant-ratio progression. Measured step-to-step ratios across the twelve
+fixed sizes:
+
+```
+10 → 11 → 12 → 14 → 16 → 18 → 22 → 28 → 36 → 48 → 64 → 80
+   1.10  1.09  1.17  1.14  1.13  1.22  1.27  1.29  1.33  1.33  1.25
+```
+
+They run from 1.09 to 1.33. No single `scaleRatio` reproduces the table, and 14 × 1.2 = 16.8 where the
+document fixes `md` at 16. Regenerating geometrically would therefore replace an authored optical table
+with a computed one — which the criterion forbids.
+
+`baseSize` **can** be implemented without contradiction: scaling every fixed size and line height by
+`baseSize / 14` preserves the authored proportions exactly, and tracking is in `em` so it is already
+proportional and needs no change.
+
+### Decision
+- `baseSize` scales the twelve fixed `--ms-text-*` steps and their line heights by `baseSize / 14`. The
+  two fluid `display-*` steps are `clamp()` over viewport units — content-page typography rather than
+  studio density — and are emitted unchanged.
+- `scaleRatio` is emitted as `--ms-font-scale-ratio` and changes no shipped step. It is data for
+  consumers that build their own steps and for the theme builder's readout.
+- `borderStyle` becomes `--ms-border-width`, by a stated rule rather than a document: `hairline` is one
+  device pixel (`1px`), `none` is absent (`0px`), and `solid` is the next integer width that reads as a
+  deliberate rule rather than a hairline (`2px`).
+
+### Consequences
+- Accepted: **`scaleRatio` is inert.** A user moving that control sees nothing change. This is the one
+  item in this entry the owner should read as an open gap rather than a derivation — see the escalation
+  in the session report. The alternative was to invent a regeneration formula that contradicts
+  `DESIGN_SYSTEM.md` § Scale.
+- Accepted: `--ms-border-width` is the implementer's mapping. `1px` and `0px` follow from the words;
+  `2px` for `solid` does not, and is the weakest number in this session.
+- Accepted: `baseSize: 16` produces one-decimal sizes such as `11.4px`. Sub-pixel font sizes render
+  fine and rounding to integers would collide adjacent steps.
+
+### Alternatives rejected
+- Regenerate the scale geometrically from `baseSize` and `scaleRatio`: contradicts the measured table
+  and would silently change every block's typography.
+- Drop the two controls from `ThemeConfig`: they are in the document, and cutting a documented control
+  is the owner's decision.
+
+## ADR-025 — The five font pairings
+
+**Date** 2026-08-05 · **Prompt** 06 · **Status** Accepted
+
+### Question
+`THEME_ENGINE.md` § ThemeConfig types `pairing: FontPairingId` as `'geist' | 'inter-mono' |
+'satoshi-jet' | ...`. Three ids and an ellipsis. What is the set?
+
+### Criterion (set before measuring)
+1. `geist` is `DESIGN_SYSTEM.md` § Families verbatim — it is the shipped pairing and the default.
+2. The two named ids keep their names and get the stacks their names state.
+3. Every pairing supplies all three roles (`sans`, `display`, `mono`) and ends in a generic keyword,
+   because `FONT_FAMILY` in `packages/tokens` does and CSS requires the keyword.
+4. The set closes with an option that needs no downloaded font, so a document can be built and exported
+   with zero font payload.
+
+### Decision
+Five: `geist` (the shipped pairing), `inter-mono` (Inter / JetBrains Mono), `satoshi-jet` (Satoshi /
+JetBrains Mono), `sohne-berkeley` (Söhne / Berkeley Mono), and `system`. The table is in
+`packages/theme/src/resolve/typography.ts` with a label per pairing for the theme builder's dropdown.
+
+### Consequences
+- Accepted: four of the five reference fonts this repository does not yet ship. `DESIGN_SYSTEM.md`
+  § Families requires self-hosting through `next/font`, so a pairing is not usable until its files are
+  added — the ids and stacks are correct, the assets are a later prompt's work. `system` and `geist`
+  work today.
+- Accepted: Söhne and Berkeley Mono are commercially licensed. Naming an id is not distributing a font,
+  but whoever adds the files owes the licence check in `DESIGN_REFERENCES.md` § The licence check.
+- Accepted: the ellipsis in the document meant the set was open. Five is the implementer's closure.
+
+### Alternatives rejected
+- Ship only `geist` and `system`: the document names three ids, and dropping two named ones is a scope
+  cut, which is the owner's decision.
+
+## ADR-026 — The system colour preference is CSS, not the blocking script
+
+**Date** 2026-08-05 · **Prompt** 06 · **Status** Accepted
+
+### Question
+Prompt 06 requires the blocking colour-mode script to be under 300 bytes and to "not reference anything
+outside `document` and `localStorage`". Resolving a `system` preference before first paint appears to
+need `matchMedia`, which is neither.
+
+### Criterion (set before measuring)
+Both constraints hold, and there is no flash of the wrong theme — including on a first visit, where
+nothing is stored yet. A solution that satisfies the byte limit by flashing has not solved the problem
+the script exists for.
+
+### Measurement
+The generated stylesheet already emits a full dark block. Emitting it a second time under
+`@media (prefers-color-scheme: dark)` for `:root:not([data-color-mode])` costs 33 declarations and
+resolves the system preference with no script at all — the browser applies it during the first style
+pass, before any JavaScript runs. The script then has exactly one job: apply a *stored* choice, which
+needs only `localStorage` and `document`.
+
+Resulting script, 139 bytes:
+
+```js
+try{var m=localStorage.getItem('ms-color-mode');if(m==='light'||m==='dark'){document.documentElement.dataset.colorMode=m}}catch(e){}
+```
+
+### Decision
+`packages/tokens/src/build/to-css.ts` emits the media-query variant of each non-default mode block, and
+`COLOR_MODE_SCRIPT` handles stored preferences only. The `:not([data-color-mode])` guard is what makes
+the two cooperate: once the script or the engine has set the attribute, the media query stops applying.
+
+### Consequences
+- Accepted: the dark declarations appear twice in `theme.css`, which grows the generated sheet. It is
+  one generated file and the duplication is derived, not maintained.
+- Accepted: system mode now works with JavaScript disabled, which the script-based design could not do.
+- Accepted: the script no longer needs `matchMedia`, so prompt 06's constraint holds literally rather
+  than by argument.
+
+### Alternatives rejected
+- Use `matchMedia` in the script: 84 bytes more and still inside the limit, but it breaks the stated
+  constraint and leaves system mode dependent on JavaScript for no gain.
+- Default the script to `light` when nothing is stored: a first-time visitor with a dark OS gets a white
+  flash on every first page view, which is the exact failure the script exists to prevent.
+
+## ADR-027 — The ten preset configurations
+
+**Date** 2026-08-05 · **Prompt** 06 · **Status** Accepted
+
+### Question
+`THEME_ENGINE.md` § Presets lists ten presets, each with a name and a one-line character —
+"Deep blue-black, cyan accent, glow elevation" — and none of the seventeen field values a `ThemeConfig`
+needs. What are the values?
+
+### Criterion (set before measuring)
+1. Every field named in the character line is taken from it literally. `midnight` gets `elevationStyle:
+   'glow'` and a cyan accent because the line says so; nothing in a line is reinterpreted.
+2. Every preset clears the full `TEXT_PAIRS` and `UI_PAIRS` lists in its own mode, with **no contrast
+   repair and no warning**. A preset that needs repairing to be usable is not shipped as a preset —
+   `ACCESSIBILITY.md` § Contrast requires the gate over all ten.
+3. `studio-dark` and `studio-light` reproduce what `packages/tokens` already ships and verified, so
+   applying the default theme changes nothing a reader has already seen.
+4. Across the set, all four elevation styles and both colour modes appear, so the list exercises the
+   engine rather than restating one configuration ten times.
+5. Fields the character line does not mention take the studio default, so a preset differs from the
+   default only where the document says it differs.
+
+### Measurement
+All ten resolved and measured against both lists: **0 failures, 0 repairs, 0 warnings**, 141 variables
+each. The saturation control was then swept across its documented range for every preset — 0.5, 1.0 and
+1.5, thirty configurations — because `palette.saturation` reaches the neutral ramp and every surface in
+both lists is built from it. All thirty clear both lists; `presets.test.ts` keeps the sweep.
+
+`studio-dark` was checked against criterion 3 by seeding at the lightness that selects step 400 and
+riding the gamut ceiling: the generated ramp reproduces `VIOLET` to within 0.0005 chroma (ADR-023), and
+its resolved `--ms-color-accent` in the browser is `oklch(70.00% 0.1560 285.00)` — `violet.400`.
+
+### Decision
+The table is `packages/theme/src/presets/presets.ts`, each preset carrying the document's character line
+as its doc comment so a reader can check the values against the words. Accent seeds are written through
+`seedAt(step, hue)`, which states the intent — this step's lightness, fully saturated for it — instead of
+twelve opaque `oklch()` strings.
+
+### Consequences
+- Accepted: these are the implementer's values, not the owner's. This is the third time this session's
+  work has hit the same gap (ADR-018 for the token tables, ADR-025 for the font pairings), and the owner
+  has twice resolved it by delegating with a criterion. The criteria are stated so a disagreement lands
+  on one preset rather than on a hundred numbers.
+- Accepted: `paper` and `aurora` name font pairings whose files the repository does not ship yet
+  (ADR-025), so they fall back to the generic keyword until a later prompt adds them.
+- Accepted: `mono` has an achromatic accent, which makes `palette.saturation` inert for that preset.
+  That is what "no accent hue" means.
+- Accepted: no preset needs contrast repair, so the presets do not exercise the repair path. It is
+  covered separately in `repair-contrast.test.ts` with a deliberately failing config.
+
+### Alternatives rejected
+- Ship two presets and escalate the other eight: the document lists ten and `ACCESSIBILITY.md` requires
+  the gate over ten. Cutting eight is the owner's decision, not the implementer's.
+- Pick values that need repair and let the engine fix them: it would demonstrate the repair path, and it
+  would ship ten presets that each raise a warning chip in the theme builder on load.

@@ -136,7 +136,8 @@ export function applyTheme(config: ThemeConfig, root: HTMLElement = document.doc
 | `--ms-text-*` | 14 | Computed size/line-height pairs |
 | `--ms-shadow-*` | 8 | Elevation set for mode + `elevationStyle` |
 | `--ms-blur-*` | 8 | Blur scale |
-| `--ms-duration-*` | 7 | Durations × `motionScale` |
+| `--ms-duration-*` | 7 | Base durations, each a `calc()` over the two motion factors |
+| `--ms-motion-scale` | 1 | `motionScale`. The environment's `--ms-reduced-motion` is not written here |
 | `--ms-ease-*` | 8 | Easing curves |
 | `--ms-glass-*` | 3 | Backdrop-filter, background, border for the level |
 | `--ms-noise-opacity` | 1 | |
@@ -172,18 +173,35 @@ const mode = config.colorMode === 'system'
 
 ## Motion scale
 
-`--ms-duration-*` are all multiplied by `motionScale`. `motionScale: 0` produces `0ms` for
-every duration, which is precisely the reduced-motion behaviour — so the reduced-motion path is
-the same code path, not a separate branch.
+Every duration is a product of its base and **two** independent factors, so reduced motion is the
+same code path as `motionScale: 0` rather than a separate branch:
 
 ```css
+:root {
+  --ms-motion-scale: 1;    /* the theme's, written by applyTheme */
+  --ms-reduced-motion: 1;  /* the environment's */
+  --ms-duration-base: calc(240ms * var(--ms-motion-scale) * var(--ms-reduced-motion));
+}
+
 @media (prefers-reduced-motion: reduce) {
-  :root { --ms-motion-scale: 0; }
+  :root { --ms-reduced-motion: 0; }
 }
 ```
 
-The studio's "preview reduced motion" toggle sets the same variable, which is how a designer
-can check the reduced experience without changing OS settings.
+**The two factors cannot be one variable.** `applyTheme` writes through `style.setProperty`, which
+is an inline declaration, and an inline declaration outranks every author rule including one inside a
+media query. Measured in Chrome with reduced motion forced on: with a single shared variable, the
+theme's inline `--ms-motion-scale: 1` resolved `calc(240ms * 1)` — the media query had no effect at
+all, so applying any theme silently switched a reduced-motion user back to full animation. With the
+factors separated, the same write resolved `calc(240ms * 1 * 0)`. See ADR-021.
+
+`motionScale: 0` therefore zeroes durations by the theme's own factor, and the media query zeroes
+them by the environment's; either is sufficient, which is what "not a separate branch" means.
+
+The studio's "preview reduced motion" toggle writes `--ms-reduced-motion: 0` inline, letting a
+designer check the reduced experience without changing OS settings. Writing `1` there is the one way
+to override the OS preference, and it is deliberate: only the preview toggle does it, and only while
+the designer is looking.
 
 ## Presets
 
