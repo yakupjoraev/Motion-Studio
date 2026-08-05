@@ -1,1 +1,34 @@
 @import 'tailwindcss';
+@import '../src/styles/theme.css';
+
+/*
+ * The base layer, and nothing more. Everything here reads a `--ms-*` variable rather than a value, so
+ * a theme change repaints without a rebuild and without a React render.
+ */
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  :root[data-color-mode='dark'] {
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--ms-color-surface-0);
+    color: var(--ms-color-foreground);
+    font-family: var(--ms-font-sans);
+    font-size: var(--ms-text-md);
+    line-height: var(--ms-text-md-line-height);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /*
+   * ACCESSIBILITY.md § Focus: `:focus-visible` only, and never `outline: none` without a replacement.
+   * The replacement is the two-ring focus shadow, which is identical in all four elevation styles.
+   */
+  :focus-visible {
+    outline: none;
+    box-shadow: var(--ms-shadow-focus);
+  }
+}

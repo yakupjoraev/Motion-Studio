@@ -18,6 +18,7 @@
     "test:unit": "turbo test -- --environment=node",
     "test:coverage": "turbo test -- --coverage",
     "test:e2e": "turbo test:e2e",
+    "generate:tokens": "tsx packages/tokens/src/build/generate.ts",
     "clean": "turbo clean && rm -rf node_modules",
     "check:deps": "node scripts/check-deps.mjs"
   },

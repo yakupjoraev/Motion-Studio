@@ -8,6 +8,8 @@ node_modules/
 out/
 dist/
 build/
+# `build/` above is for output. A package's generators are source and live in one, so name them back.
+!packages/*/src/build/
 storybook-static/
 *.tsbuildinfo
 
