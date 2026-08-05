@@ -305,7 +305,7 @@ pre-commit:
   parallel: true
   commands:
     format:
-      glob: "*.{ts,tsx,json,md,css}"
+      glob: "*.{ts,tsx,mts,mjs,json,md,css}"
       run: pnpm biome check --write --no-errors-on-unmatched {staged_files}
       stage_fixed: true
     secrets:
@@ -321,8 +321,16 @@ commit-msg:
     conventional: { run: pnpm check:commit-msg {1} }
 ```
 
+The `format` glob covers `.mjs` and `.mts` because the gate scripts themselves are `.mjs`, and Biome
+lints them like any other source. Left out, a formatting slip in a gate reaches CI as a `pnpm lint`
+failure instead of being fixed and re-staged where it was made.
+
 `check:secrets` is a small script scanning staged content for API-key patterns, `.env` contents,
 and absolute local paths. Cheap insurance in a repo that will be public.
+
+The gate scripts print their results on stdout, which is what `console.log` is for in a CLI. Biome's
+`noConsole` rule allows only `warn` and `error`, so `scripts/**` carries an override — the same shape
+as the overrides for `app/` default exports and config files.
 
 `check:commit-msg` enforces Conventional Commits and rejects messages containing tooling or
 assistant attribution — the repository history should read as the work of its author.
