@@ -526,3 +526,156 @@ Self-reference through the `exports` map.
 - Build `reactConfig` with `mergeConfig(nodeConfig, …)`: Vite's `mergeConfig` concatenates arrays, so
   `include` would become both globs and the node preset's `src/**/*.ts` coverage include would
   survive into a package holding `.tsx` files.
+
+## ADR-010 — The OKLCH parser is `parseOklch`, and `THEME_ENGINE.md` is corrected to match
+
+**Date** 2026-08-05 · **Prompt** 03 · **Status** Accepted
+
+### Question
+`THEME_ENGINE.md` § Palette generation calls `parseToOklch(seed)`. Prompt 03 § Constraints names the
+same function `parseOklch` and specifies its behaviour. Which name does `packages/utils` export?
+
+### Criterion
+Only one of the two can exist, so the question is which document owns the name. A package's public
+surface is owned by the prompt that builds the package; a consuming document that names a function it
+does not own is a forward reference, and a forward reference that does not match is a defect in the
+consumer.
+
+### Decision
+`parseOklch`. `THEME_ENGINE.md`'s snippet is corrected in the same commit that records this entry,
+before any code is written against it — `docs: correct the OKLCH parser name in the theme engine`.
+
+Supporting: `parseOklch` pairs with `formatOklch`, which the same snippet already calls, so the
+module's two halves are named symmetrically.
+
+### Consequences
+- Accepted: `parseOklch` reads as "parse an OKLCH string", while the function also accepts hex. The
+  name understates the input it takes. Prompt 03 states the hex acceptance explicitly, and the
+  signature is `(input: string)`, so no caller can be misled by the name into passing something else.
+- Avoided: prompt 06 discovering that the function `THEME_ENGINE.md` told it to call does not exist,
+  and inventing an alias to bridge the two names.
+
+### Alternatives rejected
+- Export `parseToOklch` and change prompt 03: the prompt also fixes the behaviour and the test
+  assertions around that name, and editing the build plan to match an illustrative snippet in
+  another subsystem's document inverts which document is authoritative.
+- Export both, one aliasing the other: two names for one function is exactly the drift the glossary
+  exists to prevent.
+
+## ADR-011 — `Rect` is `{ x, y, width, height }`
+
+**Date** 2026-08-05 · **Prompt** 03 · **Status** Accepted
+
+### Question
+Prompt 03 asks `packages/utils` for "Rect helpers: intersects, contains, union, center, expand" but
+no document defines `Rect`. `CANVAS.md` uses the type without declaring it.
+
+### Criterion
+`CANVAS.md` § Rect intersection populates the rect cache by "batched `getBoundingClientRect` via
+`ResizeObserver`", and `RectCache.get` returns `Rect | undefined`. A `DOMRect` must therefore be
+assignable to `Rect` with no conversion step, or the cache needs a mapping pass on every refresh —
+which is the cost `CANVAS.md` § Performance is explicitly avoiding. Among the shapes that satisfy
+that, take the one with no redundant fields, because a rect with both `width` and `right` has two
+representations of one fact and nothing keeps them in sync.
+
+### Measurement
+`DOMRect` declares `x`, `y`, `width`, `height`, `top`, `right`, `bottom`, `left`. Both
+`{ x, y, width, height }` and `{ top, right, bottom, left }` are assignable from it.
+`{ x, y, width, height }` carries no derivable field; the edge form makes `width` a computation at
+every call site, and the snapping engine (`CANVAS.md` § Snap candidate) needs both edges and centres,
+so neither form avoids arithmetic.
+
+### Decision
+```ts
+export interface Rect {
+  readonly x: number
+  readonly y: number
+  readonly width: number
+  readonly height: number
+}
+```
+
+### Consequences
+- Accepted: edge comparisons inside `intersects`, `contains`, and `union` compute `x + width` rather
+  than reading a field. Five call sites, all in one file.
+- Accepted: a negative `width` or `height` is representable. The helpers do not normalise it, because
+  a `DOMRect` never has one and a marquee rect is normalised by the caller that builds it.
+
+### Alternatives rejected
+- `{ top, right, bottom, left }`: assignable from `DOMRect` too, but makes every consumer that has a
+  size compute it, and `expand` would touch four fields instead of four with a clearer meaning.
+- Branded per space, like `CANVAS.md`'s `ScreenPoint` / `CanvasPoint`: rects in `utils` are space
+  agnostic on purpose — the same `intersects` serves marquee (screen) and drop resolution (canvas).
+  Branding belongs where the space is known, which is `canvas`.
+
+## ADR-012 — `errors.ts` ships one subclass, not a hierarchy
+
+**Date** 2026-08-05 · **Prompt** 03 · **Status** Accepted
+
+### Question
+Prompt 03 asks for "`MotionStudioError` + typed subclasses". Which subclasses?
+
+### Criterion
+Prompt 00 § Do not: "no speculative abstraction … no config options with one caller". A subclass is
+justified only if a document names it and a package that may depend on `utils` calls it. Anything
+else is discriminated by the `code` field that `MotionStudioError` already carries.
+
+### Measurement
+Grepped `docs/` for class names ending in `Error`: `MotionStudioError` and `NodeNotFoundError`
+(`CODE_STANDARDS.md` § Errors, `EDITOR_ENGINE.md` § Commands), `DocumentError`
+(`EDITOR_ENGINE.md` — `validateDocument`, owned by `editor`), `MigrationError` (`FILE_FORMAT.md` —
+owned by `schema`), `CssError` (`PLAYGROUND.md` — owned by the playground). Exactly one belongs to
+`utils`.
+
+### Decision
+`MotionStudioError` plus `NodeNotFoundError`. `assertNever`, `invariant`, `assertDefined`, and
+`clone` throw `MotionStudioError` with the codes `UNHANDLED_CASE`, `INVARIANT_VIOLATED`,
+`VALUE_NOT_DEFINED`, and `CLONE_FAILED`.
+
+### Consequences
+- Accepted: "subclasses" in prompt 03 is plural and this delivers one. The other four names the
+  documents give are owned by other packages, and defining them here would put `editor`'s and
+  `schema`'s vocabulary in the leaf package everything depends on.
+- Accepted: catching an invariant violation specifically means checking `error.code`, not
+  `instanceof`. The code is a string union in one file, so it is checkable.
+
+### Alternatives rejected
+- One subclass per code: four classes with one throw site each and no caller that distinguishes them
+  by type.
+- No subclass at all, `NodeNotFoundError` included: `CODE_STANDARDS.md` § Errors gives its
+  implementation verbatim, so it is specified, not chosen.
+
+## ADR-013 — `deletePath` splices arrays instead of leaving a hole
+
+**Date** 2026-08-05 · **Prompt** 03 · **Status** Accepted
+
+### Question
+Prompt 03 lists `deletePath` beside `getPath`/`setPath` and specifies the other two in detail but not
+this one. What happens when the removed leaf is an array index?
+
+### Criterion
+`FILE_FORMAT.md` § Testing requires `parse(serialize(doc))` to deep-equal `doc` and serialising twice
+to produce identical strings. Whatever `deletePath` does must survive a JSON round-trip unchanged.
+
+### Measurement
+`delete array[0]` leaves a hole. `JSON.stringify([ , 1])` produces `[null,1]`, and parsing that back
+gives `[null, 1]` — a different value from the one serialised. The round-trip requirement is
+therefore violated by the hole, not by the shift.
+
+### Decision
+`deletePath` removes an object key with `delete`, and an array index with `splice`, so no array ever
+holds a hole.
+
+### Consequences
+- Accepted: removing index 0 of a three-element array renumbers the other two. For the documented
+  callers — a prop key and a sparse `node.responsive[bp][key]` override
+  (`RESPONSIVE_ENGINE.md` § Override) — the leaf is an object key, so the array branch is reachable
+  but not on any documented path.
+- Accepted: a caller that wanted a hole cannot get one through this function. Nothing in the document
+  model has a use for one.
+
+### Alternatives rejected
+- `delete` on both: produces a value that does not survive `serialize`/`parse`, which
+  `FILE_FORMAT.md` § Testing asserts against.
+- Set the index to `null`: silently changes the array's length semantics from "n items" to "n slots",
+  and every consumer would need a null check the schema does not describe.

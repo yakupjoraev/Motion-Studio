@@ -63,7 +63,7 @@ chroma curve from `packages/tokens` and substituting the seed's hue.
 
 ```ts
 export function generateRamp(seed: string, options: RampOptions): ColorRamp {
-  const { l, c, h } = parseToOklch(seed)
+  const { l, c, h } = parseOklch(seed)
 
   return LIGHTNESS_LADDER.map((targetL, i) => {
     const chroma = CHROMA_CURVE[i] * options.saturation * (c / REFERENCE_CHROMA)
