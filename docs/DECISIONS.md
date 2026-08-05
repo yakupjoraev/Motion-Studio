@@ -1023,3 +1023,48 @@ Light mode is unchanged: it already descended 600 → 700 → 800 under `white` 
 - Give `accent-hover` and `accent-active` their own `foreground-on*` tokens: three foreground tokens
   for one fill family, and every button would have to know which state it is in to pick a text
   colour. The ascending ladder makes one token correct for all three.
+
+## ADR-020 — Line endings are pinned to LF by `.gitattributes`
+
+**Date** 2026-08-05 · **Prompt** 05 · **Status** Accepted
+
+### Question
+`core.autocrlf=true` is the Windows default, and the repository had no `.gitattributes`. Whose job is
+it to keep the working tree LF — every contributor's git config, or the repository?
+
+### Criterion (set before measuring)
+`pnpm lint` must pass on a fresh clone, on every platform, before any edit. If it does not, the lint
+gate this prompt wires into CI is a gate that fails for reasons unrelated to the change under review,
+which is how a gate gets ignored.
+
+### Measurement
+Biome is configured `formatter.lineEnding: "lf"` (`packages/config/biome.json`) and treats a CRLF file
+as unformatted. Reproduced during this session's own gate demonstrations: reverting three manifests
+with `git checkout` rewrote them CRLF, and `biome check` then reported every line of
+`packages/hooks/package.json` as needing to be rewritten — `pnpm lint` failed in 3 of 15 packages.
+Four files in the tree were CRLF at that point, including `apps/web/next-env.d.ts`.
+
+With `* text=auto eol=lf` in place, deleting and re-checking-out those four files produced LF, and
+`pnpm lint` and `pnpm typecheck` both returned 15 of 15 successful.
+
+### Decision
+Commit a `.gitattributes` that pins `* text=auto eol=lf`, marks binary asset extensions binary, and
+flags `pnpm-lock.yaml` as generated so it is not diffed as prose. `apps/web/src/styles/theme.css` gets
+an explicit `text eol=lf` line: it is compared byte for byte against a fresh generator run
+(ADR-018's transcription work, `packages/tokens/src/build/generate.test.ts`), and a line-ending
+rewrite would break that comparison in a way the diff makes hard to see.
+
+### Consequences
+- Accepted: a contributor whose editor writes CRLF will see git normalise on commit rather than an
+  error. That is the intended behaviour, but it does mean the working tree and the editor can disagree
+  until the file is saved again.
+- Accepted: this fixes a class of failure rather than the three files that exposed it. The repository
+  now states its own line-ending policy instead of depending on each machine's `core.autocrlf`.
+- Avoided: a CI gate that fails on a fresh Windows clone for a reason that has nothing to do with the
+  change being reviewed.
+
+### Alternatives rejected
+- Ask contributors to set `core.autocrlf=false` or `input`: unenforceable, and `CONTRIBUTING.md` § Setup
+  would have to carry a git-config instruction that a gate cannot check.
+- Relax Biome to accept either line ending: the formatter would then produce different bytes on
+  different platforms, and `pnpm lint` would stop being a statement about the repository.

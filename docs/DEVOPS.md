@@ -120,10 +120,21 @@ Branch protection: no direct pushes, no force-push, linear history, up-to-date b
 Two scripts that exist because the rules in `docs/ARCHITECTURE.md` are otherwise unenforceable:
 
 **`pnpm check:deps`**
-- Builds the workspace dependency graph and asserts it is acyclic.
+- Builds the workspace dependency graph and asserts it is acyclic, reporting the cycle path.
 - Asserts the direction rules: `editor` does not import `blocks`, `blocks` does not import
   `editor`, nothing imports `apps/*`.
 - Asserts no deep imports (`@motion-studio/x/src/...`).
+- Asserts every internal import is declared in the importing package's own `package.json`, which is
+  what catches a phantom dependency that only resolves because pnpm hoisted something.
+
+The deep-import assertion is **exports-aware**, not a regex on the specifier. ADR-005 puts the ban in
+the `exports` map, so the question is whether the target declares the subpath, not whether a subpath
+exists: `@motion-studio/config/vitest/node` is legal because `config` exports `./vitest/*`, and every
+package's `vitest.config.ts` uses it. `@motion-studio/ui/src/button/button` is not, because nothing
+exports it. A specifier-shape regex would fail the repository's own clean graph.
+
+The package list comes from `pnpm-workspace.yaml`, so adding a workspace root cannot silently put a
+package outside the gate.
 
 **`pnpm check:registry`**
 - `blockRegistry` keys === `renderRegistry` keys.
@@ -131,7 +142,7 @@ Two scripts that exist because the rules in `docs/ARCHITECTURE.md` are otherwise
 - Every `defaultMotion` preset id exists.
 - Every template in `public/templates/` parses against the current schema.
 
-Both are ~80 lines each and prevent the specific ways a monorepo rots.
+Small scripts — one file, no framework — that prevent the specific ways a monorepo rots.
 
 ## Turborepo
 
