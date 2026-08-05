@@ -1483,3 +1483,57 @@ numbers.
   a root script, wrong again the next time a package changes environment.
 - Drop tests from pre-push and leave them to CI: the hook's whole value is catching a red suite before it
   reaches a branch, and at 0.35 s there is nothing to trade away.
+
+## ADR-029 — Test matcher types are declared per consuming package
+
+**Date** 2026-08-05 · **Prompt** 08 · **Status** Accepted · **Closes the open item in** ADR-008
+
+### Question
+ADR-008 left this unresolved: `packages/config/vitest/setup-react.ts` registers `toHaveNoViolations`
+with `expect.extend`, and the declaration typing `jest-axe` lives in `packages/config`, whose files are
+not in a consumer's tsconfig program. `packages/ui` is the first package with component tests, so it is
+the first place the gap can be closed. The same gap applies to `@testing-library/jest-dom`'s matchers.
+
+### Criterion (set before measuring)
+`pnpm typecheck` clean in the consuming package under "zero `any`, no `@ts-ignore`", without a deep
+import across a package boundary — the contract's § 1.3 ban — and without weakening the type environment
+the way `@types/jest` would (ADR-008's measurement).
+
+### Measurement
+Confirmed by running it: with no declaration in `packages/ui`, `tsc --noEmit` reported
+`TS7016 Could not find a declaration file for module 'jest-axe'` plus one `TS2339` per jest-dom matcher —
+`toBeInTheDocument`, `toHaveAttribute`, `toHaveFocus`, `toBeDisabled`. Nine errors from a suite that
+passed at runtime, which is exactly the state ADR-008 predicted.
+
+A single `.d.ts` holding both declarations then produced a **worse** failure:
+`Module '"vitest"' has no exported member 'describe'`. The cause is a TypeScript rule worth writing down:
+a `.d.ts` with no top-level `import` or `export` is a **global script**, and `declare module 'X'` there is
+an ambient module *declaration* that **replaces** the module's types. In a file that is a module, the same
+syntax is an *augmentation*. One file cannot be both, and this needs both.
+
+### Decision
+Two files in the consuming package, each the right kind:
+
+- `src/test/jest-axe.d.ts` — a global script. Ambient-declares the untyped `jest-axe` surface the package
+  uses, and carries `/// <reference types="@testing-library/jest-dom/vitest" />` for the jest-dom matchers.
+- `src/test/vitest-matchers.d.ts` — a module, opened with `import 'vitest'`. Augments `Assertion` with
+  `toHaveNoViolations`.
+
+With both in place, `tsc --noEmit` is clean and 64 tests pass with two axe assertions per component.
+
+### Consequences
+- Accepted: a second package with component tests copies these two files. Reaching across a package
+  boundary for a `.d.ts` is the deep import § 1.3 bans, and `packages/config` cannot be in the consumer's
+  program without one. Twenty lines is the cost of that rule.
+- Accepted: the `jest-axe` surface is now declared in two places, `packages/config` and `packages/ui`. Both
+  are two exports wide, and a mismatch surfaces as a type error at a call site rather than silently.
+- Accepted: `.stories.tsx` files are added to `coverageExclude` in the shared Vitest preset in the same
+  change. Measured: with stories in the denominator `packages/ui` reported 47.8 % lines against its 70 %
+  floor; excluded, 77.7 %. Stories are executed by Storybook and never by Vitest, so counting them measures
+  how much of Storybook the unit tests happen to run.
+
+### Alternatives rejected
+- `@types/jest-axe`: ADR-008 measured it — it pulls `@types/jest`, whose ambient globals shadow Vitest's in
+  every file of every consuming package.
+- A relative `/// <reference path="../../../config/vitest/jest-axe.d.ts" />`: the deep cross-package reach
+  the contract bans, wearing a different syntax.

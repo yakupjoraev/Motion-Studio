@@ -2,10 +2,19 @@ import { type ViteUserConfig, defineConfig } from 'vitest/config'
 
 /**
  * Kept out of the coverage denominator: the tests themselves, the barrel (re-exports have no
- * branches to cover, so counting them only inflates the number), and the shared factories from
- * CODE_STANDARDS.md § Testing style.
+ * branches to cover, so counting them only inflates the number), the shared factories from
+ * CODE_STANDARDS.md § Testing style, and the Storybook stories.
+ *
+ * Stories are executed by Storybook, never by Vitest. Counting them measures how much of Storybook the
+ * unit tests happen to run, which is not a question anyone asked — and it drags a well-tested package
+ * under its floor for writing more documentation.
  */
-export const coverageExclude = ['src/**/*.test.{ts,tsx}', 'src/index.ts', 'src/test/**']
+export const coverageExclude = [
+  'src/**/*.test.{ts,tsx}',
+  'src/**/*.stories.tsx',
+  'src/index.ts',
+  'src/test/**',
+]
 
 /**
  * Preset for the React-free packages. Coverage thresholds are deliberately absent — TESTING.md
