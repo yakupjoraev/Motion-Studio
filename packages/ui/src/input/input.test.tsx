@@ -1,7 +1,8 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { axe } from 'jest-axe'
 import { describe, expect, it, vi } from 'vitest'
+
+import { expectNoViolations } from '../test/axe'
 
 import { Input } from './input'
 
@@ -94,12 +95,12 @@ describe('Input', () => {
   it('is axe clean', async () => {
     const { container } = render(<Input aria-label="Width" />)
 
-    expect(await axe(container)).toHaveNoViolations()
+    await expectNoViolations(container)
   })
 
   it('is axe clean with slots and an invalid state', async () => {
     const { container } = render(<Input aria-label="Blur" invalid prefix="⌀" suffix="px" />)
 
-    expect(await axe(container)).toHaveNoViolations()
+    await expectNoViolations(container)
   })
 })

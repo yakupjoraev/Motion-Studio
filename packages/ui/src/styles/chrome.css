@@ -1,0 +1,70 @@
+/*
+ * The chrome's overlay motion. It lives in CSS rather than in a class string because Radix decides when to
+ * unmount by looking for a running CSS *animation* — a transition alone would make every exit instant.
+ *
+ * Timings are `UI_GUIDELINES.md` § Timing: open 160 ms on `decelerate`, close 120 ms on `accelerate`, and
+ * nothing in the chrome over 260 ms. They read `--ms-duration-*`, which carries both motion factors, so
+ * `motionScale: 0` and `prefers-reduced-motion` each zero them on their own (ADR-021).
+ *
+ * An overlay opts in with `data-ms-overlay`; Radix supplies `data-state`.
+ */
+@keyframes ms-overlay-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ms-overlay-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+
+@keyframes ms-scrim-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ms-scrim-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+[data-ms-overlay][data-state='open'] {
+  animation: ms-overlay-in var(--ms-duration-quick) var(--ms-ease-decelerate);
+}
+
+[data-ms-overlay][data-state='closed'] {
+  animation: ms-overlay-out var(--ms-duration-fast) var(--ms-ease-accelerate);
+}
+
+/* A dialog is the one chrome surface allowed 220 ms — § Timing, dialog open, `emphasized`. */
+[data-ms-overlay='dialog'][data-state='open'] {
+  animation: ms-overlay-in var(--ms-duration-base) var(--ms-ease-emphasized);
+}
+
+[data-ms-scrim][data-state='open'] {
+  animation: ms-scrim-in var(--ms-duration-quick) var(--ms-ease-standard);
+}
+
+[data-ms-scrim][data-state='closed'] {
+  animation: ms-scrim-out var(--ms-duration-fast) var(--ms-ease-standard);
+}

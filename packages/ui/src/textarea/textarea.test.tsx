@@ -1,7 +1,8 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { axe } from 'jest-axe'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { expectNoViolations } from '../test/axe'
 
 import { Textarea } from './textarea'
 
@@ -151,6 +152,6 @@ describe('Textarea', () => {
   it('is axe clean', async () => {
     const { container } = render(<Textarea style={STYLE} aria-label="Custom CSS" />)
 
-    expect(await axe(container)).toHaveNoViolations()
+    await expectNoViolations(container)
   })
 })

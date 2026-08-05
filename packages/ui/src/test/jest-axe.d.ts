@@ -20,5 +20,9 @@ declare module 'jest-axe' {
     readonly violations: readonly AxeViolation[]
   }
 
-  export function axe(container: Element | Document): Promise<AxeResults>
+  interface AxeRunOptions {
+    readonly rules?: Readonly<Record<string, { readonly enabled: boolean }>>
+  }
+
+  export function axe(container: Element | Document, options?: AxeRunOptions): Promise<AxeResults>
 }

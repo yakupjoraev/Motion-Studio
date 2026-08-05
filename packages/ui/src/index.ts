@@ -14,11 +14,15 @@ export {
   type InputStyleProps,
 } from './input/index'
 export {
-  DENSITY,
-  HEIGHT_CLASS,
-  LABEL_COLUMN_CLASS,
-  type DensityToken,
-} from './styles/density'
+  Select,
+  selectContentStyles,
+  selectItemStyles,
+  selectTriggerStyles,
+  type SelectOption,
+  type SelectProps,
+  type SelectStyleProps,
+} from './select/index'
+export { DENSITY, HEIGHT_CLASS, LABEL_COLUMN_CLASS, type DensityToken } from './styles/density'
 export {
   DISABLED,
   FLOATING_SURFACE,

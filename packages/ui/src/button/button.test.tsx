@@ -1,8 +1,9 @@
 import { SparklesIcon } from '@motion-studio/icons'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { axe } from 'jest-axe'
 import { describe, expect, it, vi } from 'vitest'
+
+import { expectNoViolations } from '../test/axe'
 
 import { Button } from './button'
 
@@ -136,7 +137,7 @@ describe('Button', () => {
   it('is axe clean', async () => {
     const { container } = render(<Button>Export</Button>)
 
-    expect(await axe(container)).toHaveNoViolations()
+    await expectNoViolations(container)
   })
 
   it('is axe clean when icon-only and labelled', async () => {
@@ -144,6 +145,6 @@ describe('Button', () => {
       <Button size="icon" aria-label="Duplicate" leadingIcon={<SparklesIcon />} />,
     )
 
-    expect(await axe(container)).toHaveNoViolations()
+    await expectNoViolations(container)
   })
 })
