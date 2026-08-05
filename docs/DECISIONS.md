@@ -846,3 +846,85 @@ rule, so it cannot be narrowed — only turned off.
 - Restructure the code the rule flagged to use a `Map`: it was a test asserting that `assertDefined`
   narrows an index access, which is the case the function exists for. Changing the subject of a test
   to satisfy a lint rule tests the lint rule.
+
+## ADR-018 — The missing token tables were authored into `DESIGN_SYSTEM.md` by derivation
+
+**Date** 2026-08-05 · **Prompt** 04 · **Status** Accepted
+
+### Question
+Prompt 04 says "the exact ramps and semantic mappings are the tables in `docs/DESIGN_SYSTEM.md` — use
+those values, do not invent your own". The tables were incomplete: 72 chroma values across six hues,
+21 of 33 semantic mappings per mode, `CHROMA_CURVE`, `HUE_SHIFT_CURVE`, three of four elevation
+styles, ten gradient preset definitions, and the noise asset were all absent.
+
+### Escalated
+Options presented: (a) the owner writes the missing tables into `DESIGN_SYSTEM.md`, and a later
+session transcribes them mechanically; (b) the owner approves a derivation criterion and the
+implementer applies it. Recommendation given: (a), because the values are the owner's design rather
+than the implementer's inference.
+
+Owner decided on 2026-08-05. Owner's stated reason, verbatim: "вариант (а), дополни DESIGN_SYSTEM.md
+сам" — option (a), fill in DESIGN_SYSTEM.md yourself.
+
+So the choice of route was the owner's; the values were delegated. Every family below is therefore
+derived from a criterion recorded in the document beside it, never picked by eye, so the owner can
+disagree with a rule rather than with a hundred numbers.
+
+### Decision
+`docs: complete the token tables in the design system` adds, each with its criterion:
+
+1. **`CHROMA_CURVE`** — `NEUTRAL`'s own chroma curve normalised to its peak. That is the only chroma
+   curve the document fixed, and it already "peaks around step 500".
+2. **The six chromatic ramps** — `min(REFERENCE_CHROMA[hue] × CHROMA_CURVE[i], 0.95 × gamut
+   boundary at that lightness)`, where `REFERENCE_CHROMA` is 95 % of the boundary at step 500.
+   Measured with `clampChroma` from `packages/utils`.
+3. **`HUE_SHIFT_CURVE`** — linear from +1 at the lightest step to −1 at the darkest, zero across the
+   chroma peak. Applies to generated palettes only; the shipped ramps stay hue-constant like `NEUTRAL`.
+4. **The 21 missing semantic mappings** — each chosen by a measured contrast threshold or by a stated
+   positional rule, both recorded in the table's new "Why this step" column.
+5. **The three missing elevation styles** — stated transforms of `soft`, written out in full.
+6. **The ten gradient presets** — stops as ramp references, with a measured `readable` foreground or
+   an explicit `null`.
+7. **The noise asset** — a 342-byte `feTurbulence` data URL, with the reason for each parameter.
+
+### Measurement
+Ramps: the per-step clamp is not a refinement, it is required. A single global scale that keeps every
+step in gamut is bounded by the lightest step, where violet's widest chroma is 0.007 — that scale
+crushes `violet.500` from 0.229 to 0.048, a grey. Measured and discarded before the per-step form was
+written.
+
+Semantics, the corrections the measurements forced:
+- Light `foreground-subtle` was documented as `neutral.400`: **2.67 : 1** on `surface-1`, below even
+  3 : 1. Moved to `neutral.500` (4.28 : 1) and placed in `UI_PAIRS` under a stated duplication rule.
+- Dark status colours at step 500 fail on their own muted background for every hue (3.87–4.49 : 1).
+  Step 400 passes for all six (6.40–7.10 : 1), so dark status is 400.
+- `accent-ring`: minimum across all five surfaces is 6.26 : 1 for `violet.600` in light and 5.41 : 1
+  for `violet.400` in dark. `violet.500` in dark gives 3.21 : 1 and was rejected.
+- Gradients: seven of the first ten preset drafts had **no** foreground clearing 4.5 : 1 at both
+  extremes. Four were kept vivid and marked `readable: null`; six were pulled into one half of the
+  ladder and now measure 6.47–15.31 : 1.
+
+### Consequences
+- Accepted: these are the implementer's derivations, not the owner's picks. The criteria are in the
+  document next to the values, so a disagreement lands on one rule and re-derives its family.
+- Accepted: **`border`, `border-subtle`, `border-strong`, `canvas-grid`, and the surface steps cannot
+  meet the document's own "non-text UI ≥ 3 : 1" line.** Measured: 1.11–1.91 : 1. Reaching 3 : 1 on a
+  hairline against white needs about `neutral.500`, which is a mid-grey rule and would replace the
+  surface language the document is calibrated to. They are declared texture, with a compensating rule
+  — no control is identified by its border alone. This is the one item in this entry the owner should
+  read as a real trade rather than a derivation, and it is written up in § What is deliberately
+  exempt.
+- Accepted: a shared lightness ladder leaves `amber` and `cyan` far less chromatic at step 500 than
+  `violet` or `rose`; `amber.500` reads closer to bronze than to yellow. Noted in the document. A
+  per-hue ladder would fix it and would break the theme engine's hue substitution.
+- Accepted: no visual side-by-side against impeccable.style has happened yet. The values are
+  contrast-correct and internally consistent; whether they are *good* is the swatch-grid check in
+  prompt 04's Verify, which the session that transcribes them must perform and report.
+- Avoided: a hundred values with no recorded reasoning, which is what filling the gap by preference
+  would have produced.
+
+### Alternatives rejected
+- Leave prompt 04 blocked: the owner resolved the escalation, so the block is gone.
+- Derive in code and let the code be the specification: `THEME_ENGINE.md` § Palette generation already
+  reads the curves as data, and a reader comparing document to implementation needs the numbers in
+  one place. The document is that place.
