@@ -78,6 +78,10 @@
     {
       "include": ["**/tsconfig/*.json"],
       "json": { "parser": { "allowComments": true } }
+    },
+    {
+      "include": ["scripts/**"],
+      "linter": { "rules": { "suspicious": { "noConsole": "off" } } }
     }
   ]
 }

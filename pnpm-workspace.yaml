@@ -10,6 +10,9 @@ packages:
 # build.
 # esbuild — arrives under vite, which Vitest runs the test files through. Without its binary in
 # place every `vitest run` fails to start.
+# lefthook — its postinstall places the platform binary that `lefthook install` and every hook then
+# invoke. Skipped, the `prepare` script fails and the repository silently has no hooks.
 onlyBuiltDependencies:
   - sharp
   - esbuild
+  - lefthook

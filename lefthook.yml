@@ -1,0 +1,25 @@
+# docs/DEVOPS.md § Git hooks. Hooks never run the full suite: a pre-commit hook that takes 40 seconds
+# gets bypassed with --no-verify, and then it protects nothing.
+pre-commit:
+  parallel: true
+  commands:
+    format:
+      # .mjs and .mts are here because the gate scripts are .mjs and Biome lints them like any other
+      # source — see docs/DEVOPS.md § Git hooks.
+      glob: '*.{ts,tsx,mts,mjs,json,md,css}'
+      run: pnpm exec biome check --write --no-errors-on-unmatched {staged_files}
+      stage_fixed: true
+    secrets:
+      run: pnpm check:secrets {staged_files}
+
+pre-push:
+  commands:
+    typecheck:
+      run: pnpm typecheck
+    unit:
+      run: pnpm test:unit
+
+commit-msg:
+  commands:
+    conventional:
+      run: pnpm check:commit-msg {1}

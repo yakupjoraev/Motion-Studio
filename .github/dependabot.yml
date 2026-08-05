@@ -1,0 +1,25 @@
+# Grouped so a React bump is one pull request, not four. Full CI runs on every Dependabot pull
+# request — the point of the gates is that a dependency upgrade cannot silently regress a budget.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      react:
+        patterns: ['react', 'react-dom', '@types/react*']
+      next:
+        patterns: ['next', '@next/*']
+      testing:
+        patterns: ['vitest', '@vitest/*', '@playwright/*', '@testing-library/*']
+      tooling:
+        patterns: ['@biomejs/*', 'turbo', 'typescript']
+      motion:
+        patterns: ['motion', 'gsap']
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

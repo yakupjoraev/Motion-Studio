@@ -1,0 +1,52 @@
+name: Preset request
+description: Propose a theme preset or a motion preset.
+labels: [preset-request]
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options:
+        - Theme preset (docs/THEME_ENGINE.md § Presets)
+        - Motion preset (docs/ANIMATION_SYSTEM.md)
+    validations:
+      required: true
+
+  - type: input
+    id: name
+    attributes:
+      label: Preset name
+      placeholder: nord
+    validations:
+      required: true
+
+  - type: textarea
+    id: character
+    attributes:
+      label: Character
+      description: One line, as the preset tables put it — what a document feels like under it.
+      placeholder: Cool desaturated, blue accent, flat elevation.
+    validations:
+      required: true
+
+  - type: textarea
+    id: values
+    attributes:
+      label: Values
+      description: >
+        For a theme: the `ThemeConfig` fields you propose. For motion: the durations, easings, and the
+        properties animated. Every value is a token reference, never a literal colour or millisecond
+        count outside the token set.
+      render: ts
+    validations:
+      required: true
+
+  - type: textarea
+    id: contrast
+    attributes:
+      label: Contrast, or reduced motion
+      description: >
+        Theme presets go through `TEXT_PAIRS` and `UI_PAIRS` in CI — say whether you measured, and what
+        you got. Motion presets need a reduced-motion fallback, stated here.
+    validations:
+      required: true

@@ -1,0 +1,67 @@
+name: Block request
+description: Propose a component for the block registry.
+labels: [block-request]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The catalogue is in `docs/COMPONENT_LIBRARY.md`. A block is a pure presentational component of
+        its props — it never knows it is in an editor, which is what makes export possible.
+
+  - type: input
+    id: name
+    attributes:
+      label: Block name
+      placeholder: Pricing table with a monthly/annual toggle
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - layout
+        - hero
+        - marketing
+        - navigation
+        - interactive
+        - data
+        - forms
+        - content
+    validations:
+      required: true
+
+  - type: textarea
+    id: purpose
+    attributes:
+      label: What a user builds with it
+      description: The page or section it makes possible that no existing block does.
+    validations:
+      required: true
+
+  - type: textarea
+    id: props
+    attributes:
+      label: Props it would expose
+      description: >
+        The inspector is generated from the Zod schema, so this list becomes the controls a user sees.
+        Name each prop and its type.
+    validations:
+      required: true
+
+  - type: textarea
+    id: motion
+    attributes:
+      label: Motion, and its reduced-motion fallback
+      description: >
+        A preset without a reduced-motion fallback fails review — `CONTRIBUTING.md` § Adding a motion
+        preset. Say what it does under `prefers-reduced-motion: reduce`.
+
+  - type: textarea
+    id: references
+    attributes:
+      label: Visual references
+      description: >
+        Links only, never pasted code. `CONTRIBUTING.md` § Design references and licences: a verbatim
+        paste fails review on three counts.

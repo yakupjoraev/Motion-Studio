@@ -1,0 +1,62 @@
+# The pipeline from docs/DEVOPS.md § CI, with the jobs whose subjects exist today.
+#
+# Job order follows docs/TESTING.md § CI ordering — cheapest first, so a lint error does not wait on a
+# build. `quality` uses the composite action rather than repeating pnpm/node/install inline as the
+# document writes it: the composite is those exact steps, so the pipeline is unchanged and the setup
+# lives in one file.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Absent on a fork's pull request. Turbo treats empty values as "no remote cache" and builds
+  # locally, which is why nothing here is marked required.
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test:coverage
+      # `pnpm test:codegen` — added by prompt 46 (export verification), which creates the goldens.
+      - uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          # A fork's pull request has no token. Coverage reporting is information, not a gate.
+          fail_ci_if_error: false
+
+  graph:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm check:deps # cycles, direction rules, deep imports, undeclared imports
+      # `pnpm check:registry` — added by prompt 26 (block thumbnails), which creates the registry.
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm build
+      # `pnpm size-limit` and `pnpm analyze` with the bundle-analysis artifact — added by prompt 54
+      # (performance hardening), which writes the per-route budgets they check against.
+# Jobs still to come, each with the prompt that creates what it tests:
+#   compile-exports — prompt 46, tsc over every golden export
+#   e2e             — prompt 56, Playwright sharded ×3 across three browsers
+#   a11y            — prompt 55, zero axe violations
+#   lighthouse      — prompt 54, its own workflow with the perf and a11y budgets
+#   visual          — prompt 57, non-blocking, main and labelled pull requests
+# Prompt 60 assembles the complete pipeline and reports per-job duration.

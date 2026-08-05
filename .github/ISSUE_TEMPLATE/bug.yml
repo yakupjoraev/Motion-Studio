@@ -1,0 +1,58 @@
+name: Bug report
+description: Something behaves differently from what the docs say it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        `CONTRIBUTING.md` § Reporting bugs: console output helps more than a description of it.
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: What you did
+      description: The steps, in order, starting from a fresh load.
+      placeholder: |
+        1. Open /studio
+        2. Insert a Hero block
+        3. Drag the corner handle left past the artboard edge
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+      description: If a document states it, name the document and the section.
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Browser and OS
+      placeholder: Firefox 131, Windows 11
+    validations:
+      required: true
+
+  - type: textarea
+    id: console
+    attributes:
+      label: Console output
+      description: Paste it verbatim, not a summary.
+      render: text
+
+  - type: textarea
+    id: document
+    attributes:
+      label: Repro document
+      description: >
+        Attach the `.motion` file, or paste a minimal one. Required when the canvas, selection, or
+        history is involved — those bugs depend on document state.
