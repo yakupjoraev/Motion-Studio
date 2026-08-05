@@ -22,6 +22,15 @@ export {
   type SelectProps,
   type SelectStyleProps,
 } from './select/index'
+export {
+  Segmented,
+  segmentedIndicatorStyles,
+  segmentedItemStyles,
+  segmentedRootStyles,
+  type SegmentedOption,
+  type SegmentedProps,
+  type SegmentedStyleProps,
+} from './segmented/index'
 export { DENSITY, HEIGHT_CLASS, LABEL_COLUMN_CLASS, type DensityToken } from './styles/density'
 export {
   DISABLED,
