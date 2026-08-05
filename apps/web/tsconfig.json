@@ -1,13 +1,5 @@
 {
-  "extends": "../../tsconfig.json",
-  "compilerOptions": {
-    "jsx": "preserve",
-    "allowJs": true,
-    "esModuleInterop": true,
-    "resolveJsonModule": true,
-    "incremental": true,
-    "plugins": [{ "name": "next" }]
-  },
+  "extends": "@motion-studio/config/tsconfig/next.json",
   "include": ["next-env.d.ts", "app/**/*.ts", "app/**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]
 }

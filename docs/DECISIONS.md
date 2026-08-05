@@ -274,3 +274,255 @@ Prompt 02 repoints every `extends` at the real preset and the root keeps only it
 ### Alternatives rejected
 - Option A: identical end state, sixteen places for a flag to drift in between.
 - Option C: takes prompt 02's deliverables and violates prompt 01's file-list constraint.
+
+## ADR-005 — The deep-import ban is enforced by the `exports` map, not by Biome
+
+**Date** 2026-08-05 · **Prompt** 02 · **Status** Accepted
+
+### Question
+Prompt 02 asks for "a custom restriction: no import matching `@motion-studio/*/src/*`", and adds:
+"If Biome cannot express it, add it to `scripts/check-deps.mjs` in prompt 05 and note that here."
+Can Biome 1.9 express it?
+
+### Criterion (set before measuring)
+The branch is chosen by whether Biome's rule accepts a pattern, not by preference. If it does, the
+rule goes in `biome.json`; if it does not, the ban falls to prompt 05's script and this entry records
+what still catches the violation in the meantime.
+
+### Measurement
+`biome explain noRestrictedImports` on 1.9.4 documents a single option, `paths`, whose value is a map
+from an **exact** module specifier to a message. There is no pattern or glob form (Biome added
+`patterns` in 2.0). Enumerating exact paths is not equivalent: the violation is
+`@motion-studio/<pkg>/src/<any file>`, an open set.
+
+Measured what does catch it, with `@motion-studio/utils` declared as a real dependency of
+`@motion-studio/ui` and `import { placeholder } from '@motion-studio/utils/src/index'` in
+`packages/ui/src`:
+
+- `biome check src/probe.ts` → `Checked 1 file. No fixes applied.` — not caught.
+- `tsc --noEmit` → `error TS2307: Cannot find module '@motion-studio/utils/src/index' or its
+  corresponding type declarations.` — caught, because prompt 01 § Constraints publishes only `"."`
+  and `"./package.json"` in every `exports` map.
+
+### Decision
+No `noRestrictedImports` entry in `biome.json`. The `exports` map is the gate today and it fails
+`pnpm typecheck`; prompt 05 § `scripts/check-deps.mjs` assertion 3 adds the regex gate that reports
+the offending file and line.
+
+### Consequences
+- Accepted: until prompt 05, a deep import surfaces as a module-resolution error rather than a
+  message naming the rule. The failure is loud, but the diagnostic does not say "deep import".
+- Accepted: a deep import inside a package's own source (`./src/...` relative) is not covered by
+  either gate. It is also not the failure the rule exists to prevent — the rule is about crossing a
+  package boundary.
+- Avoided: an exact-path list that would silently miss every file not enumerated in it, which is
+  worse than no rule because it reads as coverage.
+
+### Alternatives rejected
+- Upgrade to Biome 2 for `patterns`: `TECH_STACK.md` § Tooling pins Biome 1.9. Changing a pinned
+  tool version to obtain one rule is a `TECH_STACK.md` edit and its own decision, not a side effect
+  of prompt 02.
+- Enumerate the fourteen package names in `paths`: does not match, because the specifier that must
+  be rejected includes the file path after `/src/`.
+
+## ADR-006 — A package takes the React Vitest preset unless it can never hold a `.tsx` test
+
+**Date** 2026-08-05 · **Prompt** 02 · **Status** Accepted
+
+### Question
+Prompt 02 defines two Vitest presets and two matching tsconfig presets but does not say which of the
+fourteen packages takes which.
+
+### Criterion (set before choosing)
+The presets differ in their `include` glob, which prompt 02 fixes: `node` collects
+`src/**/*.test.ts`, `react` collects `src/**/*.test.{ts,tsx}`. A `.test.tsx` file in a package on the
+node preset is therefore **silently never run** — it is not an error, it is an absence. A pure
+`.test.ts` file in a package on the react preset runs correctly, only in jsdom.
+
+The two failure modes are not symmetric, so the criterion is: a package goes on the node preset only
+if it can never hold a component test. Every other package goes on the react preset. Speed is not the
+criterion — `pnpm test:unit` (`turbo test -- --environment=node`, `TESTING.md` § Commands) already
+exists for the fast path.
+
+### Measurement
+Applied to each package's own `README.md`, written in prompt 01:
+
+| Node preset | The sentence that puts it there |
+| --- | --- |
+| `utils` | "It depends on nothing, which is what keeps it testable in `node`" |
+| `editor` | "testable in `node` with no React" |
+| `schema` | "Zod schemas and the types inferred from them" |
+| `codegen` | "the intermediate representation … and the formatter" |
+| `tokens` | "as typed objects, and the generator that turns them into the `@theme` block" |
+
+The remaining eight — `icons`, `theme`, `motion`, `hooks`, `ui`, `blocks`, `canvas`, `dnd` — each
+describe React components, React hooks, or direct DOM work in their own README, so each can hold a
+`.test.tsx`. `apps/web` takes `tsconfig/next.json` and no Vitest config: its flows are Playwright's
+(`TESTING.md` § E2E tests).
+
+### Decision
+Five packages on `library.json` + `vitest/node`, eight on `react.json` + `vitest/react`, `apps/web`
+on `next.json`. The table is repeated in `packages/config/README.md` so it is visible where the
+presets are, not only here.
+
+### Consequences
+- Accepted: `canvas` runs its pure coordinate tests in jsdom, which costs jsdom start-up per file
+  even though `TESTING.md` § Unit tests lists every canvas subject as pure. `CANVAS.md` § DOM
+  structure gives the package an overlay layer, so it will hold component tests.
+- Accepted: `motion` and `theme` likewise pay for jsdom on tests that do not need it.
+- Avoided: the failure this criterion exists for — a component test that is present, passes review,
+  and never runs.
+
+### Alternatives rejected
+- Split by test kind rather than by package: Vitest workspaces would let one package run both
+  environments, but prompt 02's deliverable is two presets consumed one per package, and a second
+  mechanism to configure is not in its scope.
+- Node preset wherever `TESTING.md` § Unit tests lists the package: that table is about what belongs
+  in unit tests, not about what the package can contain, and it would put `canvas`, `motion`, and
+  `theme` on a preset that drops their future component tests.
+
+## ADR-007 — Biome override globs are written to match from any working directory
+
+**Date** 2026-08-05 · **Prompt** 02 · **Status** Accepted
+
+### Question
+Prompt 02 specifies the `noDefaultExport` override as `apps/web/app/**`. `lint` is a per-package
+script, so Biome runs with the package as its working directory. Does the specified glob hold?
+
+### Criterion (set before measuring)
+The override must suppress the rule identically whether Biome is invoked at the repository root or
+inside the package. Anything else is a gate whose result depends on how it was invoked, which cannot
+be checked.
+
+### Measurement
+With `"include": ["**/apps/web/app/**"]`:
+
+- `pnpm exec biome check .` at the root → clean.
+- `pnpm exec biome check .` in `apps/web` → 2 errors, `lint/style/noDefaultExport` on
+  `app/page.tsx:1:8` and `app/layout.tsx:15:8`.
+
+Biome matches override globs against the path relative to the working directory, so `app/page.tsx`
+does not match a glob containing `apps/web/`.
+
+### Decision
+`**/app/**`. `**/` matches zero or more leading segments, so the glob holds from both directories.
+Every other glob in the file — `**/*.stories.tsx`, `**/*.config.{ts,mts,js,mjs}`,
+`**/tsconfig/*.json`, and the `files.ignore` list — is written in the same form for the same reason.
+The reasoning is repeated in `packages/config/README.md` because `biome.json` cannot hold a comment:
+Biome parses its own config as strict JSON and rejects one with `parse` errors.
+
+### Consequences
+- Accepted: the override is broader than specified. It exempts any directory named `app`, not only
+  `apps/web/app`. In this repository a directory named `app` is a Next App Router root by
+  `ENGINEERING_CONTRACT.md` § Directory law, and `apps/web` is the only Next app.
+- Accepted: if a package ever adds a plain `app/` directory that is not a router root, default
+  exports go unchecked inside it. That would be a directory-law violation first.
+- Avoided: a lint gate that passes in CI and fails locally, or the reverse, depending on the
+  directory it was started from.
+
+### Alternatives rejected
+- A second `biome.json` in `apps/web` carrying the override relative to itself: the policy would then
+  be declared in two files that must agree, which is the drift this package exists to prevent.
+- Root-only linting (`biome check .` as the root `lint` script, no per-package scripts):
+  `DEVOPS.md` § Turborepo declares a `lint` task and § CI runs `pnpm lint`, so per-package scripts are
+  the documented shape; and a `turbo lint` with no package script is a gate that reports success
+  without checking anything.
+
+## ADR-008 — `jest-axe` is typed by a local module declaration
+
+**Date** 2026-08-05 · **Prompt** 02 · **Status** Accepted
+
+### Question
+`packages/config/vitest/setup-react.ts` must call `expect.extend(toHaveNoViolations)` from
+`jest-axe`, which is a new dependency and is not named in `TECH_STACK.md` § Tooling. How is it
+declared, and how is it typed under "zero `any`, no `@ts-ignore`"?
+
+### Six answers from `TECH_STACK.md` § Adding a dependency
+1. It formats an axe-core result set into a readable matcher failure. Reimplementing it means
+   reimplementing the violation report, not the assertion.
+2. Zero bytes in any shipped bundle. It is a devDependency of a development-only package and is
+   loaded only by the Vitest setup file.
+3. Not applicable — it never enters a bundle. Used surface: two exports.
+4. **No.** The published tarball contains `index.js` and nothing else.
+5. Yes — 11.0.0, and it carries `axe-core` 4.12.1 as a direct dependency.
+6. No bundle. Not dynamically importable and does not need to be.
+
+### Criterion
+Answer 4 forces a choice, and the criterion is that the chosen option must not weaken the type
+environment of any package that consumes the preset.
+
+### Measurement
+`npm view @types/jest-axe dependencies` → `{ 'axe-core': '^3.5.5', '@types/jest': '*' }`.
+`@types/jest` declares ambient `expect`, `describe`, and `it` globals, which shadow Vitest's in every
+file of every package that picks the types up — a strictly worse type environment, and it pins
+`axe-core` types three major versions behind the runtime.
+
+`import type { … } from 'axe-core'` is also unavailable: `axe-core` arrives as a transitive
+dependency of `jest-axe`, and `node-linker=isolated` (`.npmrc`) means it is not resolvable from
+`packages/config`.
+
+### Decision
+Add `jest-axe` as a devDependency of `@motion-studio/config`, and declare the two used exports in
+`packages/config/vitest/jest-axe.d.ts` with a result type narrowed to the fields a failure message
+reads. `pnpm typecheck` is clean with it and `expect.extend(toHaveNoViolations)` typechecks.
+
+### Consequences
+- Accepted: one file more than prompt 02's deliverable list. Without it the import is an error under
+  `strict`, so the alternative is not "fewer files" but "no working setup file".
+- Accepted: the declaration is hand-maintained. It covers two exports, and a mismatch surfaces as a
+  type error at the call site rather than silently.
+- Accepted: `TECH_STACK.md` § Tooling names `axe-core / @axe-core/playwright` but not `jest-axe`.
+  The document should name it next to Vitest; proposed as an edit, not made in this commit.
+- Not resolved here: the declaration is inside `packages/config`, whose files are not in a consumer's
+  tsconfig program, so `toHaveNoViolations()` is registered at runtime but not yet visible to
+  TypeScript inside a consumer package. Verified: the matcher is present on the assertion object at
+  runtime. The first component test needs the module augmentation and is the first place it can be
+  checked, so it belongs there.
+
+### Alternatives rejected
+- `@types/jest-axe`: measured above — shadows Vitest's globals.
+- `vitest-axe` instead of `jest-axe`: ships its own types, but prompt 02 names `jest-axe`, and
+  swapping a named deliverable for an unnamed package is not a decision prompt 02 leaves open.
+
+## ADR-009 — The React Vitest preset imports its sibling through the package's own `exports` map
+
+**Date** 2026-08-05 · **Prompt** 02 · **Status** Accepted
+
+### Question
+`packages/config/vitest/react.ts` shares `coverageExclude` with `node.ts`. What does the import
+specifier look like?
+
+### Criterion
+The specifier must resolve in both consumers of the file: `tsc --noEmit` in the consuming package,
+and Vitest loading the consuming package's `vitest.config.ts`. One list of coverage exclusions, not
+two.
+
+### Measurement
+`import { coverageExclude } from './node'` typechecks and fails at run time:
+`Error [ERR_MODULE_NOT_FOUND]: Cannot find module '…/packages/config/vitest/node' imported from
+…/packages/config/vitest/react.ts`. Vitest treats the bare specifier
+`@motion-studio/config/vitest/react` as external, so the file reaches Node's ESM loader, which does
+not resolve an extensionless relative path.
+
+`import { coverageExclude } from '@motion-studio/config/vitest/node'` — a self-reference, which Node
+supports for a package that declares `exports` — resolves in both: `vitest run` starts and
+`pnpm typecheck` is clean across all fifteen tasks.
+
+### Decision
+Self-reference through the `exports` map.
+
+### Consequences
+- Accepted: a relative import inside one directory is written as a package specifier, which reads
+  oddly until the comment above it is read. The comment is there.
+- Accepted: it depends on the `./vitest/*` entry in the `exports` map. Removing that entry breaks
+  the preset, which is the same thing that breaks every consumer, so it fails loudly.
+
+### Alternatives rejected
+- `./node.ts` with `allowImportingTsExtensions`: the flag would have to be in `base.json`, because a
+  consumer's tsconfig program includes `react.ts`, and `base.json` is fixed to
+  `CODE_STANDARDS.md` § Compiler configuration.
+- Duplicate the exclusion list in both presets: two lists that must stay identical, inside the
+  package whose stated purpose is that a change is "a one-file change instead of fifteen".
+- Build `reactConfig` with `mergeConfig(nodeConfig, …)`: Vite's `mergeConfig` concatenates arrays, so
+  `include` would become both globs and the node preset's `src/**/*.ts` coverage include would
+  survive into a package holding `.tsx` files.

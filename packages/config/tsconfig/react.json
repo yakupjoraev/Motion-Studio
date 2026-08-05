@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./base.json",
+  "compilerOptions": {
+    // These packages ship source and are compiled by whichever app consumes them
+    // (ARCHITECTURE.md § Monorepo topology: no build step for internal packages), so the JSX
+    // runtime import is injected instead of requiring `import React` in every file.
+    "jsx": "react-jsx"
+  }
+}

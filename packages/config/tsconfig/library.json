@@ -1,0 +1,7 @@
+{
+  // Adds nothing to base today: every flag in CODE_STANDARDS.md § Compiler configuration applies
+  // to pure and React packages alike. It exists as the named seam so a flag that should hold only
+  // for the React-free packages has one home instead of five package manifests.
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./base.json"
+}

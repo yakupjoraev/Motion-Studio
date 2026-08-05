@@ -3,8 +3,13 @@ packages:
   - packages/*
   - e2e
 
-# sharp arrives as an optional dependency of next and is what Next uses to optimise images in a
-# production build. Its native binary is selected by an install script, so without this entry pnpm
-# skips that script and prints an approval warning on every install.
+# Both of these resolve a platform-specific native binary in an install script, so without an entry
+# here pnpm skips that script and prints an approval warning on every install.
+#
+# sharp — an optional dependency of next, and what Next uses to optimise images in a production
+# build.
+# esbuild — arrives under vite, which Vitest runs the test files through. Without its binary in
+# place every `vitest run` fails to start.
 onlyBuiltDependencies:
   - sharp
+  - esbuild
