@@ -24,6 +24,16 @@
   }
 
   /*
+   * Mode switching animates; page load does not. `data-theme-ready` is set in a rAF after the first
+   * paint (THEME_ENGINE.md § Colour mode), so the initial variable write has nothing to transition from.
+   * The duration carries both motion factors, so reduced motion zeroes it — ADR-021.
+   */
+  :root[data-theme-ready] body {
+    transition: background-color var(--ms-duration-quick) var(--ms-ease-standard), color
+      var(--ms-duration-quick) var(--ms-ease-standard);
+  }
+
+  /*
    * ACCESSIBILITY.md § Focus: `:focus-visible` only, and never `outline: none` without a replacement.
    * The replacement is the two-ring focus shadow, which is identical in all four elevation styles.
    */

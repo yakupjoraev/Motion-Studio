@@ -12,10 +12,22 @@
     "test": "vitest run --passWithNoTests",
     "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "@motion-studio/tokens": "workspace:*",
+    "@motion-studio/utils": "workspace:*",
+    "zod": "^3.23.8"
+  },
+  "peerDependencies": {
+    "react": ">=19"
+  },
   "devDependencies": {
     "@motion-studio/config": "workspace:*",
+    "@testing-library/react": "^16.3.2",
+    "@types/react": "^19.2.18",
     "@vitest/coverage-v8": "^2.1.9",
     "jsdom": "^25.0.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "vitest": "^2.1.9"
   }
 }

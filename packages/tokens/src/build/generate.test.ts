@@ -84,8 +84,24 @@ describe('the variable indirection', () => {
     }
   })
 
-  it('keeps the reduced-motion query on the same variable the motion scale writes', () => {
-    expect(toCss()).toContain('--ms-motion-scale: 0;')
-    expect(toCss()).toContain('--ms-motion-scale: 1;')
+  it('keeps the reduced-motion factor separate from the theme scale', () => {
+    // ADR-021: the theme writes `--ms-motion-scale` inline, which outranks the media query. If the
+    // query ever targets that same variable again, reduced motion stops working on themed documents.
+    const css = toCss()
+
+    expect(css).toContain('--ms-motion-scale: 1;')
+    expect(css).toContain('--ms-reduced-motion: 1;')
+    expect(css).toContain('--ms-reduced-motion: 0;')
+    expect(css).not.toContain('--ms-motion-scale: 0;')
+  })
+
+  it('multiplies every duration by both motion factors', () => {
+    for (const line of toCss()
+      .split('\n')
+      .filter((row) => row.includes('--ms-duration-'))) {
+      expect(line).toMatch(
+        /calc\(\d+ms \* var\(--ms-motion-scale\) \* var\(--ms-reduced-motion\)\);$/,
+      )
+    }
   })
 })

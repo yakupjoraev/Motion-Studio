@@ -28,6 +28,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@motion-studio/theme':
+        specifier: workspace:*
+        version: link:../../packages/theme
       next:
         specifier: ^15.5.4
         version: 15.5.22(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -219,16 +222,38 @@ importers:
         version: 2.1.9(@types/node@22.20.1)(jsdom@25.0.1)(lightningcss@1.32.0)
 
   packages/theme:
+    dependencies:
+      '@motion-studio/tokens':
+        specifier: workspace:*
+        version: link:../tokens
+      '@motion-studio/utils':
+        specifier: workspace:*
+        version: link:../utils
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
     devDependencies:
       '@motion-studio/config':
         specifier: workspace:*
         version: link:../config
+      '@testing-library/react':
+        specifier: ^16.3.2
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@types/react':
+        specifier: ^19.2.18
+        version: 19.2.18
       '@vitest/coverage-v8':
         specifier: ^2.1.9
         version: 2.1.9(vitest@2.1.9(@types/node@22.20.1)(jsdom@25.0.1)(lightningcss@1.32.0))
       jsdom:
         specifier: ^25.0.1
         version: 25.0.1
+      react:
+        specifier: ^19.2.8
+        version: 19.2.8
+      react-dom:
+        specifier: ^19.2.8
+        version: 19.2.8(react@19.2.8)
       vitest:
         specifier: ^2.1.9
         version: 2.1.9(@types/node@22.20.1)(jsdom@25.0.1)(lightningcss@1.32.0)
@@ -2157,6 +2182,9 @@ packages:
   xmlchars@2.2.0:
     resolution: {integrity: sha512-JZnDKK8B0RCDw84FNdDAIpZK+JuJw+s7Lz8nksI7SIuU3UXJJslUthsi+uWBUYOwPFwW7W7PRLRfUKpxjtjFCw==}
 
+  zod@3.25.76:
+    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
+
 snapshots:
 
   '@adobe/css-tools@4.5.0': {}
@@ -3749,3 +3777,5 @@ snapshots:
   xml-name-validator@5.0.0: {}
 
   xmlchars@2.2.0: {}
+
+  zod@3.25.76: {}

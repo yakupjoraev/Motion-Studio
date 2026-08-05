@@ -27,6 +27,8 @@ interface Block {
   readonly selector: string
   readonly comment: string
   readonly declarations: readonly Declaration[]
+  /** Wraps the rule in an at-rule. Used for the system colour preference — ADR-026. */
+  readonly media?: string
 }
 
 const SHADOW_LEVELS = ['xs', 'sm', 'md', 'lg', 'xl', '2xl'] as const
@@ -64,13 +66,15 @@ const modelessDeclarations = (): Declaration[] => [
     [`--ms-text-${token}-tracking`, entry.tracking],
   ]),
   ...Object.entries(BLUR).map(([token, value]): Declaration => [`--ms-blur-${token}`, value]),
-  // Durations carry the motion scale in the value, so reduced motion is the same code path as
-  // `motionScale: 0` rather than a separate branch — `THEME_ENGINE.md` § Motion scale.
+  // Two independent factors, not one: the theme's scale is written inline by `applyTheme`, and an
+  // inline declaration outranks the media query below. Sharing one variable let a theme change put a
+  // reduced-motion user back on full animation — measured, ADR-021.
   ['--ms-motion-scale', '1'],
+  ['--ms-reduced-motion', '1'],
   ...Object.entries(DURATION).map(
     ([token, value]): Declaration => [
       `--ms-duration-${token}`,
-      `calc(${value}ms * var(--ms-motion-scale))`,
+      `calc(${value}ms * var(--ms-motion-scale) * var(--ms-reduced-motion))`,
     ],
   ),
   ...Object.entries(EASING).map(
@@ -106,13 +110,29 @@ const blocks = (): Block[] => [
       ...modelessDeclarations(),
     ],
   },
-  ...COLOR_MODES.filter((mode) => mode !== DEFAULT_MODE).map(
-    (mode): Block => ({
-      selector: `:root[data-color-mode='${mode}']`,
-      comment: `${mode} mode. Not an inversion: the elevation direction, the accent ladder and the status step all differ`,
-      declarations: [...colorDeclarations(mode), ...shadowDeclarations(DEFAULT_ELEVATION, mode)],
-    }),
-  ),
+  ...COLOR_MODES.filter((mode) => mode !== DEFAULT_MODE).flatMap((mode): Block[] => {
+    const declarations = [
+      ...colorDeclarations(mode),
+      ...shadowDeclarations(DEFAULT_ELEVATION, mode),
+    ]
+
+    return [
+      {
+        selector: `:root[data-color-mode='${mode}']`,
+        comment: `${mode} mode. Not an inversion: the elevation direction, the accent ladder and the status step all differ`,
+        declarations,
+      },
+      {
+        // The system preference, handled in CSS so it needs no JavaScript: a first-time visitor whose OS
+        // is dark paints dark before any script runs, which leaves the blocking head script with nothing
+        // to do but apply a *stored* choice. ADR-026.
+        selector: ':root:not([data-color-mode])',
+        comment: `${mode} mode for a root that has not been told yet — the system preference, no script involved`,
+        declarations,
+        media: `(prefers-color-scheme: ${mode})`,
+      },
+    ]
+  }),
   ...ELEVATION_STYLES.flatMap((style) =>
     COLOR_MODES.map(
       (mode): Block => ({
@@ -128,20 +148,25 @@ const blocks = (): Block[] => [
 ]
 
 const renderBlock = (block: Block): string => {
-  const body = block.declarations.map(([name, value]) => `  ${name}: ${value};`).join('\n')
+  const indent = block.media === undefined ? '  ' : '    '
+  const body = block.declarations.map(([name, value]) => `${indent}${name}: ${value};`).join('\n')
+  const comment = `/* ${block.comment} */`
 
-  return `/* ${block.comment} */\n${block.selector} {\n${body}\n}`
+  if (block.media === undefined) {
+    return `${comment}\n${block.selector} {\n${body}\n}`
+  }
+
+  return `${comment}\n@media ${block.media} {\n  ${block.selector} {\n${body}\n  }\n}`
 }
 
 /**
- * Reduced motion is the same code path as `motionScale: 0`, not a separate branch — `THEME_ENGINE.md`
- * § Motion scale. The scale variable lives here so the media query has something to write before the
- * theme engine exists.
+ * The environment's factor. The theme engine never writes this one — that separation is the whole
+ * point of ADR-021.
  */
 const REDUCED_MOTION = [
   '@media (prefers-reduced-motion: reduce) {',
   '  :root {',
-  '    --ms-motion-scale: 0;',
+  '    --ms-reduced-motion: 0;',
   '  }',
   '}',
 ].join('\n')

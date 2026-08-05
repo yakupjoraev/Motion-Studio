@@ -256,13 +256,14 @@
   --ms-blur-2xl: 40px;
   --ms-blur-3xl: 64px;
   --ms-motion-scale: 1;
-  --ms-duration-instant: calc(0ms * var(--ms-motion-scale));
-  --ms-duration-fast: calc(120ms * var(--ms-motion-scale));
-  --ms-duration-quick: calc(180ms * var(--ms-motion-scale));
-  --ms-duration-base: calc(240ms * var(--ms-motion-scale));
-  --ms-duration-slow: calc(360ms * var(--ms-motion-scale));
-  --ms-duration-slower: calc(520ms * var(--ms-motion-scale));
-  --ms-duration-slowest: calc(800ms * var(--ms-motion-scale));
+  --ms-reduced-motion: 1;
+  --ms-duration-instant: calc(0ms * var(--ms-motion-scale) * var(--ms-reduced-motion));
+  --ms-duration-fast: calc(120ms * var(--ms-motion-scale) * var(--ms-reduced-motion));
+  --ms-duration-quick: calc(180ms * var(--ms-motion-scale) * var(--ms-reduced-motion));
+  --ms-duration-base: calc(240ms * var(--ms-motion-scale) * var(--ms-reduced-motion));
+  --ms-duration-slow: calc(360ms * var(--ms-motion-scale) * var(--ms-reduced-motion));
+  --ms-duration-slower: calc(520ms * var(--ms-motion-scale) * var(--ms-reduced-motion));
+  --ms-duration-slowest: calc(800ms * var(--ms-motion-scale) * var(--ms-reduced-motion));
   --ms-ease-linear: cubic-bezier(0, 0, 1, 1);
   --ms-ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --ms-ease-decelerate: cubic-bezier(0, 0, 0.2, 1);
@@ -334,6 +335,49 @@
   --ms-shadow-2xl: 0 32px 64px oklch(0% 0 0 / 0.60), inset 0 1px 0 oklch(100% 0 0 / 0.09);
 }
 
+/* dark mode for a root that has not been told yet — the system preference, no script involved */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-color-mode]) {
+    --ms-color-surface-0: oklch(9.5% 0.006 265);
+    --ms-color-surface-1: oklch(14.0% 0.008 265);
+    --ms-color-surface-2: oklch(19.5% 0.010 265);
+    --ms-color-surface-3: oklch(27.0% 0.012 265);
+    --ms-color-surface-inset: oklch(9.5% 0.006 265);
+    --ms-color-foreground: oklch(98.5% 0.002 265);
+    --ms-color-foreground-muted: oklch(70.0% 0.012 265);
+    --ms-color-foreground-subtle: oklch(58.0% 0.014 265);
+    --ms-color-foreground-onAccent: oklch(9.5% 0.006 265);
+    --ms-color-border: oklch(27.0% 0.012 265);
+    --ms-color-border-strong: oklch(37.0% 0.014 265);
+    --ms-color-border-subtle: oklch(19.5% 0.010 265);
+    --ms-color-accent: oklch(70.0% 0.156 285);
+    --ms-color-accent-hover: oklch(86.0% 0.068 285);
+    --ms-color-accent-active: oklch(92.5% 0.036 285);
+    --ms-color-accent-muted: oklch(19.5% 0.114 285);
+    --ms-color-accent-ring: oklch(70.0% 0.156 285);
+    --ms-color-success: oklch(70.0% 0.107 160);
+    --ms-color-success-muted: oklch(19.5% 0.047 160);
+    --ms-color-warning: oklch(70.0% 0.100 75);
+    --ms-color-warning-muted: oklch(19.5% 0.045 75);
+    --ms-color-danger: oklch(70.0% 0.184 15);
+    --ms-color-danger-muted: oklch(19.5% 0.081 15);
+    --ms-color-info: oklch(70.0% 0.152 255);
+    --ms-color-info-muted: oklch(19.5% 0.070 255);
+    --ms-color-canvas-bg: oklch(9.5% 0.006 265);
+    --ms-color-canvas-grid: oklch(19.5% 0.010 265);
+    --ms-color-canvas-guide: oklch(70.0% 0.082 210);
+    --ms-color-canvas-selection: oklch(70.0% 0.156 285);
+    --ms-color-canvas-hover: oklch(70.0% 0.156 285 / 0.5);
+    --ms-color-canvas-snap: oklch(70.0% 0.184 15);
+    --ms-shadow-xs: inset 0 1px 0 oklch(100% 0 0 / 0.04);
+    --ms-shadow-sm: 0 1px 2px oklch(0% 0 0 / 0.40), inset 0 1px 0 oklch(100% 0 0 / 0.05);
+    --ms-shadow-md: 0 2px 6px oklch(0% 0 0 / 0.45), inset 0 1px 0 oklch(100% 0 0 / 0.06);
+    --ms-shadow-lg: 0 8px 20px oklch(0% 0 0 / 0.50), inset 0 1px 0 oklch(100% 0 0 / 0.07);
+    --ms-shadow-xl: 0 16px 40px oklch(0% 0 0 / 0.55), inset 0 1px 0 oklch(100% 0 0 / 0.08);
+    --ms-shadow-2xl: 0 32px 64px oklch(0% 0 0 / 0.60), inset 0 1px 0 oklch(100% 0 0 / 0.09);
+  }
+}
+
 /* flat elevation, light mode */
 :root[data-elevation='flat'] {
   --ms-shadow-xs: none;
@@ -396,6 +440,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   :root {
-    --ms-motion-scale: 0;
+    --ms-reduced-motion: 0;
   }
 }
