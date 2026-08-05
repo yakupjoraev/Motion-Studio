@@ -10,8 +10,13 @@ import { readFileSync, statSync } from 'node:fs'
 
 const TYPES = ['feat', 'fix', 'perf', 'refactor', 'docs', 'test', 'build', 'ci', 'chore', 'style']
 
+/**
+ * Every workspace package, plus the three cross-cutting scopes. `CONTRIBUTING.md` § Commit convention is
+ * the source: its rule is that scopes match package names, so a new package adds a row here and there.
+ */
 const SCOPES = [
   'web',
+  'storybook',
   'ui',
   'blocks',
   'editor',
@@ -22,8 +27,10 @@ const SCOPES = [
   'motion',
   'theme',
   'tokens',
+  'icons',
   'hooks',
   'utils',
+  'config',
   'e2e',
   'ci',
   'docs',

@@ -40,8 +40,13 @@ chore(ci): cache turbo remote artifacts
 
 Allowed types: `feat`, `fix`, `perf`, `refactor`, `docs`, `test`, `build`, `ci`, `chore`, `style`.
 
-Scopes match package names: `web`, `ui`, `blocks`, `editor`, `canvas`, `dnd`, `codegen`,
-`schema`, `motion`, `theme`, `tokens`, `hooks`, `utils`, `e2e`, `ci`, `docs`.
+Scopes match package names: `web`, `storybook`, `ui`, `blocks`, `editor`, `canvas`, `dnd`, `codegen`,
+`schema`, `motion`, `theme`, `tokens`, `icons`, `hooks`, `utils`, `config`, plus `e2e`, `ci` and `docs`
+for the cross-cutting work that belongs to no package.
+
+`scripts/check-commit-msg.mjs` reads this list, so a scope that is not here is rejected. Every workspace
+package must appear: `icons`, `config` and `storybook` were missing from the original list while the rule
+above said scopes match package names, and the gate caught it on the first commit that needed `icons`.
 
 Commit messages describe the change and nothing else — no tooling attribution, no assistant
 mentions, no "as requested".
