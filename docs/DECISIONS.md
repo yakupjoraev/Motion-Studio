@@ -928,3 +928,98 @@ Semantics, the corrections the measurements forced:
 - Derive in code and let the code be the specification: `THEME_ENGINE.md` § Palette generation already
   reads the curves as data, and a reader comparing document to implementation needs the numbers in
   one place. The document is that place.
+
+## ADR-019 — The dark accent ladder ascends, and `foreground-onAccent` is per mode
+
+**Date** 2026-08-05 · **Prompt** 04 · **Status** Accepted · **Amends** ADR-018
+
+### Question
+`DESIGN_SYSTEM.md` § Semantic tokens contradicted its own contrast contract. The table set dark
+`accent-hover` to `violet.400` and `accent-active` to `violet.300` — "one ramp step toward higher
+contrast against the mode's surfaces" — while `foreground-onAccent` was `white` in both modes and
+`TEXT_PAIRS` requires `['foreground-onAccent', 'accent-hover']` and
+`['foreground-onAccent', 'accent-active']` at ≥ 4.5 : 1. Transcribing the table as written produces a
+red contrast suite, and prompt 04 says to adjust the token rather than the test.
+
+### Criterion (set before measuring)
+Two thresholds already in the document, both of which the resolution must hold:
+
+1. `foreground-onAccent` on each of `accent`, `accent-hover`, `accent-active`: **≥ 4.5 : 1**
+   (§ Contrast contract, body text).
+2. Each accent fill against all five surfaces of its own mode: **≥ 3 : 1** (§ Contrast contract,
+   non-text graphics that carry information — a fill is how a primary button is identified, and the
+   § exempt list covers hairlines and surface steps, not fills).
+
+An option failing either is rejected. Where both hold, prefer the one that also keeps the positional
+rule the table states in prose.
+
+### Measurement
+`violet.500` is the crossover: `white` on it is 4.70 : 1, `neutral.1000` on it is 4.39 : 1. No single
+foreground spans a ladder that crosses it, which is why the table could not be transcribed as written.
+
+Foreground on each step, dark mode:
+
+| Step | `white` | `neutral.1000` | vs `surface-1` | vs `surface-3` |
+| --- | --- | --- | --- | --- |
+| `violet.200` | 1.25 | 16.46 | 15.87 | 12.01 |
+| `violet.300` | 1.55 | 13.33 | 12.85 | 9.73 |
+| `violet.400` | 2.79 | 7.41 | 7.14 | 5.41 |
+| `violet.500` | 4.70 | 4.39 | 4.23 | 3.21 |
+| `violet.600` | 7.81 | 2.64 | 2.55 | 1.93 |
+| `violet.700` | 11.59 | 1.78 | 1.72 | 1.30 |
+
+- **Ascending ladder** (`accent` 400 → `hover` 300 → `active` 200, foreground `neutral.1000`):
+  criterion 1 gives 7.41 / 13.33 / 16.46; criterion 2's worst case is 5.41. Both hold.
+- **Descending ladder** (`accent` 500 → `hover` 600 → `active` 700, foreground `white`): criterion 1
+  gives 4.70 / 7.81 / 11.59 — holds. Criterion 2 gives 1.93 for `violet.600` and 1.30 for
+  `violet.700` against `surface-3` — **fails**. A pressed primary button sits on the popover it
+  belongs to and cannot be told apart from it.
+- **Documented ladder unchanged** (`accent` 500 → 400 → 300, foreground `white`): criterion 1 gives
+  2.79 and 1.55 — **fails**, which is the defect.
+
+### Escalated
+The choice of route was put to the owner: amend the table's accent rows, or amend the
+`foreground-onAccent` row. Options were presented with the numbers above; the recommendation was the
+ascending ladder, as the only candidate holding both thresholds.
+
+Owner decided on 2026-08-05. Owner's stated reason, verbatim: "Решай сам по критерию" — decide it
+yourself against the criterion.
+
+### Decision
+`docs: correct the dark accent ladder against its own contrast contract` amends
+`DESIGN_SYSTEM.md` § Semantic tokens:
+
+- dark `accent` `violet.500` → `violet.400`, `accent-hover` `violet.400` → `violet.300`,
+  `accent-active` `violet.300` → `violet.200`
+- `foreground-onAccent` becomes `white` in light and `neutral.1000` in dark
+- the prose rule is restated as a direction rather than a mirror: the ladder moves *away* from the
+  mode's surfaces in lightness, and `foreground-onAccent` is the far end of the neutral ramp
+- rule 1's example is re-grounded: `violet.500` at 4.23 : 1 on dark `surface-1` is now the case a
+  *generated* palette hits, since `accent` is placed from the seed's own lightness
+
+Light mode is unchanged: it already descended 600 → 700 → 800 under `white` and measures
+7.81 / 11.59 / 15.99.
+
+### Consequences
+- Accepted: `foreground-onAccent` is no longer one value for both modes. That is what the token is
+  for — a component writes `text-foreground-onAccent` on an accent fill and it resolves per mode —
+  but the document's old claim that `white` was "the only value clearing 4.5 : 1 on both modes'
+  accent" is gone, and the row now carries two values.
+- Accepted: dark `accent` and dark `accent-ring` are both `violet.400`, as light `accent` and
+  `accent-ring` are both `violet.600`. The tokens stay separate because only `accent-ring` carries a
+  guarantee against surfaces, and only `accent-ring` is what contrast repair
+  ([THEME_ENGINE.md](THEME_ENGINE.md) § Contrast repair) may move. A reader seeing two names on one
+  value should read it as a coincidence of the shipped palette, not as duplication to collapse.
+- Accepted: dark `accent` is one step less saturated in appearance than `violet.500` was. The dark
+  primary button is lighter and reads slightly softer against the chrome than the original table
+  intended.
+- Avoided: a red contrast suite, or the same suite with two pairs deleted to make it green — which
+  the prompt names explicitly as the wrong repair.
+
+### Alternatives rejected
+- Descending dark ladder: fails criterion 2 at 1.93 : 1 and 1.30 : 1, measured above.
+- Drop the two pairs from `TEXT_PAIRS`: prompt 04, § The contrast test is the point of this prompt —
+  "if a pair fails, adjust the token, not the test".
+- Give `accent-hover` and `accent-active` their own `foreground-on*` tokens: three foreground tokens
+  for one fill family, and every button would have to know which state it is in to pick a text
+  colour. The ascending ladder makes one token correct for all three.

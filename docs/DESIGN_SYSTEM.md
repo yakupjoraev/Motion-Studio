@@ -228,15 +228,15 @@ never a literal — the ramp is the only place a colour value is written.
 | `foreground` | `neutral.950` | `neutral.50` | 19.9 : 1 on `surface-1` |
 | `foreground-muted` | `neutral.600` | `neutral.400` | 6.98 : 1 / 7.45 : 1 on `surface-1` |
 | `foreground-subtle` | `neutral.500` | `neutral.500` | 4.28 : 1 / 4.65 : 1 on `surface-1`. See the tertiary-text rule below |
-| `foreground-onAccent` | `white` | `white` | The only value clearing 4.5 : 1 on both modes' accent |
+| `foreground-onAccent` | `white` | `neutral.1000` | Each mode's accent ladder climbs away from that mode's surfaces, so the readable foreground is the far end of the neutral ramp: 7.81 light, 7.41 dark |
 | `border` | `neutral.200` | `neutral.800` | Hairline. Decorative — see the exemption below |
 | `border-strong` | `neutral.300` | `neutral.700` | Input and control boundaries |
 | `border-subtle` | `neutral.100` | `neutral.900` | One step inside `border`, for dividers inside a card |
-| `accent` | `violet.600` | `violet.500` | Fill token. `foreground-onAccent` on it measures 7.81 / 4.70 |
-| `accent-hover` | `violet.700` | `violet.400` | One ramp step toward higher contrast against the mode's surfaces |
-| `accent-active` | `violet.800` | `violet.300` | Two steps in the same direction |
+| `accent` | `violet.600` | `violet.400` | Fill token. `foreground-onAccent` on it measures 7.81 / 7.41 |
+| `accent-hover` | `violet.700` | `violet.300` | One ramp step further from the mode's surfaces in lightness |
+| `accent-active` | `violet.800` | `violet.200` | Two steps in the same direction |
 | `accent-muted` | `violet.100` | `violet.900` | The violet step at `surface-2`'s lightness, so a tint reads as the same elevation |
-| `accent-ring` | `violet.600` | `violet.400` | Highest minimum across all five surfaces: 6.26 / 5.41 |
+| `accent-ring` | `violet.600` | `violet.400` | Highest minimum across all five surfaces: 6.26 / 5.41. Coincides with `accent` in both modes; the two are separate tokens because only this one carries a guarantee |
 | `success` | `emerald.600` | `emerald.400` | Clears 4.5 : 1 on `surface-1` *and* on its own muted background |
 | `success-muted` | `emerald.100` | `emerald.900` | Same lightness rule as `accent-muted` |
 | `warning` | `amber.600` | `amber.400` | As `success` |
@@ -252,16 +252,27 @@ never a literal — the ramp is the only place a colour value is written.
 | `canvas-hover` | `violet.600 / 50 %` | `violet.400 / 50 %` | The 50 % from UI_GUIDELINES § Canvas is baked in, not applied at call sites |
 | `canvas-snap` | `rose.500` | `rose.400` | A third hue: transient measurement feedback must never be mistaken for a guide |
 
-Three rules travel with this table:
+Four rules travel with this table:
 
 1. **`accent` is a fill token.** Text or an icon that must read as accent on a surface uses
    `accent-ring`, which is measured to clear 4.5 : 1 against every surface in its mode. `accent`
-   itself is only guaranteed against `foreground-onAccent`, because `violet.500` on dark
-   `surface-1` is 4.23 : 1 — fine as a button fill, not as body text.
-2. **Status colours take the step that clears 4.5 : 1 twice**: on the mode's `surface-1` and on the
+   itself is only guaranteed against `foreground-onAccent`. The two hold the same ramp step today,
+   but a generated palette places `accent` from the seed's own lightness
+   ([THEME_ENGINE.md](THEME_ENGINE.md) § Palette generation), and a seed landing on `violet.500`
+   gives 4.23 : 1 on dark `surface-1` — fine as a button fill, not as body text. `accent-ring` is
+   the token contrast repair is allowed to move; `accent` is the one the user picked.
+2. **The accent ladder moves away from the mode's surfaces, and `foreground-onAccent` follows the
+   other end.** Light surfaces are pale, so light `accent` → `accent-hover` → `accent-active`
+   descends 600 → 700 → 800 and carries `white`. Dark surfaces are near-black, so the dark ladder
+   ascends 400 → 300 → 200 and carries `neutral.1000`. Measured on the three fills: 7.81 / 11.59 /
+   15.99 light, 7.41 / 13.33 / 16.46 dark, and each fill clears 3 : 1 against all five of its own
+   surfaces (worst case 5.41). A ladder that moved *toward* the mode's surfaces would keep `white`
+   in both modes at the cost of a hovered fill measuring 1.93 : 1 against `surface-3` — a pressed
+   button disappearing into the popover under it.
+3. **Status colours take the step that clears 4.5 : 1 twice**: on the mode's `surface-1` and on the
    status's own `-muted` background. Measured, that is step 600 in light and step 400 in dark. Using
    500 in dark fails on the muted background for every hue (3.87–4.49 : 1).
-3. **Tertiary text is held to 3 : 1, not 4.5 : 1** — and in exchange, a value rendered in
+4. **Tertiary text is held to 3 : 1, not 4.5 : 1** — and in exchange, a value rendered in
    `foreground-subtle` must be duplicated somewhere at `foreground-muted` or above. A placeholder
    repeats its field's label; tertiary metadata repeats what a primary label already states. If a
    value is the only carrier of its information, it is not tertiary and does not use this token.
