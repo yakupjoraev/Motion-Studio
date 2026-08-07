@@ -2444,3 +2444,41 @@ mattered, and `simulateSpring` remains the single source of the curve.
   the other side of the threshold measured above. This decision is about these two editors at this size.
 - Accepted: `springPolyline` and `settleFrame` are pure functions over `simulateSpring`, so what is
   drawn is unit-tested directly rather than through a rendering surface.
+
+## ADR-047 — The workshop app is the package `workshop`, in the directory `apps/storybook`
+
+**Date** 2026-08-07 · **Prompt** 10 · **Status** Accepted
+
+### Question
+Prompt 10's deliverable is `apps/storybook/`. Naming the package after its directory gives a workspace
+package called `storybook`, which is also the name of the npm package it depends on.
+
+### Criterion (set before measuring)
+`check-deps` is the gate on the dependency graph, and `DEVOPS.md` § Custom gates makes it authoritative.
+A name is admissible only if the gate stays green and stays meaningful — a rule that has to be relaxed
+to accommodate a name is a rule that no longer catches what it was written for.
+
+### Measurement
+With the package named `storybook`, `pnpm check:deps` reported two violations:
+
+```
+cycle: storybook -> storybook
+apps\storybook\package.json: nothing may depend on the app 'storybook' (§ Rules, 5)
+```
+
+Both are real. The gate resolves every declared dependency against the workspace by name, so
+`"storybook": "^8.6.18"` — the CLI — resolves to the app itself. Renaming the package clears both with
+no change to the gate. The alternative is an exception list inside `check-deps`, which would blind it
+to a genuine self-dependency later.
+
+### Decision
+The package is `workshop`. The directory stays `apps/storybook`, because that is what the prompt names
+and what a reader looks for. The root scripts keep their names — `dev:storybook`, `build:storybook` —
+and filter on `workshop`.
+
+### Consequences
+- Accepted: the directory and the package name differ, which is the one thing this entry exists to
+  explain. Every other package in the repository matches its directory.
+- Accepted: `--filter=workshop` in two root scripts is the only place the name is spelled.
+- Rejected: teaching `check-deps` that `storybook` is special. The collision is with a real package
+  name, and the next one would be silent.
