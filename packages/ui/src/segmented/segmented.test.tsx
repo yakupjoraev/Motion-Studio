@@ -150,6 +150,23 @@ describe('Segmented', () => {
     )
   })
 
+  it('moves the indicator when an uncontrolled group is clicked', async () => {
+    /*
+     * The indicator is rendered from a value this component holds, and Radix keeps the uncontrolled
+     * selection in its own context. Without a copy of that state here, the group re-renders inside Radix,
+     * this component does not, and the indicator stays behind the segment it started under.
+     */
+    const { container } = render(
+      <Segmented aria-label="Direction" options={OPTIONS} defaultValue="row" />,
+    )
+
+    await userEvent.click(screen.getByRole('radio', { name: 'Column' }))
+
+    const indicator = container.querySelector('span[class*="absolute"]')
+
+    expect(screen.getByRole('radio', { name: 'Column' })).toContainElement(indicator as HTMLElement)
+  })
+
   it('takes its height from the density scale', () => {
     const { container } = render(
       <Segmented aria-label="Direction" options={OPTIONS} defaultValue="row" />,

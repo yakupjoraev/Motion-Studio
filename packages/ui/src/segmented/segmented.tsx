@@ -1,7 +1,7 @@
 import { cn } from '@motion-studio/utils'
 import * as RadixRadioGroup from '@radix-ui/react-radio-group'
 import { motion } from 'motion/react'
-import { forwardRef } from 'react'
+import { forwardRef, useState } from 'react'
 
 import {
   segmentedIndicatorStyles,
@@ -27,13 +27,25 @@ export const Segmented = forwardRef<HTMLDivElement, SegmentedProps>(function Seg
   { value, defaultValue, onValueChange, options, disabled = false, className, ...aria },
   ref,
 ) {
+  /*
+   * The indicator is rendered from `selected`, so this component needs to know the selection even when the
+   * caller does not control it. Radix keeps the uncontrolled selection in its own context and this component
+   * does not subscribe to it, so without the copy below the group would re-render inside Radix, this
+   * function would not, and the indicator would sit under the segment it started on forever.
+   */
+  const [uncontrolled, setUncontrolled] = useState(defaultValue)
+  const selected = value ?? uncontrolled
+
+  const handleValueChange = (next: string): void => {
+    setUncontrolled(next)
+    onValueChange?.(next)
+  }
+
   // `exactOptionalPropertyTypes`: an absent prop is omitted, never passed as `undefined`.
   const rootProps = {
     ...(value === undefined ? {} : { value }),
     ...(defaultValue === undefined ? {} : { defaultValue }),
-    ...(onValueChange === undefined ? {} : { onValueChange }),
   }
-  const selected = value ?? defaultValue
 
   return (
     <RadixRadioGroup.Root
@@ -42,6 +54,7 @@ export const Segmented = forwardRef<HTMLDivElement, SegmentedProps>(function Seg
       orientation="horizontal"
       loop
       className={cn(segmentedRootStyles(), className)}
+      onValueChange={handleValueChange}
       {...rootProps}
       {...aria}
     >
