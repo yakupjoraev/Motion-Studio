@@ -2482,3 +2482,57 @@ and filter on `workshop`.
 - Accepted: `--filter=workshop` in two root scripts is the only place the name is spelled.
 - Rejected: teaching `check-deps` that `storybook` is special. The collision is with a real package
   name, and the next one would be silent.
+
+## ADR-048 — The shared Vitest presets are JavaScript, because Node loads them itself
+
+**Date** 2026-08-07 · **Prompt** 10 · **Status** Accepted
+
+### Question
+`pnpm test` has passed locally since prompt 05 and `pnpm test:coverage` has failed in CI on **every
+push to `main` since the pipeline was added** — including the commit that added it. Fourteen packages
+fail identically:
+
+```
+failed to load config from packages/hooks/vitest.config.ts
+TypeError [ERR_UNKNOWN_FILE_EXTENSION]: Unknown file extension ".ts"
+  for packages/config/vitest/react.ts
+```
+
+### Criterion (set before measuring)
+`TECH_STACK.md` § Versions states Node `>=20.11`, and `.nvmrc` and `engines` both pin it. That is a
+specification, so the question is not which Node to support — it is what has to change for the
+declared floor to work. The fix is admissible only if the preset loads on 20.11 **and** every
+consumer's `vitest.config.ts` still typechecks, since `tsc --noEmit` covers that file in all fourteen.
+
+### Measurement
+Reproduced locally, where Node is 22.20 and the suite passes, by disabling the one feature that
+differs. From `packages/hooks`:
+
+| Command | Result |
+| --- | --- |
+| `node -e "import('@motion-studio/config/vitest/react')"` | `loaded: reactConfig` |
+| `node --no-experimental-strip-types -e "…"` | `ERROR: ERR_UNKNOWN_FILE_EXTENSION` |
+
+Node 22.18 and later strip types from `.ts` by default; 20.11 does not. Vitest bundles a consumer's
+`vitest.config.ts` with bare specifiers left **external**, so this module never reaches Vite's
+transform — it is handed to Node's ESM loader as written. The whole project has therefore been
+running on an experimental feature of a Node newer than the one it claims to support, and CI has been
+telling us so for two days in a job nobody had authenticated to read.
+
+### Decision
+`packages/config/vitest/react.ts` and `node.ts` become `react.mjs` and `node.mjs`, each with a
+hand-written `.d.ts` beside it, and the `exports` map names the three subpaths explicitly with a
+`types` condition rather than globbing `./vitest/*` onto `.ts`.
+
+`setup-react.ts` stays TypeScript: Vitest loads a setup file *through Vite*, which transforms it. The
+distinction is the whole point — a file Node loads is JavaScript, a file Vite loads may be TypeScript.
+
+### Consequences
+- Accepted: two declaration files are maintained by hand against two implementations. They are three
+  exports in total, and `tsc --noEmit` in fourteen packages fails the moment they disagree.
+- Accepted: the explicit `exports` entries are longer than the wildcard they replace, and they are why
+  the next file added there has to state which loader reads it.
+- Rejected: raising `.nvmrc` to a Node with type stripping. It would make a documented floor false, and
+  it would leave the project's build depending on an experimental flag to read a config file.
+- Rejected: importing the preset by relative path from each package. That reaches across a package
+  boundary, which `ENGINEERING_CONTRACT.md` § 3 bans and `check-deps` catches.
