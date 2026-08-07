@@ -69,6 +69,25 @@ Concretely:
 
 Row height 28 px with `text-xs` labels is the studio's rhythm. Everything else follows it.
 
+### Control glyphs
+
+The table above sizes rows. These are the marks drawn inside them — a checkbox box, a switch
+track, a slider thumb. None of them is a free choice: each is derived from a number already in the
+scale, so the glyphs stay on the same rhythm as the rows that hold them.
+
+| Glyph | Size | Derived from |
+| --- | --- | --- |
+| Checkbox box | 16 × 16 | the panel icon cell — the box is the frame of a 16 px check |
+| Switch track | 24 × 14 | a small button wide, half a control row tall |
+| Switch thumb | 10 × 10 | the track, inset 2 px on every side |
+| Slider track | 4px | the panel resize handle — the chrome's thinnest interactive line |
+| Slider thumb | 12 × 12 | half a small button |
+
+**The glyph is what you see; the target is what you hit.** Every one of them sits inside a hit area
+of at least 24 × 24 px, padded by its control — WCAG 2.2 AA § 2.5.8, which
+[ACCESSIBILITY.md](ACCESSIBILITY.md) adopts whole. A 16 px checkbox with a 16 px target would be a
+conformance failure wearing a tidy design.
+
 ## Panels
 
 ### Section headers

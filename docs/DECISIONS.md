@@ -1537,3 +1537,79 @@ With both in place, `tsc --noEmit` is clean and 64 tests pass with two axe asser
   every file of every consuming package.
 - A relative `/// <reference path="../../../config/vitest/jest-axe.d.ts" />`: the deep cross-package reach
   the contract bans, wearing a different syntax.
+
+## ADR-030 — Control glyph sizes are derived from the density scale, not chosen
+
+**Date** 2026-08-07 · **Prompt** 08 · **Status** Accepted
+
+### Question
+`UI_GUIDELINES.md` § Density scale sizes rows: top bar, control row, input, small button. It says
+nothing about the marks drawn *inside* a row — the checkbox box, the switch track and thumb, the
+slider track and thumb. Prompt 08 requires that "every height comes from `density.ts`", and three of
+the next components in its fixed order (`switch`, `slider`, `checkbox`) are made almost entirely of
+sizes the table does not contain.
+
+### Criterion (set before measuring)
+A glyph size is admissible only if all four hold:
+
+1. It is **derived from a number already in § Density scale**, by a stated relation. A number with
+   no parent is a preference, and § 9 of the contract bans those.
+2. Its interactive target is **≥ 24 × 24 px** — WCAG 2.2 AA § 2.5.8, which `ACCESSIBILITY.md`
+   adopts whole in its first line. The glyph may be smaller; the padded hit area may not.
+3. It is an **even number of pixels**, so a centred glyph lands on whole pixels inside an
+   even-height row rather than on a half-pixel that the browser rounds inconsistently.
+4. It **fits the 26 px input band with ≥ 4 px of clearance** top and bottom, so a glyph and a field
+   can share a control row without the row growing.
+
+### Measurement
+Applying the four rules leaves one candidate per glyph, which is the point of writing them down:
+
+| Glyph | Derivation | Size | Clearance in a 28 px row |
+| --- | --- | --- | --- |
+| Checkbox box | the panel icon cell (§ Character: "icons are 16 px in panels") | 16 × 16 | 6 px |
+| Switch track | small button wide × half a control row tall | 24 × 14 | 7 px |
+| Switch thumb | the track inset 2 px per side | 10 × 10 | — |
+| Slider track | the panel resize handle (§ Layout: "4 px wide with an 8 px hit area") | 4px | 12 px |
+| Slider thumb | half a small button | 12 × 12 | 8 px |
+
+Rule 3 rejects the alternatives that survive rule 1: a 15 px box (icon cell minus a hairline pair),
+a 13 px slider thumb (input ÷ 2). Rule 4 rejects the switch track at a full control row of 28 px
+tall. Switch thumb travel is 24 − 2 − 10 − 2 = **10 px**, which is the whole width of the thumb, so
+the movement is unambiguous at a glance rather than a nudge.
+
+### Decision
+`UI_GUIDELINES.md` § Density scale gains a **Control glyphs** subsection carrying the table above,
+in its own commit ahead of the code, and `styles/density.ts` transcribes it as `GLYPH` /
+`GLYPH_CLASS` beside `DENSITY` / `HEIGHT_CLASS`. `density.test.ts` asserts the numbers against the
+document exactly as it already does for the rows.
+
+The 24 × 24 target is produced by padding, never by inflating the glyph: `Checkbox` and `Switch` put
+their glyph inside a 24 px square root, and `Slider`'s thumb reaches 24 × 24 through an
+`::after` overlay rather than by growing the visible circle.
+
+### Consequences
+- Accepted: `UI_GUIDELINES.md` grew a subsection. A prompt is allowed to find a gap in a document,
+  and the contract § 9.1 states the only legal response — change the document first, with the
+  reasoning — so the alternative was not "keep the document short", it was "put five unfindable
+  numbers in a styles file".
+- Accepted: the derivations are relations, not formulas, and a reader can disagree with one of them.
+  That is the intended failure mode. A recorded relation can be argued with; `w-6` in a class string
+  cannot.
+- Accepted: an invisible 24 px hit area around a 12 px slider thumb overlaps its neighbours when two
+  sliders sit 12 px apart. The inspector's control rows are 28 px, so this cannot occur there; a
+  caller stacking sliders tighter than the density scale allows is outside the scale.
+- Rejected consequence worth naming: the glyph scale does **not** claim to cover every future
+  control. The next component that needs a mark the table lacks repeats this exercise instead of
+  reaching for the nearest existing number.
+
+### Alternatives rejected
+- **Literal sizes in each component's `.styles.ts`.** Exactly what the prompt's constraint forbids,
+  and for the stated reason: the density scale is a design decision, and five copies of it in five
+  files is five places for it to drift.
+- **A `GLYPH` table in `density.ts` with no document behind it.** Puts the design decision in the
+  transcription rather than in the source, and inverts `density.test.ts` — the test would then be
+  asserting a file against itself.
+- **Inflating the glyphs to 24 px so the target needs no padding.** Measured against the reference:
+  a 24 px checkbox in a 28 px row leaves 2 px of clearance and reads as a button, not a mark.
+  § Character calls the studio "dense, quiet, precise" and the block card is the only 88 px thing in
+  the chrome — a checkbox the size of a small button contradicts that at every row.
