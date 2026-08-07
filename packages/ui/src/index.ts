@@ -17,6 +17,20 @@ export {
   type CheckboxState,
 } from './checkbox/index'
 export {
+  Dropdown,
+  dropdownContentStyles,
+  dropdownItemStyles,
+  dropdownLabelStyles,
+  dropdownSeparatorStyles,
+  dropdownShortcutStyles,
+  type DropdownAction,
+  type DropdownEntry,
+  type DropdownGroupLabel,
+  type DropdownProps,
+  type DropdownSeparator,
+  type DropdownStyleProps,
+} from './dropdown/index'
+export {
   Input,
   inputStyles,
   inputWrapperStyles,
@@ -31,6 +45,7 @@ export {
   type KbdPlatform,
   type KbdProps,
 } from './kbd/index'
+export { Popover, popoverContentStyles, type PopoverProps } from './popover/index'
 export {
   Select,
   selectContentStyles,
