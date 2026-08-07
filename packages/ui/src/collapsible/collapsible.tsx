@@ -5,6 +5,7 @@ import { forwardRef } from 'react'
 
 import {
   collapsibleContentStyles,
+  collapsibleHeaderStyles,
   collapsibleIndicatorStyles,
   collapsibleRootStyles,
   collapsibleTriggerStyles,
@@ -22,6 +23,7 @@ import type { CollapsibleProps } from './collapsible.types'
 export const Collapsible = forwardRef<HTMLDivElement, CollapsibleProps>(function Collapsible(
   {
     trigger,
+    action,
     children,
     open,
     defaultOpen,
@@ -47,14 +49,15 @@ export const Collapsible = forwardRef<HTMLDivElement, CollapsibleProps>(function
       className={cn(collapsibleRootStyles(), className)}
       {...rootProps}
     >
-      {/* `group` so the chevron can read the root's state — the section does not know its own openness when
-          the caller leaves it uncontrolled. */}
-      <RadixCollapsible.Trigger
-        className={cn('group', collapsibleTriggerStyles(), triggerClassName)}
-      >
-        <ChevronRightIcon size={12} className={collapsibleIndicatorStyles()} />
-        {trigger}
-      </RadixCollapsible.Trigger>
+      <div className={collapsibleHeaderStyles()}>
+        {/* The trigger is a `group` so the chevron can read its `data-state` — the section does not know
+            its own openness when the caller leaves it uncontrolled. */}
+        <RadixCollapsible.Trigger className={cn(collapsibleTriggerStyles(), triggerClassName)}>
+          <ChevronRightIcon size={12} className={collapsibleIndicatorStyles()} />
+          {trigger}
+        </RadixCollapsible.Trigger>
+        {action}
+      </div>
 
       <RadixCollapsible.Content
         data-ms-collapsible=""

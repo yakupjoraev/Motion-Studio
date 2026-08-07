@@ -1,8 +1,13 @@
 import type { ReactNode } from 'react'
 
 export interface CollapsibleProps {
-  /** The row that toggles it. Rendered inside a button, so it must not contain one. */
+  /** The section's name. Rendered inside the trigger button, so it must not contain one. */
   readonly trigger: ReactNode
+  /**
+   * Rendered at the end of the header row, beside the trigger rather than inside it. § Section headers puts
+   * the `⟳` reset here, and a button nested in the trigger button would not be markup.
+   */
+  readonly action?: ReactNode
   readonly children: ReactNode
   /**
    * Controlled by the caller. `ui` does not touch `localStorage` — persistence is the app's concern, and a

@@ -93,8 +93,34 @@ describe('Collapsible', () => {
   it('takes its header height from the density scale and sticks it to the top', () => {
     render(<Fixture />)
 
-    expect(header().className).toContain('h-[32px]')
-    expect(header().className).toContain('sticky')
+    // The row is what is sticky and sized; the trigger fills it, so a click anywhere but the action toggles.
+    const row = header().parentElement
+
+    expect(row?.className).toContain('h-[32px]')
+    expect(row?.className).toContain('sticky')
+    expect(header().className).toContain('flex-1')
+  })
+
+  it('puts an action beside the trigger rather than inside it', async () => {
+    /*
+     * § Section headers: the `⟳` reset lives in the header row. A button nested in the trigger button would
+     * not be markup, and clicking it would toggle the section on the way to its own handler.
+     */
+    const reset = vi.fn()
+    render(
+      <Fixture
+        action={
+          <button type="button" onClick={reset}>
+            Reset
+          </button>
+        }
+      />,
+    )
+
+    await userEvent.click(screen.getByRole('button', { name: 'Reset' }))
+
+    expect(reset).toHaveBeenCalledTimes(1)
+    expect(header()).toHaveAttribute('aria-expanded', 'false')
   })
 
   it('turns one chevron rather than swapping two glyphs', () => {

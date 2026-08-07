@@ -1,6 +1,7 @@
 export { Collapsible } from './collapsible'
 export {
   collapsibleContentStyles,
+  collapsibleHeaderStyles,
   collapsibleIndicatorStyles,
   collapsibleRootStyles,
   collapsibleTriggerStyles,

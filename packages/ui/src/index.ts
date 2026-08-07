@@ -75,7 +75,30 @@ export {
   type KbdPlatform,
   type KbdProps,
 } from './kbd/index'
+export {
+  Panel,
+  PanelHeader,
+  PanelSection,
+  panelHeaderStyles,
+  panelSectionContentStyles,
+  panelSectionStyles,
+  panelStyles,
+  type PanelHeaderProps,
+  type PanelProps,
+  type PanelSectionProps,
+  type PanelSide,
+  type PanelStyleProps,
+} from './panel/index'
 export { Popover, popoverContentStyles, type PopoverProps } from './popover/index'
+export {
+  Resizable,
+  resizableFrameStyles,
+  resizableHandleStyles,
+  resizableLineStyles,
+  type ResizableProps,
+  type ResizableSide,
+  type ResizableStyleProps,
+} from './resizable/index'
 export {
   ScrollArea,
   scrollAreaRootStyles,

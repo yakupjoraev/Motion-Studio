@@ -6,15 +6,21 @@ import { FOCUS_RING, TRANSITION_CONTROL } from '../styles/variants'
 export const collapsibleRootStyles = cva(['flex flex-col'])
 
 /**
- * The trigger is a section header — § Section headers: 32 px, `text-xs`, uppercase, tracked out, muted, and
- * sticky when the panel scrolls. Stickiness lives here rather than at the call site so every section in every
- * panel behaves the same on scroll.
+ * The header row — § Section headers: 32 px, sticky while the panel scrolls. It is a row rather than just the
+ * trigger because the section's `⟳` reset lives here too, and a button inside a button is not markup.
+ *
+ * Stickiness lives here rather than at the call site so every section in every panel behaves the same.
  */
+export const collapsibleHeaderStyles = cva([
+  'sticky top-0 z-10 flex shrink-0 items-center gap-1 bg-surface-1 pr-2',
+  HEIGHT_CLASS.sectionHeader,
+])
+
+/** The trigger fills the row, so clicking anywhere but the action toggles the section. */
 export const collapsibleTriggerStyles = cva([
-  'sticky top-0 z-10 flex w-full shrink-0 items-center gap-1.5 bg-surface-1 px-2',
+  'group flex h-full min-w-0 flex-1 items-center gap-1.5 px-2',
   'font-medium text-2xs text-foreground-muted uppercase tracking-[0.06em]',
   'hover:text-foreground disabled:pointer-events-none disabled:opacity-50',
-  HEIGHT_CLASS.sectionHeader,
   TRANSITION_CONTROL,
   FOCUS_RING,
 ])
