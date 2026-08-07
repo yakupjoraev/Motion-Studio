@@ -93,9 +93,10 @@ Dialog, Popover, Dropdown, Tooltip, Tabs, Slider, Switch, Toggle Group, Context 
 Scroll Area, Collapsible. Unstyled, correct, accessible. This is the studio chrome's skeleton.
 
 ### React Aria (`react-aria` / `react-stately`)
-Used where Radix does not reach: the colour picker (`useColorArea`, `useColorSlider`), number
-scrub fields (`useNumberField` for keyboard + locale), and the toolbar focus management. Also
-for `useHover`/`usePress` where pointer-event correctness matters.
+Used where Radix does not reach: the colour picker (`useColorArea`, `useColorSlider`) and the
+toolbar focus management. Also for `useHover`/`usePress` where pointer-event correctness matters.
+Not the number scrub field — `useNumberField` cannot pass a typed expression through to the value,
+so that one control is ours (ADR-037).
 
 Rule: prefer Radix for overlays, React Aria for value-editing widgets. Do not implement both
 for the same control.

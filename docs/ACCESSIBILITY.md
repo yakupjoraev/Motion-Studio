@@ -86,8 +86,10 @@ the design, stated explicitly so nobody "fixes" the canvas by making it a giant 
 
 - Sections are `Collapsible` with `aria-expanded` on the trigger and `aria-controls`.
 - Every control has a `<label>` linked by `htmlFor`, not a `placeholder` doing double duty.
-- Scrub fields are `role="spinbutton"` (via React Aria's `useNumberField`) with `aria-valuenow`,
-  `aria-valuemin`, `aria-valuemax`, `aria-valuetext` (including the unit: "16 pixels").
+- Scrub fields are `role="spinbutton"` with `aria-valuenow`, `aria-valuemin`, `aria-valuemax`,
+  `aria-valuetext` (including the unit: "16 pixels"). The role is written directly rather than taken
+  from React Aria's `useNumberField`, which filters every keystroke through a number parser and so
+  cannot accept the typed expressions the field requires — ADR-037.
 - Colour controls announce the value as a name where possible: "Accent, oklch 58% 0.18 285".
   The contrast indicator is announced: "Contrast 4.8 to 1, passes AA".
 - Override indicators are not colour-only: the dot has `title` and the control's

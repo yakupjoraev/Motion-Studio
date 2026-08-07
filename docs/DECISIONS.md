@@ -2039,3 +2039,176 @@ stated size is a form, and 320 is only right for a confirmation.
   intended coupling; the derivation is written down here so the next editor knows to re-run it.
 - Accepted: no `xl` and no `full`. A full-screen surface is a route, not a dialog, and `PRODUCT.md`
   gives the two things that would want one — the playground and the docs — their own routes already.
+
+## ADR-037 — The scrub field implements `spinbutton` directly, not through `useNumberField`
+
+**Date** 2026-08-07 · **Prompt** 09 · **Status** Accepted
+
+### Question
+`ACCESSIBILITY.md` § Inspector says scrub fields are `role="spinbutton"` "via React Aria's
+`useNumberField`", and `TECH_STACK.md` § React Aria names number scrub fields as one of its three
+uses. Prompt 09 § `ScrubField` requires that typing `16*2` evaluates. Both cannot be true.
+
+### Criterion (set before measuring)
+React Aria wins by default — `TECH_STACK.md` states the rule and it is not up for re-litigation
+here. It loses only if the library *mechanically prevents* a behaviour prompt 09 requires, and the
+test for "prevents" is reading the shipped code, not guessing at the API surface.
+
+### Measurement
+`react-stately@3.49.0`, `dist/private/numberfield/useNumberFieldState.js:164`:
+
+```js
+let validate = (value) => numberParser.isValidPartialNumber(value, minValue, maxValue);
+```
+
+`useNumberField` runs every keystroke through `state.validate` before it reaches the input's value.
+`isValidPartialNumber` accepts a partially-typed *number* in the current locale — sign, digits,
+group and decimal separators, currency and percent affixes. `*`, `/`, `(` and `)` are none of those,
+so the characters an expression is made of never arrive. There is no option or parser injection
+point on `useNumberFieldState` that changes this.
+
+Two of prompt 09's required tests are unreachable through it: expression evaluation, and `Esc`
+reverting to the value at focus time — `useNumberField` binds `Escape` to its own
+revert-to-last-committed behaviour, which is a different value once a drag has happened.
+
+### Decision
+`ScrubField` writes the `spinbutton` role and its four ARIA attributes itself. React Aria keeps the
+two jobs where no such conflict exists: `useColorArea` and `useColorSlider` in the colour picker.
+`ACCESSIBILITY.md` § Inspector is corrected in the same commit as this entry — the parenthetical
+naming `useNumberField` is removed; the ARIA requirements it states are unchanged and still binding.
+
+### Consequences
+- Accepted: we own the keyboard and ARIA correctness of the most-used control in the product. The
+  mitigation is the test list, not care — `aria-valuetext` including the unit, arrow stepping under
+  both modifiers, and `Esc` revert are each an assertion.
+- Accepted: no locale-aware number parsing. The field reads and writes `.` as the decimal separator.
+  Nothing in `docs/` states a localisation requirement, and inventing one here would be scope the
+  owner did not ask for. If it arrives, it arrives as its own prompt against the expression parser.
+- Rejected: keeping `useNumberField` and dropping expressions. Prompt 09 lists expression evaluation
+  as a required test; cutting a deliverable is the owner's call, not this session's.
+
+## ADR-038 — The shared control contract lives in `control-row/`
+
+**Date** 2026-08-07 · **Prompt** 09 · **Status** Accepted
+
+### Question
+Twenty-one value controls share one contract — `value` / `onChange` / `onCommit`, plus the `id`,
+label and `mixed` wiring a row hands down. Where does that contract's source file live?
+
+### Criterion (set before measuring)
+Contract § 3 permits exactly one thing: a directory per concept, `index.ts` re-exporting, siblings
+importing each other only through that barrel. Global rules § Do not forbids scaffolding beyond the
+prompt's deliverables. So the contract lives in one of the 25 named directories, and it has to be
+the one whose concept it actually is.
+
+### Measurement
+Of the 25 deliverable directories, 24 are named after a *value kind* — a colour, a gradient, a list.
+Exactly one is named after the relationship between a label and a control: `control-row`. The
+alternative is 21 copies of the same interface, and nothing checks that copies stay identical.
+
+### Decision
+`control-row/control-row.types.ts` exports `ValueControlProps<T>` and `ControlSlotProps`;
+`control-row/control-labels.ts` exports `controlLabelProps`, the function that turns a `label` plus
+an optional `labelledBy` into whichever of `aria-label` / `aria-labelledby` is correct. Every other
+control imports them from `../control-row/index`.
+
+`ControlRow` passes its slot props through a render function rather than cloning children, because
+`id`, `labelledBy`, `describedBy` and `mixed` all have to reach an element the row does not own.
+
+### Consequences
+- Accepted: `control-row` is now a dependency of every control, so a change to the contract is a
+  change to all of them. That is what a contract is; the alternative hides the coupling rather than
+  removing it.
+- Accepted: every story and every consumer writes `<ControlRow>{(slot) => …}</ControlRow>`, which is
+  noisier than passing a child. It is also the only form in which a `div`-based composite — spacing,
+  align, shadow — gets an accessible name at all, since `htmlFor` does nothing for them.
+
+## ADR-039 — Colour values are OKLCH strings or token references, and `utils` gains `formatHex`
+
+**Date** 2026-08-07 · **Prompt** 09 · **Status** Accepted
+
+### Question
+Prompt 09 requires React Aria's `useColorArea` / `useColorSlider`, and requires that picking a theme
+token stores the reference rather than the resolved value. What string does the picker emit for a
+colour that is *not* a token, and who converts?
+
+### Criterion (set before measuring)
+One colour language in the repository. `DESIGN_SYSTEM.md` § Colour writes every ramp step in OKLCH,
+`packages/tokens` emits OKLCH, and `utils.contrastRatio` — which prompt 09 names as the source of
+truth for the picker's readout — parses OKLCH. A second language is admissible only if the first is
+mechanically unusable at the boundary.
+
+### Measurement
+`react-stately@3.49.0`, `dist/private/color/Color.js:26`:
+
+```js
+let res = RGBColor.parse(value) || HSBColor.parse(value) || HSLColor.parse(value);
+if (res) return res;
+throw new Error('Invalid color value: ' + value);
+```
+
+`parseColor` accepts hex, `rgb()`, `hsl()` and `hsb()`, and nothing else. An OKLCH string throws. So
+the boundary needs a conversion in both directions, and the only question is where it lives.
+
+`utils/color/color.ts` already holds Ottosson's matrices both ways — `linearRgbToOklch` and
+`oklchToLinearRgb` — as module-private functions, and `parseOklch` already accepts hex. Exactly one
+direction is missing from the public API: OKLCH out to an sRGB hex string.
+
+### Decision
+The picker's value is `{ kind: 'token'; token: string } | { kind: 'color'; value: string }`, where
+`value` is an `oklch()` string. `utils` gains `formatHex(color: Oklch): string`, with its own tests,
+and the picker converts at the React Aria boundary only.
+
+### Consequences
+- Accepted: `formatHex` clamps out-of-gamut OKLCH to the sRGB cube, so a colour authored outside sRGB
+  and round-tripped through the picker comes back clamped. Every colour the picker can *produce*
+  originates in a react-aria HSB value and is in gamut already; the clamp only bites on a token
+  authored outside it, and `clampChroma` exists for exactly that case.
+- Accepted: `formatOklch`'s fixed precision — two decimals of lightness, four of chroma — means a
+  hex→OKLCH→hex round trip is not bit-exact. It is exact to well under one 8-bit step, which is the
+  precision that function was fixed at and for the same reason.
+- Accepted: `utils` grew a public function for one caller. The alternative is a second copy of the
+  OKLab matrices inside `packages/ui`, which is the failure mode prompt 09 spends a paragraph on for
+  `simulateSpring`.
+
+## ADR-040 — A composite control's value is the CSS it produces, proven by a round trip
+
+**Date** 2026-08-07 · **Prompt** 09 · **Status** Accepted
+
+### Question
+`ShadowField`, `GradientField`, `SpacingField`, `RadiusField`, `FontField` and `LinkField` each edit
+a structure, and no document states what that structure is. `packages/schema` — where a document
+model would normally answer this — is prompt 12.
+
+### Criterion (set before measuring)
+Prompt 09 § Universal says no control touches the store, so a control's value type is a contract with
+its consumer, not with the document. Prefer a shape that is already specified somewhere. Where
+nothing specifies one, the admissible shape is the smallest record that round-trips losslessly to the
+CSS the property is ultimately written as — that string is the one thing the export engine is certain
+to need, and a round trip is checkable.
+
+### Measurement
+- `GradientField` — specified. `packages/tokens` already exports `Gradient`, `ColorStop`, `Position`
+  and `MeshPoint`, derived from `DESIGN_SYSTEM.md` § Gradients. Reused verbatim; no new type.
+- `ShadowField` — unspecified. `packages/tokens`'s `ShadowSet` holds `box-shadow` *strings*
+  (`0 2px 4px oklch(0% 0 0 / 0.06), …`), so the layer record is whatever parses out of and prints
+  back into that grammar: `{ x, y, blur, spread, color, inset }`.
+- `SpacingField` / `RadiusField` — unspecified. Four sides and four corners in CSS shorthand order,
+  plus a link flag that is UI state and stays out of the value.
+- `FontField` — unspecified. `{ family, size, weight, tracking }`, the four properties
+  `COMPONENT_LIBRARY.md` § Control kinds names for the `font` kind.
+- `LinkField` — unspecified. `{ href, target, rel }`, the three the same table names.
+
+### Decision
+Each ships a `*-css.ts` with `toCss` and `fromCss`, and a test asserting `fromCss(toCss(value))`
+equals `value` over a fixture set that includes the boundary cases — an empty shadow stack, a
+single-stop gradient, a zero-length spacing box.
+
+### Consequences
+- Accepted: when prompt 12 defines the document model, these types either match it or a mapping is
+  written. The round-trip test is what makes that mapping mechanical rather than archaeological.
+- Accepted: `fromCss` is a parser per control. Each accepts the grammar `toCss` emits plus whitespace
+  tolerance — not the full CSS specification. A value the browser accepts and `toCss` would never
+  write is rejected, and the control reports it rather than guessing.
+- Rejected: one `value: string` of raw CSS per control. It makes every control a parser at every
+  keystroke, and "move the third shadow up" becomes a string edit.
