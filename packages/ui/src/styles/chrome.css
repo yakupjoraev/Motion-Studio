@@ -147,6 +147,43 @@
   animation: ms-collapsible-close var(--ms-duration-quick) var(--ms-ease-standard);
 }
 
+/*
+ * § Timing, toast in: 260 ms on a spring. `base` is the nearest duration step at 240, and `--ms-ease-spring`
+ * is the overshooting curve the token scale already carries — the one place the chrome is allowed one.
+ */
+@keyframes ms-toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+[data-ms-toast][data-state='open'] {
+  animation: ms-toast-in var(--ms-duration-base) var(--ms-ease-spring);
+}
+
+[data-ms-toast][data-state='closed'] {
+  animation: ms-overlay-out var(--ms-duration-fast) var(--ms-ease-accelerate);
+}
+
+/*
+ * A skeleton pulses rather than shimmers: a travelling highlight is a gradient, and § Character keeps
+ * gradients for content. `slower` is the only step long enough not to read as a flicker.
+ */
+@keyframes ms-skeleton-pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+[data-ms-skeleton] {
+  animation: ms-skeleton-pulse var(--ms-duration-slower) var(--ms-ease-standard) infinite;
+}
+
 [data-ms-scrim][data-state='open'] {
   animation: ms-scrim-in var(--ms-duration-quick) var(--ms-ease-standard);
 }
