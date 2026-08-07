@@ -1,7 +1,7 @@
 import { type VariantProps, cva } from 'class-variance-authority'
 
 import { HEIGHT_CLASS } from '../styles/density'
-import { FOCUS_RING } from '../styles/variants'
+import { FOCUS_RING, TRANSITION_CONTROL } from '../styles/variants'
 
 /**
  * A single inset track holding the segments. `surface-inset` rather than `surface-2` so the group reads as a
@@ -19,7 +19,7 @@ export const segmentedRootStyles = cva([
 export const segmentedItemStyles = cva(
   [
     'relative z-10 inline-flex items-center justify-center rounded-xs px-2 text-xs',
-    'transition-colors duration-[--ms-duration-fast] ease-[--ms-ease-standard]',
+    TRANSITION_CONTROL,
     'disabled:pointer-events-none disabled:opacity-50',
     FOCUS_RING,
   ],

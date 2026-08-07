@@ -1613,3 +1613,319 @@ their glyph inside a 24 px square root, and `Slider`'s thumb reaches 24 × 24 th
   a 24 px checkbox in a 28 px row leaves 2 px of clearance and reads as a button, not a mark.
   § Character calls the studio "dense, quiet, precise" and the block card is the only 88 px thing in
   the chrome — a checkbox the size of a small button contradicts that at every row.
+
+## ADR-031 — Controls with no § Timing row animate at 120 ms `standard`, and dragged values not at all
+
+**Date** 2026-08-07 · **Prompt** 08 · **Status** Accepted
+
+### Question
+`UI_GUIDELINES.md` § Timing is a ten-row table: hover, press, focus ring, dropdown open/close, dialog
+open, panel collapse, tab indicator, toast in, tooltip. `Switch`, `Checkbox` and `Slider` are none of
+those. A switch thumb travels, a checkbox mark appears, a slider fill grows — and the table names no
+duration for any of them. What do they use?
+
+### Criterion (set before measuring)
+Resolution #1 of the contract, applied strictly: an animation takes the duration of the § Timing row
+whose **interaction class** it belongs to. A row matches when the thing being animated changes for
+the same reason and at the same scale as the row's example. If two rows match, the shorter wins —
+§ Timing's own closing line is "chrome animation is feedback, not performance". If no row matches
+because the change is not an interaction transition at all, the answer is no animation, not the
+nearest number.
+
+### Measurement
+Sorting the three controls against the ten rows:
+
+| Change | Matching row | Duration |
+| --- | --- | --- |
+| Switch track colour, thumb travel | *Hover state* / *Focus ring* — a control restyling itself in place | 120 ms `standard` |
+| Checkbox box fill, mark appearance | same class | 120 ms `standard` |
+| Slider track and thumb colour | same class | 120 ms `standard` |
+| Slider fill width, thumb position | **none** — the value is following a pointer or a key, frame by frame | 0 ms |
+
+Both candidate rows for the first three are 120 ms `standard`, so the "shorter wins" tie-break never
+had to fire. The three surviving longer rows are rejected by class, not by taste: *panel collapse*
+(200 ms) and *dialog open* (220 ms) animate a container appearing, and *tab indicator* (200 ms) is a
+layout animation of an element moving between two other elements — which is `Segmented` and `Tabs`,
+and those two already read that row directly.
+
+The last line is the one worth stating. Transitioning a slider's fill width means the fill lags the
+pointer by a fixed 120 ms for the whole drag: the number under the cursor and the bar beneath it
+disagree continuously, which reads as the control being broken rather than as smoothing. § Feedback
+rules requires "every press changes something visually within one frame", and a transition on a
+value the user is directly manipulating is the one case where an animation *prevents* that.
+
+### Decision
+`Switch`, `Checkbox` and `Slider` transition **colour only**, at `--ms-duration-fast` on
+`--ms-ease-standard`, plus the switch thumb's `transform` at the same pair. Slider fill width and
+thumb position carry no `transition` property at all.
+
+Both durations read `--ms-duration-fast`, so `motionScale: 0` and `prefers-reduced-motion` zero them
+without a branch in any component (ADR-021).
+
+### Consequences
+- Accepted: the switch thumb's 10 px travel in 120 ms is quick. That is the point — it is feedback
+  for a press that already happened, not a demonstration of the mechanism.
+- Accepted: `transition-colors` plus `transition-transform` on the same element would clobber one
+  another if written as two utilities, so the switch thumb declares both properties in one
+  `transition-[transform,background-color]`. A future edit that adds a third property to the thumb
+  must add it there and not as a second `transition-*` class.
+- Accepted: a keyboard step on a slider is therefore instant, with no easing between the old and new
+  value. Consistent with the drag case, and the alternative — animating key steps but not drags —
+  would make the same control behave two ways.
+- Accepted: this rule is a reading of § Timing, not an addition to it. § Timing stays ten rows; the
+  next control that does not fit re-runs the sort above rather than inheriting "120 because Switch
+  is 120".
+
+### Alternatives rejected
+- **Add rows to § Timing for switch, checkbox and slider.** Rejected because the sort found real
+  matches. ADR-030 amended a document where the answer genuinely was absent; here it is present
+  under a different name, and duplicating it into three more rows creates three more places for
+  120 ms to drift.
+- **Press, 80 ms `accelerate`, for the switch.** That row is the press *feedback* — the scale-down
+  under the finger, which `PRESS` in `styles/variants.ts` already owns and which composes with this.
+  The thumb travel outlives the press: it is where the control ended up, not the acknowledgement
+  that it was touched.
+- **A spring for the switch thumb.** § Timing gives a spring to exactly one interaction, *toast in*,
+  and § Character asks the chrome to be quiet. A springing toggle in a 28 px inspector row is the
+  loudness the reference explicitly does not lend us.
+
+## ADR-032 — A control's "on" state is neutral inversion, not accent
+
+**Date** 2026-08-07 · **Prompt** 08 · **Status** Accepted
+
+### Question
+What colour is a checked `Switch` track, a filled `Slider` range, and a checked `Checkbox` box?
+Every mainstream tool paints them the accent colour. `UI_GUIDELINES.md` § Character says: "Exactly
+**one** accent colour in the chrome, used only for: selection, focus, active tab, and primary
+action. Everything else is neutral." A switch that is on is none of those four — but neither is it
+obviously excluded, and reading the list as exhaustive changes the look of every inspector row.
+
+### Criterion (set before measuring)
+§ Character states the test itself: "screenshot the studio with a document open. Your eye should go
+to the user's design, not to our panels." The operative property of the four permitted uses is
+**multiplicity at rest**: a panel shows at most one selection highlight, one focus ring, one active
+tab, one primary button. So the criterion is countable — accent is admissible for a state only if at
+most one instance of it can be visible in a panel at rest. A state that can repeat down a column is
+neutral.
+
+### Measurement
+Counted against the inspector as `COMPONENT_LIBRARY.md` § Control kinds specifies it. The catalogue
+has 20 control kinds; `switch`, `slider` and a `checkbox` appear once per property, and a realistic
+Layout + Effects inspector shows **six to ten** of them at once, all at rest, all "on" as often as
+not. The four permitted uses cap at one each.
+
+Ten accent bars down a 320 px panel against a canvas holding the user's own colours is precisely the
+failure the screenshot test names, and no amount of restraint elsewhere recovers it.
+
+The reference supports the same answer independently. § Character's three reference points are
+Linear, Figma and Vercel. Linear and Figma paint toggles accent; **Vercel does not** — its switch
+inverts to the foreground colour and its checkbox fills with foreground and cuts the mark out in the
+surface colour. § Character borrows "Vercel's typographic discipline", and this is the same
+discipline applied to colour: value carries the state, hue is reserved.
+
+The codebase had already answered it twice without saying so, which is why this entry exists now
+rather than earlier: `Segmented`'s selected indicator is `surface-2` on `surface-inset`, and
+`Select`'s highlighted item is `surface-2`. Both are states, both are neutral.
+
+### Decision
+The three state-carrying controls invert in **value**, not in hue, and they all invert to the same
+pair so that "on" looks like one idea across the chrome:
+
+| Control | Off | On |
+| --- | --- | --- |
+| Switch track | `surface-inset` + `border-strong`, thumb `foreground-muted` | `foreground`, thumb `surface-0` |
+| Slider range | well is `surface-inset` | fill is `foreground`, thumb `surface-0` ringed `foreground` |
+| Checkbox box | `surface-2` + `border-strong` | `foreground`, mark `surface-0` |
+
+`accent` stays where § Character puts it: `Button` variant `primary`, the focus ring
+(`accent-ring`), canvas selection, and the active tab.
+
+### Consequences
+- Accepted: an "on" switch is the highest-value object in a panel at rest, which is loud in a
+  different currency. It is bounded — a 24 × 14 pill — and it is the currency the chrome is allowed
+  to spend, because value is what § Character says depth and state come from.
+- Accepted: this will read as wrong to anyone arriving from Figma, where an accent toggle is the
+  convention. The criterion above is the answer to that objection, and it is falsifiable: if a
+  screenshot with a document open draws the eye to the panels, the criterion failed and this entry
+  gets superseded rather than quietly patched.
+- Accepted: `foreground` as a fill means `foreground-onAccent` is not the mark colour — the mark is
+  `surface-0`, the far end of the surface ramp. Contrast is the reverse of the body-text pair, which
+  `contrast.test.ts` already measures in both modes, so no new pair enters the matrix.
+- Accepted: colour is not the only carrier in any of the three. The switch also travels, the slider
+  also fills a proportion, the checkbox also shows a mark — `ACCESSIBILITY.md` § Non-negotiables 4
+  holds independently of this decision.
+
+### Alternatives rejected
+- **Accent for all three.** Fails the count above. It is also the version this project would produce
+  by reflex, which is the reason § Character is written as a list of four rather than as a mood.
+- **`accent-muted` — a tinted background rather than a fill.** Softens the count without changing
+  it: ten tinted bars is still ten hue events, and `DESIGN_SYSTEM.md` sizes `accent-muted` at
+  `surface-2`'s lightness, so an "on" switch would sit at the same value as an "off" one and lose
+  the second, non-colour carrier.
+- **Accent for `Switch` only, neutral for the rest.** Three controls expressing one concept in two
+  visual languages, decided by which one felt too plain on its own.
+
+## ADR-033 — One `transition` declaration per element, written in `chrome.css`
+
+**Date** 2026-08-07 · **Prompt** 08 · **Status** Accepted
+
+### Question
+`styles/variants.ts` gives `FOCUS_RING` a `transition-shadow` and `PRESS` a `transition-transform`,
+and every control adds `transition-colors` of its own. Three fragments, one element. Does that
+compose?
+
+### Criterion (set before measuring)
+Compile the classes a shipped component actually emits and read the resulting CSS. It composes if
+the element ends up with a `transition-property` naming **every** property the three fragments claim
+to animate. Anything less is a defect regardless of how the source reads.
+
+### Measurement
+It does not compose, and it fails twice over — once in Tailwind and once before Tailwind ever sees
+the string.
+
+**In the stylesheet.** Compiled with `tailwindcss@4.3.3`'s `compile()` API, the three utilities are
+emitted in this order:
+
+```
+164 .transition-\[transform\,background-color\] { transition-property: transform,background-color }
+169 .transition-colors                          { transition-property: color, background-color, … }
+174 .transition-shadow                          { transition-property: box-shadow }
+```
+
+Same specificity, so the last one wins. An element carrying `transition-colors` and
+`transition-shadow` animates `box-shadow` and nothing else.
+
+**In `cn`.** It never even reaches the browser, because `tailwind-merge` resolves the conflict
+first — and it keeps the *last* class in the string, which is a different winner. Printing what the
+two shipped components actually render:
+
+```
+button : … outline-none focus-visible:shadow-focus active:scale-[0.98]
+          transition-transform duration-[--ms-duration-fast] ease-[--ms-ease-accelerate] …
+input  : … outline-none focus-within:has(:focus-visible):shadow-focus
+          transition-shadow duration-[--ms-duration-fast] ease-[--ms-ease-standard] …
+```
+
+So on `main` today: **`Button` has no colour transition and no focus-ring transition** — its hover
+is a hard cut — and **`Input` has no border-colour transition** on hover or on invalid. The same
+holds for `Textarea`, `Select`'s trigger and items, and `Segmented`'s items. `duration` and `ease`
+collapse the same way, which is why `Button` currently eases its press on `accelerate` and would
+have eased its colours on the same curve if any had survived.
+
+This was invisible in review because each fragment is correct in isolation, and invisible in tests
+because a class string containing `transition-colors` looks like a passing assertion.
+
+### Decision
+Each element gets exactly **one** `transition`, and it is written in `styles/chrome.css` rather than
+assembled from utilities:
+
+- `.ms-transition-control` — `color`, `background-color`, `border-color`, `box-shadow` at
+  `--ms-duration-fast` / `--ms-ease-standard`, plus `transform` at `--ms-duration-fast` /
+  `--ms-ease-accelerate`. The press curve, for anything that scales under the finger.
+- `.ms-transition-travel` — the same four properties, plus `transform` on `--ms-ease-standard`.
+  For a mark that moves to a new position rather than reacting to a press: the switch thumb.
+
+`FOCUS_RING` becomes `outline-none focus-visible:shadow-focus` and `PRESS` becomes
+`active:scale-[0.98]`. Both keep their meaning and lose the transition they could not deliver.
+
+Two things follow from writing it as CSS rather than as a utility. The shorthand gives each property
+its own curve, which a single Tailwind utility cannot express at all — so § Timing's split between
+press on `accelerate` and everything else on `standard` survives instead of being rounded off. And
+`CODE_STANDARDS.md` § Tailwind already called this: "a repeated arbitrary value is a missing token",
+and `duration-[--ms-duration-fast] ease-[--ms-ease-standard]` appeared in eight files.
+
+`styles/chrome.test.ts` asserts every duration in that file is a `var(--ms-duration-*)` and that each
+class declares `transition` once, so the same collapse cannot return through the CSS.
+
+### Consequences
+- Accepted: importing `@motion-studio/ui/styles.css` is now required for **every** component, not
+  only for the overlays. It was already required and already exported; the failure mode changes from
+  "popovers do not animate" to "nothing animates", which is more visible, not less.
+- Accepted: `chrome.css` is unlayered, so it outranks Tailwind's `utilities` layer. A caller cannot
+  override the transition with `transition-none`. That is the intended direction — the timing is a
+  design decision, not a per-call-site one — and a component that genuinely must not transition omits
+  the class instead.
+- Accepted: two classes rather than one, distinguished only by the transform curve. A third would be
+  a smell; if one appears, the right move is a custom property for the curve rather than a third
+  copy of the property list.
+- Accepted: this is a behaviour change to four components already committed. Their hovers start
+  animating where they previously cut. That is the fix, but it is a visual change to shipped work and
+  is called out rather than folded silently into a new-component commit.
+
+### Alternatives rejected
+- **Keep the utilities and write one `transition-[a,b,c]` per component.** Fixes the collapse and
+  loses the per-property curve — press would ease on `standard` because the element can only have
+  one timing function. Also leaves the repeated arbitrary value CODE_STANDARDS names.
+- **Rely on `cn` to resolve it.** It already does, deterministically, to the wrong answer. A merge
+  that silently drops two of three intents is not a resolution.
+- **A Tailwind plugin adding a `transition-control` utility.** Same result through more machinery,
+  and it puts a design timing inside build configuration where nobody reading a component will find
+  it.
+
+## ADR-034 — Type-only modules and component barrels leave the coverage denominator
+
+**Date** 2026-08-07 · **Prompt** 08 · **Status** Accepted
+
+### Question
+`packages/ui` follows the six-file component layout, so every component contributes a `*.types.ts` and
+an `index.ts` alongside its `.tsx` and `.styles.ts`. Both report 0 % coverage and always will. With
+eight components built, the package reported **69.93 %** lines against a 70 % floor while every file
+holding a statement was at or near 100 %. Is the floor detecting anything?
+
+### Criterion (set before measuring)
+A file belongs in the denominator only if a test could, in principle, raise its number. If no test
+can — because the file emits nothing, or because what it emits has no branch — then including it
+measures the shape of the directory layout rather than the thoroughness of the tests, and the floor
+stops meaning what `TESTING.md` § Coverage contract says it means.
+
+The exclusion must not be able to hide real logic: whatever leaves the denominator has to be a file
+kind the layout guarantees is trivial.
+
+### Measurement
+Both kinds meet the criterion, for different reasons.
+
+`*.types.ts` holds interfaces and type aliases. TypeScript erases them, so the emitted module is
+empty and the `import type` in the component is erased too — the module is never loaded at runtime at
+all. Its lines cannot be reached by any test that could ever be written.
+
+`index.ts` is re-exports. `src/index.ts` was already excluded on exactly this reasoning, recorded in
+the same file; the glob simply predates the six-file layout, which puts a second barrel in every
+component directory. This is that rule reaching the files it was written for.
+
+Measured on `packages/ui` at ten test files and 181 tests:
+
+| Denominator | Lines | Branches |
+| --- | --- | --- |
+| Before | 69.93 % | 82.85 % |
+| After | 99.61 % | 86.95 % |
+
+The 30-point jump is the point: nothing about the tests changed between those two rows. The floor was
+reading the ratio of type files to component files.
+
+### Decision
+`coverageExclude` in `packages/config/vitest/node.ts` gains `src/**/*.types.ts` and widens
+`src/index.ts` to `src/**/index.ts`. Applies to every package on either preset, since the layout is
+the contract's, not `ui`'s.
+
+### Consequences
+- Accepted: a `const` accidentally placed in a `*.types.ts` is now unmeasured. The six-file layout
+  gives runtime values their own home in `*.styles.ts`, and a value in a types file is already a
+  review finding — but it is a real gap, and it is the price of the exclusion.
+- Accepted: `packages/ui` now sits near 100 % against a 70 % floor, which makes the floor
+  uninformative in the other direction. That is the correct kind of uninformative: it fires when a
+  component ships without tests, rather than when a component ships with types.
+- Accepted: barrels are untested by coverage, so nothing catches a component that exists but was
+  never re-exported. `src/index.test.ts` closes that specifically — it reads the component directories
+  off disk and asserts the package barrel names each one, which is contract § 4 as an assertion rather
+  than as a convention.
+- Rejected framing worth naming: this is not "lowering the bar to pass". The bar was passing at 69.93 %
+  and the fix would have been one more test on a file that already has fourteen. The number was wrong,
+  not the work.
+
+### Alternatives rejected
+- **Write tests that import the type modules.** There is nothing to import at runtime; a test that
+  imports a type and asserts nothing is a line of theatre added to satisfy a counter.
+- **Lower the floor to 65 %.** Moves the threshold to match the number, which § 9 names as the same
+  defect wearing a lab coat. The threshold is not the thing that is wrong here.
+- **Fold types into the component file.** Contradicts the contract § 3 file layout, and trades a
+  measurement problem for a structural one.

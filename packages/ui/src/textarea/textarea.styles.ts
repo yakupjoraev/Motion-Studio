@@ -1,6 +1,6 @@
 import { type VariantProps, cva } from 'class-variance-authority'
 
-import { DISABLED, FOCUS_RING } from '../styles/variants'
+import { DISABLED, FOCUS_RING, TRANSITION_CONTROL } from '../styles/variants'
 
 /**
  * No fixed height here: the element's height is measured and set by the component, which is the whole point
@@ -10,7 +10,7 @@ export const textareaStyles = cva(
   [
     'block w-full resize-none overflow-hidden rounded-sm border bg-surface-2 px-2 py-1 text-xs text-foreground',
     'placeholder:text-foreground-subtle',
-    'transition-colors duration-[--ms-duration-fast] ease-[--ms-ease-standard]',
+    TRANSITION_CONTROL,
     FOCUS_RING,
     DISABLED,
   ],

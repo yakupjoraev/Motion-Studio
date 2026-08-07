@@ -1,7 +1,7 @@
 import { type VariantProps, cva } from 'class-variance-authority'
 
 import { HEIGHT_CLASS } from '../styles/density'
-import { DISABLED, FOCUS_RING, PRESS } from '../styles/variants'
+import { DISABLED, FOCUS_RING, PRESS, TRANSITION_CONTROL } from '../styles/variants'
 
 /**
  * `cva` rather than conditional class strings in markup — `CODE_STANDARDS.md` § Styling.
@@ -12,7 +12,7 @@ import { DISABLED, FOCUS_RING, PRESS } from '../styles/variants'
 export const buttonStyles = cva(
   [
     'inline-flex select-none items-center justify-center gap-1.5 whitespace-nowrap rounded-sm font-medium',
-    'transition-colors duration-[--ms-duration-fast] ease-[--ms-ease-standard]',
+    TRANSITION_CONTROL,
     FOCUS_RING,
     PRESS,
     DISABLED,

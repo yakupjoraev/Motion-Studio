@@ -1,6 +1,45 @@
 /*
- * The chrome's overlay motion. It lives in CSS rather than in a class string because Radix decides when to
- * unmount by looking for a running CSS *animation* — a transition alone would make every exit instant.
+ * The chrome's motion, in two parts: the control transitions every component wears, and the overlay
+ * animations Radix needs. Both live in CSS rather than in class strings, for two different reasons.
+ *
+ * --- Control transitions -----------------------------------------------------------------------------
+ *
+ * An element may have exactly one `transition-property`, and Tailwind offers one utility per property
+ * group. Combining `transition-colors`, `transition-shadow` and `transition-transform` on the same element
+ * therefore does not compose: the last one in the stylesheet wins, and `cn`'s tailwind-merge resolves it
+ * even earlier, to whichever came last in the string. Measured in ADR-033 — it had already silenced
+ * `Button`'s colour transition and `Input`'s border transition.
+ *
+ * Written as a shorthand here, each property also keeps its own § Timing row, which a single utility
+ * cannot express: press is `accelerate`, everything else is `standard`.
+ *
+ * Every duration is a `--ms-duration-*`, which carries the theme's `motionScale` and the environment's
+ * reduced-motion factor both (ADR-021), so reduced motion needs no rule of its own here.
+ */
+.ms-transition-control {
+  transition:
+    color var(--ms-duration-fast) var(--ms-ease-standard),
+    background-color var(--ms-duration-fast) var(--ms-ease-standard),
+    border-color var(--ms-duration-fast) var(--ms-ease-standard),
+    box-shadow var(--ms-duration-fast) var(--ms-ease-standard),
+    transform var(--ms-duration-fast) var(--ms-ease-accelerate);
+}
+
+/* Same four properties, but the transform is a mark travelling to a new position rather than a press. */
+.ms-transition-travel {
+  transition:
+    color var(--ms-duration-fast) var(--ms-ease-standard),
+    background-color var(--ms-duration-fast) var(--ms-ease-standard),
+    border-color var(--ms-duration-fast) var(--ms-ease-standard),
+    box-shadow var(--ms-duration-fast) var(--ms-ease-standard),
+    transform var(--ms-duration-fast) var(--ms-ease-standard);
+}
+
+/*
+ * --- Overlay motion ----------------------------------------------------------------------------------
+ *
+ * Radix decides when to unmount by looking for a running CSS *animation* — a transition alone would make
+ * every exit instant.
  *
  * Timings are `UI_GUIDELINES.md` § Timing: open 160 ms on `decelerate`, close 120 ms on `accelerate`, and
  * nothing in the chrome over 260 ms. They read `--ms-duration-*`, which carries both motion factors, so

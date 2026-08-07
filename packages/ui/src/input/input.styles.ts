@@ -1,7 +1,7 @@
 import { type VariantProps, cva } from 'class-variance-authority'
 
 import { HEIGHT_CLASS } from '../styles/density'
-import { DISABLED, FOCUS_RING } from '../styles/variants'
+import { DISABLED, FOCUS_RING, TRANSITION_CONTROL } from '../styles/variants'
 
 /**
  * The focus ring goes on the **wrapper**, not the `input`: with a prefix or a suffix the field the user sees
@@ -10,7 +10,7 @@ import { DISABLED, FOCUS_RING } from '../styles/variants'
 export const inputWrapperStyles = cva(
   [
     'flex items-center gap-1.5 rounded-sm border bg-surface-2 px-2 text-xs text-foreground',
-    'transition-colors duration-[--ms-duration-fast] ease-[--ms-ease-standard]',
+    TRANSITION_CONTROL,
     HEIGHT_CLASS.input,
     FOCUS_RING.replace('focus-visible:', 'focus-within:has(:focus-visible):'),
   ],
