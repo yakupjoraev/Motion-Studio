@@ -1,0 +1,75 @@
+import { Meta } from '@storybook/blocks'
+
+import {
+  ColorRamps,
+  Effects,
+  Elevation,
+  Fonts,
+  Motion,
+  Radii,
+  SemanticColors,
+  Spacing,
+  TypeScale,
+} from './token-groups'
+
+<Meta title="Docs/Tokens" />
+
+# Tokens
+
+Every table on this page is rendered from `packages/tokens` at run time. Adding a token there adds a
+row here, and nothing on this page names a token — which is the only way token documentation stays
+true for longer than a week.
+
+`DESIGN_SYSTEM.md` is the source these values were transcribed from, and `packages/tokens` is the
+source of truth for the values themselves.
+
+## Colour
+
+Twelve steps per hue in OKLCH, so perceptual lightness is even and dark mode is a lightness inversion
+rather than a hand-tuned second palette.
+
+<ColorRamps />
+
+The semantic layer is what components use. No component reads a primitive ramp — it reads a semantic
+token, which resolves through a `--ms-*` variable and therefore follows the theme.
+
+<SemanticColors mode="light" />
+
+<SemanticColors mode="dark" />
+
+## Space
+
+<Spacing />
+
+## Radius
+
+Every value is multiplied by the theme's `radiusScale`, so `Brutal` renders this whole table at zero.
+
+<Radii />
+
+## Typography
+
+<TypeScale />
+
+<Fonts />
+
+## Elevation
+
+Four styles, and the theme picks one. Dark mode is not the light shadow made stronger — it adds an
+inner top highlight instead, because a black shadow on a dark surface is invisible.
+
+<Elevation mode="light" />
+
+<Elevation mode="dark" />
+
+## Motion
+
+Durations multiply by both motion factors: the theme's `motionScale` and the environment's
+`prefers-reduced-motion`. Switch the toolbar's reduced-motion toggle and every animation in the
+workshop goes still — ADR-021.
+
+<Motion />
+
+## Effects
+
+<Effects />

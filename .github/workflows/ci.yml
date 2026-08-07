@@ -53,6 +53,17 @@ jobs:
       - run: pnpm build
       # `pnpm size-limit` and `pnpm analyze` with the bundle-analysis artifact — added by prompt 54
       # (performance hardening), which writes the per-route budgets they check against.
+
+  # Non-blocking by design — prompt 10 § Verify. A broken story is worth knowing about on every pull
+  # request, and it is not a reason to stop one: the workshop is a development tool, not a shipped
+  # surface. `pnpm build` above already covers everything that ships.
+  storybook:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm build:storybook
 # Jobs still to come, each with the prompt that creates what it tests:
 #   compile-exports — prompt 46, tsc over every golden export
 #   e2e             — prompt 56, Playwright sharded ×3 across three browsers

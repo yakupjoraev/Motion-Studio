@@ -1,0 +1,38 @@
+import { Meta } from '@storybook/blocks'
+
+<Meta title="Docs/Introduction" />
+
+# Motion Studio — the workshop
+
+This is where every component in `packages/ui` and every block in `packages/blocks` is built and
+reviewed. If a component has no story here, it is not finished.
+
+## The toolbar
+
+Four globals, and each one exists because a component can be wrong in that dimension without being
+wrong in any other.
+
+| Global | What it does | What it catches |
+| --- | --- | --- |
+| **Theme** | Applies one of the ten presets through `ThemeScope` | A component that hard-codes a colour instead of reading a token |
+| **Colour mode** | Overrides the preset's own `colorMode` | Contrast that only holds in one mode |
+| **Reduced motion** | Forces `--ms-reduced-motion: 0` on the story | An animation that ignores the preference |
+| **Surface** | Puts grain or a gradient behind the story | Glass that looks like a flat panel because nothing is behind it |
+
+The theme is applied to the story's own wrapper, never to the page root, so switching it repaints the
+story and leaves this documentation exactly as it was. That is `THEME_ENGINE.md` § Scoped themes doing
+its job, and it is the same mechanism the block gallery will use to render many previews in many
+themes at once.
+
+## Accessibility is a gate here
+
+The a11y addon runs with `test: 'error'`, so a violation fails an interaction-test run rather than
+sitting in a panel nobody opened. `ACCESSIBILITY.md` is the specification; this is where it is checked
+first, and `e2e` checks the rest at page level.
+
+## Rules for a story
+
+- **Typed.** `Meta<typeof Component>` and `StoryObj<typeof meta>`. No `any` in args.
+- **No network.** Every fixture is inline. A story that fetches is a broken story.
+- **One idea per story.** `Default`, then one story per state worth looking at, not a matrix.
+- **A story is a document.** The doc comment above it says what a reader should notice.

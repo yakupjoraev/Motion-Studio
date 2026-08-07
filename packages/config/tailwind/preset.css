@@ -2,9 +2,10 @@
  * The shared Tailwind entry point. Tailwind v4 is CSS-first, so this file — not a JS config — is
  * where the design system enters the build (TECH_STACK.md § Tailwind CSS v4).
  *
- * The generated `@theme` block is not here. `packages/tokens` writes one stylesheet per app —
- * `apps/web/src/styles/theme.css` — because the variable values are per app, not shared: an app
- * imports Tailwind, then that sheet, then its own base layer. See DESIGN_SYSTEM.md § Generated
- * output and `apps/web/app/globals.css` for the wiring. Nothing hand-writes a token anywhere.
+ * The generated `@theme` block is not here. `packages/tokens` writes one stylesheet per app that
+ * renders the design system — `apps/web` and `apps/storybook` — because an app imports Tailwind, then
+ * that sheet, then its own base layer, and a shared file would have to be imported across an app
+ * boundary that ARCHITECTURE.md § Dependency graph forbids. See DESIGN_SYSTEM.md § Generated output
+ * and `apps/web/app/globals.css` for the wiring. Nothing hand-writes a token anywhere.
  */
 @import 'tailwindcss';

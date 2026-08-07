@@ -1,0 +1,8 @@
+{
+  "extends": "@motion-studio/config/tsconfig/react.json",
+  "compilerOptions": {
+    "types": ["vite/client"]
+  },
+  "include": [".storybook/**/*.ts", ".storybook/**/*.tsx", "src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["node_modules", "storybook-static"]
+}

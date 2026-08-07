@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import { describe, expect, it } from 'vitest'
 
-import { OUTPUT_PATH, generateThemeCss } from './generate'
+import { OUTPUT_PATHS, generateThemeCss } from './generate'
 import { toCss } from './to-css'
 import { toTailwind } from './to-tailwind'
 
@@ -31,8 +31,12 @@ describe('generateThemeCss', () => {
     expect(generateThemeCss()).toBe(generateThemeCss())
   })
 
-  it('matches the committed apps/web/src/styles/theme.css byte for byte', async () => {
-    const committed = await readFile(OUTPUT_PATH, 'utf8')
+  it('writes one sheet per app that renders the design system', () => {
+    expect(OUTPUT_PATHS).toHaveLength(2)
+  })
+
+  it.each(OUTPUT_PATHS)('matches the committed %s byte for byte', async (path) => {
+    const committed = await readFile(path, 'utf8')
 
     expect(committed).toBe(generateThemeCss())
   })

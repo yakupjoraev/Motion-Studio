@@ -1,6 +1,37 @@
 {
-  "name": "storybook",
+  "name": "workshop",
   "version": "0.0.0",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "scripts": {
+    "dev": "storybook dev -p 6006 --ci",
+    "build": "storybook build",
+    "lint": "biome check .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@motion-studio/theme": "workspace:*",
+    "@motion-studio/tokens": "workspace:*",
+    "@motion-studio/ui": "workspace:*",
+    "@motion-studio/utils": "workspace:*",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@motion-studio/config": "workspace:*",
+    "@storybook/addon-a11y": "^8.6.18",
+    "@storybook/addon-essentials": "^8.6.18",
+    "@storybook/addon-interactions": "^8.6.18",
+    "@storybook/addon-themes": "^8.6.18",
+    "@storybook/manager-api": "^8.6.18",
+    "@storybook/react": "^8.6.18",
+    "@storybook/react-vite": "^8.6.18",
+    "@storybook/theming": "^8.6.18",
+    "@tailwindcss/postcss": "^4.1.14",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "storybook": "^8.6.18",
+    "tailwindcss": "^4.1.14",
+    "vite": "^6.3.6"
+  }
 }

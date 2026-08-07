@@ -1,0 +1,21 @@
+<!--
+  The two families DESIGN_SYSTEM.md § Typography names, preconnected rather than preloaded: the font
+  files are not in the repository yet (ADR-025), so a `preload` would be a request for a URL that
+  404s on every story. The stacks in `FONT_FAMILY` fall back to `system-ui` until they land.
+
+  `color-scheme` is declared here as well as in the base layer so the browser paints its own scrollbars
+  and form controls in the right mode before the first stylesheet has parsed.
+-->
+<meta name="color-scheme" content="light dark" />
+<style>
+  html,
+  body,
+  #storybook-root {
+    height: 100%;
+  }
+
+  /* The story canvas has no margin of its own; the surface decorator is what fills it. */
+  body {
+    margin: 0;
+  }
+</style>

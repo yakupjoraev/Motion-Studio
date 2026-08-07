@@ -76,6 +76,10 @@
       "linter": { "rules": { "style": { "noDefaultExport": "off" } } }
     },
     {
+      "include": ["**/.storybook/**"],
+      "linter": { "rules": { "style": { "noDefaultExport": "off" } } }
+    },
+    {
       "include": ["**/tsconfig/*.json"],
       "json": { "parser": { "allowComments": true } }
     },
