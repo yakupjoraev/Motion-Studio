@@ -17,6 +17,18 @@ export {
   type CheckboxState,
 } from './checkbox/index'
 export {
+  Dialog,
+  dialogBodyStyles,
+  dialogContentStyles,
+  dialogDescriptionStyles,
+  dialogFooterStyles,
+  dialogScrimStyles,
+  dialogTitleStyles,
+  type DialogProps,
+  type DialogSize,
+  type DialogStyleProps,
+} from './dialog/index'
+export {
   Dropdown,
   dropdownContentStyles,
   dropdownItemStyles,

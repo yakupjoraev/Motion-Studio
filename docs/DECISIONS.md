@@ -1990,3 +1990,52 @@ already exists.
   this would need a second platform-aware spoken form, and it would say "Command Z" on a machine
   where the key is Ctrl unless that form were platform-aware too. Cost is real; the reference sheet
   already covers the need.
+
+## ADR-036 — Dialog widths are the panel widths, and the widest one is the viewport bound
+
+**Date** 2026-08-07 · **Prompt** 08 · **Status** Accepted
+
+### Question
+Prompt 08 asks `Dialog` for "sizes" and no document names any. Three numbers have to come from
+somewhere.
+
+### Criterion (set before measuring)
+Same rule as ADR-030, one level up: a width is admissible only if it is a number the layout already
+names, or a bound the layout already implies. Two further constraints, both from documents:
+
+1. It must fit the studio's **minimum** viewport. `ACCESSIBILITY.md` § Known limitations and
+   `UI_GUIDELINES.md` § Responsiveness both put that at 1024 px, below which the studio declines to
+   run at all.
+2. It must leave the same 8 px collision padding the other overlays use, at minimum.
+
+### Measurement
+`UI_GUIDELINES.md` § Layout names four widths: left panel 240–360 with a default of 280, inspector
+280–420 with a default of 320. Building from those:
+
+| Size | Width | Derivation | Margin at 1024 px |
+| --- | --- | --- | --- |
+| `sm` | 320px | the inspector's default — one column of chrome | 352 px each side |
+| `md` | 640px | two of them — a form with a label column and a control column | 192 px each side |
+| `lg` | 960px | the viewport bound: 1024 − 32 each side | 32 px each side |
+
+`lg` is not a chosen width, it is the largest one that satisfies constraint 1 with a margin that
+still reads as a margin. Below 1024 the studio does not render, so nothing narrower needs handling —
+but every size is `max-w`, so a narrower window shrinks the dialog rather than clipping it.
+
+Height is bounded the same way and for the same reason: `max-h` of the viewport less 64 px, with the
+body scrolling inside. A dialog taller than the window puts its own buttons out of reach, which is
+the one failure mode a confirmation cannot have.
+
+### Decision
+Three sizes, `sm` 320, `md` 640, `lg` 960, all as `max-w`. `md` is the default: a dialog with no
+stated size is a form, and 320 is only right for a confirmation.
+
+### Consequences
+- Accepted: `lg` is pinned to the minimum viewport, not to the target one. On a 2560 px display the
+  export dialog uses 37 % of the width and the rest is scrim. The alternative — sizing for the target
+  and shrinking for the minimum — makes the dialog a different shape on two machines, and the export
+  dialog's file tree is the kind of layout that then needs two designs.
+- Accepted: the three numbers stop meaning anything if § Layout's panel widths change. That is the
+  intended coupling; the derivation is written down here so the next editor knows to re-run it.
+- Accepted: no `xl` and no `full`. A full-screen surface is a route, not a dialog, and `PRODUCT.md`
+  gives the two things that would want one — the playground and the docs — their own routes already.
