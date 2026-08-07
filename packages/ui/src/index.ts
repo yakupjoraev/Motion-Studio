@@ -7,6 +7,16 @@ export {
   type ButtonVariant,
 } from './button/index'
 export {
+  Checkbox,
+  checkboxBoxStyles,
+  checkboxCheckStyles,
+  checkboxDashStyles,
+  checkboxIndicatorStyles,
+  checkboxRootStyles,
+  type CheckboxProps,
+  type CheckboxState,
+} from './checkbox/index'
+export {
   Input,
   inputStyles,
   inputWrapperStyles,
@@ -31,7 +41,17 @@ export {
   type SegmentedProps,
   type SegmentedStyleProps,
 } from './segmented/index'
-export { DENSITY, HEIGHT_CLASS, LABEL_COLUMN_CLASS, type DensityToken } from './styles/density'
+export {
+  DENSITY,
+  GLYPH,
+  GLYPH_CLASS,
+  HEIGHT_CLASS,
+  LABEL_COLUMN_CLASS,
+  MIN_TARGET,
+  MIN_TARGET_CLASS,
+  type DensityToken,
+  type GlyphToken,
+} from './styles/density'
 export {
   DISABLED,
   FLOATING_SURFACE,
@@ -39,7 +59,24 @@ export {
   PANEL_SURFACE,
   PRESS,
   ROW,
+  TRANSITION_CONTROL,
+  TRANSITION_TRAVEL,
 } from './styles/variants'
+export {
+  Slider,
+  sliderRangeStyles,
+  sliderRootStyles,
+  sliderThumbStyles,
+  sliderTrackStyles,
+  type SliderProps,
+} from './slider/index'
+export {
+  Switch,
+  switchRootStyles,
+  switchThumbStyles,
+  switchTrackStyles,
+  type SwitchProps,
+} from './switch/index'
 export {
   Textarea,
   textareaStyles,

@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
-import { DENSITY, type DensityToken, HEIGHT_CLASS, LABEL_COLUMN_CLASS } from './density'
+import {
+  DENSITY,
+  type DensityToken,
+  GLYPH,
+  GLYPH_CLASS,
+  type GlyphToken,
+  HEIGHT_CLASS,
+  LABEL_COLUMN_CLASS,
+  MIN_TARGET,
+  MIN_TARGET_CLASS,
+} from './density'
 
 /**
  * `UI_GUIDELINES.md` § Density scale is a table in a document; this asserts the code still says the same
@@ -53,5 +63,85 @@ describe('the density scale', () => {
     expect(DENSITY.controlRow).toBe(28)
     expect(DENSITY.statusBar).toBe(DENSITY.controlRow)
     expect(DENSITY.iconButton).toBe(DENSITY.controlRow)
+  })
+})
+
+/** `UI_GUIDELINES.md` § Control glyphs, asserted the same way — the document's table, transcribed. */
+const DOCUMENTED_GLYPHS: Readonly<Record<GlyphToken, number>> = {
+  checkboxBox: 16,
+  switchTrackWidth: 24,
+  switchTrackHeight: 14,
+  switchThumb: 10,
+  sliderTrack: 4,
+  sliderThumb: 12,
+}
+
+describe('the control glyph scale', () => {
+  it.each(Object.entries(DOCUMENTED_GLYPHS))('puts %s at %ipx', (token, size) => {
+    expect(GLYPH[token as GlyphToken]).toBe(size)
+  })
+
+  it('carries exactly the six glyphs the table lists', () => {
+    expect(Object.keys(GLYPH).sort()).toEqual(Object.keys(DOCUMENTED_GLYPHS).sort())
+  })
+
+  it('writes every glyph class out literally, for the same reason the row classes are', () => {
+    for (const className of Object.values(GLYPH_CLASS)) {
+      expect(className).not.toContain('$')
+    }
+  })
+
+  it.each([
+    ['checkboxBox', GLYPH_CLASS.checkboxBox, ['16px']],
+    ['switchTrack', GLYPH_CLASS.switchTrack, ['14px', '24px']],
+    ['switchThumb', GLYPH_CLASS.switchThumb, ['10px']],
+    ['sliderTrack', GLYPH_CLASS.sliderTrack, ['4px']],
+    ['sliderThumb', GLYPH_CLASS.sliderThumb, ['12px']],
+  ] as const)('gives %s a class carrying its documented size', (_token, className, sizes) => {
+    for (const size of sizes) {
+      expect(className).toContain(size)
+    }
+  })
+
+  /*
+   * The four admission rules of ADR-030, as assertions. They are what makes these numbers derived rather
+   * than chosen, so a future edit that breaks one has to argue with the ADR instead of with a diff.
+   */
+  it('derives every glyph from a row in the density scale', () => {
+    expect(GLYPH.switchTrackWidth).toBe(DENSITY.smallButton)
+    expect(GLYPH.switchTrackHeight).toBe(DENSITY.controlRow / 2)
+    expect(GLYPH.switchThumb).toBe(GLYPH.switchTrackHeight - 2 * 2)
+    expect(GLYPH.sliderThumb).toBe(DENSITY.smallButton / 2)
+  })
+
+  it('keeps every glyph on whole pixels when centred in an even row', () => {
+    for (const [token, size] of Object.entries(GLYPH)) {
+      expect(size % 2, token).toBe(0)
+    }
+  })
+
+  it('leaves at least 4px of clearance inside the input band', () => {
+    const tallest = Math.max(GLYPH.checkboxBox, GLYPH.switchTrackHeight, GLYPH.sliderThumb)
+
+    expect(DENSITY.input - tallest).toBeGreaterThanOrEqual(2 * 4)
+  })
+
+  it('sets the minimum target at the small-button row, and not below WCAG 2.2 AA', () => {
+    expect(MIN_TARGET).toBe(DENSITY.smallButton)
+    expect(MIN_TARGET).toBeGreaterThanOrEqual(24)
+    expect(MIN_TARGET_CLASS).toBe('h-[24px] w-[24px]')
+  })
+
+  it('keeps every glyph smaller than the target that carries it', () => {
+    for (const [token, size] of Object.entries(GLYPH)) {
+      expect(size, token).toBeLessThanOrEqual(MIN_TARGET)
+    }
+  })
+
+  it('gives the switch thumb a travel as wide as the thumb itself', () => {
+    // 24 − 2 − 10 − 2. A travel shorter than the thumb reads as a nudge rather than as a throw.
+    const travel = GLYPH.switchTrackWidth - 2 - GLYPH.switchThumb - 2
+
+    expect(travel).toBe(GLYPH.switchThumb)
   })
 })
