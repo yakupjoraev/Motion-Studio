@@ -1,6 +1,10 @@
-import { type ViteUserConfig, defineConfig } from 'vitest/config'
+import { defineConfig } from 'vitest/config'
 
 /**
+ * JavaScript, not TypeScript — ADR-048. A consumer's `vitest.config.ts` is bundled by Vite with bare
+ * specifiers left external, so this file reaches Node's ESM loader untransformed. Node 20.11, which
+ * `TECH_STACK.md` names as the floor, cannot load `.ts`. The types live in `node.d.ts` beside it.
+ *
  * Kept out of the coverage denominator: the tests themselves, the barrels (re-exports have no
  * branches to cover, so counting them only inflates the number), the type-only modules, the shared
  * factories from CODE_STANDARDS.md § Testing style, and the Storybook stories.
@@ -27,7 +31,7 @@ export const coverageExclude = [
  * § Coverage contract sets a floor per package, and a shared number here would let a well-tested
  * package cover for an untested one.
  */
-export const nodeConfig: ViteUserConfig = defineConfig({
+export const nodeConfig = defineConfig({
   test: {
     environment: 'node',
     globals: false,

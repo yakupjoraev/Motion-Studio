@@ -1,4 +1,4 @@
-import { type ViteUserConfig, defineConfig } from 'vitest/config'
+import { defineConfig } from 'vitest/config'
 
 // Self-referenced through this package's own `exports` map rather than as `./node`: the consumer's
 // Vitest treats a bare specifier as external and hands the file to Node's ESM loader, which will
@@ -6,14 +6,18 @@ import { type ViteUserConfig, defineConfig } from 'vitest/config'
 import { coverageExclude } from '@motion-studio/config/vitest/node'
 
 /**
+ * JavaScript, not TypeScript — ADR-048, and the same reason as `node.mjs`: this file is loaded by
+ * Node rather than transformed by Vite. The types live in `react.d.ts` beside it.
+ *
  * Preset for the packages that render React. `include` covers `.test.ts` as well as `.test.tsx`,
  * so a package on this preset still runs its pure tests — the reverse is not true, which is why a
  * package that will ever hold a component test belongs here rather than on the node preset.
  *
  * The setup file is referenced by package specifier rather than by path: it is resolved through
  * this package's `exports` map, so the consumer's config never encodes where it lives on disk.
+ * It stays TypeScript, because Vitest loads a setup file through Vite and transforms it.
  */
-export const reactConfig: ViteUserConfig = defineConfig({
+export const reactConfig = defineConfig({
   test: {
     environment: 'jsdom',
     globals: false,

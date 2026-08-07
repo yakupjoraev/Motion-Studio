@@ -7,7 +7,9 @@
     ".": "./src/index.ts",
     "./biome.json": "./biome.json",
     "./tsconfig/*.json": "./tsconfig/*.json",
-    "./vitest/*": "./vitest/*.ts",
+    "./vitest/node": { "types": "./vitest/node.d.ts", "default": "./vitest/node.mjs" },
+    "./vitest/react": { "types": "./vitest/react.d.ts", "default": "./vitest/react.mjs" },
+    "./vitest/setup-react": "./vitest/setup-react.ts",
     "./tailwind/preset.css": "./tailwind/preset.css",
     "./package.json": "./package.json"
   },
