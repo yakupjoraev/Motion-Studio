@@ -31,7 +31,7 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test:coverage
       # `pnpm test:codegen` — added by prompt 46 (export verification), which creates the goldens.
-      - uses: codecov/codecov-action@v4
+      - uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           # A fork's pull request has no token. Coverage reporting is information, not a gate.
