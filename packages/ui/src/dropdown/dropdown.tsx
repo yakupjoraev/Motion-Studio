@@ -3,7 +3,7 @@ import { cn } from '@motion-studio/utils'
 import * as RadixDropdown from '@radix-ui/react-dropdown-menu'
 import type { ReactElement } from 'react'
 
-import { Kbd } from '../kbd/kbd'
+import { Kbd } from '../kbd/index'
 
 import {
   dropdownContentStyles,

@@ -17,6 +17,24 @@ export {
   type CheckboxState,
 } from './checkbox/index'
 export {
+  Collapsible,
+  collapsibleContentStyles,
+  collapsibleIndicatorStyles,
+  collapsibleRootStyles,
+  collapsibleTriggerStyles,
+  type CollapsibleProps,
+} from './collapsible/index'
+export {
+  ContextMenu,
+  contextMenuContentStyles,
+  contextMenuItemStyles,
+  contextMenuLabelStyles,
+  contextMenuSeparatorStyles,
+  contextMenuShortcutStyles,
+  type ContextMenuEntry,
+  type ContextMenuProps,
+} from './context-menu/index'
+export {
   Dialog,
   dialogBodyStyles,
   dialogContentStyles,
@@ -58,6 +76,15 @@ export {
   type KbdProps,
 } from './kbd/index'
 export { Popover, popoverContentStyles, type PopoverProps } from './popover/index'
+export {
+  ScrollArea,
+  scrollAreaRootStyles,
+  scrollAreaScrollbarStyles,
+  scrollAreaThumbStyles,
+  scrollAreaViewportStyles,
+  type ScrollAreaProps,
+  type ScrollAreaStyleProps,
+} from './scroll-area/index'
 export {
   Select,
   selectContentStyles,

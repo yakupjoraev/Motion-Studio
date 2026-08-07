@@ -114,6 +114,39 @@
   animation: ms-overlay-in var(--ms-duration-base) var(--ms-ease-emphasized);
 }
 
+/*
+ * A collapsing section. Height cannot be transitioned from `auto`, so Radix measures the content and
+ * publishes `--radix-collapsible-content-height`; these keyframes are the only place that variable is read.
+ *
+ * § Timing, panel collapse: 200 ms `standard`. The nearest step of the duration scale is `quick` at 180 —
+ * `base` is 240, which is twice as far.
+ */
+@keyframes ms-collapsible-open {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-collapsible-content-height);
+  }
+}
+
+@keyframes ms-collapsible-close {
+  from {
+    height: var(--radix-collapsible-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+
+[data-ms-collapsible][data-state='open'] {
+  animation: ms-collapsible-open var(--ms-duration-quick) var(--ms-ease-standard);
+}
+
+[data-ms-collapsible][data-state='closed'] {
+  animation: ms-collapsible-close var(--ms-duration-quick) var(--ms-ease-standard);
+}
+
 [data-ms-scrim][data-state='open'] {
   animation: ms-scrim-in var(--ms-duration-quick) var(--ms-ease-standard);
 }

@@ -1,16 +1,13 @@
 import { CopyIcon, DeleteIcon, DuplicateIcon, LockIcon } from '@motion-studio/icons'
 import type { Meta, StoryObj } from '@storybook/react'
 
-import { Button } from '../button/index'
-
-import { Dropdown } from './dropdown'
+import { ContextMenu } from './context-menu'
 
 const meta = {
-  title: 'Chrome/Dropdown',
-  component: Dropdown,
+  title: 'Chrome/ContextMenu',
+  component: ContextMenu,
   parameters: { layout: 'centered' },
-  args: { trigger: <Button variant="ghost">Actions</Button> },
-} satisfies Meta<typeof Dropdown>
+} satisfies Meta<typeof ContextMenu>
 
 export default meta
 
@@ -18,18 +15,15 @@ type Story = StoryObj<typeof meta>
 
 const noop = (): void => undefined
 
+const Region = (
+  <div className="grid h-[120px] w-[280px] place-items-center rounded-md border border-border border-dashed text-foreground-subtle text-xs">
+    Right-click here
+  </div>
+)
+
 export const Default: Story = {
   args: {
-    items: [
-      { id: 'duplicate', label: 'Duplicate', shortcut: 'Mod+D', onSelect: noop },
-      { id: 'copy', label: 'Copy', shortcut: 'Mod+C', onSelect: noop },
-      { id: 'lock', label: 'Lock', shortcut: 'Mod+Shift+L', onSelect: noop },
-    ],
-  },
-}
-
-export const WithGroupsAndIcons: Story = {
-  args: {
+    children: Region,
     items: [
       { kind: 'label', id: 'edit', label: 'Edit' },
       {
@@ -41,7 +35,6 @@ export const WithGroupsAndIcons: Story = {
       },
       { id: 'copy', label: 'Copy', icon: <CopyIcon />, shortcut: 'Mod+C', onSelect: noop },
       { kind: 'separator', id: 'rule' },
-      { kind: 'label', id: 'layer', label: 'Layer' },
       { id: 'lock', label: 'Lock', icon: <LockIcon />, shortcut: 'Mod+Shift+L', onSelect: noop },
       {
         id: 'delete',
@@ -51,15 +44,6 @@ export const WithGroupsAndIcons: Story = {
         danger: true,
         onSelect: noop,
       },
-    ],
-  },
-}
-
-export const WithADisabledItem: Story = {
-  args: {
-    items: [
-      { id: 'duplicate', label: 'Duplicate', shortcut: 'Mod+D', onSelect: noop },
-      { id: 'paste', label: 'Paste', shortcut: 'Mod+V', disabled: true, onSelect: noop },
     ],
   },
 }

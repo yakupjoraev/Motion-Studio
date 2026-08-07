@@ -1,7 +1,7 @@
 import { RedoIcon, UndoIcon, ZapIcon } from '@motion-studio/icons'
 import type { Meta, StoryObj } from '@storybook/react'
 
-import { Button } from '../button/button'
+import { Button } from '../button/index'
 
 import { Tooltip, TooltipProvider } from './tooltip'
 

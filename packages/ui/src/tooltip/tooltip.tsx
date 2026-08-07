@@ -3,7 +3,7 @@ import { cn } from '@motion-studio/utils'
 import * as RadixTooltip from '@radix-ui/react-tooltip'
 import type { ReactElement } from 'react'
 
-import { Kbd } from '../kbd/kbd'
+import { Kbd } from '../kbd/index'
 
 import { tooltipContentStyles } from './tooltip.styles'
 

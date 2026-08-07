@@ -4,7 +4,7 @@ import { cn } from '@motion-studio/utils'
 import * as RadixDialog from '@radix-ui/react-dialog'
 import type { ReactElement } from 'react'
 
-import { Button } from '../button/button'
+import { Button } from '../button/index'
 
 import {
   dialogBodyStyles,

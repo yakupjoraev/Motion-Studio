@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import type { ReactElement } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
-import { Button } from '../button/button'
+import { Button } from '../button/index'
 import { expectNoViolations } from '../test/axe'
 
 import { Dialog } from './dialog'
