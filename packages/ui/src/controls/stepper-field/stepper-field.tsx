@@ -64,7 +64,7 @@ function StepperFieldImpl({
         <MinusIcon size={12} />
       </Button>
 
-      {/* biome-ignore lint/a11y/useSemanticElements: no element expresses `spinbutton`; an `input` here would offer a caret the stepper does not have. */}
+      {/* No element expresses `spinbutton`, and an `input` here would offer a caret the stepper does not have. */}
       <span
         id={id}
         role="spinbutton"

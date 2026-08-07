@@ -1,35 +1,17 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReactElement } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { expectNoViolations } from '../../test/axe'
+import { drag, stubDragEnvironment } from '../../test/pointer'
 
 import { ScrubField } from './scrub-field'
 
 import type { ScrubFieldProps } from './scrub-field.types'
 
-/** jsdom ships no `PointerEvent`; Testing Library then sends a bare `Event` with no coordinates. */
-class PointerEventStub extends MouseEvent {
-  readonly pointerId: number
-
-  constructor(type: string, init: PointerEventInit = {}) {
-    super(type, init)
-    this.pointerId = init.pointerId ?? 0
-  }
-}
-
 beforeEach(() => {
-  vi.stubGlobal('PointerEvent', PointerEventStub)
-  Element.prototype.setPointerCapture = vi.fn()
-  Element.prototype.releasePointerCapture = vi.fn()
-  // Synchronous frames: the per-frame coalescing is what is under test, not the browser's scheduler.
-  vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
-    callback(0)
-
-    return 1
-  })
-  vi.stubGlobal('cancelAnimationFrame', () => undefined)
+  stubDragEnvironment()
 })
 
 const Fixture = (props: Partial<ScrubFieldProps>): ReactElement => (
@@ -43,22 +25,6 @@ const Fixture = (props: Partial<ScrubFieldProps>): ReactElement => (
 )
 
 const field = (): HTMLElement => screen.getByRole('spinbutton', { name: 'Radius' })
-
-interface DragStep {
-  readonly clientX: number
-  readonly shiftKey?: boolean
-  readonly altKey?: boolean
-}
-
-function drag(element: HTMLElement, steps: readonly DragStep[]): void {
-  fireEvent.pointerDown(element, { clientX: 0, pointerId: 1 })
-
-  for (const step of steps) {
-    fireEvent.pointerMove(element, { pointerId: 1, ...step })
-  }
-
-  fireEvent.pointerUp(element, { clientX: steps.at(-1)?.clientX ?? 0, pointerId: 1 })
-}
 
 describe('ScrubField', () => {
   it('renders the value with its unit inside the field', () => {
@@ -172,6 +138,19 @@ describe('ScrubField', () => {
     await user.keyboard('{ArrowDown}{ArrowDown}')
 
     expect(onCommit).toHaveBeenLastCalledWith(15)
+  })
+
+  it('does not commit an arrow step that the bound swallows', async () => {
+    const user = userEvent.setup()
+    const onChange = vi.fn()
+    const onCommit = vi.fn()
+
+    render(<Fixture value={0} min={0} onChange={onChange} onCommit={onCommit} />)
+    await user.click(field())
+    await user.keyboard('{ArrowDown}')
+
+    expect(onChange).not.toHaveBeenCalled()
+    expect(onCommit).not.toHaveBeenCalled()
   })
 
   it('applies the modifiers to an arrow step', async () => {

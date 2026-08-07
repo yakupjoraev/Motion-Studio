@@ -8,4 +8,10 @@ export {
   controlRowResetStyles,
   controlRowStyles,
 } from './control-row.styles'
+export {
+  useRowDrag,
+  type RowDrag,
+  type RowDragOptions,
+  type RowDragProps,
+} from './use-row-drag'
 export type { ControlRowProps, ControlSlotProps, ValueControlProps } from './control-row.types'

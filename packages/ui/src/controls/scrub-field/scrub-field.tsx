@@ -209,7 +209,11 @@ function ScrubFieldImpl({
       const next = quantize(live + direction * steppedBy(event), stepped(event))
 
       setDraft(formatValue(next, bounds.precision))
-      settle(next)
+
+      // A step that lands on the value it started from is not an edit — ADR-043.
+      if (next !== live) {
+        settle(next)
+      }
     } else if (event.key === 'Enter') {
       event.preventDefault()
       commitDraft()

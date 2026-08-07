@@ -156,3 +156,29 @@
 [data-ms-scrim][data-state='closed'] {
   animation: ms-scrim-out var(--ms-duration-fast) var(--ms-ease-standard);
 }
+
+/*
+ * The curve editor's preview dot. Its timing function is the curve being edited, set inline by the
+ * component, so what the user watches is the value itself rather than a second drawing of it.
+ *
+ * The one place that needs an explicit reduced-motion rule: a zeroed duration token stops a finite
+ * animation, but an infinite one would only run infinitely fast.
+ */
+@keyframes ms-curve-preview {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(96px);
+  }
+}
+
+.ms-curve-preview {
+  animation: ms-curve-preview var(--ms-duration-slower) infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ms-curve-preview {
+    animation: none;
+  }
+}

@@ -65,7 +65,6 @@ function AlignFieldImpl({
   return (
     <div
       id={id}
-      // biome-ignore lint/a11y/useSemanticElements: a `fieldset` cannot carry roving tabindex over nine radios, and no element expresses `radiogroup`.
       role="radiogroup"
       aria-describedby={describedBy}
       aria-disabled={disabled || undefined}
