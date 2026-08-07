@@ -78,6 +78,17 @@ export {
   type SwitchProps,
 } from './switch/index'
 export {
+  Tabs,
+  tabsContentStyles,
+  tabsIndicatorStyles,
+  tabsListStyles,
+  tabsRootStyles,
+  tabsTriggerStyles,
+  type TabItem,
+  type TabsProps,
+  type TabsStyleProps,
+} from './tabs/index'
+export {
   Textarea,
   textareaStyles,
   type TextareaProps,
