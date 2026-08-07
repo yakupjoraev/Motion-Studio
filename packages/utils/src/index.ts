@@ -6,6 +6,7 @@ export {
   type Oklch,
   clampChroma,
   contrastRatio,
+  formatHex,
   formatOklch,
   parseOklch,
   relativeLuminance,

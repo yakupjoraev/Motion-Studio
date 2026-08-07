@@ -11,11 +11,11 @@ export interface SliderProps {
   readonly step?: number
   readonly disabled?: boolean
   /** Names the thumb, which is the `role="slider"`. */
-  readonly 'aria-label'?: string
-  readonly 'aria-labelledby'?: string
+  readonly 'aria-label'?: string | undefined
+  readonly 'aria-labelledby'?: string | undefined
   /** "16 pixels", not "16" — ACCESSIBILITY.md § Inspector wants the unit announced. */
-  readonly 'aria-valuetext'?: string
-  readonly id?: string
-  readonly name?: string
-  readonly className?: string
+  readonly 'aria-valuetext'?: string | undefined
+  readonly id?: string | undefined
+  readonly name?: string | undefined
+  readonly className?: string | undefined
 }

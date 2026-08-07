@@ -16,7 +16,7 @@ import type { SegmentedProps } from './segmented.types'
  * gives radio semantics and roving tabindex together. The indicator is one `layoutId` span.
  */
 export const Segmented = forwardRef<HTMLDivElement, SegmentedProps>(function Segmented(
-  { value, defaultValue, onValueChange, options, disabled = false, className, ...aria },
+  { value, defaultValue, onValueChange, options, disabled = false, id, className, ...aria },
   ref,
 ) {
   // Radix keeps the uncontrolled selection in a context this component does not subscribe to, so the
@@ -38,6 +38,7 @@ export const Segmented = forwardRef<HTMLDivElement, SegmentedProps>(function Seg
   return (
     <RadixRadioGroup.Root
       ref={ref}
+      id={id}
       disabled={disabled}
       orientation="horizontal"
       loop

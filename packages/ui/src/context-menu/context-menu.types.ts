@@ -10,5 +10,5 @@ export interface ContextMenuProps {
   readonly children: ReactNode
   readonly items: readonly ContextMenuEntry[]
   readonly onOpenChange?: (open: boolean) => void
-  readonly className?: string
+  readonly className?: string | undefined
 }

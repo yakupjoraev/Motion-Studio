@@ -2,7 +2,14 @@ import { describe, expect, it } from 'vitest'
 
 import { ERROR_CODES } from '../errors/errors'
 import { codeOfThrown } from '../test/errors'
-import { clampChroma, contrastRatio, formatOklch, parseOklch, relativeLuminance } from './color'
+import {
+  clampChroma,
+  contrastRatio,
+  formatHex,
+  formatOklch,
+  parseOklch,
+  relativeLuminance,
+} from './color'
 
 /**
  * Computed by a literal transcription of the WCAG 2.x formula straight from hex, independent of this
@@ -240,5 +247,28 @@ describe('clampChroma', () => {
     const atDark = clampChroma(0.4, 0.05, 300)
 
     expect(atDark).toBeLessThan(atMid)
+  })
+})
+
+describe('formatHex', () => {
+  it('round-trips the sRGB primaries and the greys', () => {
+    for (const hex of ['#000000', '#ffffff', '#ff0000', '#00ff00', '#0000ff', '#808080']) {
+      expect(formatHex(parseOklch(hex))).toBe(hex)
+    }
+  })
+
+  it('emits eight digits only when the colour is transparent', () => {
+    expect(formatHex(parseOklch('#ff000080'))).toBe('#ff000080')
+    expect(formatHex(parseOklch('#ff0000ff'))).toBe('#ff0000')
+  })
+
+  it('holds lightness and hue when a colour is outside the sRGB gamut', () => {
+    // Chroma 0.35 at this lightness and hue is well outside sRGB; the nearest in-gamut colour keeps both.
+    const wide = parseOklch('oklch(60% 0.35 320)')
+    const rendered = parseOklch(formatHex(wide))
+
+    expect(rendered.l).toBeCloseTo(wide.l, 2)
+    expect(rendered.h).toBeCloseTo(wide.h, 0)
+    expect(rendered.c).toBeLessThan(wide.c)
   })
 })

@@ -23,6 +23,7 @@ export {
   type BadgeStyleProps,
   type BadgeTone,
 } from './badge/index'
+export * from './controls/index'
 export {
   Collapsible,
   collapsibleContentStyles,

@@ -16,7 +16,9 @@ export interface SegmentedProps {
   readonly options: readonly SegmentedOption[]
   readonly disabled?: boolean
   /** § Inspector requires one per radiogroup. */
-  readonly 'aria-label'?: string
-  readonly 'aria-labelledby'?: string
-  readonly className?: string
+  readonly 'aria-label'?: string | undefined
+  readonly 'aria-labelledby'?: string | undefined
+  /** Lets a `ControlRow` label reach the group, which `htmlFor` cannot do for a non-labelable element. */
+  readonly id?: string | undefined
+  readonly className?: string | undefined
 }

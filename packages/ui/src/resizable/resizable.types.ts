@@ -16,6 +16,6 @@ export interface ResizableProps {
   readonly onWidthChange: (width: number) => void
   /** An unnamed `role="separator"` announces as "separator" and a number. */
   readonly 'aria-label': string
-  readonly className?: string
-  readonly handleClassName?: string
+  readonly className?: string | undefined
+  readonly handleClassName?: string | undefined
 }

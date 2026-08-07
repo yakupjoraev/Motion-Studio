@@ -157,6 +157,30 @@ export function formatOklch(l: number, c: number, h: number, a = 1): string {
   return a >= 1 ? `${base})` : `${base} / ${a})`
 }
 
+function linearToSrgb(value: number): number {
+  return value <= 0.0031308 ? value * 12.92 : 1.055 * value ** (1 / 2.4) - 0.055
+}
+
+function toByte(channel: number): string {
+  return Math.round(Math.min(1, Math.max(0, channel)) * 255)
+    .toString(16)
+    .padStart(2, '0')
+}
+
+/**
+ * The sRGB hex form, `#rrggbb` or `#rrggbbaa` when the colour is not opaque. The inverse of
+ * `parseOklch`'s hex branch, and the only form the React Aria colour hooks accept — ADR-039.
+ *
+ * Chroma is clamped into gamut first, so a wide-gamut colour comes back as the nearest sRGB colour at
+ * the same lightness and hue rather than as three independently clipped channels, which shifts hue.
+ */
+export function formatHex(color: Oklch): string {
+  const rgb = oklchToLinearRgb({ ...color, c: clampChroma(color.c, color.l, color.h) })
+  const hex = `#${toByte(linearToSrgb(rgb.r))}${toByte(linearToSrgb(rgb.g))}${toByte(linearToSrgb(rgb.b))}`
+
+  return color.a >= 1 ? hex : `${hex}${toByte(color.a)}`
+}
+
 /** WCAG 2.x relative luminance, computed on linearised sRGB channels. */
 export function relativeLuminance(color: string): number {
   const rgb = oklchToLinearRgb(parseOklch(color))

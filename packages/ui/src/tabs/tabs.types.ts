@@ -17,7 +17,7 @@ export interface TabsProps {
   readonly onValueChange?: (value: string) => void
   readonly items: readonly TabItem[]
   /** Names the tab list. axe fails a bare `role="tablist"`. */
-  readonly 'aria-label'?: string
-  readonly 'aria-labelledby'?: string
-  readonly className?: string
+  readonly 'aria-label'?: string | undefined
+  readonly 'aria-labelledby'?: string | undefined
+  readonly className?: string | undefined
 }

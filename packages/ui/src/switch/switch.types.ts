@@ -14,8 +14,8 @@ export interface SwitchProps extends SwitchRootAttributes {
   readonly required?: boolean
   /** Submitted with the form under `name`. Defaults to Radix's `"on"`. */
   readonly value?: string
-  readonly name?: string
+  readonly name?: string | undefined
   /** Required when no visible `Label` is wired to it — every control needs an accessible name. */
-  readonly 'aria-label'?: string
-  readonly 'aria-labelledby'?: string
+  readonly 'aria-label'?: string | undefined
+  readonly 'aria-labelledby'?: string | undefined
 }

@@ -1,5 +1,5 @@
 import { readdirSync } from 'node:fs'
-import { dirname } from 'node:path'
+import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { pascal } from '@motion-studio/utils'
 import { describe, expect, it } from 'vitest'
@@ -15,9 +15,21 @@ const SRC = dirname(fileURLToPath(import.meta.url))
 /** Not components: shared fragments and test helpers. */
 const NOT_A_COMPONENT = new Set(['styles', 'test'])
 
-const componentDirectories = readdirSync(SRC, { withFileTypes: true })
-  .filter((entry) => entry.isDirectory() && !NOT_A_COMPONENT.has(entry.name))
-  .map((entry) => entry.name)
+/** `controls/` is a container of concepts rather than a concept, so the walk descends into it. */
+const CONTAINERS = new Set(['controls'])
+
+const directoriesIn = (path: string): string[] =>
+  readdirSync(path, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+
+const componentDirectories = directoriesIn(SRC).flatMap((name) => {
+  if (CONTAINERS.has(name)) {
+    return directoriesIn(join(SRC, name))
+  }
+
+  return NOT_A_COMPONENT.has(name) ? [] : [name]
+})
 
 describe('the package barrel', () => {
   it('finds the component directories to check', () => {

@@ -2212,3 +2212,47 @@ single-stop gradient, a zero-length spacing box.
   write is rejected, and the control reports it rather than guessing.
 - Rejected: one `value: string` of raw CSS per control. It makes every control a parser at every
   keystroke, and "move the third shadow up" becomes a string edit.
+
+## ADR-041 — A scrub modifier scales the increment and may refine the grid, never coarsen it
+
+**Date** 2026-08-07 · **Prompt** 09 · **Status** Accepted
+
+### Question
+Prompt 09 gives `Shift` ×10 and `Alt` ×0.1, and `COMPONENT_LIBRARY.md` § Control kinds gives the
+`number` control a `step` and a `precision`. Nothing says how the three interact. Dragging a
+`step: 1` field 20 px with `Shift` held is +200 — but +200 onto what grid, and rounded to what?
+
+### Criterion (set before measuring)
+Two properties, both checkable, and the rule is whichever satisfies both:
+
+1. A modifier never moves the value somewhere an unmodified drag could not reach. Snapping a
+   `Shift` drag to a grid of 10 would jump 16 to 220, a value the field cannot otherwise express.
+2. A modifier never produces a value finer than the field's declared resolution. `precision` is what
+   the field claims it can represent, and an increment below it is not representable.
+
+### Measurement
+Three candidate rules against the two properties, on a `step: 1` field at 16 dragged 20 px:
+
+| Rule | `Shift` | `Alt` | Property 1 | Property 2 |
+| --- | --- | --- | --- | --- |
+| Snap to the base step always | 216 | 16 (Alt is inert) | holds | holds |
+| Snap to the scaled step | 220 | 16.1 | **fails** — 220 is off-grid | fails at `precision: 0` |
+| Snap to `min(step, step × scale)` | 216 | 16 | holds | holds |
+
+Rules 1 and 3 differ only where `precision` leaves room below `step`: on a field declared
+`step: 0.1, precision: 2`, rule 1 makes `Alt` inert and rule 3 gives 0.01 increments. Rule 3 is the
+only one that uses the resolution the caller declared.
+
+### Decision
+The increment is `step × scale`, where `scale` is `(Shift ? 10 : 1) × (Alt ? 0.1 : 1)`. The result
+snaps to `min(step, step × scale)` and is then rounded to `precision`, which defaults to the decimals
+in `step`.
+
+### Consequences
+- Accepted: `Alt` does nothing on a field whose `precision` leaves no room below its `step` — an
+  integer pixel field, most of them. The field cannot represent 16.1, so offering a gesture that
+  appears to produce it would be the worse behaviour.
+- Accepted: holding both modifiers is ×1, since they are independent factors. No separate rule, and
+  nothing to remember.
+- Accepted: `precision` is now load-bearing rather than cosmetic. A caller who wants fine dragging
+  declares it, and the declaration is visible in the inspector schema rather than implied.

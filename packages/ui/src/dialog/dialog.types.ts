@@ -17,5 +17,5 @@ export interface DialogProps {
   readonly open?: boolean
   readonly defaultOpen?: boolean
   readonly onOpenChange?: (open: boolean) => void
-  readonly className?: string
+  readonly className?: string | undefined
 }

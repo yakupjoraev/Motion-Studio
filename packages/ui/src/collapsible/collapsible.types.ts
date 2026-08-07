@@ -11,7 +11,7 @@ export interface CollapsibleProps {
   readonly defaultOpen?: boolean
   readonly onOpenChange?: (open: boolean) => void
   readonly disabled?: boolean
-  readonly className?: string
-  readonly triggerClassName?: string
-  readonly contentClassName?: string
+  readonly className?: string | undefined
+  readonly triggerClassName?: string | undefined
+  readonly contentClassName?: string | undefined
 }
