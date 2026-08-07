@@ -8,14 +8,7 @@ import { selectContentStyles, selectItemStyles, selectTriggerStyles } from './se
 
 import type { SelectProps } from './select.types'
 
-/**
- * Radix Select with our field styling — `TECH_STACK.md` § Radix UI: unstyled, correct, accessible, and the
- * studio chrome's skeleton. Positioning, typeahead, and the listbox semantics are Radix's; the tokens, the
- * density and the timings are ours.
- *
- * `position="popper"` rather than the default: the inspector's selects sit in a scrolling panel, and the
- * item-aligned default reparents the list over the trigger, which reads as a jump.
- */
+/** `position="popper"`: the item-aligned default reparents the list over the trigger, which reads as a jump. */
 export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select(
   {
     value,
@@ -33,11 +26,7 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
   },
   ref,
 ) {
-  /*
-   * `exactOptionalPropertyTypes` is on, and Radix types these props as optional without `| undefined`. So an
-   * absent prop is omitted rather than passed as `undefined` — the two are different things under that flag,
-   * and passing the second is what turns a controlled component into an uncontrolled one by accident.
-   */
+  // `exactOptionalPropertyTypes`: an explicit `undefined` makes Radix treat the control as uncontrolled.
   const rootProps = {
     ...(value === undefined ? {} : { value }),
     ...(defaultValue === undefined ? {} : { defaultValue }),

@@ -1,9 +1,6 @@
 import type { ReactNode } from 'react'
 
-/**
- * `UI_GUIDELINES.md` § Feedback rules: "no success toast for expected outcomes", so there is no `success`
- * tone. What is left is the neutral confirmation that carries an Undo, and the failure that has to be read.
- */
+/** No `success` tone: § Feedback rules bans a success toast for an expected outcome. */
 export type ToastTone = 'neutral' | 'danger'
 
 export interface ToastAction {
@@ -12,10 +9,10 @@ export interface ToastAction {
 }
 
 export interface ToastOptions {
-  /** One line. § Copy: "Deleted Hero", not "The block was successfully deleted". */
+  /** § Copy: "Deleted Hero", not "The block was successfully deleted". */
   readonly title: string
   readonly description?: string
-  /** § Feedback rules: "every destructive action is undoable, and the toast says so". */
+  /** § Feedback rules: every destructive action is undoable, and the toast says so. */
   readonly action?: ToastAction
   readonly tone?: ToastTone
   /** Overrides the provider's dismissal time for this one toast. */

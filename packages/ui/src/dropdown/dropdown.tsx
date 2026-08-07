@@ -15,10 +15,7 @@ import {
 
 import type { DropdownEntry, DropdownProps } from './dropdown.types'
 
-/**
- * One entry. Written as three early returns rather than a `switch` with a `default`, because the default arm
- * would be a branch no test can reach — TypeScript has already narrowed the union by the last line.
- */
+/** Early returns rather than a `switch`: a `default` arm would be a branch no test can reach. */
 function Entry({ entry }: { entry: DropdownEntry }): ReactElement {
   if (entry.kind === 'separator') {
     return <RadixDropdown.Separator className={dropdownSeparatorStyles()} />
@@ -45,15 +42,7 @@ function Entry({ entry }: { entry: DropdownEntry }): ReactElement {
   )
 }
 
-/**
- * Radix DropdownMenu. Radix owns the menu semantics, typeahead, arrow navigation, and returning focus to the
- * trigger on close; this file owns the surface, the density, the shortcut column and the separators.
- *
- * Entries are data rather than children. A menu is a list of commands, and the alternative — compound
- * children — makes every caller reach for `DropdownMenu.Item` and re-decide its styling.
- *
- * No `forwardRef`: this renders no element of its own.
- */
+/** Entries are data, not children: a menu is a list of commands. No `forwardRef` — no element of its own. */
 export function Dropdown({
   trigger,
   items,

@@ -12,10 +12,7 @@ import {
 
 import type { PanelHeaderProps, PanelProps, PanelSectionProps } from './panel.types'
 
-/**
- * The left and right panel frames of § Layout. A column that clips its own overflow, with one hairline on the
- * edge facing the canvas — the panel's job is to be a surface, and everything with an opinion goes inside it.
- */
+/** § Layout's left and right frames. A surface and nothing else; everything with an opinion goes inside. */
 export const Panel = forwardRef<HTMLDivElement, PanelProps>(function Panel(
   { side = 'left', children, className, ...rest },
   ref,
@@ -27,10 +24,7 @@ export const Panel = forwardRef<HTMLDivElement, PanelProps>(function Panel(
   )
 })
 
-/**
- * The panel's title row. Not sticky: it is outside the scrolling region, which is what keeps it visible
- * without competing with the section headers, which are sticky and do scroll.
- */
+/** Not sticky: it sits outside the scrolling region, so it cannot compete with the section headers. */
 export const PanelHeader = forwardRef<HTMLDivElement, PanelHeaderProps>(function PanelHeader(
   { title, action, className, ...rest },
   ref,
@@ -43,14 +37,7 @@ export const PanelHeader = forwardRef<HTMLDivElement, PanelHeaderProps>(function
   )
 })
 
-/**
- * A collapsible section of an inspector — § Section headers. `Collapsible` supplies the header, the chevron,
- * the height animation and the ARIA; this adds the separator between sections and the body padding, so a
- * caller drops control rows in without measuring anything.
- *
- * Collapse state stays the caller's. § Section headers wants it persisted per section, and `ui` writing to
- * `localStorage` would mean two panels on one page fighting over the same key.
- */
+/** `Collapsible` plus the separator and the body padding. Collapse state stays the caller's. */
 export function PanelSection({
   title,
   children,
@@ -70,10 +57,7 @@ export function PanelSection({
 
   return (
     <Collapsible trigger={title} className={cn(panelSectionStyles(), className)} {...stateProps}>
-      {/*
-       * The padding goes on an inner element, never on the collapsing one. Height animates; padding does
-       * not — a padded box at `height: 0` is still 16 px tall, and the section would never close.
-       */}
+      {/* Padding on an inner element: a padded box at `height: 0` is still 16 px tall. */}
       <div className={panelSectionContentStyles()}>{children}</div>
     </Collapsible>
   )

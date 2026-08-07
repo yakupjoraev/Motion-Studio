@@ -3,7 +3,7 @@ import { type VariantProps, cva } from 'class-variance-authority'
 import { HEIGHT_CLASS } from '../styles/density'
 import { FLOATING_SURFACE, FOCUS_RING, TRANSITION_CONTROL } from '../styles/variants'
 
-/** The trigger is a field, so it matches `Input`: 26 px, `surface-2`, hairline border. */
+/** A field, so it matches `Input`. */
 export const selectTriggerStyles = cva(
   [
     'flex w-full items-center justify-between gap-1.5 rounded-sm border bg-surface-2 px-2 text-xs text-foreground',
@@ -21,14 +21,7 @@ export const selectTriggerStyles = cva(
   },
 )
 
-/**
- * The entrance and exit come from `styles/chrome.css`, keyed on `data-ms-overlay` — Radix decides when to
- * unmount by looking for a running CSS animation, so a class-string transition would make every exit
- * instant. § Timing: open 160 ms `decelerate`, close 120 ms `accelerate`.
- *
- * `z-index` is `Z_INDEX.dropdown` applied inline rather than a utility: Radix portals the content out of the
- * panel, and § Z-index says named and centralized, no magic numbers anywhere.
- */
+/** The entrance is in `chrome.css`. `z-index` is applied inline because Radix portals the content out. */
 export const selectContentStyles = cva([FLOATING_SURFACE, 'overflow-hidden p-1'])
 
 export const selectItemStyles = cva([

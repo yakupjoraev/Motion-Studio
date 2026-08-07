@@ -18,12 +18,7 @@ type Publish = (options: ToastOptions) => void
 
 const ToastContext = createContext<Publish | null>(null)
 
-/**
- * The hook the app calls: `toast({ title: 'Deleted Hero', action: { label: 'Undo', onClick: undo } })`.
- *
- * It throws rather than no-oping without a provider. A toast that silently never appears is the worst
- * possible failure for this component — the user's undo is gone and nothing said so.
- */
+/** Throws rather than no-oping: a toast that never appears takes the user's undo with it, silently. */
 export function useToast(): Publish {
   const publish = useContext(ToastContext)
 
@@ -62,7 +57,7 @@ function ToastItem({
       </div>
 
       {record.action === undefined ? null : (
-        // `altText` is what a screen reader is told to do instead of reaching a button that will vanish.
+        // `altText` is what a screen reader hears instead of a button that is about to vanish.
         <RadixToast.Action asChild altText={record.action.label}>
           <Button variant="ghost" size="sm" onClick={record.action.onClick}>
             {record.action.label}
@@ -80,14 +75,8 @@ function ToastItem({
 }
 
 /**
- * Mounts the viewport and holds the queue. One per app, above the studio shell.
- *
- * Radix owns the live region, the timers, the pause on hover and focus, and the `F8` hotkey that moves focus
- * into the viewport. What this adds is the queue and the hook, because Radix's own API is one component per
- * toast and the caller wants a function call.
- *
- * Ids come from a counter rather than from `createId`: they never leave this component, and a random id
- * would put `crypto` on a path that `TESTING.md` § Determinism asks to keep out of tested code.
+ * Holds the queue, because Radix's API is one component per toast and the caller wants a function call.
+ * Ids are a counter: they never leave this component, and `createId` would put `crypto` on a tested path.
  */
 export function ToastProvider({ children, duration = 5000 }: ToastProviderProps): ReactElement {
   const [records, setRecords] = useState<readonly ToastRecord[]>([])

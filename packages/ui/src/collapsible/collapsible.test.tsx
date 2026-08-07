@@ -102,10 +102,7 @@ describe('Collapsible', () => {
   })
 
   it('puts an action beside the trigger rather than inside it', async () => {
-    /*
-     * § Section headers: the `⟳` reset lives in the header row. A button nested in the trigger button would
-     * not be markup, and clicking it would toggle the section on the way to its own handler.
-     */
+    // A button nested in the trigger would toggle the section on the way to its own handler.
     const reset = vi.fn()
     render(
       <Fixture
@@ -133,10 +130,7 @@ describe('Collapsible', () => {
   })
 
   it('opts its content into the height animation, and clips it while it runs', async () => {
-    /*
-     * Height cannot be transitioned from `auto`, so the keyframes in `styles/chrome.css` read the height
-     * Radix measures. `overflow-hidden` is what makes that a collapse rather than a wipe over spilling text.
-     */
+    // `overflow-hidden` is what makes the height animation a collapse rather than a wipe over spilling text.
     render(<Fixture defaultOpen />)
 
     const content = document.querySelector('[data-ms-collapsible]')

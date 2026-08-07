@@ -130,10 +130,7 @@ describe('PanelSection', () => {
   })
 
   it('pads an element inside the collapsing box, never the box itself', () => {
-    /*
-     * The height animation moves `height` and leaves `padding` alone, so a padded collapsing box stops at
-     * 16 px rather than at 0 and the section never actually closes.
-     */
+    // Height animates and padding does not, so a padded collapsing box stops at 16 px instead of 0.
     render(
       <PanelSection title="Layout" defaultOpen>
         rows

@@ -13,13 +13,7 @@ import {
 
 import type { CollapsibleProps } from './collapsible.types'
 
-/**
- * Radix Collapsible dressed as an inspector section — § Section headers. Radix owns `aria-expanded`,
- * `aria-controls`, the Space and Enter path, and measuring the content so its height can be animated at all.
- *
- * Open state is the caller's: `ui` never touches `localStorage`. Two sections with the same key on one page
- * would fight over it, and where the state is persisted is an application decision, not a chrome one.
- */
+/** Open state is the caller's: `ui` never touches `localStorage`, and where it persists is the app's call. */
 export const Collapsible = forwardRef<HTMLDivElement, CollapsibleProps>(function Collapsible(
   {
     trigger,
@@ -50,8 +44,7 @@ export const Collapsible = forwardRef<HTMLDivElement, CollapsibleProps>(function
       {...rootProps}
     >
       <div className={collapsibleHeaderStyles()}>
-        {/* The trigger is a `group` so the chevron can read its `data-state` — the section does not know
-            its own openness when the caller leaves it uncontrolled. */}
+        {/* `group` so the chevron can read `data-state`: uncontrolled, the section does not know its own. */}
         <RadixCollapsible.Trigger className={cn(collapsibleTriggerStyles(), triggerClassName)}>
           <ChevronRightIcon size={12} className={collapsibleIndicatorStyles()} />
           {trigger}

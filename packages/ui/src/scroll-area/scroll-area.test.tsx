@@ -47,11 +47,8 @@ describe('ScrollArea', () => {
   })
 
   it('renders no bar until the content overflows', () => {
-    /*
-     * Radix mounts a hover scrollbar from a measurement, and jsdom reports every box as zero — so nothing
-     * overflows here and no bar exists. That is the honest state of this environment: the bar's appearance
-     * belongs to the Storybook walkthrough, and its styling is asserted below as the pure functions it is.
-     */
+    // Radix mounts a hover bar from a measurement, and jsdom reports every box as zero. The styling is
+    // asserted below as the pure functions it is.
     const { container } = render(
       <ScrollArea>
         <Content />

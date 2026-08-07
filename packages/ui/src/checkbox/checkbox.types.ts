@@ -1,10 +1,6 @@
 import type { ButtonHTMLAttributes } from 'react'
 
-/**
- * Three states, not two. `UI_GUIDELINES.md` § Multi-selection: with several nodes selected a shared boolean
- * property is on for some of them, and the control has to say so rather than pick a side. Radix maps this to
- * `aria-checked="mixed"`.
- */
+/** Three states: § Multi-selection needs "on for some of the selected nodes". Radix maps it to `mixed`. */
 export type CheckboxState = boolean | 'indeterminate'
 
 type CheckboxRootAttributes = Omit<

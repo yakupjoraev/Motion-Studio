@@ -10,10 +10,8 @@ import { Resizable } from './resizable'
 import type { ResizableProps } from './resizable.types'
 
 /**
- * jsdom has no `PointerEvent` at all, and Testing Library falls back to a plain `Event` when it is missing —
- * which carries no `clientX`, so every drag below would compute a delta from `undefined`. Extending
- * `MouseEvent` is enough: it already has the coordinates, and the drag path only reads `pointerId` beyond
- * them. Measured — without this the component reports `NaN`.
+ * jsdom has no `PointerEvent`, and Testing Library then falls back to a plain `Event` with no `clientX`, so
+ * every drag below computes `NaN`. `MouseEvent` already carries the coordinates.
  */
 class PointerEventStub extends MouseEvent {
   readonly pointerId: number
@@ -48,7 +46,7 @@ const handle = (): HTMLElement => screen.getByRole('separator', { name: 'Resize 
 
 const frameOf = (container: HTMLElement): HTMLElement => container.firstElementChild as HTMLElement
 
-/** A drag, as three pointer events on the handle. `fireEvent` because jsdom has no real pointer. */
+/** `fireEvent` because jsdom has no real pointer. */
 const drag = (to: number): void => {
   fireEvent.pointerDown(handle(), { pointerId: 1, clientX: 0 })
   fireEvent.pointerMove(handle(), { pointerId: 1, clientX: to })

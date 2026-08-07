@@ -13,24 +13,13 @@ import {
 
 import type { TabsProps } from './tabs.types'
 
-/**
- * Radix Tabs with the panel tab strip's styling. Radix owns `role="tablist"`, the roving tabindex
- * § Focus and keyboard requires, and the arrow-key navigation; this file owns the strip, the underline and
- * the timing.
- *
- * The underline is one `motion.span` with a `layoutId`, so it slides between tabs instead of one border
- * fading out while another fades in — § Timing calls the tab indicator a layout animation at 200 ms
- * `standard`, and the two are not the same thing to look at.
- */
+/** One `layoutId` span slides between tabs — § Timing calls the indicator a layout animation. */
 export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs(
   { value, defaultValue, onValueChange, items, className, ...aria },
   ref,
 ) {
-  /*
-   * A copy of the selection, for the same reason `Segmented` keeps one: the underline is rendered from a
-   * value this component holds, and Radix keeps the uncontrolled selection in a context this component does
-   * not subscribe to. Without the copy the underline never leaves the tab it started on.
-   */
+  // Radix keeps the uncontrolled selection in a context this component does not subscribe to, so the
+  // underline needs its own copy or it never leaves the tab it started on.
   const [uncontrolled, setUncontrolled] = useState(defaultValue)
   const active = value ?? uncontrolled
 
@@ -39,7 +28,7 @@ export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs(
     onValueChange?.(next)
   }
 
-  // `exactOptionalPropertyTypes`: an absent prop is omitted, never passed as `undefined`.
+  // `exactOptionalPropertyTypes`: an explicit `undefined` makes Radix treat the control as uncontrolled.
   const rootProps = {
     ...(value === undefined ? {} : { value }),
     ...(defaultValue === undefined ? {} : { defaultValue }),

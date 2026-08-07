@@ -1,20 +1,9 @@
 /*
- * The chrome's motion, in two parts: the control transitions every component wears, and the overlay
- * animations Radix needs. Both live in CSS rather than in class strings, for two different reasons.
+ * The chrome's motion. Durations are UI_GUIDELINES.md § Timing, mapped to the nearest step of the duration
+ * scale, and every one is a token so reduced motion needs no rule here (ADR-021).
  *
- * --- Control transitions -----------------------------------------------------------------------------
- *
- * An element may have exactly one `transition-property`, and Tailwind offers one utility per property
- * group. Combining `transition-colors`, `transition-shadow` and `transition-transform` on the same element
- * therefore does not compose: the last one in the stylesheet wins, and `cn`'s tailwind-merge resolves it
- * even earlier, to whichever came last in the string. Measured in ADR-033 — it had already silenced
- * `Button`'s colour transition and `Input`'s border transition.
- *
- * Written as a shorthand here, each property also keeps its own § Timing row, which a single utility
- * cannot express: press is `accelerate`, everything else is `standard`.
- *
- * Every duration is a `--ms-duration-*`, which carries the theme's `motionScale` and the environment's
- * reduced-motion factor both (ADR-021), so reduced motion needs no rule of its own here.
+ * Transitions are written as a shorthand rather than as Tailwind utilities: an element gets one
+ * `transition-property`, so two utilities silently discard one another. ADR-033.
  */
 .ms-transition-control {
   transition:
@@ -25,7 +14,7 @@
     transform var(--ms-duration-fast) var(--ms-ease-accelerate);
 }
 
-/* Same four properties, but the transform is a mark travelling to a new position rather than a press. */
+/* Same, but the transform is a mark travelling rather than a press. */
 .ms-transition-travel {
   transition:
     color var(--ms-duration-fast) var(--ms-ease-standard),
@@ -36,16 +25,8 @@
 }
 
 /*
- * --- Overlay motion ----------------------------------------------------------------------------------
- *
- * Radix decides when to unmount by looking for a running CSS *animation* — a transition alone would make
- * every exit instant.
- *
- * Timings are `UI_GUIDELINES.md` § Timing: open 160 ms on `decelerate`, close 120 ms on `accelerate`, and
- * nothing in the chrome over 260 ms. They read `--ms-duration-*`, which carries both motion factors, so
- * `motionScale: 0` and `prefers-reduced-motion` each zero them on their own (ADR-021).
- *
- * An overlay opts in with `data-ms-overlay`; Radix supplies `data-state`.
+ * Overlays. Radix unmounts on a running CSS *animation*, so a transition here would make every exit
+ * instant. An overlay opts in with `data-ms-overlay`; Radix supplies `data-state`.
  */
 @keyframes ms-overlay-in {
   from {
@@ -95,11 +76,7 @@
   animation: ms-overlay-out var(--ms-duration-fast) var(--ms-ease-accelerate);
 }
 
-/*
- * A tooltip fades faster than a menu opens — § Timing, tooltip, 100 ms after its 500 ms delay. There is no
- * 100 ms token, and the mapping used throughout this file is "nearest step of the duration scale": 160 → 180
- * `quick`, 220 → 240 `base`, and here 100 → 120 `fast`.
- */
+/* A tooltip fades faster than a menu opens — § Timing, 100 ms, nearest step `fast`. */
 [data-ms-overlay='tooltip'][data-state='delayed-open'],
 [data-ms-overlay='tooltip'][data-state='instant-open'] {
   animation: ms-overlay-in var(--ms-duration-fast) var(--ms-ease-standard);
@@ -109,18 +86,12 @@
   animation: ms-overlay-out var(--ms-duration-fast) var(--ms-ease-standard);
 }
 
-/* A dialog is the one chrome surface allowed 220 ms — § Timing, dialog open, `emphasized`. */
+/* The one surface allowed 220 ms — § Timing, dialog open. */
 [data-ms-overlay='dialog'][data-state='open'] {
   animation: ms-overlay-in var(--ms-duration-base) var(--ms-ease-emphasized);
 }
 
-/*
- * A collapsing section. Height cannot be transitioned from `auto`, so Radix measures the content and
- * publishes `--radix-collapsible-content-height`; these keyframes are the only place that variable is read.
- *
- * § Timing, panel collapse: 200 ms `standard`. The nearest step of the duration scale is `quick` at 180 —
- * `base` is 240, which is twice as far.
- */
+/* Height cannot animate from `auto`, so Radix measures it and publishes the variable these read. */
 @keyframes ms-collapsible-open {
   from {
     height: 0;
@@ -147,10 +118,7 @@
   animation: ms-collapsible-close var(--ms-duration-quick) var(--ms-ease-standard);
 }
 
-/*
- * § Timing, toast in: 260 ms on a spring. `base` is the nearest duration step at 240, and `--ms-ease-spring`
- * is the overshooting curve the token scale already carries — the one place the chrome is allowed one.
- */
+/* § Timing, toast in: 260 ms on a spring — the one place the chrome is allowed one. */
 @keyframes ms-toast-in {
   from {
     opacity: 0;
@@ -170,10 +138,7 @@
   animation: ms-overlay-out var(--ms-duration-fast) var(--ms-ease-accelerate);
 }
 
-/*
- * A skeleton pulses rather than shimmers: a travelling highlight is a gradient, and § Character keeps
- * gradients for content. `slower` is the only step long enough not to read as a flicker.
- */
+/* Pulses rather than shimmers: a travelling highlight is a gradient, and § Character keeps those for content. */
 @keyframes ms-skeleton-pulse {
   50% {
     opacity: 0.5;

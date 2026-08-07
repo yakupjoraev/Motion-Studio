@@ -92,8 +92,7 @@ describe('Switch', () => {
   })
 
   it('shows its state by position as well as by colour', () => {
-    // `ACCESSIBILITY.md` § Non-negotiables 4: colour is never the only carrier of meaning. The thumb's
-    // translate is the second carrier, so it is asserted rather than left to the eye.
+    // § Non-negotiables 4: the thumb's travel is the second carrier, so it is asserted, not eyeballed.
     render(<Switch aria-label="Snap to grid" defaultChecked />)
 
     expect(thumbOf(screen.getByRole('switch')).className).toContain(
@@ -102,11 +101,7 @@ describe('Switch', () => {
   })
 
   it('paints its on state in value rather than in hue', () => {
-    /*
-     * ADR-032: the accent is spent on the four things § Character lists, each of which appears at most once
-     * in a panel. A switch appears six to ten times, so it inverts to `foreground` instead. The class string
-     * is the only place this is observable in jsdom, and it is the thing that would drift.
-     */
+    // ADR-032. The class string is the only place this is observable in jsdom, and it is what would drift.
     render(<Switch aria-label="Snap to grid" />)
 
     const track = thumbOf(screen.getByRole('switch')).parentElement
@@ -126,14 +121,8 @@ describe('Switch', () => {
   })
 
   it('animates through the shared transition, which is what makes reduced motion automatic', () => {
-    /*
-     * The travel is declared in `styles/chrome.css` against `--ms-duration-fast`, which carries both the
-     * theme's `motionScale` and the environment's reduced-motion factor (ADR-021). Opting in is the
-     * component's whole responsibility; `chrome.test.ts` asserts what the class then does.
-     *
-     * `travel`, not `control`: the thumb moves to a new position, which § Timing eases on `standard`, and
-     * `control` reserves `accelerate` for a press (ADR-033).
-     */
+    // `travel`, not `control`: the thumb moves to a new position, which § Timing eases on `standard`.
+    // What the class then does is asserted in chrome.test.ts.
     render(<Switch aria-label="Snap to grid" />)
 
     const thumb = thumbOf(screen.getByRole('switch'))
@@ -153,8 +142,7 @@ describe('Switch', () => {
   })
 
   it('submits under its name when inside a form', () => {
-    // Radix mirrors the switch into a hidden input, but only when there is a form to submit to — it looks
-    // for an ancestor `<form>`. Rendering the switch bare is why a name silently does nothing.
+    // Radix mirrors the switch into a hidden input only when there is an ancestor `<form>`.
     const { container } = render(
       <form>
         <Switch aria-label="Snap to grid" name="snap" value="on" defaultChecked />

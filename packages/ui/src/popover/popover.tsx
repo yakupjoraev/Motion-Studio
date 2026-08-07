@@ -8,14 +8,8 @@ import { popoverContentStyles } from './popover.styles'
 import type { PopoverProps } from './popover.types'
 
 /**
- * Radix Popover. Radix owns positioning, the outside-press and `Escape` dismissal, and returning focus to
- * the trigger; this file owns the surface, the name and the timing.
- *
- * Non-modal on purpose. An inspector popover — a colour picker, a preset list — sits beside the canvas and
- * the user is expected to keep working around it; trapping focus and inerting the page would make a picker
- * behave like a save dialog. `Dialog` is the component for the cases that do need that.
- *
- * No `forwardRef`: this renders no element of its own. The trigger is the caller's.
+ * Non-modal on purpose: an inspector popover sits beside the canvas and the user keeps working around it.
+ * `Dialog` is the component for the cases that need a trap. No `forwardRef`: this renders no element.
  */
 export function Popover({
   trigger,
@@ -28,8 +22,7 @@ export function Popover({
   onOpenChange,
   className,
 }: PopoverProps): ReactElement {
-  // `exactOptionalPropertyTypes`: omit an absent prop rather than passing `undefined`, which Radix reads as
-  // "uncontrolled".
+  // `exactOptionalPropertyTypes`: an explicit `undefined` makes Radix treat the control as uncontrolled.
   const rootProps = {
     ...(open === undefined ? {} : { open }),
     ...(defaultOpen === undefined ? {} : { defaultOpen }),

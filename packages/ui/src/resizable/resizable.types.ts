@@ -5,19 +5,16 @@ export type ResizableSide = 'left' | 'right'
 
 export interface ResizableProps {
   readonly children: ReactNode
-  /**
-   * The committed width. Not the width during a drag — that never reaches React. Contract § 5: "high-
-   * frequency values never live in React state… React re-renders on commit only."
-   */
+  /** The committed width. The width during a drag never reaches React — contract § 5. */
   readonly width: number
   readonly min: number
   readonly max: number
-  /** How far one arrow press moves it. Prompt 08 fixes this at 8 px. */
+  /** How far one arrow press moves it. */
   readonly step?: number
   readonly side?: ResizableSide
-  /** Called once per commit — the end of a drag, or one arrow press. Persistence is the app's. */
+  /** Once per commit: the end of a drag, or one arrow press. Persistence is the app's. */
   readonly onWidthChange: (width: number) => void
-  /** Names the handle. A `role="separator"` with no name announces as "separator" and a number. */
+  /** An unnamed `role="separator"` announces as "separator" and a number. */
   readonly 'aria-label': string
   readonly className?: string
   readonly handleClassName?: string

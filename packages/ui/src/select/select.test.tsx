@@ -15,11 +15,7 @@ const OPTIONS: readonly SelectOption[] = [
   { value: 'none', label: 'none', disabled: true },
 ]
 
-/**
- * Radix Select reaches for pointer capture and element measurement that jsdom does not implement. Stubbing
- * the three it needs is what lets the listbox open at all; the assertions below are then about our behaviour
- * rather than about the primitive's internals.
- */
+// Radix Select reaches for pointer capture and measurement that jsdom does not implement.
 beforeEach(() => {
   Element.prototype.hasPointerCapture = vi.fn(() => false)
   Element.prototype.releasePointerCapture = vi.fn()
@@ -143,9 +139,7 @@ describe('Select', () => {
 
     await open()
 
-    // The entrance is declared in styles/chrome.css against `--ms-duration-*`, which carries both the
-    // theme's motion scale and the environment's reduced-motion factor (ADR-021). Opting in is the
-    // component's whole responsibility, so that is what is asserted.
+    // The entrance is in chrome.css; opting in is all the component is responsible for.
     expect(screen.getByRole('listbox').closest('[data-ms-overlay]')).not.toBeNull()
   })
 

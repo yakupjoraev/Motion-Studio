@@ -1,10 +1,5 @@
-/**
- * `UI_GUIDELINES.md` § Density scale, as the only place a chrome height is written. The scale is a design
- * decision: "Row height 28 px with `text-xs` labels is the studio's rhythm. Everything else follows it."
- *
- * A literal `h-7` in a component would be that decision restated where nobody can find it, so components
- * read from here and `density.test.ts` asserts the numbers against the document's table.
- */
+// UI_GUIDELINES.md § Density scale, transcribed. `density.test.ts` asserts it against the document.
+
 export const DENSITY = {
   topBar: 48,
   statusBar: 28,
@@ -20,10 +15,7 @@ export const DENSITY = {
 
 export type DensityToken = keyof typeof DENSITY
 
-/**
- * Tailwind arbitrary-value classes for the heights above. Written out rather than interpolated because
- * Tailwind finds utilities by scanning source text — `h-[${n}px]` produces no CSS at all.
- */
+/** Written out, never interpolated: Tailwind finds utilities by scanning source text. */
 export const HEIGHT_CLASS = {
   topBar: 'h-[48px]',
   statusBar: 'h-[28px]',
@@ -37,15 +29,9 @@ export const HEIGHT_CLASS = {
   blockCard: 'h-[88px]',
 } as const satisfies Record<DensityToken, string>
 
-/** The label column in a control row — `UI_GUIDELINES.md` § Control rows fixes it at 88 px. */
 export const LABEL_COLUMN_CLASS = 'w-[88px]'
 
-/**
- * `UI_GUIDELINES.md` § Control glyphs: the marks drawn *inside* a row, as opposed to the rows above.
- *
- * Each number is derived from one in `DENSITY` rather than chosen — the derivations and the four rules that
- * admit them are ADR-030. The glyph is deliberately smaller than what the user hits; see `MIN_TARGET`.
- */
+/** § Control glyphs. Each size is derived from a row above rather than chosen — ADR-030. */
 export const GLYPH = {
   checkboxBox: 16,
   switchTrackWidth: 24,
@@ -57,7 +43,6 @@ export const GLYPH = {
 
 export type GlyphToken = keyof typeof GLYPH
 
-/** As with `HEIGHT_CLASS`, written out literally: Tailwind finds utilities by scanning source text. */
 export const GLYPH_CLASS = {
   checkboxBox: 'h-[16px] w-[16px]',
   switchTrack: 'h-[14px] w-[24px]',
@@ -66,10 +51,6 @@ export const GLYPH_CLASS = {
   sliderThumb: 'h-[12px] w-[12px]',
 } as const
 
-/**
- * The smallest interactive target the chrome ships — WCAG 2.2 AA § 2.5.8, which `ACCESSIBILITY.md` adopts in
- * its first line. It is the small-button row of the density scale, and a glyph reaches it by padding rather
- * than by growing: what you see and what you hit are two different sizes on purpose.
- */
+/** WCAG 2.2 AA § 2.5.8. A glyph reaches it by padding, never by growing. */
 export const MIN_TARGET = DENSITY.smallButton
 export const MIN_TARGET_CLASS = 'h-[24px] w-[24px]'

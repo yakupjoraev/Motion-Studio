@@ -84,11 +84,8 @@ describe('Checkbox', () => {
   })
 
   it('carries two marks, each hidden by the state it does not belong to', () => {
-    /*
-     * `ACCESSIBILITY.md` § Non-negotiables 4: the two states paint the same box, so the mark is the only
-     * visual carrier and they must differ. Which one is actually painted is a CSS variant, and jsdom applies
-     * no stylesheets — so this asserts the wiring, and the Storybook walkthrough judges the picture.
-     */
+    // The two states paint the same box, so the mark is the only carrier. jsdom applies no stylesheets, so
+    // this asserts the wiring and the Storybook walkthrough judges the picture.
     const { container } = render(<Checkbox aria-label="Clip content" checked="indeterminate" />)
 
     const indicator = container.querySelector('span[data-state]')

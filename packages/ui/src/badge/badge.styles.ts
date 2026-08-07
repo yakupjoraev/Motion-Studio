@@ -1,9 +1,6 @@
 import { type VariantProps, cva } from 'class-variance-authority'
 
-/**
- * Tinted background, full-strength foreground. The `*-muted` tokens sit at `surface-2`'s lightness, so a
- * badge reads as the same elevation as the row it is on rather than as a chip floating over it.
- */
+/** The `*-muted` tokens sit at `surface-2`'s lightness, so a badge reads level with its row. */
 export const badgeStyles = cva(
   [
     'inline-flex h-[16px] items-center rounded-xs px-1.5 font-medium text-2xs',

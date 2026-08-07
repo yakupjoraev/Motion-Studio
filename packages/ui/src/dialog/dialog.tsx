@@ -18,14 +18,8 @@ import {
 import type { DialogProps } from './dialog.types'
 
 /**
- * Radix Dialog. Radix owns the focus trap, the restore to the trigger, `Escape`, and marking the background
- * `aria-hidden` — `ACCESSIBILITY.md` § Dialogs asks for all four and says not to reimplement them.
- *
- * What this file adds: the sizes (ADR-036), the 220 ms `emphasized` entrance § Timing gives dialogs and
- * nothing else, and the wiring that makes `aria-labelledby` and `aria-describedby` impossible to omit — both
- * are required props rather than optional slots.
- *
- * The close button carries a real label rather than an icon alone, which is the other thing § Dialogs lists.
+ * `title` and `description` are required props, not optional slots: ACCESSIBILITY.md § Dialogs wants both
+ * `aria-labelledby` and `aria-describedby` on every dialog. Sizes are ADR-036.
  */
 export function Dialog({
   trigger,

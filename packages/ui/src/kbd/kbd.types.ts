@@ -4,11 +4,8 @@ import type { HTMLAttributes } from 'react'
 export type KbdPlatform = 'mac' | 'other'
 
 export interface KbdProps extends Omit<HTMLAttributes<HTMLElement>, 'children'> {
-  /**
-   * The shortcut in the registry's own notation — `Mod+Shift+Z`. `SHORTCUTS.md` § Platform normalization:
-   * "`Mod` = `Cmd` on macOS, `Ctrl` elsewhere. Resolved at runtime; never hard-coded."
-   */
+  /** The registry's notation — `Mod+Shift+Z`. `Mod` resolves at runtime, never hard-coded. */
   readonly keys: string
-  /** Overrides detection. Present so a test, a story or a docs page can show the other platform's form. */
+  /** Overrides detection, so a story or a docs page can show the other platform. */
   readonly platform?: KbdPlatform
 }

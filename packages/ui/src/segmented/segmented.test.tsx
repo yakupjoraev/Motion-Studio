@@ -48,12 +48,8 @@ describe('Segmented', () => {
   })
 
   it('commits the focused segment on Space', async () => {
-    /*
-     * Measured, not assumed: in jsdom the arrow moves focus and Space commits. Radix checks on focus in a
-     * real browser — it gates that on a pointer/keyboard heuristic that synthetic events do not trip — so
-     * this asserts the half that is observable here. The browser half belongs to the Storybook walkthrough,
-     * which is still outstanding for this prompt.
-     */
+    // In jsdom the arrow moves focus and Space commits. Radix checks on focus in a real browser, gated on a
+    // pointer/keyboard heuristic that synthetic events do not trip, so only this half is observable here.
     const onValueChange = vi.fn()
     render(
       <Segmented
@@ -151,11 +147,7 @@ describe('Segmented', () => {
   })
 
   it('moves the indicator when an uncontrolled group is clicked', async () => {
-    /*
-     * The indicator is rendered from a value this component holds, and Radix keeps the uncontrolled
-     * selection in its own context. Without a copy of that state here, the group re-renders inside Radix,
-     * this component does not, and the indicator stays behind the segment it started under.
-     */
+    // Radix keeps the uncontrolled selection in its own context; without a copy the indicator never moves.
     const { container } = render(
       <Segmented aria-label="Direction" options={OPTIONS} defaultValue="row" />,
     )

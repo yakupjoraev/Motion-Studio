@@ -4,11 +4,11 @@ export interface DropdownAction {
   readonly kind?: 'item'
   readonly id: string
   readonly label: string
-  /** In the registry's notation — `Mod+Shift+Z`. Rendered by `Kbd` in the shortcut column. */
+  /** The registry's notation. Rendered by `Kbd` in the shortcut column. */
   readonly shortcut?: string
   readonly icon?: ReactNode
   readonly disabled?: boolean
-  /** Destructive actions read in `danger`, the same status colour `Button`'s danger variant uses. */
+  /** The same status colour `Button`'s danger variant uses. */
   readonly danger?: boolean
   readonly onSelect: () => void
 }
@@ -30,11 +30,7 @@ export interface DropdownProps {
   /** The element that opens the menu. Rendered as-is — Radix merges the trigger's props onto it. */
   readonly trigger: ReactNode
   readonly items: readonly DropdownEntry[]
-  /*
-   * There is no `label`: Radix points the menu's `aria-labelledby` at the trigger, so the menu is named by
-   * the thing that opened it and the two cannot drift. Measured — an `aria-label` here is silently
-   * overridden, because `aria-labelledby` wins.
-   */
+  // No `label`: Radix names the menu after its trigger, and an `aria-label` here is silently overridden.
   readonly side?: 'top' | 'right' | 'bottom' | 'left'
   readonly align?: 'start' | 'center' | 'end'
   readonly open?: boolean

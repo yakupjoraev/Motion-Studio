@@ -158,10 +158,7 @@ describe('Slider', () => {
   })
 
   it('does not transition the fill, because it follows the pointer', () => {
-    /*
-     * ADR-031. A transition here puts the bar a fixed 120 ms behind the number beside it for the whole
-     * drag, which reads as the control being broken rather than as smoothing.
-     */
+    // ADR-031: a transition puts the bar a fixed 120 ms behind the number beside it for the whole drag.
     const { container } = render(<Slider aria-label="Opacity" defaultValue={50} />)
 
     expect(container.querySelector('.absolute.h-full')?.className).not.toContain('transition')

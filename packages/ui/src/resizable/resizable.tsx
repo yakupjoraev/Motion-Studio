@@ -13,14 +13,8 @@ import type { ResizableProps } from './resizable.types'
 const DIRECTION = { left: -1, right: 1 } as const
 
 /**
- * A resizable panel frame with a draggable, keyboard-operable edge.
- *
- * The width during a drag never enters React. Contract § 5 puts drag deltas in "refs + CSS custom properties"
- * with React re-rendering "on commit only", so a pointer move writes `--ms-resizable-width` on the frame and
- * updates the handle's `aria-valuenow` in place. `onWidthChange` fires once, when the pointer is released.
- *
- * The handle is a `role="separator"` with `aria-valuenow`, which is what makes the width announceable at all:
- * a screen reader reads the new number on every arrow press without a live region.
+ * The width during a drag never enters React — contract § 5. A pointer move writes the custom property and
+ * the handle's `aria-valuenow`; `onWidthChange` fires once, on release.
  */
 export const Resizable = forwardRef<HTMLDivElement, ResizableProps>(function Resizable(
   {
@@ -39,7 +33,7 @@ export const Resizable = forwardRef<HTMLDivElement, ResizableProps>(function Res
 ) {
   const frameRef = useRef<HTMLDivElement | null>(null)
   const handleRef = useRef<HTMLDivElement | null>(null)
-  /** The live width during a drag. A ref, not state — writing it must not render. */
+  /** A ref, not state: writing it must not render. */
   const liveRef = useRef(width)
   const dragRef = useRef<{ pointerX: number; startWidth: number } | null>(null)
 
@@ -53,7 +47,7 @@ export const Resizable = forwardRef<HTMLDivElement, ResizableProps>(function Res
     }
   }
 
-  /** Paint a width without rendering: the custom property moves the panel, the ARIA reports it. */
+  /** Paint without rendering: the property moves the panel, the ARIA reports it. */
   const paint = (next: number): void => {
     liveRef.current = next
     frameRef.current?.style.setProperty('--ms-resizable-width', `${next}px`)
@@ -98,7 +92,7 @@ export const Resizable = forwardRef<HTMLDivElement, ResizableProps>(function Res
     onWidthChange(liveRef.current)
   }
 
-  /** Arrows step by 8 px, `Home` and `End` snap to the bounds — the keyboard path prompt 08 requires. */
+  /** Arrows step, `Home` and `End` snap to the bounds. */
   const onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>): void => {
     const stepped: Readonly<Record<string, number>> = {
       ArrowLeft: liveRef.current - step * DIRECTION[side],
@@ -126,7 +120,7 @@ export const Resizable = forwardRef<HTMLDivElement, ResizableProps>(function Res
       {children}
       <div
         ref={handleRef}
-        // biome-ignore lint/a11y/useSemanticElements: the rule suggests `<hr>`, which is void, cannot hold the 4 px line inside the 8 px target, and is not focusable. This is the WAI-ARIA window splitter pattern — a focusable `role="separator"` carrying `aria-valuenow` — and no element expresses it.
+        // biome-ignore lint/a11y/useSemanticElements: `<hr>` is void and not focusable. This is the WAI-ARIA window splitter pattern, and no element expresses it.
         role="separator"
         aria-label={ariaLabel}
         aria-orientation="vertical"

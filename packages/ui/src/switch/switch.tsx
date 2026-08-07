@@ -6,20 +6,12 @@ import { switchRootStyles, switchThumbStyles, switchTrackStyles } from './switch
 
 import type { SwitchProps } from './switch.types'
 
-/**
- * Radix Switch with our track and thumb. Radix owns `role="switch"`, `aria-checked`, the Space/Enter
- * keyboard path and the hidden form input; this file owns the sizes, the tokens and the timing.
- *
- * The track is a separate element rather than the root's own background because the root is the 24 × 24 hit
- * target and the track is the 24 × 14 glyph inside it (ADR-030). The extra span is the difference between
- * those two numbers, made visible.
- */
+/** The track is its own element because the root is the hit target and the track is the glyph (ADR-030). */
 export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(function Switch(
   { checked, defaultChecked, onCheckedChange, className, ...rest },
   ref,
 ) {
-  // `exactOptionalPropertyTypes`: an absent prop is omitted, never passed as `undefined`. Passing the second
-  // to Radix is what turns a controlled component into an uncontrolled one by accident.
+  // `exactOptionalPropertyTypes`: an explicit `undefined` makes Radix treat the control as uncontrolled.
   const stateProps = {
     ...(checked === undefined ? {} : { checked }),
     ...(defaultChecked === undefined ? {} : { defaultChecked }),

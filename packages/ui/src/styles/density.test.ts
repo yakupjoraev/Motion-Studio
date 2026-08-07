@@ -12,10 +12,7 @@ import {
   MIN_TARGET_CLASS,
 } from './density'
 
-/**
- * `UI_GUIDELINES.md` § Density scale is a table in a document; this asserts the code still says the same
- * numbers. The scale is the studio's rhythm — a drift here is a drift in every panel at once.
- */
+/** The document's table, transcribed. A drift here is a drift in every panel at once. */
 const DOCUMENTED: Readonly<Record<DensityToken, number>> = {
   topBar: 48,
   statusBar: 28,
@@ -66,7 +63,7 @@ describe('the density scale', () => {
   })
 })
 
-/** `UI_GUIDELINES.md` § Control glyphs, asserted the same way — the document's table, transcribed. */
+/** § Control glyphs, the same way. */
 const DOCUMENTED_GLYPHS: Readonly<Record<GlyphToken, number>> = {
   checkboxBox: 16,
   switchTrackWidth: 24,
@@ -103,10 +100,7 @@ describe('the control glyph scale', () => {
     }
   })
 
-  /*
-   * The four admission rules of ADR-030, as assertions. They are what makes these numbers derived rather
-   * than chosen, so a future edit that breaks one has to argue with the ADR instead of with a diff.
-   */
+  // ADR-030's four admission rules, so an edit that breaks one has to argue with the ADR.
   it('derives every glyph from a row in the density scale', () => {
     expect(GLYPH.switchTrackWidth).toBe(DENSITY.smallButton)
     expect(GLYPH.switchTrackHeight).toBe(DENSITY.controlRow / 2)

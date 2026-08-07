@@ -7,16 +7,12 @@ import { describe, expect, it } from 'vitest'
 import * as publicApi from './index'
 
 /**
- * Contract § 4: "Public API is barrel-only. Each package exports through `src/index.ts`." A component that
- * exists but was never re-exported compiles, tests green, and is invisible to every consumer — and since
- * ADR-034 took the barrels out of the coverage denominator, no other signal catches it either.
- *
- * The expected list is read off disk rather than written down, so adding a component to the directory is
- * what makes this test demand its export.
+ * Contract § 4, public API is barrel-only. Read off disk rather than written down, so adding a directory is
+ * what makes this demand its export. ADR-034 took the barrels out of coverage, so nothing else catches it.
  */
 const SRC = dirname(fileURLToPath(import.meta.url))
 
-/** Not components: `styles` is the shared fragments, `test` is the helpers. Both export by other names. */
+/** Not components: shared fragments and test helpers. */
 const NOT_A_COMPONENT = new Set(['styles', 'test'])
 
 const componentDirectories = readdirSync(SRC, { withFileTypes: true })
@@ -25,7 +21,7 @@ const componentDirectories = readdirSync(SRC, { withFileTypes: true })
 
 describe('the package barrel', () => {
   it('finds the component directories to check', () => {
-    // Guards the guard: a glob that matches nothing would make every assertion below vacuously true.
+    // A glob that matches nothing would make every assertion below vacuously true.
     expect(componentDirectories.length).toBeGreaterThan(0)
   })
 

@@ -1,10 +1,6 @@
 import type { ButtonHTMLAttributes } from 'react'
 
-/**
- * `value` and `onChange` are dropped from the button attributes and replaced: Radix types `value` as a
- * `string` for form submission, and `onCheckedChange` is the only change handler the control has. Leaving
- * React's `onChange` reachable would offer a prop that silently never fires.
- */
+/** `onChange` is dropped: it would be a prop that silently never fires. */
 type SwitchRootAttributes = Omit<
   ButtonHTMLAttributes<HTMLButtonElement>,
   'onChange' | 'type' | 'value'

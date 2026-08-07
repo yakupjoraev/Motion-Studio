@@ -2,11 +2,7 @@ import type { ReactNode } from 'react'
 
 import type { DropdownEntry } from '../dropdown/index'
 
-/**
- * The entries are `Dropdown`'s. A context menu and a dropdown are the same list of commands reached two
- * ways, and giving them separate shapes would mean writing "Duplicate, Mod+D" twice per surface — the
- * layers tree offers both, and the two must not drift.
- */
+/** The same entries as `Dropdown`: the layers tree offers both, and the two must not drift. */
 export type ContextMenuEntry = DropdownEntry
 
 export interface ContextMenuProps {

@@ -14,11 +14,7 @@ import { Kbd } from '../kbd/index'
 
 import type { ContextMenuEntry, ContextMenuProps } from './context-menu.types'
 
-/**
- * One entry. The styles come from `Dropdown` rather than from a second set of near-identical `cva` calls:
- * a context menu is the same list of commands as a dropdown, and a right-click menu that sits 2 px taller
- * than the same menu opened from a button is the kind of drift a design system exists to prevent.
- */
+/** Styles come from `Dropdown`: the two menus are the same object reached two ways. */
 function Entry({ entry }: { entry: ContextMenuEntry }): ReactElement {
   if (entry.kind === 'separator') {
     return <RadixContextMenu.Separator className={dropdownSeparatorStyles()} />
@@ -48,13 +44,8 @@ function Entry({ entry }: { entry: ContextMenuEntry }): ReactElement {
 }
 
 /**
- * Radix ContextMenu. Radix owns opening at the pointer, the long-press path on touch, the menu semantics and
- * the focus restore.
- *
- * `SHORTCUTS.md` § Accessibility notes: "every shortcut has a non-keyboard equivalent". The reverse holds
- * too — a context menu is never the only way to reach a command, because a right-click has no keyboard
- * equivalent on every platform. Callers put the same entries in a `Dropdown`, which is why both take the
- * same list.
+ * A right-click has no keyboard equivalent everywhere, so a context menu is never the only way to reach a
+ * command. Both menus take the same entry list for that reason.
  */
 export function ContextMenu({
   children,

@@ -140,10 +140,7 @@ describe('Tooltip', () => {
   })
 
   it('hides the bubble from assistive technology, because it repeats the name', async () => {
-    /*
-     * ADR-035. With both the label and a description the button announces as "Undo, button, Undo"; the
-     * bubble is a visual duplicate of a name that is already spoken.
-     */
+    // ADR-035: with both, the button announces as "Undo, button, Undo".
     const { baseElement } = render(
       withProvider(
         <Tooltip label="Undo" shortcut="Mod+Z">
@@ -173,8 +170,7 @@ describe('Tooltip', () => {
     await userEvent.hover(trigger())
 
     await waitFor(() => {
-      // The 120 ms fade is declared in `styles/chrome.css` against `--ms-duration-fast`, which carries the
-      // theme's motion scale and the environment's reduced-motion factor both (ADR-021).
+      // The fade is in chrome.css, on a token, so reduced motion zeroes it (ADR-021).
       expect(baseElement.querySelector('[data-ms-overlay="tooltip"]')).not.toBeNull()
     })
   })

@@ -11,26 +11,14 @@ import {
 
 import type { SliderProps } from './slider.types'
 
-/**
- * Radix reports an array because the same primitive serves range sliders. This unwraps it once, here, so
- * that twenty inspector rows do not each write `[value]` going in and `next[0]` coming out.
- *
- * `assertDefined` rather than a `if (next === undefined)` guard: the array always holds one element for a
- * one-thumb slider, so the guard would be a branch no test can reach — ADR-014 is the pattern.
- */
+/** Radix works in arrays because it also serves range sliders. `assertDefined` per ADR-014. */
 const unwrap =
   (handler: (value: number) => void) =>
   (values: number[]): void => {
     handler(assertDefined(values[0], 'a one-thumb slider reported no value'))
   }
 
-/**
- * Radix Slider, narrowed to one value and given our well, fill and knob.
- *
- * The accessible name goes on the **thumb**, not on the root: the thumb is the element carrying
- * `role="slider"`, `aria-valuenow` and the arrow keys, and a name on the root would leave the control a
- * screen reader actually lands on unnamed.
- */
+/** The name goes on the thumb: that is the `role="slider"`, not the root. */
 export const Slider = forwardRef<HTMLSpanElement, SliderProps>(function Slider(
   {
     value,
@@ -50,8 +38,7 @@ export const Slider = forwardRef<HTMLSpanElement, SliderProps>(function Slider(
   },
   ref,
 ) {
-  // `exactOptionalPropertyTypes`: omit an absent prop rather than passing `undefined`, which Radix reads as
-  // "uncontrolled" and which would make a controlled slider drift away from its own value.
+  // `exactOptionalPropertyTypes`: an explicit `undefined` makes Radix treat the control as uncontrolled.
   const rootProps = {
     ...(value === undefined ? {} : { value: [value] }),
     ...(defaultValue === undefined ? {} : { defaultValue: [defaultValue] }),

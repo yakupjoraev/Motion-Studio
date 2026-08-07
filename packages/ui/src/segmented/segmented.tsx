@@ -12,27 +12,15 @@ import {
 import type { SegmentedProps } from './segmented.types'
 
 /**
- * A segmented control. Built on Radix **RadioGroup**, not ToggleGroup: `ACCESSIBILITY.md` § Inspector
- * requires `role="radiogroup"` with arrow navigation, and RadioGroup is the primitive that gives radio
- * semantics, roving tabindex and arrow keys together. The segments are styling over that.
- *
- * The indicator is a Motion `layoutId`: one element moves between segments rather than each segment fading
- * its own background in and out, which is what makes the movement read as a physical slide. § Timing puts a
- * tab-style indicator at 200 ms `standard` and calls it a layout animation.
- *
- * Reduced motion is not special-cased. `layout` transitions honour `prefers-reduced-motion` through Motion's
- * own reducedMotion handling, and the duration is the token, which carries both motion factors (ADR-021).
+ * RadioGroup, not ToggleGroup: § Inspector wants `role="radiogroup"` with arrow keys, and only RadioGroup
+ * gives radio semantics and roving tabindex together. The indicator is one `layoutId` span.
  */
 export const Segmented = forwardRef<HTMLDivElement, SegmentedProps>(function Segmented(
   { value, defaultValue, onValueChange, options, disabled = false, className, ...aria },
   ref,
 ) {
-  /*
-   * The indicator is rendered from `selected`, so this component needs to know the selection even when the
-   * caller does not control it. Radix keeps the uncontrolled selection in its own context and this component
-   * does not subscribe to it, so without the copy below the group would re-render inside Radix, this
-   * function would not, and the indicator would sit under the segment it started on forever.
-   */
+  // Radix keeps the uncontrolled selection in a context this component does not subscribe to, so the
+  // indicator needs its own copy or it never leaves the segment it started on.
   const [uncontrolled, setUncontrolled] = useState(defaultValue)
   const selected = value ?? uncontrolled
 
@@ -41,7 +29,7 @@ export const Segmented = forwardRef<HTMLDivElement, SegmentedProps>(function Seg
     onValueChange?.(next)
   }
 
-  // `exactOptionalPropertyTypes`: an absent prop is omitted, never passed as `undefined`.
+  // `exactOptionalPropertyTypes`: an explicit `undefined` makes Radix treat the control as uncontrolled.
   const rootProps = {
     ...(value === undefined ? {} : { value }),
     ...(defaultValue === undefined ? {} : { defaultValue }),

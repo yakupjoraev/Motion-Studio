@@ -6,15 +6,9 @@ export type DialogSize = 'sm' | 'md' | 'lg'
 export interface DialogProps {
   /** The element that opens it. Omitted when the caller drives `open` itself. */
   readonly trigger?: ReactNode
-  /**
-   * The heading, and the dialog's accessible name. Required: `ACCESSIBILITY.md` § Dialogs asks for
-   * `aria-labelledby` on every one of them.
-   */
+  /** The heading and the accessible name. Required — ACCESSIBILITY.md § Dialogs. */
   readonly title: string
-  /**
-   * One sentence under the heading, and the dialog's accessible description — the other half of what
-   * § Dialogs requires. `UI_GUIDELINES.md` § Copy: say what will happen, not that you are sure.
-   */
+  /** One sentence, and the accessible description. § Copy: say what will happen. */
   readonly description: string
   readonly children?: ReactNode
   /** The action row. Rendered at the end, right-aligned. */

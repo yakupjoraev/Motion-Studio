@@ -3,10 +3,7 @@ import { type VariantProps, cva } from 'class-variance-authority'
 import { HEIGHT_CLASS } from '../styles/density'
 import { DISABLED, FOCUS_RING, TRANSITION_CONTROL } from '../styles/variants'
 
-/**
- * The focus ring goes on the **wrapper**, not the `input`: with a prefix or a suffix the field the user sees
- * is the wrapper, and a ring around the bare text node would leave the slots outside it.
- */
+/** The ring goes on the wrapper: with a prefix or suffix, that is the field the user sees. */
 export const inputWrapperStyles = cva(
   [
     'flex items-center gap-1.5 rounded-sm border bg-surface-2 px-2 text-xs text-foreground',
@@ -26,7 +23,7 @@ export const inputWrapperStyles = cva(
   },
 )
 
-/** The text node itself carries no border, background or ring — the wrapper owns all three. */
+/** The wrapper owns the border, the background and the ring. */
 export const inputStyles = cva([
   'min-w-0 flex-1 bg-transparent text-xs text-foreground outline-none',
   'placeholder:text-foreground-subtle',

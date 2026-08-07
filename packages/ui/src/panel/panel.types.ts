@@ -17,15 +17,9 @@ export interface PanelHeaderProps extends HTMLAttributes<HTMLDivElement> {
 export interface PanelSectionProps {
   readonly title: string
   readonly children: ReactNode
-  /**
-   * § Section headers: "the `⟳` reset appears only when a property in the section differs from the block
-   * default". Whether it differs is the app's question, so the app supplies the control.
-   */
+  /** The `⟳` reset. Whether the section differs from the default is the app's question. */
   readonly action?: ReactNode
-  /**
-   * Collapse state is the caller's — § Section headers wants it persisted per section, and `ui` does not
-   * touch `localStorage`. The key it is persisted under is an application concern.
-   */
+  /** The caller's: § Section headers wants it persisted, and the key is an application concern. */
   readonly open?: boolean
   readonly defaultOpen?: boolean
   readonly onOpenChange?: (open: boolean) => void
