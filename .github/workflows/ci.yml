@@ -25,7 +25,7 @@ jobs:
   quality:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - run: pnpm lint
       - run: pnpm typecheck
@@ -40,7 +40,7 @@ jobs:
   graph:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - run: pnpm check:deps # cycles, direction rules, deep imports, undeclared imports
       # `pnpm check:registry` — added by prompt 26 (block thumbnails), which creates the registry.
@@ -48,7 +48,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - run: pnpm build
       # `pnpm size-limit` and `pnpm analyze` with the bundle-analysis artifact — added by prompt 54
@@ -61,7 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - run: pnpm build:storybook
 # Jobs still to come, each with the prompt that creates what it tests:
