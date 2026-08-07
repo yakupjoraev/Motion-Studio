@@ -2256,3 +2256,191 @@ in `step`.
   nothing to remember.
 - Accepted: `precision` is now load-bearing rather than cosmetic. A caller who wants fine dragging
   declares it, and the declaration is visible in the inspector schema rather than implied.
+
+## ADR-042 — A link's value round-trips to a URL, not to CSS
+
+**Date** 2026-08-07 · **Prompt** 09 · **Status** Accepted
+
+### Question
+ADR-040 states that a composite control's value is the CSS it produces, proven by a round trip, and
+lists `LinkField` among the controls it covers. `LinkField` produces an `href`, a `target` and a `rel`
+— three HTML attributes. There is no CSS for it to round-trip to, so ADR-040 as written cannot be
+satisfied by this control.
+
+### Criterion (set before measuring)
+ADR-040's real requirement is not "CSS" but "a grammar the export engine is certain to need, checkable
+by a round trip". The admissible grammar for a control is whatever the exporter writes that value into.
+Where that grammar is already specified by a standard, the standard is the specification and the
+checkable property is validity against it rather than a `toCss`/`fromCss` pair of ours.
+
+### Measurement
+- `href` is written into an HTML attribute whose grammar is the URL standard. A `*-css.ts` here would
+  be a URL parser we wrote, tested against itself.
+- `target` is an enumerated attribute with two values this product emits.
+- `rel` is a space-separated token list.
+
+The checkable property is therefore validation, not round-tripping: `hrefIssue` returns the reason a
+URL is unusable, and its tests assert both directions — every form the exporter may emit is accepted,
+and `javascript:`, `data:`, `blob:`, `file:` and `vbscript:` are refused by name.
+
+### Decision
+`LinkField` is exempt from ADR-040's round-trip rule and ships `link-url.ts` instead: `hrefIssue` and
+`relIssue`, both returning a sentence or `null`. ADR-040 stands for the five controls whose value is
+CSS. The exemption is for controls whose target grammar is defined by a standard outside CSS.
+
+### Consequences
+- Accepted: two shapes of evidence now exist for composite controls — a round trip for the CSS ones, a
+  validator for this one. A reader has to know which applies, which is what this entry is for.
+- Accepted: `hrefIssue` encodes a policy — which schemes this product exports — and not only a syntax.
+  That policy is now in one place, and `RichTextField`'s link sanitiser calls the same function rather
+  than keeping a second list.
+- Rejected: a `toCss`/`fromCss` pair emitting `<a href="…">`. It would make the control's value HTML,
+  which is a larger grammar than the three attributes it actually edits.
+
+## ADR-043 — An edit that changes nothing is not committed
+
+**Date** 2026-08-07 · **Prompt** 09 · **Status** Accepted
+
+### Question
+Pressing `ArrowDown` on a `ScrubField` already at its `min` produced `onChange` and `onCommit` with the
+value it already had. `StepperField`, written in the same session, guarded against exactly that. Two
+sibling number controls disagreed, and nothing said which was right.
+
+### Criterion (set before measuring)
+`STATE_MANAGEMENT.md` § Store already answers the downstream half — `if (patches.length === 0) return`
+drops a no-op command, so neither behaviour can pollute history. The remaining question is decidable
+against the transient-state contract itself: `onChange` is defined as "what a gesture writes", and
+prompt 09 § Universal defines `onCommit` as the edge a coalesced command is built from. A keystroke
+that moves nothing wrote nothing, so it is admissible to emit only if some consumer needs to observe
+a refused edit.
+
+### Measurement
+Traced both callbacks through the specified consumers. `onChange`'s documented job is writing a CSS
+variable on the target (`useTransientNumber` in § Transient state) — writing the value already there is
+a no-op with a re-render attached. `onCommit`'s job is dispatching a command, which the store then
+drops. No consumer in any document observes a refused edit, and the two composite controls that wrap
+`ScrubField` — `SpacingField` and `RadiusField` — turn one refused step into a whole-value callback,
+so the cost multiplies rather than staying local.
+
+### Decision
+An arrow step whose result equals the current value fires neither callback. The draft string is still
+rewritten, so a half-typed value is normalised by the keypress. `commitDraft` and the `Escape` path
+already held this rule; the arrow path now does too, and `StepperField`'s guard becomes the shared
+behaviour rather than the odd one out.
+
+### Consequences
+- Accepted: a consumer that wants to flash a "cannot go lower" affordance has no callback to hang it
+  on. That affordance is the disabled stepper button, which is drawn from the bounds, not from an event.
+- Accepted: the rule is per-control, not enforced centrally. A control that forgets it is a defect its
+  own test should catch, which is why every number control now has one.
+
+## ADR-044 — The gradient editor edits stops; mesh stays a preset
+
+**Date** 2026-08-07 · **Prompt** 09 · **Status** Accepted
+
+### Question
+`Gradient` in `packages/tokens` has four kinds, one of which — `mesh` — has points and a blur instead of
+a stop track and an angle. Prompt 09 § Deliverables describes `GradientField` as "stop track: add, drag,
+delete, colour per stop; angle dial; kind switch". A mesh value has none of those. Does the kind switch
+offer mesh, and if a mesh value arrives, what does the editor do with it?
+
+### Criterion (set before measuring)
+Two things have to hold. First, no value the type permits may reach a control that cannot render it —
+`PRODUCT.md` § Reliability rules out a control that silently drops part of a document. Second, a lossy
+conversion must be a deliberate act, never a side effect of opening a panel.
+
+### Measurement
+Counted what a mesh ⇄ stop conversion would have to invent in each direction. Mesh → linear: four
+points at (x, y, radius) collapse to positions along one axis, so three of the four numbers per point
+are discarded and the angle is fabricated. Linear → mesh: every stop needs an x, a y and a radius that
+no stop carries. Both directions invent more than they carry.
+
+`DESIGN_SYSTEM.md` § Gradients lists ten presets; two are mesh or conic, and the mesh one — `aurora` —
+is described as an interference pattern between overlapping fields. It is authored, not dialled in.
+
+### Decision
+The kind switch offers `linear`, `radial` and `conic`. A mesh value renders as a live preview with a
+line saying it is chosen as a preset, and the switch is disabled so it cannot be converted by accident.
+`gradientToCss` prints all four kinds, because the preview and the exporter both need mesh;
+`gradientFromCss` reads back only the three, since a mesh gradient's blur is a filter on the element
+rather than part of the `background-image` string it would have to be recovered from.
+
+### Consequences
+- Accepted: the round trip ADR-040 requires holds for three kinds of four. The fourth is stated here and
+  asserted by a test that `fromCss(toCss(mesh))` is `null` — the failure is declared, not latent.
+- Accepted: a user who wants a mesh gradient picks a preset. When a mesh editor exists it will be its
+  own control, because points-in-a-field is a different interaction from stops-on-a-track.
+- Rejected: converting on the switch. It would turn opening the kind menu into a destructive act.
+
+## ADR-045 — A multi-property composite round-trips to a declaration list
+
+**Date** 2026-08-07 · **Prompt** 09 · **Status** Accepted
+
+### Question
+ADR-040 requires a composite control's value to round-trip to "the CSS the property is ultimately
+written as". `FontField` edits four properties — family, size, weight and tracking — and there is no
+single CSS value holding all four: the `font` shorthand cannot carry `letter-spacing`.
+
+### Criterion (set before measuring)
+The round trip has to be over the exact text the export engine will emit for this control, whatever
+shape that text has. A grammar chosen for the convenience of the test is not evidence.
+
+### Measurement
+Checked what the shorthand can hold. CSS `font` takes style, variant, weight, stretch, size,
+line-height and family — not `letter-spacing`, which is a separate property. Emitting `font` plus a
+loose `letter-spacing` is two declarations; emitting four declarations is also two-or-more. So the
+smallest honest unit is a declaration list either way, and the four-declaration form is the one where
+each control maps to exactly one declaration.
+
+### Decision
+`fontToCss` emits `font-family: …; font-size: …px; font-weight: …; letter-spacing: …em`, and
+`fontFromCss` reads that back regardless of declaration order or whitespace. The round-trip test is
+over the list, not over a single value. The same form applies to any future control that edits a group
+of properties with no shorthand covering them.
+
+### Consequences
+- Accepted: a control's `toCss` no longer always returns something assignable to one CSS property. A
+  consumer has to know whether it holds a value or a declaration list; the function name says which.
+- Accepted: `fromCss` rejects a `font` shorthand, which a paste might contain. It reports rather than
+  guessing, which is ADR-040's rule for every one of these parsers.
+
+## ADR-046 — The curve and spring editors draw with SVG, not canvas
+
+**Date** 2026-08-07 · **Prompt** 09 · **Status** Accepted
+
+### Question
+Prompt 09 § SpringEditor specifies "a canvas-drawn response curve from `simulateSpring`". `CurveEditor`
+needs the same kind of drawing. Canvas is what the prompt names; is it what these two should use?
+
+### Criterion (set before measuring)
+Three properties, all checkable, and canvas is kept unless it loses on one of them:
+
+1. The drawing stays sharp at the 200 % zoom `ACCESSIBILITY.md` requires and on a 2× display.
+2. It costs no new dependency — § 1 requires a justification and a check that an existing one cannot do
+   the job.
+3. It is renderable under the test environment already in use, so the drawing is covered rather than
+   stubbed.
+
+### Measurement
+1. A canvas is a bitmap: it needs a `devicePixelRatio` transform and a redraw on every resize and zoom
+   to stay sharp. SVG is resolution-independent with no code at all.
+2. jsdom implements no 2D context. Rendering a canvas in a test needs the `canvas` npm package, a native
+   module with a build toolchain, added to a package whose whole purpose is chrome components.
+3. The curve is 120 samples in a 200 × 100 box and the bézier is one `path`. Both are trivially inside
+   the range where SVG's per-node cost is invisible; the canvas argument only starts to pay above the
+   thousands of nodes neither of these will ever draw.
+
+Canvas loses on all three, and wins on none at this size.
+
+### Decision
+Both editors draw with SVG — a `path` for the cubic bézier, a `polyline` for the spring response. The
+prompt's word "canvas" is read as "drawn from the integrator's samples", which is the part that
+mattered, and `simulateSpring` remains the single source of the curve.
+
+### Consequences
+- Accepted: this contradicts the literal text of prompt 09, which is why the entry exists. A later
+  prompt asking for a canvas here should supersede this rather than quietly re-litigating it.
+- Accepted: the timeline in prompt 32 may well need canvas — hundreds of keyframes across many tracks is
+  the other side of the threshold measured above. This decision is about these two editors at this size.
+- Accepted: `springPolyline` and `settleFrame` are pure functions over `simulateSpring`, so what is
+  drawn is unit-tested directly rather than through a rendering surface.
