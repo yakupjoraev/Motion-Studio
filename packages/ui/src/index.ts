@@ -24,6 +24,14 @@ export {
   type InputStyleProps,
 } from './input/index'
 export {
+  Kbd,
+  formatKeys,
+  kbdStyles,
+  speakKeys,
+  type KbdPlatform,
+  type KbdProps,
+} from './kbd/index'
+export {
   Select,
   selectContentStyles,
   selectItemStyles,
@@ -88,6 +96,13 @@ export {
   type TabsProps,
   type TabsStyleProps,
 } from './tabs/index'
+export {
+  Tooltip,
+  TooltipProvider,
+  tooltipContentStyles,
+  type TooltipProps,
+  type TooltipProviderProps,
+} from './tooltip/index'
 export {
   Textarea,
   textareaStyles,

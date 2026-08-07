@@ -95,6 +95,20 @@
   animation: ms-overlay-out var(--ms-duration-fast) var(--ms-ease-accelerate);
 }
 
+/*
+ * A tooltip fades faster than a menu opens — § Timing, tooltip, 100 ms after its 500 ms delay. There is no
+ * 100 ms token, and the mapping used throughout this file is "nearest step of the duration scale": 160 → 180
+ * `quick`, 220 → 240 `base`, and here 100 → 120 `fast`.
+ */
+[data-ms-overlay='tooltip'][data-state='delayed-open'],
+[data-ms-overlay='tooltip'][data-state='instant-open'] {
+  animation: ms-overlay-in var(--ms-duration-fast) var(--ms-ease-standard);
+}
+
+[data-ms-overlay='tooltip'][data-state='closed'] {
+  animation: ms-overlay-out var(--ms-duration-fast) var(--ms-ease-standard);
+}
+
 /* A dialog is the one chrome surface allowed 220 ms — § Timing, dialog open, `emphasized`. */
 [data-ms-overlay='dialog'][data-state='open'] {
   animation: ms-overlay-in var(--ms-duration-base) var(--ms-ease-emphasized);

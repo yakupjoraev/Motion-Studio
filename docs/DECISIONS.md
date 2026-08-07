@@ -1929,3 +1929,64 @@ the contract's, not `ui`'s.
   defect wearing a lab coat. The threshold is not the thing that is wrong here.
 - **Fold types into the component file.** Contradicts the contract § 3 file layout, and trades a
   measurement problem for a structural one.
+
+## ADR-035 — A tooltip names its trigger and hides its own text from assistive technology
+
+**Date** 2026-08-07 · **Prompt** 08 · **Status** Accepted
+
+### Question
+Prompt 08 requires that "the tooltip content is also the icon button's `aria-label` source, so the two
+cannot drift". Radix additionally points the trigger's `aria-describedby` at the tooltip. Doing both
+means a screen reader announces "Undo, button, Undo" — the same word as the name and again as the
+description. Which of the two roles does the tooltip text play?
+
+### Criterion (set before measuring)
+`ACCESSIBILITY.md` § Non-negotiables 2: every interactive element has an accessible name. Nothing in
+that document requires a description, and WAI-ARIA's own guidance is that a tooltip whose text
+duplicates the accessible name should not also be exposed as one. So: whichever wiring produces
+exactly one announcement of the text while leaving the icon button named.
+
+### Measurement
+The studio's tooltips are on icon buttons — `UI_GUIDELINES.md` § Character puts icons in the toolbar
+and panels, and an icon has no accessible name of its own. Enumerating the three wirings:
+
+| Wiring | Announced | Named |
+| --- | --- | --- |
+| `aria-label` + described-by content | "Undo, button, Undo" | yes |
+| described-by content only | "button, Undo" | **no** — the name is empty |
+| `aria-label` + `aria-hidden` content | "Undo, button" | yes |
+
+Only the third satisfies the criterion. The second is what a tooltip library does by default and it
+leaves an unnamed button, which is the non-negotiable this project treats as a build gate.
+
+### Decision
+`Tooltip` takes a `label` string, puts it on the trigger as `aria-label` through Radix's `asChild`
+merge, and renders the visible bubble `aria-hidden`. The bubble is a visual duplicate of a name that
+is already announced.
+
+The optional `shortcut` renders inside the bubble as a `Kbd` and is **not** part of the accessible
+name. `SHORTCUTS.md` § Reference sheet is where shortcuts are exposed non-visually: `Mod+/` opens a
+generated, searchable list of every one of them. Appending "Command Z" to every icon button's name
+would put a modifier glyph reading into every announcement in the toolbar to duplicate a surface that
+already exists.
+
+### Consequences
+- Accepted: a caller who wraps a trigger that already has a visible text label must pass that same
+  text as `label`, or the accessible name will contradict what is on screen — WCAG 2.5.3. The prop is
+  required rather than optional so that it cannot be forgotten silently, but nothing enforces that it
+  matches.
+- Accepted: `aria-hidden` on the bubble means its content is invisible to assistive technology
+  entirely, so a tooltip must never be the only place information appears. That is already the rule
+  for this chrome: § Interaction feel calls tooltips a hint, not a channel.
+- Accepted: a child that sets its own `aria-label` wins, because Radix's `Slot` gives child props
+  precedence. An escape hatch, and also a way to get the two out of sync — which is the exact drift
+  the prompt asks to prevent. It stays because removing it would mean stripping a prop the caller
+  wrote on purpose.
+
+### Alternatives rejected
+- **Let Radix describe and require the caller to label the button separately.** That is the drift the
+  prompt names: two strings, one visible and one not, that nobody notices disagreeing.
+- **Fold the shortcut into the accessible name.** `speakKeys` is macOS-specific by construction, so
+  this would need a second platform-aware spoken form, and it would say "Command Z" on a machine
+  where the key is Ctrl unless that form were platform-aware too. Cost is real; the reference sheet
+  already covers the need.
