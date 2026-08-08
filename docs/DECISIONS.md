@@ -3217,3 +3217,187 @@ transaction from the next without touching `generateId` either.
   with different histories, and nothing compares entry ids across them.
 - Accepted: ADR-061 now reads as "ids that reach the document come from `ctx.generateId`". Ids that
   never leave memory do not.
+
+## ADR-067 — The clipboard slice is asynchronous and paste returns a report
+
+**Date** 2026-08-08 · **Prompt** 16 · **Status** Accepted
+
+### Question
+STATE_MANAGEMENT.md § clipboard declares `copy`, `cut` and `paste` as returning `void`.
+EDITOR_ENGINE.md § Clipboard says paste prefers the system clipboard, and prompt 16 requires a
+partial-paste report ("Pasted 4 of 6 blocks"). What is the slice's actual API surface?
+
+### Criterion (set before measuring)
+Two requirements, in order:
+1. The signature must be implementable. A `void` method cannot wait for a promise and still act on
+   its value.
+2. Of the implementable options, prefer the one that makes the report impossible to lose: a caller
+   that forgets to handle a rejected paste is a paste that silently does nothing.
+
+### Measurement
+`navigator.clipboard.readText()` returns a `Promise<string>` — there is no synchronous read outside a
+`paste` event handler, and the shortcut path (`Mod+V` routed through the command map) is not one. So
+requirement 1 rules out `void` for anything that touches the system clipboard. Three shapes were
+weighed against requirement 2:
+
+- **`Promise<void>` plus a report field in the slice state** — the report becomes state nobody
+  invalidates, and two pastes in flight overwrite each other's report.
+- **`Promise<void>` plus a thrown error** — a rejected paste and a partial paste stop being the same
+  shape, so the caller needs both a `catch` and a state read to render one toast.
+- **`Promise<Result<PasteReport, MotionStudioError>>`** — one value carries "nothing was pasted and
+  why" and "4 of 6 were pasted and which two were not". `Result` is already this project's return for
+  an expected failure (CODE_STANDARDS.md § Errors).
+
+### Decision
+`copy` and `cut` return `Promise<void>`; `paste` and `pasteInPlace` return
+`Promise<Result<PasteReport, MotionStudioError>>`. `copyStyle` and `pasteStyle` stay synchronous: the
+style payload is not written to the system clipboard, because no document defines a cross-tab format
+for it and inventing one would put a second marker in the format.
+
+`paste` selects the roots it inserted. Undo restores `selectionBefore`, so the selection is not lost
+by it, and a paste followed by `Delete` acting on the pasted nodes is what every editor does.
+
+### Consequences
+- Accepted: every caller of `copy` in the UI is `async`, and a test must `await` it.
+- Accepted: paste-style does not cross tabs. Node paste does, which is what the prompt names.
+- Accepted: two `Result` shapes now exist for one gesture — an `err` for "no usable payload", and an
+  `ok` whose report lists per-node rejections. That distinction is the point: the first left the
+  document untouched, the second changed it.
+
+## ADR-068 — `SerializedSubtree` records the index each root came from
+
+**Date** 2026-08-08 · **Prompt** 16 · **Status** Accepted
+
+### Question
+`Mod+Shift+V` is paste-in-place: same parent, same index (SHORTCUTS.md § Editing). The payload in
+EDITOR_ENGINE.md § Clipboard carries `nodes`, and a node carries `parentId` and `slot` — but not its
+position among its siblings. Where does the index come from?
+
+### Criterion (set before measuring)
+The index must survive the trip through a `text/plain` payload and another browser tab. Nothing that
+paste-in-place needs may be read from the source document, because the source document is not open in
+the tab doing the paste.
+
+### Measurement
+Three sources for the index were checked against a cross-tab paste:
+
+- **The current document** — `children.indexOf(rootId)` is `-1` in the pasting tab whenever the copy
+  came from another document, and wrong whenever the source was cut.
+- **Recomputed from the payload** — the payload holds the copied roots only, not their siblings, so
+  there is nothing to compute a position against.
+- **Stored in the payload** — survives serialisation, the tab boundary, and a cut of the original.
+
+### Decision
+`SerializedSubtree` gains `origins: Record<NodeId, number>`, keyed by the *source* root id, holding
+the index that root occupied in its parent. The parent and the slot are already on the node, so this
+adds one number per root and nothing else.
+
+### Consequences
+- Accepted: the payload's shape changed, so a payload written before this field fails validation. It
+  is version 1 in both cases and no build has shipped, so there is no migration to write.
+- Accepted: `origins` is keyed by ids that are dead after remapping. It is read once, during the
+  paste, before those ids are discarded.
+- Rejected: a full `origin` object per root (`{ parentId, slot, index }`). Two of its three fields
+  would restate the node.
+
+## ADR-069 — "The target block's schema accepts it" means the value survives a parse
+
+**Date** 2026-08-08 · **Prompt** 16 · **Status** Accepted
+
+### Question
+Paste-style applies only the props the target block's schema accepts, and skips the rest silently.
+What makes a prop accepted?
+
+### Criterion (set before measuring)
+The test must reject a prop the target does not have. A rule that lets an unusable prop through
+writes a key no renderer reads and no inspector shows — a prop that exists in the document and
+nowhere else.
+
+### Measurement
+`safeParse` alone fails the criterion, and measurably: `z.object({ a: z.string() })` parsing
+`{ a: 'x', glass: true }` returns `success: true` with `data` equal to `{ a: 'x' }`. Zod strips
+unknown keys by default, so success proves the parse happened, not that the prop was kept. Parsing
+the merged props and then reading the path back distinguishes the two cases in one call.
+
+### Decision
+A style prop is applied when `propsSchema.safeParse({ ...targetProps, [path]: value })` succeeds
+**and** the parsed result still holds `value` at `path`. Everything else is skipped, and skipping is
+not reported — the prompt names it as expected rather than as an error.
+
+### Consequences
+- Accepted: a block whose schema is `.passthrough()` accepts every style prop. That is what
+  passthrough means, and the fake registry's permissive block is how the tests exercise the
+  accepting branch.
+- Accepted: a prop whose value the schema coerces (a number where a string arrived) counts as
+  rejected, because the value read back is not the value sent.
+- Accepted: the check runs one parse per prop per target node. A style payload is a handful of props
+  and a multi-select is tens of nodes, so this is hundreds of parses on a keystroke, not thousands.
+
+## ADR-070 — `resolveInsertTarget` never returns a target that would throw
+
+**Date** 2026-08-08 · **Prompt** 16 · **Status** Accepted
+
+### Question
+Prompt 16 fixes the resolution order and says "if the resolved slot rejects `blockId` → walk up to the
+nearest ancestor whose slot accepts it". `insertNode` has five guards, not one. Which of them count as
+the slot rejecting the block?
+
+### Criterion (set before measuring)
+`resolveInsertTarget` returns a target **or** a rejection. A caller that receives a target and then
+gets an exception from the command has been handed a broken contract — the point of the `{ rejected }`
+arm is that the caller can show a reason instead of catching.
+
+### Measurement
+The guards of EDITOR_ENGINE.md § insertNode were sorted by whether they are a property of the
+(parent, slot, block) triple that resolution is choosing:
+
+- `requireAcceptance`, `requireCapacity`, `requireUnlocked` — yes. All three are decided by the
+  candidate parent and slot, and all three throw on insert if resolution ignores them.
+- `requireProps`, `requireFreshId` — no. They are properties of the payload the caller builds
+  afterwards, not of the position.
+
+### Decision
+A slot is a candidate when it exists, accepts the block, has room for one more child, and its node is
+unlocked. All four are checked at every step of the walk, so a locked or full container is walked past
+rather than returned. `{ rejected }` carries the reason the walk reached the root without a candidate.
+
+### Consequences
+- Accepted: a paste of five roots into a slot with room for two still throws `SLOT_FULL` from the
+  command — resolution checks room for one, because its signature takes one `blockId`. The slice
+  catches it and returns an `err`, and the document is untouched. Widening the signature to a count is
+  additive if a caller ever needs it.
+- Accepted: capacity is read at resolution time and again at apply time. Nothing runs between them in
+  a single dispatch.
+
+## ADR-071 — An unknown block rejects its whole subtree, and the report counts nodes
+
+**Date** 2026-08-08 · **Prompt** 16 · **Status** Accepted
+
+### Question
+Paste rejects unknown `blockId`s per node rather than failing the whole paste. What happens to the
+children of a rejected node, and what do the two numbers in "Pasted 4 of 6 blocks" count?
+
+### Criterion (set before measuring)
+The result must satisfy the document invariants of EDITOR_ENGINE.md § Invariants — specifically 2
+(every non-root `parentId` exists) and 5 (no orphans). A partial paste that violates them is worse
+than a failed paste, because it corrupts an open document rather than declining to change it.
+
+### Measurement
+Keeping the children of a rejected node leaves each of them with a `parentId` naming a node that was
+never inserted. Re-parenting them to the rejected node's parent would satisfy the invariants and turn
+the pasted result into a layout the user never copied — a hero's two buttons landing directly in a
+page section. Dropping the subtree satisfies the invariants and drops exactly what could not be
+reproduced.
+
+### Decision
+A node whose `blockId` is not in the registry is dropped with every descendant. The report counts
+**nodes**: `requested` is every node in the payload, `pasted` is every node inserted, and the
+per-block breakdown names the unknown block ids with the number of nodes each one cost, so a hero
+that took two buttons with it reads as 3 rather than as 1.
+
+### Consequences
+- Accepted: an unknown container near the root can cost most of a paste. The report says so, naming
+  the block, which is the actionable half — the user learns which package they are missing.
+- Accepted: `pasted + dropped = requested` only when counting nodes, so the message says "blocks"
+  while the arithmetic is over nodes. The document model calls a node's definition a block, and the
+  user sees blocks in the layer tree.

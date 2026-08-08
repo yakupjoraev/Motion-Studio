@@ -268,6 +268,7 @@ export interface SerializedSubtree {
   rootIds: readonly NodeId[]
   nodes: Record<NodeId, Node>
   assets: Record<AssetId, Asset>
+  origins: Record<NodeId, number>         // root id → the index it occupied — ADR-068
   theme?: Pick<ThemeConfig, 'palette'>    // for cross-document paste fidelity
 }
 ```
@@ -278,7 +279,10 @@ export interface SerializedSubtree {
   code editor still yields readable JSON.
 - `paste` prefers the system clipboard, falls back to the store, remaps every id, and inserts
   into: the current selection's parent at the selection index + 1, or the isolation container, or
-  root. One transaction.
+  root. One transaction. The resolution itself is `resolveInsertTarget`, in `commands/`, because
+  the block palette and the command palette insert through the same rules.
+- `pasteInPlace` puts each root back at the parent and index it was copied from, when that parent
+  still exists, and falls back to the normal resolution when it does not.
 - `pasteStyle` copies only the style-category props (defined by each block's schema metadata),
   not content or structure.
 - Paste of an unknown `blockId` is rejected per node with a readable report — a partial paste is

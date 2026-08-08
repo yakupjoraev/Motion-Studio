@@ -172,19 +172,24 @@ entry is safe because entries are independent inverse patches, not a snapshot ch
 interface ClipboardSlice {
   clipboard: {
     nodes: SerializedSubtree | null
-    style: StyleProps | null        // for "paste style"
+    style: StyleClipboard | null    // for "paste style"
   }
-  copy(ids: NodeId[]): void
-  cut(ids: NodeId[]): void
-  paste(target?: { parentId: NodeId; index: number }): void
+  copy(ids: NodeId[]): Promise<void>
+  cut(ids: NodeId[]): Promise<void>
+  paste(target?: PasteTarget): Promise<Result<PasteReport, MotionStudioError>>
+  pasteInPlace(): Promise<Result<PasteReport, MotionStudioError>>
   copyStyle(id: NodeId): void
   pasteStyle(ids: NodeId[]): void
 }
 ```
 
-Copy writes both to the store and to the system clipboard as JSON with a
-`application/x-motion-studio` marker, so copy/paste works across browser tabs. Paste reads the
-system clipboard first and falls back to the store.
+Copy writes both to the store and to the system clipboard, as `text/plain` JSON prefixed with the
+`/* motion-studio:v1 */` marker of [EDITOR_ENGINE.md](EDITOR_ENGINE.md) § Clipboard — that document
+owns the payload format. Paste reads the system clipboard first and falls back to the store.
+
+The three async signatures are forced by `navigator.clipboard.readText`, and the `Result` is what
+carries the partial-paste report — ADR-067. `copyStyle` and `pasteStyle` are synchronous because the
+style payload never leaves the store: no document defines a cross-tab format for it.
 
 ### ui
 
