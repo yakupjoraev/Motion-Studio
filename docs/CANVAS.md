@@ -9,10 +9,19 @@ Three spaces, and most canvas bugs are a confusion between two of them. Names ar
 branded types so the compiler catches the mistake.
 
 ```ts
-export type ScreenPoint = { x: number; y: number } & { readonly __space: 'screen' }
-export type CanvasPoint = { x: number; y: number } & { readonly __space: 'canvas' }
-export type NodePoint   = { x: number; y: number } & { readonly __space: 'node' }
+declare const SPACE: unique symbol
+
+export type ScreenPoint = { x: number; y: number; readonly [SPACE]: 'screen' }
+export type CanvasPoint = { x: number; y: number; readonly [SPACE]: 'canvas' }
+export type NodePoint   = { x: number; y: number; readonly [SPACE]: 'node' }
 ```
+
+The brand is a `unique symbol`, not a `__space` string field, and the difference is the whole
+point: a string field is writable by anyone — `{ x: 1, y: 2, __space: 'canvas' }` type-checks — so
+the brand would not stop the mistake it exists for. A symbol declared and never exported cannot be
+named outside this module, which makes `screenPoint`, `canvasPoint` and `nodePoint` the only way to
+produce one. Rects are branded the same way, for the same reason; the unbranded `Rect` in `utils`
+stays the shape they are built on (ADR-011).
 
 | Space | Origin | Unit |
 | --- | --- | --- |

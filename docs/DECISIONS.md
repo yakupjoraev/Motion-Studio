@@ -3401,3 +3401,36 @@ that took two buttons with it reads as 3 rather than as 1.
 - Accepted: `pasted + dropped = requested` only when counting nodes, so the message says "blocks"
   while the arithmetic is over nodes. The document model calls a node's definition a block, and the
   user sees blocks in the layer tree.
+
+## ADR-072 — The conversions take a viewport rect structurally, not a `DOMRect`
+
+**Date** 2026-08-08 · **Prompt** 17 · **Status** Accepted
+
+### Question
+CANVAS.md § Coordinate spaces and prompt 17 both type the viewport argument as `DOMRect`. The same
+prompt requires that no function in the module touch the DOM. Which wins?
+
+### Criterion (set before measuring)
+Two requirements, in order:
+1. Every real caller must be able to pass `element.getBoundingClientRect()` with no conversion.
+2. Of the options that satisfy 1, prefer the one that does not force a dependency the arithmetic
+   does not have — the maths reads four numbers.
+
+### Measurement
+`DOMRect` is declared by the DOM lib and constructed by the browser. A test that names it needs a
+DOM environment to build one, and the four fields the conversions read (`left`, `top`, `width`,
+`height`) are plain numbers. A structural interface with those four fields is satisfied by `DOMRect`
+without a cast — checked by the compiler, not asserted here — so requirement 1 holds either way, and
+only the structural form satisfies requirement 2.
+
+### Decision
+`ViewportRect` is an interface of the four numbers the conversions read. `DOMRect` is assignable to
+it, so every call site in `packages/canvas` and `apps/web` passes the measured rect unchanged, and
+the coordinate tests build a rect as an object literal.
+
+### Consequences
+- Accepted: the signature no longer names the browser type the documents named. CANVAS.md keeps its
+  `DOMRect` examples because that is what callers will actually hand in.
+- Accepted: a caller could pass a rect that is not a viewport measurement. So could a `DOMRect` — the
+  type never proved the rect came from the canvas element.
+- Avoided: a `jsdom` requirement in a module whose whole content is arithmetic.
