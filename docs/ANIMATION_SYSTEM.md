@@ -17,7 +17,10 @@ MotionSpec (document)  ──resolve──►  ResolvedMotion  ──apply──
 ```
 
 ```ts
-// packages/motion/src/motion.types.ts
+// packages/schema/src/motion/motion.types.ts — a MotionSpec is a *document* shape, so it lives in
+// `schema` with the rest of the format and `packages/motion` reads it. The dependency runs
+// schema → motion; declaring it in `motion` would invert that and make the file format depend on
+// the engine that plays it.
 export interface MotionSpec {
   presetId: MotionPresetId
   channel: MotionChannel

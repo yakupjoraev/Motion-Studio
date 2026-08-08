@@ -2623,3 +2623,78 @@ keyboard cannot walk into a chrome the user was just told is unusable.
   show it. It is two elements.
 - Rejected: rendering the layout from the hook and accepting one frame of the wrong chrome. The first
   paint being layout rather than a correction is the reason the shell is server-rendered at all.
+
+## ADR-051 — Rich text is sanitised twice, by two mechanisms, against one policy
+
+**Date** 2026-08-08 · **Prompt** 12 · **Status** Accepted
+
+### Question
+`packages/ui` already sanitises rich text with `DOMParser` (prompt 09). `packages/schema` must
+sanitise it too, because a `.motion` file is untrusted input. One implementation or two?
+
+### Criterion (set before measuring)
+A second implementation is admissible only if a single one cannot serve both call sites. Two things
+decide it, and both are checkable:
+
+1. `packages/schema` runs under `node` — `codegen` imports it and `TESTING.md` § Unit tests puts its
+   suite in the `node` environment. Anything it calls must work with no DOM.
+2. The editor's sanitiser runs on **clipboard HTML**, which is arbitrary markup from another
+   application. A regex tokeniser is not a browser parser, and the gap between the two is exactly
+   where a paste payload would live.
+
+### Measurement
+`DOMParser` is not defined in `node`; importing the UI helper into the schema's test run fails at the
+first call. So requirement 1 rules the DOM version out for the file path. Requirement 2 rules the
+DOM-free version out for the paste path: a hand-written tokeniser and a browser's parser disagree on
+malformed markup by construction, and the browser's reading is the one that matters when the browser
+is what renders the result.
+
+### Decision
+Two implementations, one policy. `packages/schema/src/sanitize/rich-text.ts` is DOM-free and is what
+validates a file; `packages/ui/src/controls/rich-text-field/rich-text.ts` uses `DOMParser` and is what
+validates what a user types or pastes. Both allow the same set — bold, italic, code, and a link whose
+scheme passes the allowlist — and both unwrap everything else while keeping its text.
+
+### Consequences
+- Accepted: the allowed-tag set is written twice, and a change to it has to be made in both places.
+  Each has a test that names the set explicitly, so a divergence fails a suite rather than shipping.
+- Accepted: the two can disagree on malformed input. That is tolerable in one direction only — the
+  schema's parser is the stricter of the two, so anything the editor accepts is re-checked on save.
+- Rejected: moving the DOM version into `schema` behind a runtime check for `DOMParser`. It would make
+  the behaviour of the security path depend on which environment happened to load it.
+
+## ADR-052 — `CodegenDescriptor` carries only what `buildIR` reads today
+
+**Date** 2026-08-08 · **Prompt** 12 · **Status** Accepted
+
+### Question
+The registry seam requires a `CodegenDescriptor` on every block, and no document specifies its
+fields. `EXPORT_ENGINE.md` describes the IR and the printers; it never says what the registry hands
+them. What goes in the type?
+
+### Criterion (set before measuring)
+The seam is consumed by exactly one module — `packages/codegen`, built in prompts 40 and after. A
+field belongs in the type now only if `EXPORT_ENGINE.md` already names it as something read *per
+block*. Anything else is speculation, and speculation in a shared interface is the thing prompt
+00's § Do not bans.
+
+### Measurement
+Reading `EXPORT_ENGINE.md` § The IR and § buildIR for per-block reads yields exactly three:
+`IRElement.tag` (what a node prints as), `ImportSpec` (§ 5 Import collection, merged per file), and
+`dependencies` (§ 5, "accumulated with real semver ranges so the emitted `package.json` installs and
+runs"). A fourth follows from § 5's rule that imports are collected from actual usage: the printer has
+to know which props are attributes rather than classes, so `passthroughProps` is named too.
+
+### Decision
+`CodegenDescriptor` is `{ tag, imports?, dependencies?, passthroughProps? }` and nothing else. Every
+optional field is optional because a plain `<div>` block needs none of them.
+
+### Consequences
+- Accepted: prompt 40 will almost certainly add fields. Adding an optional field to this interface is
+  additive — no existing definition stops compiling — which is why the narrow version is safe to ship
+  and a guessed-wide one would not be.
+- Accepted: a block cannot yet express "print me as a `motion.div` when a motion channel is set". That
+  is a printer decision in the current design, and moving it here without the printer to check it
+  against is how a seam gets a field nobody uses.
+- Rejected: leaving the field as `unknown` until prompt 40. A registry entry that typechecks against
+  nothing is not a seam.

@@ -10,7 +10,7 @@ should not require a browser to test.
 ```ts
 // packages/schema/src/document/document.types.ts
 export interface MotionDocument {
-  readonly id: string
+  readonly $schema?: string            // the published schema URL, optional
   readonly version: number             // schema version, for migrations
   readonly meta: DocumentMeta
   readonly theme: ThemeConfig
@@ -18,6 +18,9 @@ export interface MotionDocument {
   readonly nodes: Readonly<Record<NodeId, Node>>
   readonly assets: Readonly<Record<AssetId, Asset>>
 }
+
+// The document's own id is `meta.id`, not a top-level field: FILE_FORMAT.md § Structure is the
+// authority on the file's shape, and it keeps the id beside the name and the timestamps.
 
 export interface Node {
   readonly id: NodeId
@@ -53,7 +56,9 @@ command asserts the invariant, and there is a `validateDocument()` used in tests
 
 ### Invariants
 
-Checked by `validateDocument(doc): Result<void, DocumentError[]>`:
+Checked by `validateDocument(doc, options?): Result<void, DocumentError[]>`. Invariants 6, 7 and 8
+are questions about blocks, so they run only when `options.registry` is supplied — which is what lets
+the editor assert structure in a `node` test with no block package loaded:
 
 1. `rootId` exists in `nodes`.
 2. Root's `parentId` is `null`; every other node's `parentId` exists.
