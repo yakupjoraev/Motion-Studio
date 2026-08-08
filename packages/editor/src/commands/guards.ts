@@ -85,16 +85,19 @@ export function requireSlot(definition: BlockDefinition, slot: string): SlotDefi
   return found
 }
 
-export function requireAcceptance(slot: SlotDefinition, child: BlockDefinition): void {
+/** The predicate behind `requireAcceptance`, for the callers that choose a slot rather than assert one. */
+export function slotAccepts(slot: SlotDefinition, child: BlockDefinition): boolean {
   const accepts = slot.accepts
-  const allowed =
-    accepts === '*'
-      ? true
-      : typeof accepts === 'function'
-        ? accepts(child)
-        : accepts.includes(child.id)
 
-  if (!allowed) {
+  return accepts === '*'
+    ? true
+    : typeof accepts === 'function'
+      ? accepts(child)
+      : accepts.includes(child.id)
+}
+
+export function requireAcceptance(slot: SlotDefinition, child: BlockDefinition): void {
+  if (!slotAccepts(slot, child)) {
     throw commandError(
       COMMAND_CODES.slotRejectsBlock,
       `Slot "${slot.name}" does not accept ${child.name}`,
@@ -102,14 +105,22 @@ export function requireAcceptance(slot: SlotDefinition, child: BlockDefinition):
   }
 }
 
-/** The ids already occupying a slot, which is what `maxChildren` counts. */
+/**
+ * The ids already occupying a slot, which is what `maxChildren` counts. Typed against the readonly
+ * document so a draft and a committed document both satisfy it — insertion targeting resolves against
+ * the latter.
+ */
 export function slotChildren(
-  draft: Draft<MotionDocument>,
-  parent: Draft<Node>,
+  document: MotionDocument,
+  parent: Node,
   slot: string,
 ): readonly NodeId[] {
-  return parent.children.filter((id) => draft.nodes[id]?.slot === slot)
+  return parent.children.filter((id) => document.nodes[id]?.slot === slot)
 }
+
+/** The predicate behind `requireCapacity`. `null` is an unbounded slot. */
+export const slotHasRoom = (slot: SlotDefinition, occupied: number, incoming: number): boolean =>
+  slot.maxChildren === null || occupied + incoming <= slot.maxChildren
 
 /** `occupied` is passed rather than read, because a move counts the slot *after* the detach. */
 export function requireCapacity(slot: SlotDefinition, occupied: number, incoming: number): void {
@@ -119,7 +130,7 @@ export function requireCapacity(slot: SlotDefinition, occupied: number, incoming
     return
   }
 
-  if (occupied + incoming > max) {
+  if (!slotHasRoom(slot, occupied, incoming)) {
     throw commandError(
       COMMAND_CODES.slotFull,
       `Slot "${slot.name}" holds at most ${max} ${max === 1 ? 'child' : 'children'}`,

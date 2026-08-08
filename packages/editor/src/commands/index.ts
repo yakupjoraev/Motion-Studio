@@ -19,6 +19,13 @@ export { COMMAND_CODES, type CommandCode } from './guards'
 export { insertBlock, type InsertBlockPayload } from './insert-block'
 export { insertNode, type InsertNodePayload } from './insert-node'
 export { moveNodes, type MoveNodesPayload } from './move-nodes'
+export { pasteNodes, type PasteNodesPayload } from './paste-nodes'
+export {
+  resolveInsertTarget,
+  type InsertTarget,
+  type InsertTargetRejection,
+  type ResolveInsertTargetArgs,
+} from './resolve-insert-target'
 export { removeEffect, type RemoveEffectPayload } from './remove-effect'
 export { removeNodes, type RemoveNodesPayload } from './remove-nodes'
 export { renameNode, type RenameNodePayload } from './rename-node'

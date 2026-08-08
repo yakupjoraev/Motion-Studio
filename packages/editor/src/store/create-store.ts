@@ -64,7 +64,7 @@ export function createEditorStore(options: EditorStoreOptions): EditorStore {
           ...createSelectionSlice()(...a),
           ...createViewportSlice()(...a),
           ...createHistorySlice(resolved)(...a),
-          ...createClipboardSlice()(...a),
+          ...createClipboardSlice(resolved)(...a),
           ...createUiSlice()(...a),
           ...createThemeSlice()(...a),
         }),

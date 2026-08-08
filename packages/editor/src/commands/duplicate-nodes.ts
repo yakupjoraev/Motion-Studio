@@ -64,7 +64,8 @@ function remap(value: unknown, ids: ReadonlyMap<string, string>): unknown {
   return value
 }
 
-function remapRecord(
+/** Shared with the clipboard, which remaps the same kinds of reference on paste. */
+export function remapRecord(
   record: Record<string, unknown>,
   ids: ReadonlyMap<string, string>,
 ): Record<string, unknown> {

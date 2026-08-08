@@ -1,8 +1,14 @@
 import type { BlockRegistry, BreakpointId, MotionDocument, NodeId } from '@motion-studio/schema'
 import type { ColorModePreference, PresetId } from '@motion-studio/theme'
-import type { Point } from '@motion-studio/utils'
+import type { MotionStudioError, Point, Result } from '@motion-studio/utils'
 import type { Mutate, StoreApi, UseBoundStore } from 'zustand'
 
+import type {
+  PasteReport,
+  PasteTarget,
+  SerializedSubtree,
+  StyleClipboard,
+} from '../clipboard/clipboard.types'
 import type { Command } from '../commands/command.types'
 import type { HistoryState, IncomingEntry, OpenTransaction } from '../history/history.types'
 
@@ -119,11 +125,21 @@ export interface HistorySlice {
 }
 
 export interface ClipboardSlice {
+  clipboard: {
+    readonly nodes: SerializedSubtree | null
+    readonly style: StyleClipboard | null
+  }
+  copy(ids: readonly NodeId[]): Promise<void>
+  cut(ids: readonly NodeId[]): Promise<void>
   /**
-   * Both payload types arrive with prompt 16 — `SerializedSubtree` and the style-prop subset. Typed
-   * as `null` until then, so the compiler names every place that has to widen rather than a comment.
+   * Async because reading the system clipboard is, and it returns a `Result` because a paste can
+   * decline (nothing usable on the clipboard) or land partially (a block this build does not
+   * have) — ADR-067. `target` bypasses resolution, which is what a drop on the canvas needs.
    */
-  clipboard: { readonly nodes: null; readonly style: null }
+  paste(target?: PasteTarget): Promise<Result<PasteReport, MotionStudioError>>
+  pasteInPlace(): Promise<Result<PasteReport, MotionStudioError>>
+  copyStyle(id: NodeId): void
+  pasteStyle(ids: readonly NodeId[]): void
 }
 
 /** PRODUCT.md § 2, in tab order. `Alt+1` … `Alt+5` — SHORTCUTS.md § Panels. */

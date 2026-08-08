@@ -40,6 +40,22 @@ export type {
 export * as commands from './commands/index'
 export * as selectors from './selectors/index'
 
+export {
+  CLIPBOARD_CODES,
+  CLIPBOARD_MARKER,
+  SUBTREE_VERSION,
+  decodeClipboardText,
+  deserializeSubtree,
+  encodeClipboardText,
+  serializeSubtree,
+  type ClipboardCode,
+  type PasteReport,
+  type PasteTarget,
+  type RejectedBlock,
+  type SerializedSubtree,
+  type StyleClipboard,
+} from './clipboard/index'
+
 export { applyCommands, type CommandOutcome } from './commands/dispatch'
 export type { Command, CommandContext } from './commands/command.types'
 
