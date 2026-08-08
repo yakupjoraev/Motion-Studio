@@ -15,7 +15,9 @@
   "devDependencies": {
     "@motion-studio/config": "workspace:*",
     "@vitest/coverage-v8": "^2.1.9",
-    "vitest": "^2.1.9"
+    "fast-check": "^3.23.2",
+    "vitest": "^2.1.9",
+    "zod": "^3.23.8"
   },
   "dependencies": {
     "@motion-studio/schema": "workspace:*",
