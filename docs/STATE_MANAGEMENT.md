@@ -16,16 +16,19 @@
 
 ```ts
 // packages/editor/src/store/store.types.ts
-export interface EditorState {
-  document: DocumentSlice
-  selection: SelectionSlice
-  viewport: ViewportSlice
-  history: HistorySlice
-  clipboard: ClipboardSlice
-  ui: UiSlice
-  theme: ThemeSlice
-}
+export type EditorState = DocumentSlice &
+  SelectionSlice &
+  ViewportSlice &
+  HistorySlice &
+  ClipboardSlice &
+  UiSlice &
+  ThemeSlice
 ```
+
+The slices merge **flat**, so `state.document` is the document and `state.dispatch` is a method on
+the store root. The keys below (`document`, `selection`, `viewport`, …) are fields *inside* their
+slices, not namespaces holding them: a component subscribing with `(s) => s.selection.ids` reads the
+selection slice's own state, and `(s) => s.dispatch` reads the document slice's method.
 
 Each slice is created by a factory and merged in `createEditorStore`:
 
@@ -57,9 +60,12 @@ interface DocumentSlice {
   dirty: boolean
   dispatch(command: Command): void
   dispatchBatch(commands: Command[], label: string): void
-  replaceDocument(next: MotionDocument, label: string): void
+  replaceDocument(next: MotionDocument): void
 }
 ```
+
+`replaceDocument` is the load path — New, Open, Import, a repaired file. It clears history rather
+than recording a whole-document entry, which is why it takes no label: ADR-054 has the measurement.
 
 `version` is a monotonic integer. Memoised derivations (resolved tree, layer list, codegen IR)
 key off it, so a cache is one integer comparison rather than a deep equality check.
@@ -80,8 +86,13 @@ interface SelectionSlice {
   clearSelection(): void
   enterNode(id: NodeId): void
   exitNode(): void
+  setHover(id: NodeId | null): void
+  setEditing(id: NodeId | null): void
 }
 ```
+
+`hoverId` is written by hit testing and `editingId` by the inline text editor, so both need a
+setter; a field of this state with no way to write it would be permanently `null`.
 
 Selection is **not** part of the document and **not** undoable. Undo restores structure, not
 what you happened to have clicked. Exception: a command may set selection as a side effect
@@ -194,16 +205,26 @@ Persisted to `localStorage`, debounced 500 ms. Not undoable.
 
 ```ts
 interface ThemeSlice {
-  theme: ThemeConfig               // see THEME_ENGINE.md
-  setThemeToken(path: string, value: string): void
-  setColorMode(mode: 'light' | 'dark' | 'system'): void
-  applyThemePreset(id: ThemePresetId): void
+  setThemeToken(path: string, value: unknown): void
+  setColorMode(mode: ColorModePreference): void
+  applyThemePreset(id: PresetId): void
 }
 ```
 
 Theme *is* part of the document (it exports with it) so theme edits go through commands and are
-undoable. `setThemeToken` writes the CSS variable synchronously for instant feedback and
-dispatches a coalesced command for the document.
+undoable, and the config itself lives at `document.theme`. The slice therefore holds **no state of
+its own** — a second copy beside the document would be derived data in the store, which § Anti-patterns
+bans, and the two would drift the first time a patch was applied without going through a setter.
+Reads go through `selectTheme`.
+
+`value` is `unknown` rather than `string` because the config holds numbers and enums as well
+(`radiusScale: 1.5`, `colorMode: 'system'`); the command validates the whole config against
+`themeConfigSchema` after the write, so an unwritable path or a wrong type throws instead of
+producing a config the theme engine cannot resolve.
+
+The CSS-variable half of "instant feedback" belongs to the caller, not to this slice: `packages/editor`
+has no DOM. The theme builder writes the variables with `applyThemePartial` and dispatches the
+coalesced command — THEME_ENGINE.md § Theme builder UI.
 
 ## Commands
 
@@ -301,21 +322,27 @@ export const selectSelectionIds = (s: EditorState) => s.selection.ids
 export const selectNode = (id: NodeId) => (s: EditorState) => s.document.nodes[id]
 export const selectChildren = (id: NodeId) => (s: EditorState) => s.document.nodes[id]?.children
 
-// derived — memoised on document.version
+// derived — recomputed when the document object changes, which is once per committed mutation
 export const selectFlatLayers = createVersionedSelector(
-  (s) => s.version,
+  (s) => [s.document],
   (s) => buildLayerRows(s.document),
 )
 
 export const selectResolvedNode = (id: NodeId) =>
   createVersionedSelector(
-    (s) => `${s.version}:${s.viewport.breakpoint}:${s.theme.id}`,
-    (s) => resolveNode(s.document.nodes[id], s.viewport.breakpoint, s.theme),
+    (s) => [s.document, s.viewport.breakpoint],
+    (s) => resolveNode(s.document.nodes[id], s.viewport.breakpoint, s.document.theme),
   )
 ```
 
-`createVersionedSelector` is a small helper: a cache keyed on a cheap scalar. No deep equality,
-no proxy tracking.
+`createVersionedSelector` is a small helper: a cache of size one, whose key is a short list of
+values compared with `Object.is`. No deep equality, no proxy tracking.
+
+The key is that list rather than `version` alone because the cache lives in the module, not in the
+store: two stores that happen to share a version — which is every pair of test stores — would
+otherwise read each other's rows. The document reference changes on exactly the same commits as
+`version` and cannot collide, so it is the cheaper of the two identities as well as the safer one —
+ADR-055.
 
 ### Component subscription rules
 

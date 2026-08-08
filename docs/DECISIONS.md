@@ -2698,3 +2698,123 @@ optional field is optional because a plain `<div>` block needs none of them.
   against is how a seam gets a field nobody uses.
 - Rejected: leaving the field as `unknown` until prompt 40. A registry entry that typechecks against
   nothing is not a seam.
+
+## ADR-053 — The theme slice ships real setters, and the two commands they need are written now
+
+**Date** 2026-08-08 · **Prompt** 13 · **Status** Accepted
+
+### Question
+`STATE_MANAGEMENT.md` § theme gives the slice three setters, and every one of them edits
+`document.theme`, which is only reachable through a command. The command catalogue is prompt 14.
+Prompt 13's checklist also says three of the seven slices are honest stubs, and only two —
+`history` and `clipboard` — are named as stubs in its deliverables. So either the theme setters are
+built here, or theme is the unnamed third stub.
+
+### Criterion (set before measuring)
+An option is admissible only if it satisfies both:
+1. It ships no API that silently does nothing. Prompt 00 § Do not bans placeholder implementations,
+   and a `setThemeToken` that returns without writing is worse than an absent one — the caller has
+   no way to tell.
+2. It creates no file that prompt 14 would then have to write a second time or delete. A mutation
+   written twice is two definitions of the same semantics for the length of one prompt.
+
+### Measurement
+Four options, against the two requirements:
+
+| Option | (1) no silent no-op | (2) no duplicate work |
+| --- | --- | --- |
+| No-op setters, prompt 14 fills them | ✗ | ✓ |
+| Setters build their commands inline in the slice | ✓ | ✗ — prompt 14 names `set-theme-token.ts` and `apply-theme-preset.ts` |
+| Drop the setters until prompt 14 | ✓ | ✓ — but the deliverable table names them, and cutting scope is the owner's call |
+| Write the two commands under prompt 14's filenames | ✓ | ✓ |
+
+### Decision
+The last one. `commands/set-theme-token.ts` and `commands/apply-theme-preset.ts` are written in this
+prompt, with the names, payload shapes and coalesce keys prompt 14's table gives them, and the theme
+slice dispatches them. Prompt 14 finds 2 of its 25 commands already present and tested.
+
+### Consequences
+- Accepted: prompt 13 touches `commands/` beyond `command.types.ts` and `dispatch.ts`. The alternative
+  spends the same code on a version that gets deleted.
+- Accepted: `packages/editor` gains a dependency on `@motion-studio/theme`, because `applyThemePreset`
+  takes a `PresetId` and has to look the config up in `PRESETS`. The dependency direction is legal —
+  `theme` knows nothing about the editor — and `schema` already depends on it for `ThemeConfig`.
+- Accepted: prompt 13 ships **two** honest stubs, not three. Reported rather than papered over.
+- Rejected: injecting the preset table through `createEditorStore` options to avoid the dependency. A
+  config option with one caller is what prompt 00 § Do not calls speculative flexibility.
+
+## ADR-054 — `replaceDocument` clears history instead of recording a whole-document entry
+
+**Date** 2026-08-08 · **Prompt** 13 · **Status** Accepted
+
+### Question
+`replaceDocument(next, label)` swaps the entire document — New, Open, Import, and the post-migration
+result of a repaired file all land here. Its documented signature carries a `label`, which in every
+other case names a history entry. Does the swap become an undo step?
+
+### Criterion (set before measuring)
+Prompt 15 states the budget for the whole undo stack: 200 entries for a 60-node document must come
+out "in kilobytes, not megabytes". An entry kind is admissible only if 200 of it stays inside that
+budget, because the cap counts entries and cannot tell one kind from another.
+
+### Measurement
+A 61-node document with realistic props serialises to **25 647 bytes**. An entry holds forward and
+inverse patches, and for a whole-document replace each is a copy of one document, so one entry costs
+**≈ 51 kB**. A representative prop patch — `{op:'replace', path:['nodes','node_7','props','gap'], value:16}`
+— is ≈ 120 bytes, so the replace entry is 400× the unit the cap was sized for. 200 of them is
+**10 MB**: megabytes, on the wrong side of the stated budget. Nothing bounds how often a session
+calls `replaceDocument` — the file menu, an import, and a template switch all do.
+
+### Decision
+`replaceDocument(next)` clears `past` and `future`, prunes the selection against the new document,
+bumps `version`, and sets `dirty = false`. It writes no history entry, and the `label` parameter is
+dropped from the signature — with no entry to name, it had no consumer.
+
+### Consequences
+- Accepted: opening a document is not undoable. This matches every editor a user has met: `Cmd+Z`
+  after opening a file does not reopen the previous one.
+- Accepted: `dirty = false` assumes every caller is a load. If a caller ever replaces the document
+  with something that has *not* been persisted, it has to mark it — that will be visible in prompt 50,
+  which owns persistence, rather than hidden here.
+- Rejected: recording the entry anyway and capping history by bytes instead of entries. That is a
+  second cap to reason about, added to protect one rare operation.
+
+## ADR-055 — A versioned selector's key is a list of values, not one scalar
+
+**Date** 2026-08-08 · **Prompt** 13 · **Status** Accepted
+
+### Question
+`createVersionedSelector(keyFn, computeFn)` keeps a cache of size one. `STATE_MANAGEMENT.md`
+§ Selectors keys it on `s.version` — a cheap scalar. The cache lives in the module, because the
+selector is a module-level constant, while `version` lives in a store. What is the key?
+
+### Criterion (set before measuring)
+No sequence of calls may return a value computed from a different state. A cache that can answer with
+another store's data is not a fast selector, it is a wrong one, and the failure is silent.
+
+### Measurement
+Two stores, both at `version: 0`, holding different documents — which is every test file that builds
+a second store, and every future multi-document surface. With `keyFn = (s) => s.version`:
+
+```
+store A rows: 1 (expected 1)
+store B rows: 1 (expected 3)     ← A's cached value, under key 0
+```
+
+Run against a 15-line scalar-keyed implementation before writing the real one. The collision needs no
+concurrency and no unusual call order: two stores at the same version is enough.
+
+### Decision
+`keyFn` returns a `readonly unknown[]`, compared element by element with `Object.is`. Selectors that
+depend on the document key on the document **reference** (`[s.document]`), which changes on exactly
+the commits `version` changes on and cannot collide between stores. Composite keys become extra
+elements: `[s.document, s.viewport.breakpoint]`.
+
+### Consequences
+- Accepted: the key allocates one small array per call. It is compared, never retained, and its length
+  is fixed per selector — this is not the allocation the § Anti-patterns table is about, which is a
+  freshly built *result* re-rendering a component.
+- Accepted: the comparison is a loop rather than one `===`. Element-wise `Object.is` over a fixed
+  two-element list is not deep equality: it never descends into a value.
+- Rejected: keying on `${version}:${document.meta.id}`. Two deterministic test stores share the
+  document id as well, so it moves the collision rather than removing it.
