@@ -15,7 +15,11 @@
   "devDependencies": {
     "@motion-studio/config": "workspace:*",
     "@vitest/coverage-v8": "^2.1.9",
+    "fast-check": "^3.23.2",
     "jsdom": "^25.0.1",
     "vitest": "^2.1.9"
+  },
+  "dependencies": {
+    "@motion-studio/utils": "workspace:*"
   }
 }
