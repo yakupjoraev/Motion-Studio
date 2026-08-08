@@ -173,4 +173,5 @@ export {
   node,
   resetFactories,
   tree,
+  treeId,
 } from './test/factories'

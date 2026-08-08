@@ -2818,3 +2818,44 @@ elements: `[s.document, s.viewport.breakpoint]`.
   two-element list is not deep equality: it never descends into a value.
 - Rejected: keying on `${version}:${document.meta.id}`. Two deterministic test stores share the
   document id as well, so it moves the collision rather than removing it.
+
+## ADR-056 — The wall clock is read once, in the composition root
+
+**Date** 2026-08-08 · **Prompt** 13 · **Status** Accepted
+
+### Question
+`TESTING.md` § Determinism requires that no tested code path calls `Date.now()`, `Math.random()` or
+`crypto.randomUUID()`: the clock and the id generator are injected, which is what makes history
+timestamps and generated ids reproducible. `store/use-store.ts` is the app-level singleton, and
+something has to hand it a real clock.
+
+### Criterion (set before measuring)
+Two requirements, both testable:
+1. No module that participates in a command, a history entry, or a selector may read a clock or a
+   random source. Those are the paths a test asserts on.
+2. `meta.updatedAt` must be a real wall-clock timestamp. A monotonic clock (`performance.now()`)
+   satisfies coalescing, whose only use of `now` is a 400 ms difference, but writes a document whose
+   modification date is "1843.7".
+
+### Measurement
+`createEditorStore` takes `now` as a required option, so requirement 1 is a property of the API
+rather than of a habit. Requirement 2 rules out `performance.now()` for the production store. The
+remaining question is where the one call to `Date.now()` lives, and there is exactly one place that
+is not a tested path: the module that constructs the singleton.
+
+Grep after the change: `rg 'Date\.now|Math\.random|crypto\.randomUUID' packages/editor/src` returns
+**one** hit, `store/use-store.ts`, on the line that builds the singleton's options.
+
+### Decision
+`now` and `generateId` are injected everywhere; the singleton in `use-store.ts` passes `Date.now` and
+`createId`. No other module in the package reads either. The expected grep result for this package is
+one hit at the composition root, not zero.
+
+### Consequences
+- Accepted: prompt 13's checklist asks for zero hits. One remains, and it is the line that makes the
+  other zero possible. Reported rather than worked around — writing `new Date().getTime()` to satisfy
+  a regex is the banned fourth way with a disguise.
+- Accepted: a test that wants a frozen clock must build its own store with `createTestStore`. It
+  cannot accidentally inherit the singleton's clock, because the singleton is a different store.
+- Rejected: a lazily initialised singleton that the app configures. It removes the hit by moving the
+  same call into `apps/web` and adds an "initialise before use" failure mode to every consumer.

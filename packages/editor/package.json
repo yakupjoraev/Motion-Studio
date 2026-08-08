@@ -16,5 +16,12 @@
     "@motion-studio/config": "workspace:*",
     "@vitest/coverage-v8": "^2.1.9",
     "vitest": "^2.1.9"
+  },
+  "dependencies": {
+    "@motion-studio/schema": "workspace:*",
+    "@motion-studio/theme": "workspace:*",
+    "@motion-studio/utils": "workspace:*",
+    "immer": "^10.2.0",
+    "zustand": "^5.0.14"
   }
 }

@@ -1,4 +1,7 @@
 {
-  "extends": "@motion-studio/config/tsconfig/library.json",
+  // `react.json` only because `@motion-studio/theme`'s barrel exports `ThemeScope`, and typechecking
+  // an import of that barrel means reading a `.tsx` file. Nothing in this package is React: it is a
+  // pure library, testable in `node` — EDITOR_ENGINE.md § intro.
+  "extends": "@motion-studio/config/tsconfig/react.json",
   "include": ["src", "vitest.config.ts"]
 }
