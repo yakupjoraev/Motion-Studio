@@ -1,0 +1,94 @@
+/*
+ * The studio's frame. Only the things a utility class cannot express live here: the grid track list
+ * that reads the panel widths, the three width breakpoints from UI_GUIDELINES.md § Responsiveness of
+ * the chrome, and the collapse transition. Everything else is Tailwind on the components.
+ *
+ * The breakpoints are media queries rather than state read from `matchMedia` — ADR-050. A layout that
+ * needs hydration to be correct paints wrong first, and this shell is server-rendered precisely so
+ * that the first paint is the layout.
+ */
+
+/*
+ * Two variables per side. The track is what the grid reads and it is zero while the panel is
+ * collapsed; the size is the width the user set, which an overlay panel still needs when the track
+ * beside it has been collapsed to nothing.
+ */
+:root {
+  --ms-panel-left: 280px;
+  --ms-panel-left-size: 280px;
+  --ms-panel-right: 320px;
+  --ms-panel-right-size: 320px;
+}
+
+.ms-studio {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--ms-panel-left) minmax(0, 1fr) var(--ms-panel-right);
+  grid-template-rows: 48px minmax(0, 1fr) 28px;
+  height: 100dvh;
+  overflow: hidden;
+  /* § Layout: the studio never scrolls the page. */
+  overscroll-behavior: none;
+  /* § Timing: panel collapse, 200 ms standard — the nearest step of the duration scale is `quick`. */
+  transition: grid-template-columns var(--ms-duration-quick) var(--ms-ease-standard);
+}
+
+/* A drag writes the width every pointer move; interpolating each write would lag behind the cursor. */
+:root[data-panel-resizing] .ms-studio {
+  transition: none;
+}
+
+/*
+ * 1024–1280: the panels leave the track list and float over the canvas, opened from the top bar. The
+ * tracks collapse to zero rather than the panels being unmounted, so the canvas keeps its own size and
+ * the panel keeps its scroll position when the window crosses the threshold.
+ */
+@media (max-width: 1279.98px) {
+  .ms-studio {
+    grid-template-columns: 0 minmax(0, 1fr) 0;
+  }
+
+  .ms-panel-overlay {
+    position: absolute;
+    top: 48px;
+    bottom: 28px;
+    z-index: 30;
+    box-shadow: var(--ms-shadow-lg);
+  }
+
+  .ms-panel-overlay[data-side='left'] {
+    left: 0;
+    width: var(--ms-panel-left-size);
+  }
+
+  .ms-panel-overlay[data-side='right'] {
+    right: 0;
+    width: var(--ms-panel-right-size);
+  }
+
+  .ms-panel-overlay[data-open='false'] {
+    display: none;
+  }
+
+  /* The handle sizes a grid track. With no track to size, it has nothing to do. */
+  .ms-panel-resizer {
+    display: none;
+  }
+}
+
+/* Below 1024 the studio does not pretend to work: the notice replaces it. */
+@media (max-width: 1023.98px) {
+  .ms-studio {
+    display: none;
+  }
+}
+
+.ms-studio-notice {
+  display: none;
+}
+
+@media (max-width: 1023.98px) {
+  .ms-studio-notice {
+    display: grid;
+  }
+}

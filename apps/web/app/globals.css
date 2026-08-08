@@ -1,10 +1,18 @@
 @import 'tailwindcss';
 @import '../src/styles/theme.css';
+@import '@motion-studio/ui/styles.css';
 
 /*
  * The base layer, and nothing more. Everything here reads a `--ms-*` variable rather than a value, so
  * a theme change repaints without a rebuild and without a React render.
+ *
+ * Tailwind has to be told where the classes live. `packages/ui` is a workspace link, which its source
+ * scan does not follow on its own.
  */
+@source '../../../packages/ui/src';
+@source '../app';
+@source '../src';
+
 @layer base {
   :root {
     color-scheme: light;
@@ -12,6 +20,17 @@
 
   :root[data-color-mode='dark'] {
     color-scheme: dark;
+  }
+
+  /*
+   * DESIGN_SYSTEM.md § Typography names Geist; `next/font` is what self-hosts it, and it exposes the
+   * family under a generated name. This is the one place the two naming schemes are joined — the token
+   * stays the thing every component reads.
+   */
+  :root {
+    --ms-font-sans: var(--font-geist-sans), system-ui, sans-serif;
+    --ms-font-display: var(--font-geist-sans), system-ui, sans-serif;
+    --ms-font-mono: var(--font-geist-mono), ui-monospace, monospace;
   }
 
   body {

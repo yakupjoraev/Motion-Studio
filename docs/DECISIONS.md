@@ -2536,3 +2536,90 @@ distinction is the whole point — a file Node loads is JavaScript, a file Vite 
   it would leave the project's build depending on an experimental flag to read a config file.
 - Rejected: importing the preset by relative path from each package. That reaches across a package
   boundary, which `ENGINEERING_CONTRACT.md` § 3 bans and `check-deps` catches.
+
+## ADR-049 — The shell's resize handle writes the grid's own custom property
+
+**Date** 2026-08-08 · **Prompt** 11 · **Status** Accepted
+
+### Question
+`packages/ui` already ships `Resizable`, built in prompt 08 for exactly this surface. The studio
+shell needs two resizable panel edges. Does the shell use it, or does it drive the widths itself?
+
+### Criterion (set before measuring)
+`UI_GUIDELINES.md` § Layout and the shell's own specification put the three columns in a CSS grid
+whose track list reads the panel widths from `--ms-panel-left` and `--ms-panel-right`. Two things
+follow, and both are checkable:
+
+1. A drag must move the **grid track**. A handle that changes some inner element's width leaves the
+   track where it was and produces a panel that overflows or underfills its own column.
+2. A drag must produce **zero renders of the canvas area** — contract § 5, the transient pattern.
+   Measured with a render counter inside the canvas island.
+
+### Measurement
+`Resizable` writes `--ms-resizable-width` onto **its own frame**, which is also the element carrying
+`w-[var(--ms-resizable-width)]` (`packages/ui/src/resizable/resizable.styles.ts`). A custom property
+set on a descendant cannot be read by an ancestor's `grid-template-columns` — inheritance runs down
+the tree only. So on criterion 1 the component cannot be made to work from the outside: the shell
+would have to declare its tracks `auto`, which is the layout the specification rules out.
+
+Criterion 2 is met by both designs, so it does not separate them.
+
+Counted after the fact with a `useRef` render counter rendered into the canvas island: **0 renders
+across a full drag of either handle**, and one render on release, in the shell only.
+
+### Decision
+The shell owns `panel-resizer.tsx`. It writes `--ms-panel-left` / `--ms-panel-right` onto the
+document element — the same element the boot script writes them to, so a restored width and a
+dragged width have one home — and calls back once on release. `Resizable` stays in `packages/ui` for
+panels that own their own width — a split inside a panel, the export dialog's file tree — and is not
+used by the shell.
+
+### Consequences
+- Accepted: two pointer-drag handles exist in the repository. They differ in the one thing that
+  matters — which element's width they define — and merging them would mean a component with two
+  modes and one caller each, which `prompts/00-GLOBAL_RULES.md` § Do not bans.
+- Accepted: the shell's handle is the WAI-ARIA window-splitter pattern a second time, so a fix to
+  the keyboard behaviour has to be made in both places. Both are tested.
+- Rejected: declaring the tracks `auto` and letting `Resizable` size the panel. It satisfies the
+  transient-pattern rule and contradicts the layout specification, which is not a trade the
+  contract allows — § 9, resolution 1.
+
+## ADR-050 — The chrome's breakpoints are CSS; the panel-overlay state is JavaScript
+
+**Date** 2026-08-08 · **Prompt** 11 · **Status** Accepted
+
+### Question
+`UI_GUIDELINES.md` § Responsiveness of the chrome gives the shell three widths: ≥ 1280 px the panels
+are columns, 1024–1280 px they overlay the canvas, below 1024 px the studio refuses and shows a
+notice. Where does that live — in media queries, or in a `matchMedia` hook the shell renders from?
+
+### Criterion (set before measuring)
+The shell is server-rendered (`ARCHITECTURE.md` § Rendering strategy), so the server does not know
+the viewport width. Two requirements decide it:
+
+1. **No layout flash.** Anything that changes the *layout* must be correct in the first paint, before
+   hydration. A value read from `matchMedia` is `false` on the server and correct only after the
+   first effect, so rendering the layout from it paints the wrong one and then corrects it.
+2. **An overlay panel is closed until asked for.** That is state, not style: at ≥ 1280 px the left
+   panel is open by default, and the same panel overlaying the canvas at 1200 px must not be. CSS
+   cannot express "default open here, default closed there" for a state the user also toggles.
+
+### Measurement
+Requirement 1 admits only CSS; requirement 2 admits only JavaScript. Neither mechanism satisfies
+both, so the split is forced rather than chosen.
+
+### Decision
+The track collapse, the overlay positioning, and the sub-1024 notice are media queries in
+`src/styles/studio.css`; the notice markup is always in the DOM so it needs no hydration to appear.
+`use-viewport-guard.ts` reports the same three thresholds through `matchMedia` and is used only for
+behaviour: which piece of state `Mod+\` toggles, and `inert` on the shell below 1024 px so the
+keyboard cannot walk into a chrome the user was just told is unusable.
+
+### Consequences
+- Accepted: the three thresholds are written twice — once in the stylesheet, once in the hook. A test
+  asserts the hook's query strings against the same numbers, and both trace to the one table in
+  `UI_GUIDELINES.md`.
+- Accepted: the notice ships in the HTML of every studio visit, including the desktop ones that never
+  show it. It is two elements.
+- Rejected: rendering the layout from the hook and accepting one frame of the wrong chrome. The first
+  paint being layout rather than a correction is the reason the shell is server-rendered at all.
