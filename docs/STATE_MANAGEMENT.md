@@ -254,18 +254,21 @@ as `generateId` and a fixed `now`.
 
 | Command | Coalesce | Notes |
 | --- | --- | --- |
-| `insertNode` | no | Validates parent accepts child via registry `slots` |
-| `insertBlock` | no | Creates a node from `BlockDefinition.defaults` |
-| `removeNodes` | no | Removes subtrees; repairs `children` arrays |
+| `insertNode` | no | One node. Validates parent accepts child via registry `slots` |
+| `insertBlock` | no | The block **and** its slots' `defaultChildren`, as one subtree — ADR-062 |
+| `removeNodes` | no | Removes subtrees; repairs `children` arrays; releases orphaned assets |
 | `moveNodes` | no | Reparent + reindex; rejects moving a node into its own descendant |
 | `reorderNode` | no | Sibling index change |
-| `duplicateNodes` | no | Deep clone with fresh ids; offsets position |
+| `duplicateNodes` | no | Deep clone with fresh ids; assets are shared, not copied — ADR-060 |
 | `setProp` | `set-prop:{id}:{path}` | Base-breakpoint prop write |
-| `setResponsiveProp` | `set-rprop:{id}:{bp}:{path}` | Breakpoint override |
-| `clearResponsiveProp` | no | Removes an override |
-| `setMotion` | `set-motion:{id}` | Assign or edit a preset |
+| `setResponsiveProp` | `set-rprop:{id}:{bp}:{path}` | Breakpoint override; top-level keys only — ADR-058 |
+| `clearResponsiveProp` | no | Deletes the key, never writes the base value back |
+| `setMotion` | `set-motion:{id}` | Assign or edit a preset; the block must declare the channel |
 | `clearMotion` | no | |
-| `setEffect` | `set-effect:{id}:{effectId}` | Attach/tune a surface effect |
+| `setEffect` | `set-effect:{id}:{instanceId}` | Tunes one instance in the stack — ADR-059 |
+| `addEffect` | no | Appends an instance; the stack holds 8 |
+| `removeEffect` | no | |
+| `reorderEffect` | no | Stack index change; paint order |
 | `renameNode` | `rename:{id}` | |
 | `setVisibility` | no | |
 | `setLocked` | no | |
@@ -273,9 +276,10 @@ as `generateId` and a fixed `now`.
 | `unwrap` | no | Hoists children, deletes the wrapper |
 | `setThemeToken` | `theme:{path}` | |
 | `applyThemePreset` | no | |
+| `setDocumentMeta` | `meta:{path}` | Name and canvas; the id and the timestamps are not editable |
 | `pasteNodes` | no | Transaction |
-| `alignNodes` | no | Transaction; `left/center/right/top/middle/bottom` |
-| `distributeNodes` | no | Transaction; `horizontal/vertical` |
+| `alignNodes` | no | Writes `align`/`justify` on the shared parent — ADR-057 |
+| `distributeNodes` | no | Writes `justify: 'between'` on the shared parent — ADR-057 |
 
 Every command lives in `packages/editor/src/commands/<name>.ts` with its test beside it.
 A command with a branch and no test does not merge.

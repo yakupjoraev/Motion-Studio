@@ -2859,3 +2859,292 @@ one hit at the composition root, not zero.
   cannot accidentally inherit the singleton's clock, because the singleton is a different store.
 - Rejected: a lazily initialised singleton that the app configures. It removes the hit by moving the
   same call into `apps/web` and adds an "initialise before use" failure mode to every consumer.
+
+## ADR-057 — Align and distribute write flow-layout props on the shared parent
+
+**Date** 2026-08-08 · **Prompt** 14 · **Status** Accepted
+
+### Question
+Prompt 14 says `alignNodes` and `distributeNodes` "operate on the selection's bounding box", and
+`STATE_MANAGEMENT.md` § Command catalogue said `duplicateNodes` "offsets position". Both sentences
+describe a free-form canvas. What do these commands actually write?
+
+### Criterion (set before measuring)
+A command must be expressible over fields the document has, and its result must survive export.
+Three checks, each answerable from a document rather than from taste:
+
+1. Does any document field hold a coordinate?
+2. Can a command read one? `EDITOR_ENGINE.md` § Commands: `apply` is a pure mutation with no DOM
+   and no store access.
+3. Does the export target have a way to express the result?
+
+### Measurement
+1. **No.** `Node` is `props / responsive / motion / effects / locked / hidden` — no `x`, no `y`, no
+   rect. `DRAG_AND_DROP.md` § Drag sources, row 2: dragging a node on the canvas commits `moveNodes`
+   (reparent and/or reorder), not a position write. Geometry is measured, and it is measured by the
+   rect cache in `packages/canvas` — prompt 19.
+2. **No.** A pure command cannot call `getBoundingClientRect`, and nothing in `CommandContext`
+   carries a rect.
+3. **Yes, for flow.** `PRODUCT.md` § 4 Inspector, Layout row names `align` and `justify` as node
+   props, and `EXPORT_ENGINE.md` prints props as Tailwind classes. `SHORTCUTS.md` § Alignment says
+   alignment "applies to the selection, or to the parent when only one node is selected" — both
+   readings write on the container that lays the selection out.
+
+So a bounding-box implementation would need a coordinate system this product does not have, and the
+one it does have expresses alignment as a container property.
+
+### Decision
+`alignNodes({ ids, edge })` requires the ids to share a parent and writes that parent's `align` or
+`justify` prop; which of the two is decided by the parent's `direction` prop, so `left` is the main
+axis in a row and the cross axis in a column. `distributeNodes({ ids, axis })` writes
+`justify: 'between'` on the same parent and rejects the cross axis, which flexbox cannot distribute
+along. Both are no-ops — zero patches, no undo entry — when the value is already there.
+
+### Consequences
+- Accepted: alignment applies to **every** child of the parent, not only to the selected ones.
+  Flexbox has no per-item main-axis alignment, so a selection of two out of five siblings moves all
+  five. Tested, and the reason the guard is "share a parent" rather than "share a parent and be all
+  of its children" — the latter would reject the common case with nothing to offer instead.
+- Accepted: `distributeNodes` on the cross axis throws instead of doing something plausible. A
+  command that silently does nothing useful is worse than one that says it cannot.
+- Accepted: this is the decision to supersede first if free positioning ever ships. It is one file
+  each, and the payloads change rather than the model.
+- Avoided: inventing `position: absolute` semantics, a coordinate space, and a second layout model
+  in the prompt that was supposed to be about guards.
+
+### Alternatives rejected
+- Rects in the payload (`bounds: Record<NodeId, Rect>`), computed by the canvas and written back as
+  offsets. It needs a positioning prop to write to; nothing declares one, so it would invent the
+  layout model as a side effect of an alignment button.
+- Deferring both commands to prompt 21. They are in prompt 14's deliverables and in `SHORTCUTS.md`
+  with six key bindings; deferring is the owner's call, not this session's.
+
+## ADR-058 — Responsive overrides are keyed by top-level prop key
+
+**Date** 2026-08-08 · **Prompt** 14 · **Status** Accepted
+
+### Question
+`setResponsiveProp` writes `responsive[bp][path]`. Controls address props by dot path
+(`padding.top`). What happens to a dotted path at a non-base breakpoint?
+
+### Criterion (set before measuring)
+Whatever is stored must come back out of `resolveResponsiveProps`. An override that writes
+successfully and does not resolve is the failure mode `RESPONSIVE_ENGINE.md` § Resolution calls the
+most common bug in this class of tool, and it is invisible until export.
+
+### Measurement
+`resolveResponsiveProps` merges with `{ ...resolved, ...override }` — a **shallow** spread, one
+level. A key of `'padding.top'` therefore resolves to a prop literally named `padding.top`, which no
+block schema declares and no printer reads. The value is stored, the editor shows the override dot,
+and the exported class is missing.
+
+### Decision
+`setResponsiveProp` and `clearResponsiveProp` reject a path containing a `.` or a `[` with
+`RESPONSIVE_PATH_NOT_SHALLOW`. Overrides are keyed by the top-level prop key, exactly as
+`RESPONSIVE_ENGINE.md` § Storage shows them. Both also reject the `base` breakpoint with
+`BASE_IS_NOT_AN_OVERRIDE`: § Editing semantics says a base edit writes `props`, which is `setProp`,
+and a `responsive.base` record would be a second base that resolves after the first.
+
+### Consequences
+- Accepted: a nested responsive control must override its whole top-level object — `padding`, not
+  `padding.top`. That is what the shallow merge means, and the generated inspector (prompt 23) reads
+  this rule off the same document rather than discovering it.
+- Accepted: the error surfaces at dispatch, in a session, rather than at export. That is the point.
+- Rejected: deep-merging overrides in `resolveResponsiveProps`. It would make the resolution
+  order-dependent per key path, break the byte-stable serialisation of the sparse record, and
+  contradict a documented function that already has tests.
+
+## ADR-059 — `setEffect` coalesces on the effect instance, not the catalogue entry
+
+**Date** 2026-08-08 · **Prompt** 14 · **Status** Accepted
+
+### Question
+The catalogue table gives `setEffect` the key `set-effect:{id}:{effectId}`. A node carries a *stack*
+of effects and can hold two instances of the same catalogue entry — `EffectInstance.id` versus
+`EffectInstance.effectId`, introduced with the schema in prompt 12.
+
+### Criterion (set before measuring)
+Coalescing merges two edits into one undo step. It is correct when a user would step back through
+them as one gesture, wrong when it makes one undo revert two things they did separately.
+
+### Measurement
+Two `noise-overlay` layers on one node, opacity dragged on the first and then on the second within
+the 400 ms window: with `{effectId}` the two drags share a key and collapse into one entry, so a
+single undo reverts both. With the instance id they are two entries, which is what the stack editor
+shows and what the user did.
+
+### Decision
+The key is `set-effect:{nodeId}:{instanceId}`. `STATE_MANAGEMENT.md` § Command catalogue is corrected
+in the same commit; the table predates the instance/catalogue split.
+
+### Consequences
+- Accepted: the key is longer and is not stable across a remove-and-re-add of the same effect. That
+  is correct — a re-added effect is a new instance.
+- Avoided: an undo that reverts an edit to a layer the user is not looking at.
+
+## ADR-060 — A duplicate shares assets and gets fresh node and layout ids
+
+**Date** 2026-08-08 · **Prompt** 14 · **Status** Accepted
+
+### Question
+`duplicateNodes` must remap "internal references (`layoutId`, asset refs, slot targets)" so that no
+id in the copy appears in the original. Does that include copying the assets?
+
+### Criterion (set before measuring)
+An id must be remapped when sharing it makes the copy behave as the original. Anything else is
+shared.
+
+### Measurement
+- **Node ids** — shared ids would make `children`/`parentId` point into the other subtree. Remapped.
+- **`layoutId`** — a shared layout id makes two elements one shared-layout animation target, so a
+  duplicate would animate as a move of the original. Remapped, to a fresh `layout_` id from the same
+  `generateId` counter.
+- **Slot targets** — a `slot` is a name declared by the parent block (`children`, `media`), not an
+  id. Nothing to remap; the copy keeps its slot.
+- **Asset ids** — an asset is document-level and can be 3 MB of data URL. Sharing one costs nothing
+  and changes no behaviour; copying doubles the file on every duplicate. `removeNodes` already
+  releases an asset when the last reference goes, so sharing is refcounted rather than leaked.
+  Shared.
+
+### Decision
+Fresh node ids for the whole subtree, fresh `layoutId` values, shared assets. The prompt's test —
+"no id in the copy appears in the original" — is asserted over node ids and layout ids, and the
+shared asset id is asserted to be *the same*, which is the behaviour, not an oversight.
+
+### Consequences
+- Accepted: deleting the original of a duplicated pair keeps the asset alive, because the copy still
+  references it. That is the refcount working.
+- Accepted: `STATE_MANAGEMENT.md`'s "offsets position" is dropped from the table in the same commit.
+  There is no position to offset — ADR-057.
+
+## ADR-061 — Generated ids come from `ctx.generateId`, re-prefixed, and the caller may pre-name a node
+
+**Date** 2026-08-08 · **Prompt** 14 · **Status** Accepted
+
+### Question
+`EDITOR_ENGINE.md` § Structural commands ends `insertNode` with "returns the new id via `ctx` so the
+caller can select it". `Command.apply` returns `void` and `dispatch` returns `void`. Two problems in
+one: how a caller learns the id, and where an *effect instance* id comes from when `generateId`
+produces `NodeId`s.
+
+### Criterion (set before measuring)
+Determinism first: `TESTING.md` § Determinism requires every id in a command to come from the
+injected generator, so that a store built twice from the same options is byte-identical. Any
+mechanism that satisfies that and needs no new store API wins over one that adds surface.
+
+### Measurement
+The generator is already shared: the store hands the same `generateId` to every command through
+`CommandContext`, and `create-store.ts` already re-prefixes it for the document id
+(`documentIds`). A caller holding the context can therefore *choose* the id before dispatching, and
+learn nothing new afterwards. The alternative — a result channel on `dispatch` — changes
+`DocumentSlice`, `Command`, and every call site, for one caller.
+
+### Decision
+Creating commands take an optional id in the payload (`id?: NodeId` on `insertNode`, `insertBlock`,
+`wrapInContainer`) and fall back to `ctx.generateId()`. Non-node ids are derived from the same
+counter with their own prefix: `fx_` for effect instances, `layout_` for layout ids, the same
+construction `create-store.ts` uses for `doc_`.
+
+### Consequences
+- Accepted: "returns the new id via `ctx`" reads, in code, as "takes the id through the payload".
+  The document sentence is the one that is loose; the mechanism it describes is this one.
+- Accepted: a caller that passes a duplicate id corrupts the document. Guarded: creating a node
+  whose id already exists throws `NODE_ID_TAKEN`.
+- Rejected: `dispatch` returning the created id. It types every command's return as `unknown` to
+  serve one of them.
+
+## ADR-062 — `insertBlock` materialises the block's default subtree
+
+**Date** 2026-08-08 · **Prompt** 14 · **Status** Accepted
+
+### Question
+`insertNode` already takes a `blockId` and defaults its props from the definition. What is left for
+`insertBlock` to be?
+
+### Criterion (set before measuring)
+Two commands with the same effect are one command with two names. `insertBlock` earns its file only
+if it does something `insertNode` does not, and that something has to be named by a document.
+
+### Measurement
+`SlotDefinition.defaultChildren` exists in the registry contract and has no consumer anywhere in the
+codebase. `DRAG_AND_DROP.md` § Drag sources, row 1: dropping a palette card runs `insertBlock` — and
+a palette card for a `feature-grid` that drops an empty grid is the case that sentence is about.
+
+### Decision
+`insertNode` inserts exactly one node. `insertBlock` inserts the node and then, depth-first, one
+child per `defaultChildren` entry of each of its slots. A `defaultChildren` chain that reaches a
+block already on the path throws `RECURSIVE_DEFAULT_CHILDREN` rather than recursing.
+
+### Consequences
+- Accepted: a registry with a cyclic default chain fails loudly at insert time instead of at the
+  call-stack limit. The cycle is a registry bug, and the message names the block.
+- Accepted: `insertBlock` consumes several ids from the generator. Deterministic, so tests state the
+  count.
+
+## ADR-063 — `setDocumentMeta` writes an allowlist of four paths
+
+**Date** 2026-08-08 · **Prompt** 14 · **Status** Accepted
+
+### Question
+`DocumentMeta` holds `id`, `name`, `createdAt`, `updatedAt`, `generator`, `canvas`, `template`.
+Prompt 14 asks for `setDocumentMeta` and names no fields. Which of the seven are editable, and does
+the command coalesce?
+
+### Criterion (set before measuring)
+A field is editable through this command when a user changes it deliberately. A field written by the
+system is not, because an undoable user command that fights the system's writer produces a document
+whose provenance is fiction.
+
+### Measurement
+- `id` — identity. A document that changes id is a different document; `FILE_FORMAT.md` § Structure
+  keeps it beside the timestamps for provenance.
+- `createdAt` / `generator` — written once, by the writer.
+- `updatedAt` — written by the save path, prompt 50, from the injected clock.
+- `name` — the title field in the topbar. Editable, and it is a text field, so it coalesces exactly
+  as `renameNode` does.
+- `canvas.width` / `canvas.background` — document settings in the inspector's no-selection state
+  (`UI_GUIDELINES.md` § Loading and empty states). Editable.
+- `template` — a flag on the fixtures the gallery ships, not something a user toggles.
+
+### Decision
+Four paths: `name`, `canvas.width`, `canvas.background`, `template`. Anything else throws
+`META_PATH_NOT_EDITABLE`. The result is re-parsed with `documentMetaSchema`, so `canvas.width: 4` is
+rejected by the same bounds the file format states. The key is `meta:{path}`, by the same reasoning
+that gives `setThemeToken` `theme:{path}` — a dragged number is one undo step.
+
+### Consequences
+- Accepted: `template` is in the list although no UI toggles it today. It is a meta field a fixture
+  author sets, and leaving it out would mean editing fixtures by hand.
+- Accepted: the command never touches `updatedAt`. Persistence owns it — ADR-056 put the clock in
+  one place, and a command that stamps a document on every keystroke would put it back everywhere.
+
+## ADR-064 — `setMotion` enforces the block's declared channels
+
+**Date** 2026-08-08 · **Prompt** 14 · **Status** Accepted
+
+### Question
+`BlockCapabilities.supportsMotion` lists the `MotionChannel`s a block declares. Nothing enforces it.
+Should `setMotion` reject a channel the block does not declare?
+
+### Criterion (set before measuring)
+A guard earns its branch when the unguarded outcome is silent. A loud failure elsewhere does not
+need a guard here.
+
+### Measurement
+`validateDocument` does not check motion channels — invariants 6 to 8 are about blocks, props and
+slots, and there is no invariant 10. `ANIMATION_SYSTEM.md` § Resolution resolves the specs a block
+supports; a spec on an unsupported channel resolves to nothing. So the unguarded outcome is a motion
+panel that accepts a setting, a document that stores it, an export that omits it, and no message
+anywhere.
+
+### Decision
+`setMotion` throws `UNSUPPORTED_MOTION_CHANNEL` when `capabilities.supportsMotion` does not list the
+channel. `clearMotion` does not check — removing a spec a block should never have had is exactly the
+repair path.
+
+### Consequences
+- Accepted: a registry that under-declares `supportsMotion` blocks a legitimate edit. That is a
+  registry bug with a message that names the block and the channel, which is the cheapest place to
+  find it.
+- Accepted: documents written before this guard can hold specs it would reject. `clearMotion` and
+  `repairDocument` both still work on them; the guard is on the write path only.
