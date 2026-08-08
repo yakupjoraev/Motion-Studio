@@ -1,0 +1,86 @@
+{
+  "$schema": "https://motion-studio.dev/schema/v1.json",
+  "version": 1,
+  "meta": {
+    "id": "doc_1",
+    "name": "Fixture",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "generator": "motion-studio@0.0.0",
+    "canvas": {
+      "background": "surface-0",
+      "width": 1440
+    }
+  },
+  "theme": {
+    "colorMode": "dark",
+    "elevationStyle": "soft",
+    "id": "studio-dark",
+    "motionScale": 1,
+    "name": "Studio Dark",
+    "palette": {
+      "accent": "oklch(70.00% 0.1560 285.00)",
+      "accentHueShift": 0,
+      "neutral": "slate",
+      "saturation": 1
+    },
+    "radiusScale": 1,
+    "spacingScale": 1,
+    "surface": {
+      "borderStyle": "hairline",
+      "glassLevel": "subtle",
+      "noiseLevel": "none"
+    },
+    "typography": {
+      "baseSize": 14,
+      "pairing": "geist",
+      "scaleRatio": 1.2
+    }
+  },
+  "rootId": "node_root",
+  "nodes": {
+    "node_features": {
+      "id": "node_features",
+      "blockId": "container",
+      "name": "features",
+      "parentId": "node_root",
+      "slot": "children",
+      "children": [],
+      "props": {},
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_hero": {
+      "id": "node_hero",
+      "blockId": "container",
+      "name": "hero",
+      "parentId": "node_root",
+      "slot": "children",
+      "children": [],
+      "props": {},
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_root": {
+      "id": "node_root",
+      "blockId": "container",
+      "name": "root",
+      "parentId": null,
+      "slot": "root",
+      "children": ["node_hero", "node_features"],
+      "props": {},
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    }
+  },
+  "assets": {}
+}

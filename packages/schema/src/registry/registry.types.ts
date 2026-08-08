@@ -1,0 +1,159 @@
+import type { ZodType } from 'zod'
+
+import type { BlockId } from '../ids/ids'
+import type { MotionChannel, MotionSpec } from '../motion/motion.types'
+
+/**
+ * The seam between `editor` / `canvas` / `codegen` and `blocks` — ARCHITECTURE.md § The registry seam.
+ *
+ * **No React types anywhere in this file.** That is what lets `codegen` run in `node` and what makes
+ * the editor testable with a three-entry fake and no component tree. `RenderRegistry` is therefore
+ * `Record<BlockId, unknown>` here and is refined to a component map in `packages/blocks`, which is the
+ * only package allowed to know that a block renders with React.
+ */
+export type UnknownProps = Record<string, unknown>
+
+export const BLOCK_CATEGORIES = {
+  layout: 'Layout',
+  hero: 'Hero',
+  content: 'Content',
+  marketing: 'Marketing',
+  navigation: 'Navigation',
+  interactive: 'Interactive',
+  data: 'Data',
+  forms: 'Forms',
+  effects: 'Effects',
+} as const
+
+export type BlockCategory = keyof typeof BLOCK_CATEGORIES
+
+/** COMPONENT_LIBRARY.md § Control kinds — one implementation each in `packages/ui/src/controls/`. */
+export const CONTROL_KINDS = [
+  'text',
+  'textarea',
+  'richText',
+  'number',
+  'slider',
+  'stepper',
+  'select',
+  'segmented',
+  'switch',
+  'color',
+  'gradient',
+  'shadow',
+  'spacing',
+  'radius',
+  'align',
+  'font',
+  'image',
+  'icon',
+  'link',
+  'list',
+  'motion',
+  'effect',
+  'css',
+] as const
+
+export type ControlKind = (typeof CONTROL_KINDS)[number]
+
+export interface ControlDescriptor {
+  /** Dot path into the block's props. */
+  readonly path: string
+  readonly kind: ControlKind
+  readonly label: string
+  readonly hint?: string
+  /** Shows the breakpoint override affordance. Layout and size controls have it; content usually does not. */
+  readonly responsive?: boolean
+  /** Kind-specific metadata — `min`, `options`, `itemControls`. Each control owns its own shape. */
+  readonly options?: Readonly<Record<string, unknown>>
+}
+
+export interface ControlGroup {
+  readonly id: string
+  readonly label: string
+  readonly controls: readonly ControlDescriptor[]
+}
+
+export interface SlotDefinition {
+  readonly name: string
+  readonly label: string
+  /** `'*'` accepts anything; a predicate lets a slot decide from the candidate's own definition. */
+  readonly accepts: readonly BlockId[] | '*' | ((definition: BlockDefinition) => boolean)
+  readonly minChildren: number
+  readonly maxChildren: number | null
+  readonly defaultChildren?: readonly BlockId[]
+}
+
+export interface BlockCapabilities {
+  readonly resizable: boolean
+  readonly fullWidth: boolean
+  /** Glass blocks need something behind them to blur. */
+  readonly requiresBackdrop: boolean
+  readonly supportsMotion: readonly MotionChannel[]
+  readonly costClass: 'cheap' | 'moderate' | 'heavy'
+  readonly minWidth?: number | undefined
+}
+
+export interface ImportSpec {
+  readonly from: string
+  readonly named?: readonly string[]
+  readonly default?: string
+  readonly typeOnly?: boolean
+}
+
+/**
+ * How a block becomes code. It carries only what EXPORT_ENGINE.md § buildIR reads off the registry:
+ * the element a node prints as, the imports that element needs, and the packages the emitted
+ * `package.json` must install. The printers themselves live in `packages/codegen` and arrive with the
+ * prompts that build it; adding a field here later is additive and breaks nothing.
+ */
+export interface CodegenDescriptor {
+  /** `'section'`, `'div'`, or a component name the import below provides. */
+  readonly tag: string
+  readonly imports?: readonly ImportSpec[]
+  /** Package name → semver range, accumulated so the emitted project installs and runs. */
+  readonly dependencies?: Readonly<Record<string, string>>
+  /** Props that print as attributes rather than as classes. */
+  readonly passthroughProps?: readonly string[]
+}
+
+export interface A11yNotes {
+  readonly role?: string
+  readonly notes: readonly string[]
+}
+
+export interface BlockDefinition<P = UnknownProps> {
+  readonly id: BlockId
+  readonly name: string
+  readonly description: string
+  readonly category: BlockCategory
+  readonly tags: readonly string[]
+  /** An icon *name*, not a component: this file stays free of React. */
+  readonly icon: string
+
+  readonly propsSchema: ZodType<P>
+  readonly defaults: P
+  /** What the palette thumbnail shows. */
+  readonly previewProps: P
+
+  readonly slots: readonly SlotDefinition[]
+  readonly controls: readonly ControlGroup[]
+  readonly capabilities: BlockCapabilities
+  readonly defaultMotion: Readonly<Partial<Record<MotionChannel, MotionSpec>>>
+  readonly codegen: CodegenDescriptor
+  readonly a11y: A11yNotes
+}
+
+export interface BlockRegistry {
+  get(id: BlockId): BlockDefinition | undefined
+  /** Throws. For the paths where a missing block is a programmer mistake rather than bad input. */
+  require(id: BlockId): BlockDefinition
+  list(): readonly BlockDefinition[]
+  byCategory(category: BlockCategory): readonly BlockDefinition[]
+}
+
+/**
+ * Deliberately `unknown`: the value is a React component, and naming that here would put React in the
+ * package that `codegen` imports to run under `node`. `packages/blocks` narrows it.
+ */
+export type RenderRegistry = Readonly<Record<string, unknown>>

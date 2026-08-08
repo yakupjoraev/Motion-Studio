@@ -12,6 +12,11 @@
     "test": "vitest run --passWithNoTests",
     "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "@motion-studio/theme": "workspace:*",
+    "@motion-studio/utils": "workspace:*",
+    "zod": "^3.23.8"
+  },
   "devDependencies": {
     "@motion-studio/config": "workspace:*",
     "@vitest/coverage-v8": "^2.1.9",
