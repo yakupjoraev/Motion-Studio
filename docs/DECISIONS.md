@@ -3755,3 +3755,34 @@ already names as the accessible structure and which carries `aria-multiselectabl
   that the canvas and the tree are two complete paths to the same operations, so the requirement is
   met — but it is met in the tree and not here, and that is now written down rather than implied.
 - Accepted: a screen-reader user who wants a multi-selection moves to the tree with `F2`.
+
+## ADR-082 — Arrows under pan mode reuse the one arrow step table the map already has
+
+**Date** 2026-08-09 · **Prompt** 19 · **Status** Accepted
+
+### Question
+CANVAS.md § Keyboard operation says "`Space` (hold) | Pan mode; arrows pan". It gives no distance,
+and SHORTCUTS.md § Viewport does not list arrow panning at all. How far does one press pan?
+
+### Criterion (set before measuring)
+The banned fourth way is an unbacked number. So the acceptable answers are: a number already written
+down for arrows on this surface, or an escalation. Inventing "40 px because it feels right" is the
+defect this file exists to catch.
+
+### Measurement
+The map contains exactly one arrow step table, SHORTCUTS.md § Transform: 1 px, `Shift` 10 px, `Alt`
+the grid size. It is already implemented in this hook for the nudge path, it already reads the grid
+size the artboard is drawn with, and it already has a coarse step for the case where one pixel is too
+slow. A second table would be a second thing to keep in step with the first, and its numbers would
+have no source.
+
+### Decision
+Arrow panning uses the same `arrowStep` as nudging: 1 / 10 / grid size, in screen pixels, applied
+through `viewport.panBy` and committed per press. The canvas introduces no number of its own.
+
+### Consequences
+- Accepted: a single arrow press pans one pixel, which is slow. `Shift` and `Alt` are the coarse
+  steps, and they are the same two modifiers the user already learned for nudging.
+- Accepted: each press commits to the store, so holding an arrow writes once per repeat rather than
+  once per gesture. A key repeat is ~30 Hz against a wheel's ~120, and unlike a wheel there is no
+  event that says the gesture ended.
