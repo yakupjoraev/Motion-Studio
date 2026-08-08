@@ -3148,3 +3148,72 @@ repair path.
   find it.
 - Accepted: documents written before this guard can hold specs it would reject. `clearMotion` and
   `repairDocument` both still work on them; the guard is on the write path only.
+
+## ADR-065 — Redo keeps the current selection, pruned; it does not restore one
+
+**Date** 2026-08-08 · **Prompt** 15 · **Status** Accepted
+
+### Question
+`EDITOR_ENGINE.md` § Undo states the selection rule for undo: `selection = pruneSelection(entry.selectionBefore, document)`.
+Redo has no such line, and a `HistoryEntry` records only the selection from *before* its command. What
+should redo select?
+
+### Criterion (set before measuring)
+Two requirements, in order:
+1. **Never select a node the document does not contain.** A selected id with no node crashes the
+   inspector — the reason `pruneSelection` exists at all.
+2. Of the options that satisfy 1, prefer the one that surprises a user least: redo is a step
+   *forward*, so it should leave the user where they already are unless that is impossible.
+
+### Measurement
+Three candidates, checked against a redo of `removeNodes`:
+
+- **`entry.selectionBefore`** — the selection before the delete, which contains the ids the redo just
+  deleted. It satisfies 1 only after pruning, and after pruning it is empty. It also walks the
+  selection *backwards* on a forward step.
+- **A recorded `selectionAfter`** — would satisfy both, and costs a second id list per entry plus a
+  second write path in `dispatch`. No document asks for it, and nothing in the UI reads it.
+- **The current selection, pruned** — satisfies 1 by construction and satisfies 2 exactly: the
+  selection does not move unless redo removed what was selected.
+
+### Decision
+`redoStep` applies the forward patches and sets `pruneSelection(currentSelection, nextDocument)`.
+Undo keeps the rule its document already states.
+
+### Consequences
+- Accepted: undo-then-redo of a deletion does not restore the selection the deletion cleared. The
+  nodes are back and unselected, which is what the document says happened and not what the user's
+  cursor was doing before.
+- Accepted: undo and redo are asymmetric in this one respect, and the asymmetry is in the entry —
+  it holds `selectionBefore` and nothing else.
+- Rejected: recording `selectionAfter`. Revisit if a UI is written that needs it; it is additive.
+
+## ADR-066 — History entry ids come from a per-store counter, not the document id generator
+
+**Date** 2026-08-08 · **Prompt** 15 · **Status** Accepted
+
+### Question
+`HistoryEntry.id` is a string and something has to produce it. ADR-061 says ids in commands come from
+the injected `ctx.generateId`. Does that extend to history?
+
+### Criterion (set before measuring)
+Determinism, and no interference: a store built twice from the same options must produce the same
+ids, and taking an id for one purpose must not shift the ids of another.
+
+### Measurement
+`ctx.generateId` is the counter the *document* is named from. A history entry drawn from it consumes
+`node_4`, so the next inserted node becomes `node_5` — every test that dispatches inside a transaction
+would have its node ids shifted by however many entries happened to be written first. The entry id is
+also never written to the document: it is a React key for the undo list and a target for "undo to
+here". Nothing serialises it.
+
+### Decision
+`createHistorySlice` keeps a counter of its own, per store, and names entries `hist_1`, `hist_2`, …
+The same counter names an open transaction, so the dev-mode "still open" warning can tell one
+transaction from the next without touching `generateId` either.
+
+### Consequences
+- Accepted: two stores in one test both start their history at `hist_1`. They are different stores
+  with different histories, and nothing compares entry ids across them.
+- Accepted: ADR-061 now reads as "ids that reach the document come from `ctx.generateId`". Ids that
+  never leave memory do not.

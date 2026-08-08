@@ -142,6 +142,9 @@ interface HistorySlice {
     past: HistoryEntry[]            // capped at 200
     future: HistoryEntry[]
   }
+  // The open transaction, or null. In the store rather than in a closure so a test and the devtools
+  // timeline can both see a transaction that was left open — which is the failure it exists to catch.
+  transaction: OpenTransaction | null
   undo(): void
   redo(): void
   canUndo: boolean
