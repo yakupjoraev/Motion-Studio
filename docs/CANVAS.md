@@ -58,7 +58,7 @@ error.
 
 ```html
 <div class="canvas-root" data-testid="canvas-root">        <!-- fixed, overflow hidden -->
-  <div class="canvas-scene" style="transform: translate(var(--ms-vp-x), var(--ms-vp-y)) scale(var(--ms-vp-zoom))">
+  <div class="canvas-scene" style="transform-origin: 0 0; transform: scale(var(--ms-vp-zoom)) translate(var(--ms-vp-x), var(--ms-vp-y))">
     <div class="canvas-artboard" style="width: var(--ms-artboard-w)">
       <!-- rendered nodes -->
     </div>
@@ -69,13 +69,19 @@ error.
 </div>
 ```
 
-Two decisions worth stating:
+Three decisions worth stating:
 
 1. **The scene transform is driven by CSS variables**, so pan and zoom during a gesture are
    variable writes at `rAF` rate with no React render. `transform` on a single element composites
    on the GPU.
 
-2. **Overlays live outside the transform.** If a selection outline were inside the scene, its
+2. **`scale()` comes before `translate()`, and the origin is the top-left corner.** The
+   conversions in § Coordinate spaces define screen as `(canvas + pan) * zoom`, which is exactly
+   what `scale(z) translate(pan)` computes — the translation happens in the scaled coordinate
+   system. Writing `translate()` first would mean the variable held screen pixels rather than the
+   pan the store keeps, so the two would have to be kept in step by multiplication at every write.
+
+3. **Overlays live outside the transform.** If a selection outline were inside the scene, its
    1.5 px border would scale to 6 px at 400 % zoom and 0.4 px at 25 %. Overlays are computed in
    screen space from the node's `getBoundingClientRect()`, so line weights stay constant. This
    also keeps overlays out of the node's layout, which matters because export must emit the node
@@ -131,7 +137,7 @@ instead of recomputing is the classic source of the canvas slowly wandering off.
 | --- | --- |
 | `Cmd/Ctrl + wheel` | Zoom at cursor, factor `1 - deltaY * 0.01`, clamped per event |
 | Pinch (`wheel` with `ctrlKey`) | Same path — the browser reports pinch as ctrl+wheel |
-| `Cmd/Ctrl + =` / `-` | Zoom at viewport centre, ×1.2 steps |
+| `Cmd/Ctrl + =` / `-` | Next / previous `ZOOM_STEPS` value, at the viewport centre — ADR-073 |
 | `Cmd/Ctrl + 0` | 100 % |
 | `Shift + 1` | Fit document |
 | `Shift + 2` | Zoom to selection (padded 64 px, capped at 200 %) |

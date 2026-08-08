@@ -386,8 +386,8 @@ The class of values that must never enter the store during a gesture:
 
 | Value | Where it lives during the gesture | Commit |
 | --- | --- | --- |
-| Pan offset | `viewportRef.current` + `--ms-viewport-x/y` | `setPan` on pointerup |
-| Zoom | `viewportRef.current` + `--ms-viewport-zoom` | `setZoom` on gesture end |
+| Pan offset | `viewportRef.current` + `--ms-vp-x/y` | `setPan` on pointerup |
+| Zoom | `viewportRef.current` + `--ms-vp-zoom` | `setZoom` on gesture end |
 | Drag ghost position | `transform` on a portal element via `rAF` | `moveNodes` on drop |
 | Scrub field value | local `useState` in the field + CSS var on the target | coalesced `setProp` |
 | Colour picker drag | local state + CSS var | coalesced `setProp` |

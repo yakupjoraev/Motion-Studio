@@ -3434,3 +3434,135 @@ the coordinate tests build a rect as an object literal.
 - Accepted: a caller could pass a rect that is not a viewport measurement. So could a `DOMRect` — the
   type never proved the rect came from the canvas element.
 - Avoided: a `jsdom` requirement in a module whose whole content is arithmetic.
+
+## ADR-073 — Keyboard zoom lands on the dropdown's steps, not on ×1.2
+
+**Date** 2026-08-08 · **Prompt** 18 · **Status** Accepted
+
+### Question
+CANVAS.md § Zoom gave `Cmd+=` / `Cmd+-` a ×1.2 factor. Prompt 18 says the keyboard steps use
+`ZOOM_STEPS`, the list the zoom dropdown shows. Both cannot be true.
+
+### Criterion (set before measuring)
+Two controls that set the same value must be able to display each other's result. The zoom dropdown
+shows a check beside the current value; a keyboard step that lands between two entries leaves that
+menu with nothing checked, and the user cannot get back to a round number without opening it.
+
+### Measurement
+Starting at 100 % and pressing `Cmd+=` three times:
+
+| Rule | Sequence | In the dropdown |
+| --- | --- | --- |
+| ×1.2 | 120 % · 144 % · 172.8 % | none of the three |
+| `ZOOM_STEPS` | 150 % · 200 % · 400 % | all three |
+
+The ×1.2 rule also never returns to 100 % by keyboard alone: pressing `-` from 120 % gives 100 % only
+because the two factors happen to cancel, and from 144 % it gives 120 %.
+
+### Decision
+`Cmd+=` moves to the next value in `ZOOM_STEPS` above the current zoom, `Cmd+-` to the next below,
+both anchored at the viewport centre. A zoom that sits between two steps — from a trackpad pinch —
+moves to the neighbouring step, so the first keypress after a pinch snaps to a round number.
+CANVAS.md § Zoom is corrected.
+
+### Consequences
+- Accepted: the steps are uneven (0.25 → 0.5 doubles, 1.5 → 2 does not). They are the ones the
+  dropdown already showed, and evenness was never the property being bought.
+- Accepted: at 400 % the key does nothing, because `MAX_ZOOM` is the last step. The ×1.2 rule would
+  also have stopped there, one clamp later.
+
+## ADR-074 — The per-event wheel zoom factor is clamped to one dropdown step
+
+**Date** 2026-08-08 · **Prompt** 18 · **Status** Accepted
+
+### Question
+CANVAS.md § Zoom gives the wheel factor as `1 - deltaY * 0.01`, "clamped per event". Prompt 18 says
+the clamp exists so a high-resolution trackpad does not jump three steps in one event. Clamped to
+what?
+
+### Criterion (set before measuring)
+One wheel event must not change the zoom by more than one step of `ZOOM_STEPS` — that is the unit the
+rest of the zoom UI is built from, so it is the unit a single event may move.
+
+### Measurement
+The ratios between adjacent entries of `ZOOM_STEPS` are 2, 1.5, 1.3333, 1.5, 1.3333 and 2. The
+smallest is 1.3333 (0.75 → 1 and 1.5 → 2), so a factor inside `[1 / 1.3333, 1.3333]` cannot cross a
+step boundary from either side. Chrome reports `deltaY` of 100 for one mouse notch, which the raw
+formula turns into a factor of 0 — clamped, it becomes 0.75. A trackpad pinch reports a stream of
+small deltas and is unaffected by the clamp.
+
+### Decision
+`WHEEL_ZOOM_CLAMP = 4 / 3`, and the factor is clamped to `[1 / WHEEL_ZOOM_CLAMP, WHEEL_ZOOM_CLAMP]`.
+The number is derived from `ZOOM_STEPS` in code, not typed in, so changing the dropdown changes the
+clamp with it.
+
+### Consequences
+- Accepted: a mouse wheel notch now zooms by 4/3 rather than by whatever `1 - deltaY * 0.01` produced,
+  which for a standard notch was a clamp to `MIN_ZOOM` in one event.
+- Accepted: a very fast trackpad flick needs more events to cross the range. It also cannot overshoot
+  past the intended stop, which is the trade being made.
+
+## ADR-075 — The canvas reads reduced motion from `--ms-reduced-motion`
+
+**Date** 2026-08-08 · **Prompt** 18 · **Status** Accepted
+
+### Question
+Pan momentum is disabled under reduced motion (CANVAS.md § Pan). The studio also has a "preview
+reduced motion" toggle (ADR-021) and the store has `viewport.previewReducedMotion`. `packages/canvas`
+must not import `editor`. How does the canvas learn the answer?
+
+### Criterion (set before measuring)
+One source that answers both questions — the OS preference and the studio's preview toggle — without
+a second mechanism to keep in step, and without a dependency the contract's § 2 forbids.
+
+### Measurement
+Three candidates:
+
+- **`matchMedia('(prefers-reduced-motion: reduce)')`** — sees the OS preference and is blind to the
+  preview toggle, so previewing reduced motion would leave momentum running.
+- **A prop from the app** — correct, and it is the store value crossing a package boundary as data.
+  It is also a second mechanism: the CSS already answers this question for every animation in the
+  product, and the two would drift the first time one is updated alone.
+- **The computed value of `--ms-reduced-motion`** — ADR-021 made this variable the single answer:
+  `1` normally, `0` from the media query, and `0` written inline by the preview toggle. One
+  `getComputedStyle` read on gesture end answers both.
+
+### Decision
+`prefersReducedMotion(element)` reads the computed `--ms-reduced-motion` on the canvas root and
+returns `true` when it is `0`. It is called when a pan gesture ends, not on every frame.
+
+### Consequences
+- Accepted: a `getComputedStyle` call per gesture end. It is one read, off the frame path, and it is
+  the same value the CSS is already resolving.
+- Accepted: an application that never loads the token stylesheet reads an empty string and gets
+  `false` — momentum runs. That matches the CSS default of `1`.
+
+## ADR-076 — `Shift+2` is bound where the selection is known, not inside the canvas
+
+**Date** 2026-08-08 · **Prompt** 18 · **Status** Accepted
+
+### Question
+SHORTCUTS.md § Viewport lists `Shift+2` as "zoom to selection", and prompt 18 asks for the viewport
+shortcuts. `CanvasProps` is `rootId`, `renderNode`, `artboardWidth` and `className`; none of them is
+a selection, and the contract forbids `canvas` from importing `editor`.
+
+### Criterion (set before measuring)
+A shortcut is implemented where its inputs are, and no package gains a dependency the directory law
+of ENGINEERING_CONTRACT.md § 2 denies it.
+
+### Measurement
+The rect `Shift+2` needs is the union of the selected nodes' boxes. Selection lives in the editor
+store; the canvas learns about it in prompt 21, which draws the selection overlay and is where a
+selection rect first exists inside this package. Adding a `selectionRect` prop now would be a prop
+with no caller until then.
+
+### Decision
+The viewport exposes `fitTo(rect)` and `fitDocument()` through its context, and binds `Cmd+0`,
+`Cmd+=`, `Cmd+-` and `Shift+1` — every shortcut whose input it has. `Shift+2` is bound in prompt 21,
+against the same `fitTo`, once the selection rect exists in this package.
+
+### Consequences
+- Accepted: one row of SHORTCUTS.md § Viewport is not wired after this prompt. It is named here and
+  in the session report rather than quietly skipped.
+- Accepted: `fitTo` is exported before it has a second caller. It is the function `Shift+1` already
+  uses, not a new seam.
