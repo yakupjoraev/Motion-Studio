@@ -1,10 +1,10 @@
 import type { BlockRegistry, BreakpointId, MotionDocument, NodeId } from '@motion-studio/schema'
 import type { ColorModePreference, PresetId } from '@motion-studio/theme'
 import type { Point } from '@motion-studio/utils'
-import type { Patch } from 'immer'
 import type { Mutate, StoreApi, UseBoundStore } from 'zustand'
 
 import type { Command } from '../commands/command.types'
+import type { HistoryState, IncomingEntry, OpenTransaction } from '../history/history.types'
 
 /**
  * STATE_MANAGEMENT.md § Store shape. The seven slices merge **flat**: `state.document` is the
@@ -98,28 +98,15 @@ export interface ViewportSlice {
   setPreviewReducedMotion(preview: boolean): void
 }
 
-/** EDITOR_ENGINE.md § History. Prompt 15 owns the behaviour; the shape is what dispatch writes to. */
-export interface HistoryEntry {
-  readonly id: string
-  readonly label: string
-  readonly patches: readonly Patch[]
-  readonly inversePatches: readonly Patch[]
-  readonly selectionBefore: readonly NodeId[]
-  readonly coalesceKey: string | null
-  readonly timestamp: number
-}
-
-/** What `dispatch` hands the history slice: an entry without the id and the timestamp it will get. */
-export interface IncomingEntry {
-  readonly label: string
-  readonly patches: readonly Patch[]
-  readonly inversePatches: readonly Patch[]
-  readonly selectionBefore: readonly NodeId[]
-  readonly coalesceKey: string | null
-}
+export type { HistoryEntry, IncomingEntry, OpenTransaction } from '../history/history.types'
 
 export interface HistorySlice {
-  history: { readonly past: readonly HistoryEntry[]; readonly future: readonly HistoryEntry[] }
+  history: HistoryState
+  /**
+   * The open transaction, or `null`. In the store rather than in a closure so a test and the devtools
+   * timeline can both see one that was left open — which is the failure it exists to catch.
+   */
+  transaction: OpenTransaction | null
   canUndo: boolean
   canRedo: boolean
   /** The single seam between dispatch and history. */

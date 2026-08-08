@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { removeNode } from '../../test/commands'
 import { createTestStore } from '../../test/create-test-store'
 
-import { normalizeSelection, pruneSelection } from './selection-slice'
+import { normalizeSelection } from './selection-slice'
 
 /** `root` over two sections, each with two children, so ordering and ancestry are both visible. */
 const shape = { root: ['a', 'b'], a: ['a1', 'a2'], b: ['b1'], a1: [], a2: [], b1: [] }
@@ -258,30 +258,5 @@ describe('normalizeSelection', () => {
 
   it('drops a node with any ancestor in the set, not just the parent', () => {
     expect(normalizeSelection(document(), [id('a1'), id('root')])).toEqual([id('root')])
-  })
-})
-
-describe('pruneSelection', () => {
-  it('clears every field that names a node the document lost', () => {
-    const before = {
-      ids: [id('a1'), id('b1')],
-      anchorId: id('a1'),
-      editingId: id('a2'),
-      hoverId: id('b1'),
-      isolationId: id('a'),
-    }
-
-    const pruned = pruneSelection(
-      before,
-      doc(tree({ root: ['b'], b: ['b1'] }), { rootId: id('root') }),
-    )
-
-    expect(pruned).toEqual({
-      ids: [id('b1')],
-      anchorId: null,
-      editingId: null,
-      hoverId: id('b1'),
-      isolationId: null,
-    })
   })
 })

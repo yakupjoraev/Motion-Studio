@@ -1,8 +1,8 @@
 import type { Command } from '../../commands/command.types'
 import { applyCommands } from '../../commands/dispatch'
+import { pruneSelection } from '../../history/prune-selection'
 import type { DocumentSlice } from '../store.types'
 
-import { pruneSelection } from './selection-slice'
 import type { ResolvedOptions, SliceCreator } from './slice.types'
 
 export const createDocumentSlice =

@@ -1,6 +1,6 @@
 export { createEditorStore } from './create-store'
 export { useEditorStore } from './use-store'
-export { normalizeSelection, pruneSelection, EMPTY_SELECTION } from './slices/selection-slice'
+export { normalizeSelection, EMPTY_SELECTION } from './slices/selection-slice'
 export { INITIAL_VIEWPORT } from './slices/viewport-slice'
 export { INITIAL_UI, PANEL_BOUNDS } from './slices/ui-slice'
 export type {

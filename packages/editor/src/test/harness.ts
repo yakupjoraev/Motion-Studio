@@ -95,17 +95,18 @@ export function harness(overrides: Partial<HarnessOptions> = {}): Harness {
   const generateId = overrides.generateId ?? ((): NodeId => nodeId(nextId()))
   const registry = overrides.registry ?? commandRegistry()
   const document = overrides.document ?? doc(tree(FLAT_TREE))
+  const now = overrides.now ?? ((): number => TEST_NOW)
   const store = createEditorStore({
     registry,
     generateId,
     document,
-    now: () => TEST_NOW,
-    coalesceWindow: 0,
+    now,
+    coalesceWindow: overrides.coalesceWindow ?? 0,
   })
 
   return {
     store,
-    context: { registry, generateId, now: () => TEST_NOW },
+    context: { registry, generateId, now },
     document: () => store.getState().document,
   }
 }
@@ -114,6 +115,10 @@ export interface HarnessOptions {
   readonly registry: BlockRegistry
   readonly document: MotionDocument
   readonly generateId: () => NodeId
+  /** `0` disables coalescing, which is what every test that is not about coalescing wants. */
+  readonly coalesceWindow: number
+  /** A test that is about coalescing hands in a clock it can move. */
+  readonly now: () => number
 }
 
 /** The patches one command would write, without committing it. */

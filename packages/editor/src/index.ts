@@ -5,9 +5,16 @@ export {
   PANEL_BOUNDS,
   createEditorStore,
   normalizeSelection,
-  pruneSelection,
   useEditorStore,
 } from './store/index'
+export {
+  COALESCE_WINDOW_MS,
+  HISTORY_LIMIT,
+  pruneSelection,
+  shouldCoalesce,
+  type HistoryState,
+  type OpenTransaction,
+} from './history/index'
 export type {
   ClipboardSlice,
   DialogId,
