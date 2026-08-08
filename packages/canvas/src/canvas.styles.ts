@@ -19,3 +19,24 @@ export const ARTBOARD_CLASS = 'relative min-h-[600px] bg-surface-0'
  * so the grid scales with the scene and costs no elements and no renders — CANVAS.md § Grid.
  */
 export const GRID_CLASS = 'pointer-events-none absolute inset-0'
+
+/**
+ * One promoted layer for every overlay, outside the scene transform so line weights stay constant at
+ * any zoom — CANVAS.md § DOM structure, and the "one promoted element, not one per overlay" rule of
+ * PERFORMANCE.md § Layer count.
+ */
+export const OVERLAYS_CLASS =
+  'pointer-events-none absolute inset-0 [transform:translateZ(0)] [contain:layout_paint]'
+
+/**
+ * Geometry comes from four CSS variables the marquee hook writes inside a `rAF`; `data-active` is
+ * what turns the band on, so an idle canvas holds an element with no size rather than none at all.
+ */
+export const MARQUEE_CLASS =
+  'absolute hidden data-[active]:block border border-canvas-selection bg-canvas-selection/10 left-[var(--ms-marquee-x,0px)] top-[var(--ms-marquee-y,0px)] h-[var(--ms-marquee-h,0px)] w-[var(--ms-marquee-w,0px)]'
+
+/**
+ * `contain: layout paint` bounds invalidation to the subtree, per PERFORMANCE.md § Canvas specifics:
+ * editing one node must not make the browser re-lay-out the page around it.
+ */
+export const NODE_WRAPPER_CLASS = '[contain:layout_paint]'

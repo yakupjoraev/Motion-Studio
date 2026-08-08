@@ -7,6 +7,9 @@ export const GRID_SIZES = [4, 8, 16, 24] as const
 
 export type GridSize = (typeof GRID_SIZES)[number]
 
+/** CANVAS.md § Grid: 8 px dots. `Alt`+arrows nudge by this, so it is named rather than repeated. */
+export const DEFAULT_GRID_SIZE: GridSize = 8
+
 /** Every tenth cell is stronger, which is what makes a grid readable rather than a texture. */
 const MAJOR_EVERY = 10
 
@@ -21,7 +24,7 @@ export interface GridProps {
  * Opacity comes from `--ms-vp-grid-opacity`, written beside the transform in the same frame, so the
  * fade between 25 % and 50 % zoom costs nothing either.
  */
-export function Grid({ size = 8 }: GridProps) {
+export function Grid({ size = DEFAULT_GRID_SIZE }: GridProps) {
   const major = size * MAJOR_EVERY
 
   return (

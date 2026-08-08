@@ -5,20 +5,26 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Canvas } from './canvas'
 import { SCENE_TRANSFORM } from './canvas.styles'
 import { stubGestureEnvironment } from './test/pointer'
+import { fakeScene } from './test/scene'
 import { VIEWPORT_VARS } from './viewport/use-viewport'
 import { useViewportContext } from './viewport/viewport-context'
 
 const ROOT = nodeId('node_root')
 
-const renderCanvas = (props: Partial<Parameters<typeof Canvas>[0]> = {}) =>
-  render(
+const renderCanvas = (props: Partial<Parameters<typeof Canvas>[0]> = {}) => {
+  const fake = fakeScene({ root: { children: [] } })
+
+  return render(
     <Canvas
       artboardWidth={1440}
       renderNode={(id) => <div data-node-id={id}>{id}</div>}
       rootId={ROOT}
+      scene={fake.scene}
+      selection={fake.selection}
       {...props}
     />,
   )
+}
 
 beforeEach(() => {
   vi.useFakeTimers()
@@ -97,5 +103,16 @@ describe('Canvas', () => {
 
   it('refuses to hand out a viewport outside the canvas', () => {
     expect(() => renderHook(() => useViewportContext())).toThrow(/inside the Canvas/)
+  })
+
+  it('is one tab stop that names itself, with an overlay layer and a live region', () => {
+    renderCanvas()
+
+    const root = screen.getByTestId('canvas-root')
+
+    expect(root).toHaveAttribute('aria-label', 'Design canvas')
+    expect(root).toHaveAttribute('tabindex', '0')
+    expect(screen.getByTestId('canvas-overlays')).toBeInTheDocument()
+    expect(screen.getByRole('status')).toBeInTheDocument()
   })
 })
