@@ -232,14 +232,21 @@ and free — the browser already solved it. Filters applied in order:
 
 ```ts
 export interface RectCache {
-  get(id: NodeId): Rect | undefined
+  get(id: NodeId): ScreenRect | undefined
   invalidate(id?: NodeId): void
-  refresh(): void                      // batched getBoundingClientRect via ResizeObserver
+  refresh(): void                      // one batched read per frame, never per node
+  observe(id: NodeId, element: Element): () => void
 }
 ```
 
+The rects are `getBoundingClientRect` results, so they are screen space and branded as such by
+§ Coordinate spaces — the marquee rect is built from pointer positions in the same space, and the
+compiler is what keeps the two from being compared against canvas units.
+
 Populated by one `ResizeObserver` over all node elements plus an invalidation on `version`
-change. Marquee reads the cache, never the DOM, so a marquee across 200 nodes costs nothing.
+change and on scroll of the canvas root. `get` reads the map and never the DOM, so a marquee
+across 200 nodes costs nothing; a rect that has been invalidated is absent until the next
+`refresh`, which is one batched pass inside one `requestAnimationFrame`.
 
 Marquee semantics: intersect (not contain) by default; `Alt` switches to contain-only. Only
 nodes at the current isolation level are candidates.

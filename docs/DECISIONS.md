@@ -3566,3 +3566,192 @@ against the same `fitTo`, once the selection rect exists in this package.
   in the session report rather than quietly skipped.
 - Accepted: `fitTo` is exported before it has a second caller. It is the function `Shift+1` already
   uses, not a new seam.
+
+## ADR-077 — The canvas reads the document through injected getters, not props
+
+**Date** 2026-08-09 · **Prompt** 19 · **Status** Accepted
+
+### Question
+Hit testing needs `locked`, `hidden`, `parentId` and `children` per node, plus the current
+`isolationId` and the selection. All of it lives in the editor store, which
+ENGINEERING_CONTRACT.md § 2 forbids `packages/canvas` from importing. How does the canvas get it?
+
+### Criterion (set before measuring)
+The seam must satisfy three constraints already written down, without adding a fourth mechanism:
+directory law (no `editor` import, `schema` types only — CANVAS.md § Public API); PERFORMANCE.md
+§ The core rule (a document edit must not re-render the canvas root); and CANVAS.md § Public API's
+own statement that the canvas is "tested with a fake viewport and three fake nodes".
+
+### Measurement
+Three candidate seams, against those three constraints:
+
+- **`document: MotionDocument` as a prop** — satisfies the directory law only by importing the type,
+  but fails the second: the prop identity changes on every keystroke in the inspector, so the canvas
+  root re-renders per edit and the memoised per-node subscriptions stop being what bounds the render.
+  It also pulls `walk`/`ancestors` in as runtime imports from `schema`, which CANVAS.md § Public API
+  restricts to types.
+- **Individual props (`isolationId`, `lockedIds`, …)** — the same re-render, multiplied by the number
+  of props, and each one is a second copy of state the store already holds.
+- **A port of getters** — `CanvasScene` with `node(id)`, `isolationId()`, `selectedIds()` and
+  `version()`, read inside event handlers rather than during render. The handle is memoised once, so
+  a document edit changes nothing React can see; the fake in a test is an object literal over a
+  `Map`.
+
+### Decision
+`CanvasProps` takes `scene: CanvasScene` (state in, by getter) and `selection: CanvasSelectionPort`
+(intent out). Both are read in handlers and effects, never during render. `version()` exists so the
+rect cache knows the geometry it holds is stale; it is the one value that crosses as a React
+dependency, because an effect is exactly what has to re-run.
+
+### Consequences
+- Accepted: `apps/web` writes the adapter — about fifteen lines over `useEditorStore.getState()`.
+  That adapter is where the two packages meet, and it reads in one screen.
+- Accepted: getters hide their dependencies from React, so anything in the canvas that must react to
+  a document change has to be told. That is what `version()` is for, and the overlays in prompt 21
+  will need the same treatment rather than a subscription.
+- Avoided: a second copy of the document inside the canvas, and a re-render per edit.
+
+## ADR-078 — "Parent chain at the current isolation level" is resolved by lifting, and a locked ancestor blocks its subtree
+
+**Date** 2026-08-09 · **Prompt** 19 · **Status** Accepted
+
+### Question
+CANVAS.md § Hit testing step 3 is "the topmost node whose parent chain is at the current isolation
+level". Two cases the sentence does not settle: what happens when the node under the cursor is
+**not** below `isolationId` at all, and whether a locked container blocks selecting its children or
+only itself.
+
+### Criterion (set before measuring)
+The behaviour the document names as the target — "clicking a nested text inside an un-entered Hero
+selects the Hero", stated as what makes the editor feel like Figma rather than a DOM inspector.
+Where the sentence is silent, the answer is the one that keeps that property true in the
+neighbouring case, not the one that is fewer lines.
+
+### Measurement
+Let `L = isolationId ?? rootId` be the level container.
+
+- **Lifting.** For a candidate under the cursor, walk up its ancestors to the node whose `parentId`
+  is `L`. That single rule produces both documented behaviours: un-isolated, a nested text lifts to
+  its top-level ancestor (the Hero); isolated into the Hero, the same text lifts to the Hero's own
+  child, which is step 2's "prefer descendants of `isolationId`". Two rules are not needed for two
+  rows.
+- **Outside the isolation container.** With the Hero entered, clicking a different top-level section
+  can only resolve to that section — nothing below `L` is under the cursor. Returning `null` would
+  make the rest of the document unclickable until `Esc`, which no tool with group entering does. The
+  candidate is lifted against the root instead, which is "leave, then select".
+- **Locked ancestors.** A container whose children stayed selectable while it is locked would make
+  the lock unusable for its stated purpose — pinning a background section so clicks fall through. A
+  candidate is therefore skipped when it, or any node between it and the result, is locked or hidden.
+- **The level container itself is never a result.** With `L = rootId` the root is under every click;
+  returning it would make "click empty space" select the page instead of clearing it, and there would
+  be nothing left to start a marquee on.
+
+### Decision
+`resolveHit` walks the candidates topmost-first; for each it lifts to the child of `L`, falling back
+to the child of `rootId` when the chain does not pass through `L`; a candidate whose chain contains a
+locked or hidden node is skipped; `L` itself and the root resolve to `null`. `Alt` skips the lift
+entirely and returns the deepest candidate that is not itself locked or hidden.
+
+### Consequences
+- Accepted: `Alt+click` can select a child of a locked container. It bypasses isolation by
+  specification, and what remains is the lock check on the node itself.
+- Accepted: clicking a section while isolated inside another one selects rather than only exiting, so
+  one click changes two things. That is the behaviour of every tool with group entering.
+- Accepted: a hidden node is filtered here as well as by the renderer, which never mounts one. The
+  duplicate is one comparison, and it keeps the chain correct if a block ever renders its own hidden
+  children.
+
+## ADR-079 — `RectCache.get` never touches the DOM
+
+**Date** 2026-08-09 · **Prompt** 19 · **Status** Accepted
+
+### Question
+After `invalidate(id)`, should `get(id)` read `getBoundingClientRect` for that one node so a caller
+always gets an answer, or return `undefined` until the next batched `refresh`?
+
+### Criterion (set before measuring)
+CANVAS.md § Hit testing states the requirement the cache exists for: "Marquee reads the cache, never
+the DOM." A design that *can* read the DOM from `get` is one where the guarantee holds only by the
+caller's good behaviour, and the failure is invisible — it shows up as frame time under a gesture,
+not as a wrong answer.
+
+### Measurement
+A marquee over 200 nodes calls `get` 200 times per frame. A lazy `get` that reads one rect per miss
+turns a single invalidation — one `ResizeObserver` callback, one scroll event — into 200 forced
+layouts inside that frame, which is precisely the loop PERFORMANCE.md § Canvas specifics exists to
+forbid. The batched alternative is one pass: `refresh` reads every observed element inside one
+`requestAnimationFrame`, so repeated invalidations within a frame still cost one layout.
+
+### Decision
+`get` is a map read. `invalidate` drops entries, `refresh` schedules the single batched pass, and a
+node whose rect has not been read yet is absent from the marquee's result for that frame.
+
+### Consequences
+- Accepted: a node that mounts mid-gesture is not marquee-selectable until the next frame. It is one
+  frame, against 200 layouts inside it.
+- Accepted: callers must call `refresh`. The hook does it on mount, on `version` change and on
+  scroll; the marquee does it at gesture start.
+- Avoided: a cache whose performance contract depends on nobody calling it wrong.
+
+## ADR-080 — Arrow keys emit a nudge intent; the canvas has no geometry to change
+
+**Date** 2026-08-09 · **Prompt** 19 · **Status** Accepted
+
+### Question
+SHORTCUTS.md § Transform binds the arrows to "nudge 1 px" (`Shift` 10 px, `Alt` grid size) and
+prompt 19 lists arrows in the keyboard selection path. There is no `x`/`y` on a node: the document
+model has no coordinates, which is why ADR-057 made align and distribute write `align`/`justify` to
+the parent rather than move anything.
+
+### Criterion (set before measuring)
+A key binding is implemented where its inputs are — the rule ADR-076 already applied to `Shift+2`.
+The canvas owns the key map for its own surface; what a nudge *does* to a document is a command, and
+commands live in `editor`.
+
+### Measurement
+`packages/editor/src/commands/` holds 25 commands and none of them translates a node: `moveNodes` is
+a reparent plus a reorder. So there is nothing for the canvas to call, and nothing for it to compute
+either — a number of pixels is meaningful only to a block that has a position.
+
+### Decision
+`use-keyboard-selection` resolves the modifiers to a step (1, 10, or the grid size) and calls
+`selection.nudge(dx, dy)` on the injected port. The canvas is complete at that seam. No translate
+command is written here, and none is faked.
+
+### Consequences
+- Accepted: until a translate command exists, an application wires `nudge` to nothing and the arrows
+  do nothing visible. The gap is named in the session report and belongs to whichever prompt gives
+  blocks a position.
+- Accepted: `Alt`+arrows needs the grid size, so the keyboard hook takes it — the same value the
+  artboard already renders with.
+
+## ADR-081 — The canvas keyboard map is SHORTCUTS.md's, and `Space` stays pan
+
+**Date** 2026-08-09 · **Prompt** 19 · **Status** Accepted
+
+### Question
+ACCESSIBILITY.md § Canvas listed "Select | `Space` toggles, `Shift+arrows` extends". SHORTCUTS.md
+§ Viewport binds `Space` (hold) to pan and § Transform binds `Shift`+arrows to nudge 10 px, and
+CANVAS.md § Keyboard operation agrees with SHORTCUTS.md on both rows. Which document wins?
+
+### Criterion (set before measuring)
+ENGINEERING_CONTRACT.md § 8 assigns each question to exactly one document. "Keyboard map, command
+palette" is SHORTCUTS.md. Ownership decides; a majority of documents does not.
+
+### Measurement
+Both contested bindings are already taken in the owning document, and both are load-bearing.
+`Space`+drag is the pan every canvas tool has and it is implemented — prompt 18, `use-pan.ts`.
+`Shift`+arrows is the 10 px nudge, which is the only thing that makes a 1 px nudge usable. Taking the
+ACCESSIBILITY.md row literally would have removed pan from the keyboard and left the arrows without a
+coarse step, and no replacement binding is free elsewhere in the map.
+
+### Decision
+ACCESSIBILITY.md § Canvas is corrected to the map SHORTCUTS.md owns: `Shift+Click` adds, `Mod+Click`
+toggles, `Mod+A` takes the level. Keyboard multi-selection is the layers tree, which the same section
+already names as the accessible structure and which carries `aria-multiselectable`.
+
+### Consequences
+- Accepted: there is no keyboard multi-select on the canvas surface. ACCESSIBILITY.md § Canvas states
+  that the canvas and the tree are two complete paths to the same operations, so the requirement is
+  met — but it is met in the tree and not here, and that is now written down rather than implied.
+- Accepted: a screen-reader user who wants a multi-selection moves to the tree with `F2`.

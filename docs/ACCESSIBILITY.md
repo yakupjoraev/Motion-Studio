@@ -45,7 +45,7 @@ worse than not using it.
 | Reach the canvas | Single tab stop in the page order |
 | Understand the content | The layers tree is the accessible structure — a real `role="tree"` |
 | Navigate | `Tab`/`Shift+Tab` siblings, `Enter`/`Esc` in/out, arrows nudge |
-| Select | `Space` toggles, `Shift+arrows` extends |
+| Select | `Shift+Click` adds, `Mod+Click` toggles, `Mod+A` takes the level; the tree is the keyboard multi-select path — ADR-081 |
 | Move nodes | Keyboard drag via dnd-kit |
 | Know what is selected | Polite live region on every change |
 | Know the result of an action | Announced: "Duplicated Hero. 7 blocks." |
