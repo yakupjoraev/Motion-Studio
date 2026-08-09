@@ -503,6 +503,9 @@ importers:
       '@motion-studio/motion':
         specifier: workspace:*
         version: link:../motion
+      '@motion-studio/schema':
+        specifier: workspace:*
+        version: link:../schema
       '@motion-studio/tokens':
         specifier: workspace:*
         version: link:../tokens

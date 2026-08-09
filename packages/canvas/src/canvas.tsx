@@ -127,7 +127,7 @@ export function Canvas({
   usePan(viewport)
   useZoom(viewport, { documentRect })
 
-  const cache = useRectCache({ rootRef: viewport.rootRef, version: scene.version() })
+  const cache = useRectCache({ rootRef: viewport.rootRef, scene })
   const announcer = useAnnouncer()
   const snap = useSnap({ viewport, thresholdPx: snapThreshold, enabled: snapEnabled })
 

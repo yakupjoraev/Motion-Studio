@@ -4,8 +4,15 @@ import { FOCUS_RING, TRANSITION_CONTROL } from '../styles/variants'
 
 export const scrollAreaRootStyles = cva(['relative overflow-hidden'])
 
-/** The viewport is a tab stop once its content overflows. */
-export const scrollAreaViewportStyles = cva(['h-full w-full', FOCUS_RING])
+/**
+ * The viewport is a tab stop once its content overflows.
+ *
+ * `[&>div]:!block` is load-bearing: Radix gives the viewport's inner wrapper `display: table`, which
+ * sizes to its content and lets a panel's rows grow past the panel. A block wrapper takes the
+ * viewport's width instead, which is what makes a 320 px panel clip its content rather than be
+ * widened by it.
+ */
+export const scrollAreaViewportStyles = cva(['h-full w-full [&>div]:!block', FOCUS_RING])
 
 /** Overlay, not inline: a panel's width must not depend on whether a section overflowed. */
 export const scrollAreaScrollbarStyles = cva(

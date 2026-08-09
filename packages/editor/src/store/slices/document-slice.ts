@@ -48,9 +48,13 @@ export const createDocumentSlice =
         commit([command], command.label, command.coalesceKey ?? null, `dispatch/${command.type}`)
       },
 
-      /** One history entry for the whole list, so a paste of five blocks is one undo step. */
-      dispatchBatch(commands, label) {
-        commit(commands, label, null, 'dispatchBatch')
+      /**
+       * One history entry for the whole list, so a paste of five blocks is one undo step — and, with
+       * a key, one entry for a batch that repeats: an inspector drag over a multi-selection commits
+       * thirty times a second and is one edit (ADR-113).
+       */
+      dispatchBatch(commands, label, coalesceKey) {
+        commit(commands, label, coalesceKey ?? null, 'dispatchBatch')
       },
 
       replaceDocument(next) {

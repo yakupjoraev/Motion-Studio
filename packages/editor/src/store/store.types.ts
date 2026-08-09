@@ -50,7 +50,7 @@ export interface DocumentSlice {
   version: number
   dirty: boolean
   dispatch(command: Command): void
-  dispatchBatch(commands: readonly Command[], label: string): void
+  dispatchBatch(commands: readonly Command[], label: string, coalesceKey?: string): void
   /** The load path: clears history rather than recording a whole-document entry — ADR-054. */
   replaceDocument(next: MotionDocument): void
 }

@@ -21,21 +21,45 @@ export function useRectCacheContext(): RectCache {
   return cache
 }
 
+/** What the cache needs off the scene: the version, and a way to hear that it moved — ADR-112. */
+export interface RectCacheSource {
+  version(): number
+  subscribe(listener: () => void): () => void
+}
+
 export interface RectCacheHookOptions {
   /** The canvas root. Anything below it scrolling moves every rect it holds. */
   readonly rootRef: RefObject<HTMLElement | null>
-  /** `document.version`: the geometry is stale the moment the tree changes — CANVAS.md § Hit testing. */
-  readonly version: number
+  /**
+   * ADR-112: subscribed to rather than read during render. A prop would make every document change a
+   * canvas re-render, and an inspector drag commits thirty times a second.
+   */
+  readonly scene: RectCacheSource
 }
 
-export function useRectCache({ rootRef, version }: RectCacheHookOptions): OwnedRectCache {
+export function useRectCache({ rootRef, scene }: RectCacheHookOptions): OwnedRectCache {
   const [cache] = useState(createRectCache)
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: `version` is the trigger, not an input — the effect re-runs because the geometry changed, and there is nothing to read off the number itself
   useEffect(() => {
+    let seen = scene.version()
+
     cache.invalidate()
     cache.refresh()
-  }, [cache, version])
+
+    // Only the version: the scene notifies for a selection and a hover too, and re-measuring 200
+    // nodes because something was clicked is the cost this comparison exists to avoid.
+    return scene.subscribe(() => {
+      const next = scene.version()
+
+      if (next === seen) {
+        return
+      }
+
+      seen = next
+      cache.invalidate()
+      cache.refresh()
+    })
+  }, [cache, scene])
 
   useEffect(() => {
     const root = rootRef.current

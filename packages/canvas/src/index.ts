@@ -80,6 +80,7 @@ export {
   useRectCache,
   useRectCacheContext,
   type RectCacheHookOptions,
+  type RectCacheSource,
 } from './rects/use-rect-cache'
 export {
   ANNOUNCE_DEBOUNCE_MS,

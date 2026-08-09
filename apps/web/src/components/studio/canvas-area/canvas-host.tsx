@@ -11,6 +11,21 @@ import { NodeRenderer } from './node-renderer'
 import { useCanvasPorts } from './use-canvas-ports'
 
 /**
+ * The counter PERFORMANCE.md's canvas budget is checked against: `renderNode` runs once per canvas
+ * render, so this is how many times the canvas rendered. Not in production, and read by the perf
+ * tests and by a browser walkthrough rather than by anything in the app.
+ */
+const countCanvasRender = (): void => {
+  if (process.env.NODE_ENV === 'production' || typeof window === 'undefined') {
+    return
+  }
+
+  const held = window as unknown as { __canvasRenders?: number }
+
+  held.__canvasRenders = (held.__canvasRenders ?? 0) + 1
+}
+
+/**
  * Where the two halves meet — ARCHITECTURE.md § The registry seam. The canvas is handed a render
  * function and a set of ports; it still imports neither the store nor a block.
  */
@@ -23,11 +38,11 @@ export function CanvasHost() {
   const rulers = useStudioStore((state) => state.viewport.rulers)
   const canvasWidth = useStudioStore((state) => state.document.meta.canvas.width)
 
-  // Read during render on purpose: it is the one getter the rect cache needs as a prop, and the host
-  // is what must re-render when the document changes — ADR-077.
-  useStudioStore(selectors.selectVersion)
-
+  // ADR-112: nothing here subscribes to the document. The rect cache hears about a change through
+  // the scene's own subscription, so an inspector drag re-renders the edited node and nothing else.
   const renderNode = useCallback((id: Parameters<typeof NodeRenderer>[0]['id']) => {
+    countCanvasRender()
+
     return <NodeRenderer id={id} />
   }, [])
 

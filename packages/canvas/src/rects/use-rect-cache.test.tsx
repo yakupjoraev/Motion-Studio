@@ -13,6 +13,37 @@ const frame = () =>
     vi.advanceTimersToNextFrame()
   })
 
+/** The scene, as the cache sees it: a version and a way to hear that it moved — ADR-112. */
+const fakeScene = () => {
+  const listeners = new Set<() => void>()
+  let version = 1
+
+  return {
+    scene: {
+      version: () => version,
+      subscribe: (listener: () => void) => {
+        listeners.add(listener)
+
+        return () => {
+          listeners.delete(listener)
+        }
+      },
+    },
+    bump() {
+      version += 1
+
+      for (const listener of listeners) {
+        listener()
+      }
+    },
+    notify() {
+      for (const listener of listeners) {
+        listener()
+      }
+    },
+  }
+}
+
 const mount = () => {
   const root = document.createElement('div')
   const node = document.createElement('div')
@@ -21,11 +52,10 @@ const mount = () => {
   root.append(node)
   document.body.append(root)
 
-  const view = renderHook(({ version }) => useRectCache({ rootRef: { current: root }, version }), {
-    initialProps: { version: 1 },
-  })
+  const held = fakeScene()
+  const view = renderHook(() => useRectCache({ rootRef: { current: root }, scene: held.scene }))
 
-  return { ...view, root, node }
+  return { ...view, ...held, root, node }
 }
 
 beforeEach(() => {
@@ -58,7 +88,7 @@ describe('useRectCache', () => {
   })
 
   it('drops what it holds when the document version changes, and reads again', () => {
-    const { result, node, rerender } = mount()
+    const { result, node, bump } = mount()
 
     act(() => {
       result.current.observe(ID, node)
@@ -66,13 +96,31 @@ describe('useRectCache', () => {
     frame()
 
     node.getBoundingClientRect = vi.fn(() => box(400))
-    rerender({ version: 2 })
+
+    act(() => bump())
 
     expect(result.current.get(ID)).toBeUndefined()
 
     frame()
 
     expect(result.current.get(ID)).toEqual(box(400))
+  })
+
+  it('ignores a notification the version did not change — a selection is not a layout', () => {
+    const { result, node, notify } = mount()
+
+    act(() => {
+      result.current.observe(ID, node)
+    })
+    frame()
+
+    node.getBoundingClientRect = vi.fn(() => box(400))
+
+    act(() => notify())
+
+    // Still the rect it measured: re-reading 200 nodes because something was clicked is the cost
+    // the version comparison exists to avoid.
+    expect(result.current.get(ID)).toEqual(box(10))
   })
 
   it('re-reads on a scroll below the canvas root, which no ResizeObserver would report', () => {
