@@ -4613,3 +4613,131 @@ cannot become a lie again.
 - Accepted: no block in the studio shows resize handles today. That is the honest state of a
   catalogue whose blocks all size themselves, and the handles were verified on the stand in prompt 21.
 - Accepted: one more method on a port the host has to implement. It is one registry lookup.
+
+## ADR-109 — The two control kinds with no control yet render a note, not nothing
+
+**Date** 2026-08-09 · **Prompt** 23 · **Status** Accepted
+
+### Question
+`CONTROL_KINDS` has 23 entries. `packages/ui/src/controls` implements 21 of them: `motion` and
+`effect` are prompts 30–33. `ControlRenderer` is exhaustive by `assertNever`, so both need an arm.
+
+### Criterion (set before measuring)
+Adding a kind must break the build until it is handled — that is the point of `assertNever`. What
+the two unbuilt arms render has to be honest about why a control is missing, and it must not be
+silently absent, because a block that declares a motion control would then show nothing at all with
+no explanation.
+
+### Measurement
+Grepped the catalogue: no block in this build declares a `motion` or `effect` control, so both arms
+are unreachable today and will be reached the moment prompt 30 lands one. The alternatives are
+`return null` (a control that vanishes with no trace) or a `throw` (a block that crashes the panel
+it is being edited in).
+
+### Decision
+Both arms render a muted one-line note naming the prompt that builds them, in the row the control
+would have occupied. When the real control arrives, the arm changes and nothing else does.
+
+### Consequences
+- Accepted: a string in the UI that will be deleted. It is one line, and it is the difference
+  between "not built yet" and "broken".
+
+## ADR-110 — Universal sections order the block's own controls; they do not invent props
+
+**Date** 2026-08-09 · **Prompt** 23 · **Status** Accepted
+
+### Question
+The prompt asks for universal Layout / Style / Typography / Effects / Code sections that are "not
+per-block". A document node holds `props`, `responsive`, `motion` and `effects` — and `props` is
+validated against the block's own schema. What can a universal section write?
+
+### Criterion (set before measuring)
+Every control the inspector shows must be able to commit. Invariant 7 parses a node's props against
+its block schema on the write path, so a control for a prop the block does not declare produces a
+thrown command the moment it is touched.
+
+### Measurement
+Tried it against the three blocks: a universal `opacity` control on a heading dispatches
+`setProp('opacity')`, and `requireProps` rejects the node because `headingSchema` has no such key —
+the edit is refused and the panel has lied. There is no node-level style bag in FILE_FORMAT.md to
+write it to instead, and adding one would be a document-format decision taken from the wrong side.
+
+### Decision
+A universal section is a **canonical group id with a canonical order and label**, filled with the
+block's own controls that declare that group — so every block's inspector reads Layout, Style,
+Typography, Content, then the node-level sections, whatever order the block listed them in. The
+node-level sections are the ones that need no block prop at all: Responsive (the overrides on this
+node at this breakpoint), Effects and Code, both stubs until their prompts.
+
+Capabilities still gate: a section is hidden when the block has no controls in it, and sizing
+controls appear only when `capabilities.resizable` is true and the schema holds the size — the same
+gate ADR-108 put on the canvas handles.
+
+### Consequences
+- Accepted: "universal" means uniform *presentation*, not a uniform set of properties. A heading
+  will never show a border control, because a heading has no border prop, and the honest fix for
+  that is a prop on the block rather than a control in the panel.
+- Accepted: a block that invents a group id gets its own section at the end, labelled from the id.
+
+## ADR-111 — Every prop commits through the throttled path today, because no block reads a variable
+
+**Date** 2026-08-09 · **Prompt** 23 · **Status** Accepted
+
+### Question
+`useControlCommit` has two paths: `onChange` writes a CSS variable on the node element with no React
+and no store, and `onCommit` dispatches a coalesced command. Which props take which?
+
+### Criterion (set before measuring)
+The variable path is only correct when the rendered block actually reads that variable. Writing
+`--ms-opacity` on a node whose component never mentions it changes nothing on screen, so the drag
+would look frozen until release.
+
+### Measurement
+Grepped the three blocks for `var(`: none. Every prop they have is a scale name or a boolean that
+resolves to a Tailwind class, and a class cannot be produced by a variable — ADR-106 recorded the
+same wall from the other side. So the number of props that can preview through a variable today is
+**zero**.
+
+### Decision
+`useControlCommit` takes the variable name from the control descriptor (`options.cssVar`). When it
+is present, `onChange` writes the variable and nothing else; when it is absent — every control in
+this build — `onChange` falls through to a **throttled commit at 30 Hz**, which coalesces into one
+history entry by the same `coalesceKey`. The choice is data on the descriptor, so a block that
+starts reading a variable turns the fast path on without touching this hook.
+
+### Consequences
+- Accepted: a scrub drag on a class-based prop costs a store write every 33 ms rather than none.
+  It is one write, one node re-render, and the canvas root does not render at all (ADR-112).
+- Accepted: the fast path is unexercised by the catalogue and is covered by its own unit test until
+  a block declares a variable.
+
+## ADR-112 — The rect cache subscribes to the scene instead of taking `version` as a prop
+
+**Date** 2026-08-09 · **Prompt** 23 · **Status** Accepted · **Amends** ADR-077
+
+### Question
+`Canvas` reads `scene.version()` during render to hand it to `useRectCache`, which makes the host
+re-render the canvas on every document change. With an inspector drag committing at 30 Hz, what does
+that cost?
+
+### Criterion (set before measuring)
+The prompt's own number: a 200 px slider drag produces **zero** canvas re-renders. Anything the
+canvas root does per commit is measured against that.
+
+### Measurement
+With `version` as a prop, one drag is ~30 commits a second, each re-rendering the canvas root, the
+scene, the artboard and `renderNode(rootId)` — the memo below it stops the cascade, so the cost is
+bounded, but the count is not zero and cannot be. The cache needs the version for one thing only:
+to invalidate geometry when the tree changed. `CanvasScene.subscribe` has existed since ADR-092.
+
+### Decision
+`useRectCache` takes the scene and subscribes: on a notification it compares `scene.version()` with
+the last one it saw and invalidates only when it changed. `Canvas` reads no getter during render,
+and the host drops its `version` subscription. ADR-077 said `version()` is the one getter read
+during render; it is now read in a listener like every other.
+
+### Consequences
+- Accepted: the cache re-measures on document change rather than on the render after it — one frame
+  earlier, and no longer dependent on the host choosing to subscribe.
+- Accepted: a host that never notifies gets a cache that never invalidates. The port's contract says
+  `subscribe` fires when any getter's answer may have changed, and the fixture and the store both do.
