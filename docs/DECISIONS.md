@@ -3786,3 +3786,226 @@ through `viewport.panBy` and committed per press. The canvas introduces no numbe
 - Accepted: each press commits to the store, so holding an arrow writes once per repeat rather than
   once per gesture. A key repeat is ~30 Hz against a wheel's ~120, and unlike a wheel there is no
   event that says the gesture ended.
+## ADR-083 — A snap candidate carries the moving edge it is allowed to match
+
+**Date** 2026-08-09 · **Prompt** 20 · **Status** Accepted
+
+### Question
+`computeSnap` tests every candidate against the moving box's leading edge, centre and trailing edge.
+Equal-spacing candidates are positions for one specific edge. Does the candidate say so, or does the
+resolver special-case the `spacing` kind?
+
+### Criterion (set before measuring)
+A candidate set is correct if every placement it can produce still satisfies the rule that generated
+it. Apply each candidate to each of the three edges and check the rule; a kind that fails for some
+edge needs the restriction, a kind that never fails must not carry one.
+
+### Measurement
+A 100-wide box between a sibling ending at 0 and a sibling starting at 300: the equalising leading
+edge is 100, and the gaps are 100 and 100. The same value applied to the centre places the box at
+50–150 → gaps 50 and 150. Applied to the trailing edge it is 0–100 → gaps 0 and 200. Two of three
+placements break the equality the candidate exists for. Grid multiples, sibling edges, container
+edges and user guides fail none of the three: they are coordinates, and any edge may sit on one.
+
+### Decision
+`SnapCandidate.edge?: 'start' | 'center' | 'end'` — absent means all three. Only the spacing
+generator sets it. The resolver reads the field and knows nothing about kinds.
+
+### Consequences
+- Accepted: a fourth field on a type CANVAS.md published without it, so the document changed first.
+- Accepted: a future generator that is also edge-specific (a baseline snap, say) gets it for free,
+  and the resolver stays a loop over candidates rather than a switch over kinds.
+
+## ADR-084 — Equal-spacing pairs are adjacent openings between siblings that overlap each other
+
+**Date** 2026-08-09 · **Prompt** 20 · **Status** Accepted
+
+### Question
+"If the moving node sits between two siblings" — which pairs of siblings count? All disjoint pairs,
+or only the ones adjacent along the axis? And must the moving box line up with them at all?
+
+### Criterion (set before measuring)
+CANVAS.md § Performance fixes candidates as generated once at drag start. A rule may therefore read
+only data that does not change during the drag. Any rule that reads the moving box's live position
+is disqualified before it is compared on anything else.
+
+### Measurement
+The moving box's perpendicular position changes every frame; the siblings' rects do not. Requiring
+overlap between the two *siblings* reads frozen data only. Requiring overlap between the moving box
+and each sibling — the intuitive rule — would have to be re-evaluated per frame, which is the
+per-frame generation the budget exists to prevent.
+
+On pair count: N siblings sorted along the axis have N−1 adjacent openings and up to N(N−1)/2
+disjoint pairs — 4 against 10 at N = 5. The six extra pairs at N = 5 are positions that place the
+moving box on top of the sibling the pair skips over.
+
+### Decision
+Sort siblings by their leading edge; take consecutive pairs; keep the pair when the two siblings
+overlap on the perpendicular axis and the opening is wider than the moving box (gap > 0). One
+candidate per surviving opening, per axis.
+
+### Consequences
+- Accepted: dragging a box into a column of siblings that do not overlap the moving row produces no
+  spacing candidate, even when the eye would accept one. The alternative reads live geometry.
+- Accepted: a flush position (gap exactly 0) is not offered as an equal-spacing snap. The two
+  sibling edges are already `edge` candidates there, so the position is still reachable.
+
+## ADR-085 — A spacing snap draws its two distance bars and no line
+
+**Date** 2026-08-09 · **Prompt** 20 · **Status** Accepted
+
+### Question
+Every other snap kind draws a line at the matched coordinate. Does a spacing snap draw one too, in
+addition to the two distance labels?
+
+### Criterion (set before measuring)
+A guide exists to show *what the box aligned to*. A line is justified when at least one other thing
+on screen shares that coordinate; a line that coincides with nothing shows nothing and costs
+readability, which is why the lines are bounded rather than full-viewport in the first place.
+
+### Measurement
+For a spacing candidate the matched coordinate is the moving box's own leading edge after the snap.
+The two siblings that produced it are `gap` away on either side — by construction, since the whole
+point is that the gaps are equal and non-zero. Nothing in the candidate set shares the coordinate.
+
+### Decision
+A spacing guide carries its two gaps and no line. `SnapGuides` draws the guides whose gap list is
+empty; `DistanceLabels` draws the gaps.
+
+### Consequences
+- Accepted: a snap fires with no line on screen, which looks different from the other four kinds.
+  The two bars with equal numbers are the feedback, and they are more specific than a line would be.
+- Accepted: `SnapGuide.gaps` being non-empty is what routes a guide to the other renderer, so a
+  future kind that wants both a line and a label needs that split revisited.
+
+## ADR-086 — The viewport variables are written on the canvas root, not on the scene
+
+**Date** 2026-08-09 · **Prompt** 20 · **Status** Accepted
+
+### Question
+Rulers, their labels and user guides sit in the overlay layer, which is outside the scene transform
+on purpose, and they still have to follow pan and zoom. A custom property written on the scene
+cannot be read by a sibling. Where does the transform live?
+
+### Criterion (set before measuring)
+Cheapest per frame, counted in DOM writes: pan and zoom are the two gestures with a per-frame budget
+(PERFORMANCE.md § The core rule), and elements whose position is a pure function of the transform
+must cost O(1) writes, not O(elements).
+
+### Measurement
+Three mechanisms, counted on a 1440-wide artboard at 100 % zoom, where the top ruler shows 15
+labels and there are a handful of user guides:
+
+- Variables on the canvas root, overlays positioned with `calc()`: **4** `setProperty` per frame —
+  the same four already written today, on a different element.
+- Variables duplicated onto the overlay layer: **8** per frame.
+- Overlays subscribed to the transform and positioned in JS: **~40** style writes per frame, growing
+  with the document and the zoom level.
+
+### Decision
+`useViewport` writes `--ms-vp-x`, `--ms-vp-y`, `--ms-vp-zoom` and `--ms-vp-grid-opacity` on the
+element behind `rootRef`. The scene inherits them and its `transform` is unchanged. `will-change`
+stays on the scene, which is the element that is actually transformed.
+
+### Consequences
+- Accepted: every element inside the canvas root can now read the transform, including rendered
+  blocks. A block that read `--ms-vp-zoom` would be coupling itself to the editor, and export would
+  drop the variable and change the layout. Nothing does today; it is worth watching.
+- Accepted: prompt 18's tests asserted the variables on the scene element and were updated.
+
+## ADR-087 — User guides reach the canvas as a prop, because no store owns them yet
+
+**Date** 2026-08-09 · **Prompt** 20 · **Status** Accepted
+
+### Question
+CANVAS.md § Guides said user guides "are stored in the document". Where does `packages/canvas` read
+and write them?
+
+### Criterion (set before measuring)
+ENGINEERING_CONTRACT.md § 8 gives the `.motion` schema to FILE_FORMAT.md. If the field exists there,
+the canvas reads the document; if it does not, the canvas cannot invent one, because that would be
+`packages/canvas` deciding the file format.
+
+### Measurement
+A search for "guide" across `packages/schema/src` returns nothing, and FILE_FORMAT.md defines no
+guides field. The store has `viewport.guides = { enabled, snapThreshold }` — the toggle and the
+threshold, not a list. So no storage for user guides exists anywhere in the repository today, and
+creating one is a format change with a migration.
+
+### Decision
+`CanvasProps.guides?: { guides, add, move, remove }` — the same seam as the selection port. CANVAS.md
+was corrected in the same commit: the canvas holds no storage and the host decides where they live.
+
+### Consequences
+- Accepted: guides do not survive a reload until a host stores them. The canvas is complete and the
+  hole is named, rather than half a feature landing in the schema on the way past.
+- Accepted: when the field is added to the format, the host wires the prop to it and the canvas does
+  not change.
+
+## ADR-088 — Ruler ticks come off the 1-2-5 ladder at a 100 px minimum
+
+**Date** 2026-08-09 · **Prompt** 20 · **Status** Accepted
+
+### Question
+The build plan fixes three points: major ticks every 100 canvas units at 100 % zoom, every 500 at
+25 %, every 50 at 200 %. What rule produces exactly those, at every zoom in between?
+
+### Criterion (set before measuring)
+One rule with no table of exceptions, reproducing all three stated points, and with the minimum
+spacing derived rather than picked: the acceptable values are whatever interval satisfies all three
+constraints, and the choice inside it must be stated.
+
+### Measurement
+With the 1-2-5 ladder (`… 20, 50, 100, 200, 500 …`) and a rule of "smallest step at least S screen
+px wide", each stated point becomes an interval for S:
+
+- zoom 2 → 50 must win over 20: S ∈ (40, 100]
+- zoom 1 → 100 must win over 50: S ∈ (50, 100]
+- zoom 0.25 → 500 must win over 200: S ∈ (50, 125]
+
+Intersection: **S ∈ (50, 100]**. Any value in it gives all three. Minor subdivision by leading
+digit — 1 → 10 parts, 2 → 4, 5 → 5 — keeps a minor tick between 10 and 62 screen px across the
+whole range, so it never collapses into its neighbour.
+
+### Decision
+`MIN_MAJOR_SPACING_PX = 100`, the upper end of the interval and the only round number in it. Fewer
+labels for the same correctness, and a 4-digit label at 10 px type is ~24 px wide, so a major tick
+carries three label widths of air.
+
+### Consequences
+- Accepted: the ladder skips 25 and 250, so a document laid out on a 25 unit rhythm never sees a
+  label on its own multiples. The grid, not the ruler, is what a layout is aligned against.
+- Accepted: S is at the top of its window, so the step changes as late as possible while zooming
+  out. One more label per screen at the moment of the switch was preferred to switching early.
+
+## ADR-089 — The snap session hook ships with the engine, before anything drags
+
+**Date** 2026-08-09 · **Prompt** 20 · **Status** Accepted
+
+### Question
+The deliverables for this prompt are pure functions and overlay components. Two of the acceptance
+criteria — `Cmd` disabling snapping live mid-drag, and guides appearing on the frame the snap
+engages — are properties of a gesture, and no file in the list owns one.
+
+### Criterion (set before measuring)
+The deliverable list is a floor. A `Done when` box that cannot be checked without a file the list
+omits is a gap in the list; skipping the box instead would be the deferral this repository's
+decision rules ban.
+
+### Measurement
+Candidate generation must happen once per gesture and the modifier must be read per frame, so
+something has to hold state between `begin` and `end`. Nothing does: `computeSnap` is pure by
+specification, and node dragging does not exist — the document model has no coordinates, which
+ADR-057 recorded and ADR-080 met again from the keyboard.
+
+### Decision
+`snap/use-snap.ts`: `begin` freezes the candidates and seeds the modifier from the initiating event,
+`move` resolves and paints inside one `rAF`, `end` clears. `Ctrl`/`Cmd` is tracked with window
+`keydown`/`keyup` for the length of the session, so releasing it repaints without a pointer move.
+
+### Consequences
+- Accepted: the hook has no production caller until the drag layer arrives in the drag-and-drop
+  prompts. It is exercised by unit tests and by a temporary harness in the browser, and that is the
+  honest state of it rather than a claim that dragging snaps today.
+- Accepted: one file beyond the deliverable list, and it is where the two gesture-shaped acceptance
+  criteria are actually tested.

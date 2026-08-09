@@ -73,7 +73,9 @@ Three decisions worth stating:
 
 1. **The scene transform is driven by CSS variables**, so pan and zoom during a gesture are
    variable writes at `rAF` rate with no React render. `transform` on a single element composites
-   on the GPU.
+   on the GPU. The variables are written on `canvas-root` rather than on the scene: overlays are
+   outside the transform and still have to follow it — a user guide, a ruler tick — and a custom
+   property inherits down, so one write on the common ancestor serves both subtrees.
 
 2. **`scale()` comes before `translate()`, and the origin is the top-left corner.** The
    conversions in § Coordinate spaces define screen as `(canvas + pan) * zoom`, which is exactly
@@ -161,6 +163,13 @@ export interface SnapCandidate {
   value: number                 // canvas coordinate
   kind: 'grid' | 'edge' | 'center' | 'guide' | 'spacing'
   sourceId?: NodeId
+  /** Which edge of the moving box may match. Absent means any of start, centre, end. */
+  edge?: 'start' | 'center' | 'end'
+  /** Perpendicular extent of whatever produced the candidate — what bounds the guide. */
+  from?: number
+  to?: number
+  /** Spacing only: the equalised gap and the two sibling edges it sits between. */
+  spacing?: { gap: number; before: number; after: number }
 }
 
 export interface SnapResult {
@@ -169,11 +178,21 @@ export interface SnapResult {
 }
 
 export function computeSnap(
-  moving: Rect,
+  moving: CanvasRect,
   candidates: readonly SnapCandidate[],
-  threshold: number,             // screen px, converted to canvas units by the caller
+  threshold: number,             // canvas units — the caller divides the screen threshold by zoom
 ): SnapResult
 ```
+
+The rects are `CanvasRect`, not the unbranded `Rect`: candidate values are canvas coordinates, and
+the brand is what stops a screen rect from the rect cache being compared against them. The caller
+converts with `screenRectToCanvas`.
+
+An `edge` restriction exists because not every candidate is a line the whole box may align to. A
+grid multiple, a sibling edge, a container centre and a user guide are all positions any of the
+three moving edges may land on, so they carry no restriction. An equal-spacing value is a position
+for the **leading** edge specifically — matching it against the centre or the trailing edge would
+snap the box to a place where the two gaps are not equal.
 
 Candidate generation per drag (not per frame — computed once at drag start, since siblings do
 not move):
@@ -184,7 +203,8 @@ not move):
 4. **User guides** — dragged from the rulers.
 5. **Equal spacing** — if the moving node sits between two siblings, the position that makes the
    two gaps equal. This is the snap that makes layouts look designed, and it is the one most
-   builders skip.
+   builders skip. The pairs are the siblings adjacent along the axis that overlap each other on the
+   perpendicular one, so a list of siblings produces one candidate per opening between them.
 
 Selection rules:
 - Threshold is **4 px in screen space**, so it feels identical at every zoom level. Convert:
@@ -206,12 +226,28 @@ Rendered in screen space:
   later one — bounded, not full-viewport, so multiple guides stay readable.
 - Centre alignments render dashed.
 - When a spacing snap fires, a label shows the matched gap (`24`) at each gap's midpoint with
-  small end caps.
+  small end caps. A spacing snap draws **only** those two bars: the line would sit on the moving
+  box's own edge, which is aligned with nothing, and the equality is the thing being shown.
 - Guides appear on the frame the snap engages and are removed on drop. No fade — a fading guide
   reads as lag.
 
 User guides: drag from a ruler to create; drag back onto the ruler to delete; double-click a
-guide to enter an exact value; guides are stored in the document and export as nothing.
+guide to enter an exact value; they export as nothing.
+
+The canvas does not own them. They arrive as a prop with `add` / `move` / `remove` alongside, the
+same seam as the selection port, because where they are stored is the host's question and the
+`.motion` file that FILE_FORMAT.md defines has no field for them. A canvas that wrote them into the
+document would be deciding the file format from the wrong package.
+
+### Rulers
+
+Both axes, 24 px, drawn in the overlay layer with a cursor marker. Major tick spacing is chosen
+from the 1-2-5 ladder (`… 50, 100, 200, 500 …`) as the smallest step at least 100 screen px wide,
+which is 100 canvas units at 100 %, 500 at 25 % and 50 at 200 %. Minor ticks subdivide the major
+into 10, 4 or 5 depending on its leading digit, so a minor tick is never narrower than 10 px.
+
+Ticks are a repeating gradient and labels are positioned with `calc()` over the viewport
+variables, so panning and zooming move them without a render.
 
 ## Hit testing
 
@@ -350,7 +386,7 @@ See [ACCESSIBILITY.md](ACCESSIBILITY.md).
 export { Canvas } from './canvas'
 export { useViewport, useViewportTransform } from './viewport'
 export { screenToCanvas, canvasToScreen, zoomAt, fitToRect } from './coords'
-export { computeSnap, generateSnapCandidates } from './snap'
+export { computeSnap, generateSnapCandidates, useSnap, majorTickStep } from './snap'
 export { useRectCache } from './rects'
 export type { ViewportTransform, SnapResult, ScreenPoint, CanvasPoint } from './types'
 ```
