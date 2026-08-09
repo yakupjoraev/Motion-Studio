@@ -4800,3 +4800,94 @@ storage is not a reason to fail to open the studio.
 - Accepted: the state is per browser rather than per document, which is what a user expects of a
   panel and not of a property.
 - Accepted: a second surface with section state — the left panel — will use the same key shape.
+
+## ADR-115 — A block declares what its parent must be, and the inspector says so
+
+**Date** 2026-08-09 · **Prompt** 24 · **Status** Accepted
+
+### Question
+A fluid `spacer` is `flex-1`, which does nothing at all inside a parent that is not a flex container.
+The prompt is explicit that silently doing nothing is the worst option. Where does that requirement
+live, and who says it out loud?
+
+### Criterion (set before measuring)
+The answer has to be readable by the inspector and by the drop-target logic that arrives with the
+drag-and-drop prompts, without either of them holding a list of block ids — the same rule ADR-108
+applied to resizing.
+
+### Measurement
+`BlockCapabilities` carries `resizable`, `fullWidth`, `requiresBackdrop`, `supportsMotion`,
+`costClass` and `minWidth`: every one of them a fact about the block that a surface reads rather
+than infers. `requiresBackdrop` is the exact precedent — a glass block needs something behind it, a
+fluid spacer needs a flex parent, and both are "this block only works in a certain context".
+
+### Decision
+`BlockCapabilities` gains `requiresFlexParent?: boolean`. `spacer` sets it, the inspector renders a
+hint on the control that turns fluid mode on, and prompt 28's drop resolution can read the same
+field rather than growing a special case for one block id.
+
+### Consequences
+- Accepted: a capability that one block uses today. It is a fact about a block, and the alternative
+  is the hard-coded list this repository has been avoiding since ADR-108.
+- Accepted: the hint is written on the control, so it is one string in the block's own metadata
+  rather than a rule in the panel.
+
+## ADR-116 — `grid`'s auto-fit minimum is a scale, not a length
+
+**Date** 2026-08-09 · **Prompt** 24 · **Status** Accepted
+
+### Question
+The prompt asks for `minItemWidth` behind `repeat(auto-fit, minmax(var(--min-item), 1fr))`, and for
+both grid modes to export to clean Tailwind. Can that minimum be a free length?
+
+### Criterion (set before measuring)
+The emitted class has to exist. Tailwind generates an arbitrary value only when it can see the
+literal in the source, and a value read out of a document at runtime is never literal at build time
+— ADR-106 recorded the same wall for padding.
+
+### Measurement
+Three ways out. A CSS variable on the element (`grid-cols-[repeat(auto-fit,minmax(var(--min),1fr))]`
+plus a `style` attribute) exports as a class **and** an inline style, which rule 3 bans and which
+makes the emitted file harder to read than the thing it replaced. An inline `grid-template-columns`
+has the same problem without the class. A named scale is one lookup into a frozen map of literal
+classes, and the four steps that matter — 12, 16, 20, 24 rem — cover the card widths this mode is for.
+
+### Decision
+`minItemWidth` is an enum over `sm | md | lg | xl`, mapped to literal
+`grid-cols-[repeat(auto-fit,minmax(Nrem,1fr))]` classes. Explicit mode maps to `grid-cols-N`. Both
+are static classes, so both export as themselves.
+
+### Consequences
+- Accepted: a user cannot ask for a 17 rem minimum. The scale is the design system holding, and the
+  `css` control kind is the escape hatch when the playground lands.
+- Accepted: the class map and the enum are edited together, which the block's own test asserts.
+
+## ADR-117 — `hidden` is a prop on the blocks that have one, not a universal control
+
+**Date** 2026-08-09 · **Prompt** 24 · **Status** Accepted
+
+### Question
+RESPONSIVE_ENGINE.md § Which properties are responsive says `hidden` is responsive and stored as a
+prop rather than as the node flag, so that an override emits `hidden md:block`. Which blocks get it?
+
+### Criterion (set before measuring)
+Same rule as ADR-110: a control may only write a prop the block's schema declares, because invariant
+7 parses the write. A universal `hidden` control would throw on every block that does not have one.
+
+### Measurement
+The document already has `node.hidden`, which is the editor's own "hide this while I work" and is
+not exported. The prop is a different fact — "this is not shown at this breakpoint" — and it has to
+reach the exporter. Adding it to all seven layout blocks is seven schema entries and seven class map
+rows; adding it to `BlockDefinition` as a universal would put it on all 62 blocks including the ones
+whose parent controls their visibility.
+
+### Decision
+The structural blocks that a user hides per breakpoint — `section`, `container`, `stack`, `grid`,
+`columns`, `spacer`, `divider` — declare `hidden` in their own schemas, responsive, mapped to
+`hidden` / `block` classes. The node flag keeps its own meaning and its own place in the layers tree.
+
+### Consequences
+- Accepted: two things called hidden. They are different facts with different lifetimes, and the
+  layers tree eye icon is the flag while the inspector's control is the prop.
+- Accepted: every later block that wants it declares it. The alternative is a universal control that
+  most blocks would reject on write.
