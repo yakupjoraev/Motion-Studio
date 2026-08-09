@@ -12,7 +12,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@motion-studio/blocks": "workspace:*",
+    "@motion-studio/canvas": "workspace:*",
+    "@motion-studio/editor": "workspace:*",
     "@motion-studio/icons": "workspace:*",
+    "@motion-studio/schema": "workspace:*",
     "@motion-studio/theme": "workspace:*",
     "@motion-studio/tokens": "workspace:*",
     "@motion-studio/ui": "workspace:*",

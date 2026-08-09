@@ -73,6 +73,8 @@ export function OverlayLayer({
   )
 
   const single = ids.length === 1 ? ids[0] : undefined
+  // ADR-108: handles on a block that cannot take a size would be a gesture with nowhere to commit.
+  const sizeable = single !== undefined && resize?.resizable(single) === true
   const altHeld = useAltHeld()
   const resizing = useResize({
     rootRef,
@@ -106,7 +108,9 @@ export function OverlayLayer({
           primary={ids.length === 1}
         />
       ))}
-      {single !== undefined && <ResizeHandles id={single} painter={painter} resize={resizing} />}
+      {single !== undefined && sizeable && (
+        <ResizeHandles id={single} painter={painter} resize={resizing} />
+      )}
       {altHeld &&
         ids.map((id) => <SpacingOverlay id={id} key={id} painter={painter} scene={scene} />)}
       {children}

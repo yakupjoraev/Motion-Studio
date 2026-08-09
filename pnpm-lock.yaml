@@ -93,9 +93,21 @@ importers:
 
   apps/web:
     dependencies:
+      '@motion-studio/blocks':
+        specifier: workspace:*
+        version: link:../../packages/blocks
+      '@motion-studio/canvas':
+        specifier: workspace:*
+        version: link:../../packages/canvas
+      '@motion-studio/editor':
+        specifier: workspace:*
+        version: link:../../packages/editor
       '@motion-studio/icons':
         specifier: workspace:*
         version: link:../../packages/icons
+      '@motion-studio/schema':
+        specifier: workspace:*
+        version: link:../../packages/schema
       '@motion-studio/theme':
         specifier: workspace:*
         version: link:../../packages/theme
@@ -161,16 +173,50 @@ importers:
   e2e: {}
 
   packages/blocks:
+    dependencies:
+      '@motion-studio/schema':
+        specifier: workspace:*
+        version: link:../schema
+      '@motion-studio/utils':
+        specifier: workspace:*
+        version: link:../utils
+      class-variance-authority:
+        specifier: ^0.7.1
+        version: 0.7.1
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
     devDependencies:
       '@motion-studio/config':
         specifier: workspace:*
         version: link:../config
+      '@storybook/react':
+        specifier: ^8.6.14
+        version: 8.6.18(@storybook/test@8.6.18(storybook@8.6.18))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(storybook@8.6.18)(typescript@5.6.3)
+      '@testing-library/jest-dom':
+        specifier: ^7.0.0
+        version: 7.0.0(@testing-library/dom@10.4.1)
+      '@testing-library/react':
+        specifier: ^16.3.2
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@types/react':
+        specifier: ^19.2.18
+        version: 19.2.18
       '@vitest/coverage-v8':
         specifier: ^2.1.9
         version: 2.1.9(vitest@2.1.9(@types/node@26.1.2)(jsdom@25.0.1)(lightningcss@1.32.0))
+      jest-axe:
+        specifier: ^11.0.0
+        version: 11.0.0
       jsdom:
         specifier: ^25.0.1
         version: 25.0.1
+      react:
+        specifier: ^19.2.8
+        version: 19.2.8
+      react-dom:
+        specifier: ^19.2.8
+        version: 19.2.8(react@19.2.8)
       vitest:
         specifier: ^2.1.9
         version: 2.1.9(@types/node@26.1.2)(jsdom@25.0.1)(lightningcss@1.32.0)

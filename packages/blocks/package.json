@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./registry": "./src/registry.ts",
     "./package.json": "./package.json"
   },
   "scripts": {
@@ -12,10 +13,27 @@
     "test": "vitest run --passWithNoTests",
     "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "@motion-studio/schema": "workspace:*",
+    "@motion-studio/utils": "workspace:*",
+    "class-variance-authority": "^0.7.1",
+    "zod": "^3.23.8"
+  },
+  "peerDependencies": {
+    "react": ">=19",
+    "react-dom": ">=19"
+  },
   "devDependencies": {
     "@motion-studio/config": "workspace:*",
+    "@storybook/react": "^8.6.14",
+    "@testing-library/jest-dom": "^7.0.0",
+    "@testing-library/react": "^16.3.2",
+    "@types/react": "^19.2.18",
     "@vitest/coverage-v8": "^2.1.9",
+    "jest-axe": "^11.0.0",
     "jsdom": "^25.0.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "vitest": "^2.1.9"
   }
 }

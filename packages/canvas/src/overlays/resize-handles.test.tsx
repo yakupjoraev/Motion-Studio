@@ -30,7 +30,7 @@ const frames = (count = 4): void => {
 const mount = (commit = vi.fn(), zoom = 1) => {
   const fake: FakeScene = fakeScene({ root: { children: ['hero'] }, hero: { name: 'Hero' } })
   const view = renderCanvas(fake, {
-    resize: { commit },
+    resize: { commit, resizable: () => true },
     initialTransform: { zoom, pan: { x: 0, y: 0 } },
   })
 
@@ -135,10 +135,19 @@ describe('ResizeHandles', () => {
     expect(screen.getByTestId('resize-handles').dataset['zoomedOut']).toBe('false')
   })
 
+  it('leaves the handles off a block that cannot take a size — ADR-108', () => {
+    const fake = fakeScene({ root: { children: ['hero'] }, hero: { name: 'Hero' } })
+
+    renderCanvas(fake, { resize: { commit: vi.fn(), resizable: () => false } })
+    act(() => fake.setSelection([fake.id('hero')]))
+
+    expect(screen.queryByTestId('resize-handles')).not.toBeInTheDocument()
+  })
+
   it('leaves the handles out of a multi-selection', () => {
     const fake = fakeScene({ root: { children: ['a', 'b'] }, a: {}, b: {} })
 
-    renderCanvas(fake, { resize: { commit: vi.fn() } })
+    renderCanvas(fake, { resize: { commit: vi.fn(), resizable: () => true } })
     act(() => fake.setSelection([fake.id('a'), fake.id('b')]))
 
     expect(screen.queryByTestId('resize-handles')).not.toBeInTheDocument()

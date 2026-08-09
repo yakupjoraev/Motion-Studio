@@ -76,6 +76,11 @@ export interface CanvasSize {
 }
 
 export interface CanvasResizePort {
+  /**
+   * ADR-108. Whether this node can take a size at all — the block's `capabilities.resizable`. The
+   * canvas cannot answer it: capabilities live in the registry, which is the host's to import.
+   */
+  resizable(id: NodeId): boolean
   /** One `setProp` per finished gesture, applied synchronously like the selection port. */
   commit(id: NodeId, size: CanvasSize): void
 }

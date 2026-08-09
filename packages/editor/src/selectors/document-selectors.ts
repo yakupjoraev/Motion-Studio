@@ -79,10 +79,14 @@ export const selectFlatLayers = createVersionedSelector<EditorState, readonly La
  * The node with its responsive overrides folded in for the active breakpoint —
  * RESPONSIVE_ENGINE.md § Resolution. Memoised per call site, which is one node: the canvas creates
  * one of these per rendered node and the inspector one for the selection.
+ *
+ * The key is **this node**, not the document. Immer shares structure, so an untouched node keeps its
+ * identity across an edit somewhere else — and keying on the document instead would allocate a new
+ * object for all 200 nodes on every keystroke, which is a re-render each.
  */
 export const selectResolvedNode = (id: NodeId): ((state: EditorState) => Node | undefined) =>
   createVersionedSelector<EditorState, Node | undefined>(
-    (state) => [state.document, state.viewport.breakpoint],
+    (state) => [state.document.nodes[id], state.viewport.breakpoint],
     (state) => {
       const node = state.document.nodes[id]
 

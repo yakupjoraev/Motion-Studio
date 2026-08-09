@@ -1,4 +1,4 @@
-import type { ZodType } from 'zod'
+import type { ZodType, ZodTypeDef } from 'zod'
 
 import type { BlockId } from '../ids/ids'
 import type { MotionChannel, MotionSpec } from '../motion/motion.types'
@@ -131,7 +131,12 @@ export interface BlockDefinition<P = UnknownProps> {
   /** An icon *name*, not a component: this file stays free of React. */
   readonly icon: string
 
-  readonly propsSchema: ZodType<P>
+  /**
+   * The input type is `unknown` on purpose: a schema whose props carry `.default()` parses a partial
+   * object into a complete one, so its input is not its output, and pinning both would reject every
+   * schema in the catalogue.
+   */
+  readonly propsSchema: ZodType<P, ZodTypeDef, unknown>
   readonly defaults: P
   /** What the palette thumbnail shows. */
   readonly previewProps: P

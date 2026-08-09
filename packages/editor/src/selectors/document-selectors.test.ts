@@ -131,7 +131,21 @@ describe('selectResolvedNode', () => {
     expect(select(editor.getState())?.props).toEqual({ gap: 24, align: 'start' })
   })
 
-  it('memoises on the document and the breakpoint together', () => {
+  it('keeps its reference when a different node changed', () => {
+    const editor = createTestStore({
+      document: doc(tree({ root: ['a'], a: [] }), { rootId: id('root') }),
+    })
+    const select = selectResolvedNode(id('a'))
+    const first = select(editor.getState())
+
+    editor.getState().dispatch(renameRoot('Renamed'))
+
+    // Immer shares structure, so node `a` is the same object after the root was renamed — and a
+    // renderer subscribed to this selector must not re-render because another node was edited.
+    expect(select(editor.getState())).toBe(first)
+  })
+
+  it('memoises on the node and the breakpoint together', () => {
     const editor = createTestStore({ document: responsive() })
     const select = selectResolvedNode(id('root'))
     const first = select(editor.getState())
