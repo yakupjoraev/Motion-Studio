@@ -4741,3 +4741,62 @@ during render; it is now read in a listener like every other.
   earlier, and no longer dependent on the host choosing to subscribe.
 - Accepted: a host that never notifies gets a cache that never invalidates. The port's contract says
   `subscribe` fires when any getter's answer may have changed, and the fixture and the store both do.
+
+## ADR-113 — `dispatchBatch` takes a coalesce key
+
+**Date** 2026-08-09 · **Prompt** 23 · **Status** Accepted
+
+### Question
+An inspector edit over a multi-selection is one command per node, dispatched together. During a drag
+that batch repeats thirty times a second. UI_GUIDELINES.md § Multi-selection requires one undo step
+for the whole gesture. How?
+
+### Criterion (set before measuring)
+One history entry per gesture, for one node and for five, and no transaction left open across a
+gesture that a thrown handler could strand.
+
+### Measurement
+Three mechanisms exist. `dispatch` coalesces by `Command.coalesceKey`, but one command per node
+gives one entry per node. `dispatchBatch` writes one entry for the batch and passes `null` as the
+key, so thirty batches are thirty entries. `beginTransaction` / `endTransaction` accumulates
+correctly, and the history slice warns in development when a transaction outlives a macrotask —
+which a two-second drag does, every time, by design.
+
+### Decision
+`dispatchBatch(commands, label, coalesceKey?)`. The inspector passes
+`inspector:<path>:<breakpoint>`, so the store's existing 400 ms coalescing merges a drag into the
+entry its first frame opened. No transaction is opened and none can be left open.
+
+### Consequences
+- Accepted: two gestures on the same property less than 400 ms apart merge into one undo step. That
+  is what the coalescing window is for, and it is the rule a single-node scrub already followed.
+- Accepted: the parameter is optional, so every existing caller — a paste, a wrap — still writes one
+  uncoalesced entry.
+
+## ADR-114 — Inspector section state persists in `localStorage`, not in the document
+
+**Date** 2026-08-09 · **Prompt** 23 · **Status** Accepted
+
+### Question
+Which inspector sections are open must survive a reload. The document persistence layer is prompt 50
+and writes to IndexedDB. Where does panel furniture go?
+
+### Criterion (set before measuring)
+The `.motion` file is what a user shares and what the exporter reads. Anything stored in it has to be
+something another person opening that file would want.
+
+### Measurement
+FILE_FORMAT.md has no field for panel state, and adding one would put "was Layout open" into every
+exported document and every diff. The state is small — a boolean per section id — synchronous to
+read, and needed before the first paint of the panel, which rules out the debounced IndexedDB path
+prompt 50 builds for the document.
+
+### Decision
+One `localStorage` key, `motion-studio.inspector.sections`, hydrated into the ui slice on mount and
+written back on change. Both directions are wrapped in `try`, because a private window that refuses
+storage is not a reason to fail to open the studio.
+
+### Consequences
+- Accepted: the state is per browser rather than per document, which is what a user expects of a
+  panel and not of a property.
+- Accepted: a second surface with section state — the left panel — will use the same key shape.
