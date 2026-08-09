@@ -107,8 +107,19 @@ switch handles it — that is the feature.
 
 - Function declarations, named exports. No `React.FC`.
 - Props interface named `<Component>Props`, exported.
-- One component per file. Sub-components used only by it may live in the same file if the file
-  stays under 300 lines; otherwise a sibling file.
+- **One component per file, and split early.** The 300-line ceiling in
+  [ENGINEERING_CONTRACT.md](ENGINEERING_CONTRACT.md) § 1 is a limit, not a target — a component well
+  under it is still too big when it holds several things at once.
+
+  The test is whether a piece of the markup **has a name you can say out loud**: "the terminal
+  window", "the attribution under a quote", "one line of code", "the copy button", "the placeholder
+  plate". If it does, it is a component, and it goes in its own file in the same directory.
+
+  Three things this buys, and none of them is tidiness: a named piece is a piece you can test
+  directly; a small component's props are its own contract rather than five of the parent's
+  variables; and a lint suppression lands next to the element it is about instead of twenty lines
+  above it. A parent whose `return` is a list of named children reads in one pass — one with five
+  levels of nesting does not, whatever its line count says.
 - No inline object/array/function props on hot paths (canvas nodes, list rows). Hoist or
   `useCallback`.
 - `memo` only where measured: canvas node renderers, layer rows, block cards. Not by default.

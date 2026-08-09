@@ -5047,3 +5047,110 @@ not been told — the same three-state shape the generated token stylesheet alre
 - Accepted: the aurora fields deliberately do *not* do this. They are checked in both modes and read
   correctly in both, because a large blurred field of a mid-lightness hue is a wash either way —
   which is a different thing from a highlight and needed no correction.
+
+## ADR-122 — Rich text is stored as an AST, and the string sanitiser keeps its own job
+
+**Date** 2026-08-09 · **Prompt** 26 · **Status** Accepted
+
+### Question
+ADR-051 settled that rich text is sanitised twice against one policy and stored as a restricted HTML
+string. Prompt 26 says the stored value must be an AST and calls the boundary non-optional. Which is
+right, and does adopting an AST supersede ADR-051?
+
+### Criterion (set before measuring)
+FILE_FORMAT.md § Security names rich text the most likely XSS vector in the product. The test is
+therefore not "does the sanitiser reject today's payloads" — both forms do — but **what the render
+path has to be right about**. Count the parsers on the path from a stored value to the screen: each
+one is something that has to agree with a browser about every malformed input ever written.
+
+### Measurement
+Storing a string: the value is sanitised on import, sanitised again on paste, and then reaches the
+page through `dangerouslySetInnerHTML` — a *browser* parse of attacker-influenced markup, at render
+time, on every render. Safety depends on the sanitiser and the browser parser agreeing, which is
+exactly the class of bug that mutation-XSS lives in.
+
+Storing an AST: the value is parsed once, at the edge, into a tree of five node kinds. The renderer
+maps those to React elements. There is **no HTML parser on the render path at all** — a node the
+parser cannot produce cannot be rendered, whatever the input looked like. The prompt's other
+requirement, lists, also falls out: the string policy drops `ul`/`ol`/`li` because it cannot express
+structure, and the AST has a place for it.
+
+### Decision
+`packages/schema/src/rich-text/` holds the AST types, its Zod schema, `parseRichText` (DOM-free) and
+`richTextToHtml` (for the editing surface). The `rich-text` block renders React elements from the
+tree and contains no `dangerouslySetInnerHTML`.
+
+ADR-051 is **not superseded**. Its subject is the `html`-keyed props FILE_FORMAT.md § Security
+already covers and the clipboard path in `packages/ui`; both keep the string sanitiser and both keep
+the same policy. The AST is the *document's* representation, which is a different question from how
+a paste is cleaned.
+
+### Consequences
+- Accepted: two representations of the same idea. They are joined by `parseRichText` /
+  `richTextToHtml`, and the round trip is asserted by a test — a trip that loses a mark loses work.
+- Accepted: the `richText` control still edits HTML, so the inspector converts at the commit boundary.
+  That seam is the one place a bug could reintroduce markup, and it is one function wide.
+- Accepted: the tree is deliberately shallow — marks are a set on a run, a link holds runs — so
+  nothing recursive has to be validated or rendered. Nested formatting beyond that is not expressible.
+
+## ADR-123 — `stat`'s sparkline rounds its coordinates
+
+**Date** 2026-08-09 · **Prompt** 26 · **Status** Accepted
+
+### Question
+`sparklinePath` normalises a numeric series into a fixed viewBox. At what precision?
+
+### Criterion (set before measuring)
+Prompt 26 requires the thumbnail generator to produce byte-identical output across two runs, and a
+thumbnail renders `previewProps` — so any float in the markup is a float in the comparison. The
+precision has to be the smallest that is visually indistinguishable in a 320 × 200 thumbnail.
+
+### Measurement
+The viewBox is 100 × 32 and a thumbnail is 320 px wide, so one viewBox unit is about 3 px. Two
+decimals is 0.03 px of positioning — an order of magnitude below a device pixel. Unrounded, the same
+series produces a path string roughly four times longer whose last digits are platform-dependent.
+
+### Decision
+Coordinates round to two decimals. The block's own test asserts it, so the property is checked in the
+package that owns it rather than only in the generator that depends on it.
+
+### Consequences
+- Accepted: a series of 64 points on a 4 K display could in principle quantise visibly. It cannot at
+  the sizes a sparkline is drawn at, and the alternative is a repository that churns on every run.
+
+## ADR-124 — `code-block` highlights with a small tokeniser, not `shiki`
+
+**Date** 2026-08-09 · **Prompt** 26 · **Status** Accepted
+
+### Question
+Prompt 26 asks for `shiki` at build time for known content plus a lightweight runtime highlighter for
+user-entered code. Is that two highlighters, one, or a different one?
+
+### Criterion (set before measuring)
+Two things decide it and both are checkable: what the studio's first-load budget can afford
+(ENGINEERING_CONTRACT.md § 6: 250 kB), and whether the "build time" half has any content to apply to
+inside an editor.
+
+### Measurement
+Code in a canvas is typed by the user, so there is no build-time content to pre-highlight — the
+build-time half of the idea has no subject. That leaves the runtime highlighter, and `shiki` at
+runtime means a WASM regex engine plus a grammar per language. Measured against the budget the studio
+was already at 244.9 kB gzip with 9 content blocks and 6 heroes; the whole `code-block` directory,
+tokeniser included, is what fits — and it is loaded on demand anyway.
+
+What a code sample on a marketing page needs is five colours that make structure legible: comment,
+string, number, keyword, and everything else. That is what the tokeniser produces, for eight
+languages, in under 120 lines.
+
+### Decision
+A hand-written tokeniser in `code-block/highlight.ts`, and the whole block is `lazy` in
+`content/components.ts`, so neither it nor the tokeniser is in the studio's first-load bundle.
+
+### Consequences
+- Accepted: highlighting is approximate. It is not a parser and cannot be wrong in a way that matters
+  — the worst failure is a word painted the wrong colour in a sample whose text is already correct,
+  selectable and copyable. Its test asserts the one property that does matter: no character of the
+  source is ever lost, whatever it paints.
+- Accepted: a language outside the eight falls back to plain text rather than to a wrong grammar.
+- Avoided: a WASM payload and a per-language grammar download in a tool whose budget is measured in
+  single-digit kilobytes of headroom.
