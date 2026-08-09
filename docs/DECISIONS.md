@@ -4360,3 +4360,37 @@ descendant reads, with no import in either direction.
   the store nor the canvas — `canvas-area/canvas-host.tsx` is prompt 22's deliverable and is what
   connects both — so wiring it now would mean inventing a second source of the flag in the shell and
   deleting it one prompt later. Reported as not done rather than faked.
+
+## ADR-101 — The selection outline is a ring, because Chrome rounds `outline-width` to whole pixels
+
+**Date** 2026-08-09 · **Prompt** 21 · **Status** Accepted
+
+### Question
+UI_GUIDELINES.md § Canvas presentation asks for a **1.5 px** selection outline drawn outside the
+node's box. `outline` is the property for that: it paints outside the border box and takes no
+layout. Does it actually render 1.5 px?
+
+### Criterion (set before measuring)
+The painted width must be the specified width. A line that says 1.5 and paints 1 is the document
+being wrong about the product, and at 25 % and 400 % zoom the whole point of the overlay layer is
+that this number does not move.
+
+### Measurement
+In Chrome 151, headless, at device pixel ratio 1: an element with the inline style
+`outline: 1.5px solid red` reports `getComputedStyle(...).outlineWidth === '1px'`. Blink rounds
+outline width to an integer, so the specified 1.5 was silently 1 — the outline was thinner than the
+document says and indistinguishable from the 1 px multi-selection member outline. A spread
+`box-shadow` is not rounded: the same element with Tailwind's `ring-[1.5px]` reports
+`0px 0px 0px 1.5px` and paints it, at zoom 0.1, 1 and 4 alike (all three measured on the stand).
+
+### Decision
+Selection, hover and the breakpoint frame use `ring-*` — a spread `box-shadow` — instead of
+`outline-*`. It is painted outside the border box, takes no layout, and honours a fractional width.
+
+### Consequences
+- Accepted: an overlay's ring participates in the `box-shadow` property, so an overlay cannot also
+  carry a shadow. None of them do, and none of them should — this layer draws lines, not elevation.
+- Accepted: rings do not follow `border-radius` of the node, because the overlay is a plain
+  rectangle over the node's box. Neither would an outline have.
+- Rejected: a `border` on an element inset by 1.5 px. It is the same picture with an offset to keep
+  correct at every zoom, and getting it wrong shifts the outline by a pixel rather than failing.
