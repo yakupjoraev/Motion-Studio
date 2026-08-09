@@ -17,6 +17,7 @@ import {
 interface Mounted {
   readonly viewport: ViewportHandle
   readonly scene: HTMLDivElement
+  readonly root: HTMLDivElement
 }
 
 /** Mounts the hook against a scene and a root, and reports how often React rendered. */
@@ -39,6 +40,7 @@ function mount(options: ViewportOptions = {}): Mounted & { renders: () => number
 
   const view = render(<Harness />)
   const scene = view.getByTestId('scene')
+  const root = view.getByTestId('root')
 
   if (handle === null) {
     throw new Error('the hook did not run')
@@ -47,6 +49,7 @@ function mount(options: ViewportOptions = {}): Mounted & { renders: () => number
   return {
     viewport: handle,
     scene: scene as HTMLDivElement,
+    root: root as HTMLDivElement,
     renders: () => renders,
   }
 }
@@ -66,25 +69,26 @@ afterEach(() => {
 })
 
 describe('useViewport', () => {
-  it('writes the transform as CSS variables on the scene', () => {
-    const { viewport, scene } = mount()
+  it('writes the transform as CSS variables on the canvas root', () => {
+    const { viewport, root } = mount()
 
     act(() => {
       viewport.set({ zoom: 2, pan: { x: 30, y: -40 } })
     })
     frames()
 
-    expect(scene.style.getPropertyValue(VIEWPORT_VARS.x)).toBe('30px')
-    expect(scene.style.getPropertyValue(VIEWPORT_VARS.y)).toBe('-40px')
-    expect(scene.style.getPropertyValue(VIEWPORT_VARS.zoom)).toBe('2')
+    // ADR-086: the scene inherits them, and so does every overlay outside the scene transform.
+    expect(root.style.getPropertyValue(VIEWPORT_VARS.x)).toBe('30px')
+    expect(root.style.getPropertyValue(VIEWPORT_VARS.y)).toBe('-40px')
+    expect(root.style.getPropertyValue(VIEWPORT_VARS.zoom)).toBe('2')
   })
 
   it('coalesces many updates in one frame into a single write', () => {
-    const { viewport, scene } = mount()
+    const { viewport, root } = mount()
 
     frames()
 
-    const writes = vi.spyOn(scene.style, 'setProperty')
+    const writes = vi.spyOn(root.style, 'setProperty')
 
     act(() => {
       for (let step = 0; step < 20; step += 1) {
@@ -98,7 +102,30 @@ describe('useViewport', () => {
 
     // Four properties, written once: x, y, zoom and the grid's opacity.
     expect(writes).toHaveBeenCalledTimes(4)
-    expect(scene.style.getPropertyValue(VIEWPORT_VARS.x)).toBe('20px')
+    expect(root.style.getPropertyValue(VIEWPORT_VARS.x)).toBe('20px')
+  })
+
+  it('tells its subscribers after each frame, and stops when they unsubscribe', () => {
+    const { viewport } = mount()
+    const listener = vi.fn()
+
+    const unsubscribe = viewport.subscribe(listener)
+
+    act(() => {
+      viewport.panBy(10, 0)
+    })
+    frames()
+
+    expect(listener).toHaveBeenCalledTimes(1)
+
+    unsubscribe()
+
+    act(() => {
+      viewport.panBy(10, 0)
+    })
+    frames()
+
+    expect(listener).toHaveBeenCalledTimes(1)
   })
 
   it('renders React once, not per update', () => {

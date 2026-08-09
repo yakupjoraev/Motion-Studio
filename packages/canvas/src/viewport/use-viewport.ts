@@ -13,7 +13,11 @@ import {
   zoomAt,
 } from '../coords/index'
 
-/** CANVAS.md § DOM structure. The scene reads these three; the grid reads the fourth. */
+/**
+ * CANVAS.md § DOM structure. The scene reads the first three and the grid the fourth — and so do
+ * the overlays, which is why ADR-086 writes them on the canvas root rather than on the scene: a
+ * ruler tick and a user guide are outside the transform and still have to follow it.
+ */
 export const VIEWPORT_VARS = {
   x: '--ms-vp-x',
   y: '--ms-vp-y',
@@ -87,6 +91,11 @@ export interface ViewportHandle {
   /** The element gestures are measured against — the canvas root. */
   readonly rootRef: React.RefObject<HTMLDivElement | null>
   readonly viewportRect: () => ViewportRect
+  /**
+   * Called after each frame's write, so an overlay that cannot be expressed as `calc()` over the
+   * variables — the ruler's choice of tick step — learns about a change without a render per frame.
+   */
+  subscribe(listener: () => void): () => void
   set(transform: ViewportTransform): void
   panBy(screenDx: number, screenDy: number): void
   zoomBy(factor: number, anchor: ScreenPoint): void
@@ -112,24 +121,29 @@ export function useViewport(options: ViewportOptions = {}): ViewportHandle {
   // Through a ref, so an inline `onCommit` at the call site does not change the handle's identity —
   // the gesture hooks subscribe to it in an effect, and a new handle would re-subscribe mid-drag.
   const onCommit = useRef(options.onCommit)
+  const listeners = useRef<Set<() => void>>(new Set())
 
   onCommit.current = options.onCommit
 
   const write = useCallback(() => {
     frame.current = null
 
-    const scene = sceneRef.current
+    const root = rootRef.current
 
-    if (scene === null) {
+    if (root === null) {
       return
     }
 
     const { zoom, pan } = transform.current
 
-    scene.style.setProperty(VIEWPORT_VARS.x, `${pan.x}px`)
-    scene.style.setProperty(VIEWPORT_VARS.y, `${pan.y}px`)
-    scene.style.setProperty(VIEWPORT_VARS.zoom, String(zoom))
-    scene.style.setProperty(VIEWPORT_VARS.gridOpacity, String(gridOpacity(zoom)))
+    root.style.setProperty(VIEWPORT_VARS.x, `${pan.x}px`)
+    root.style.setProperty(VIEWPORT_VARS.y, `${pan.y}px`)
+    root.style.setProperty(VIEWPORT_VARS.zoom, String(zoom))
+    root.style.setProperty(VIEWPORT_VARS.gridOpacity, String(gridOpacity(zoom)))
+
+    for (const listener of listeners.current) {
+      listener()
+    }
   }, [])
 
   const schedule = useCallback(() => {
@@ -188,6 +202,14 @@ export function useViewport(options: ViewportOptions = {}): ViewportHandle {
       viewportRect,
       set,
       centre,
+
+      subscribe(listener) {
+        listeners.current.add(listener)
+
+        return () => {
+          listeners.current.delete(listener)
+        }
+      },
 
       /** Screen pixels in, canvas units out: a drag of 10 px moves the scene 10 px at any zoom. */
       panBy(screenDx, screenDy) {

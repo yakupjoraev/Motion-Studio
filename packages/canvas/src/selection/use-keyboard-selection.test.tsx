@@ -188,7 +188,7 @@ describe('useKeyboardSelection', () => {
     })
 
     expect(fake.selection.nudge).not.toHaveBeenCalled()
-    expect(screen.getByTestId('canvas-scene').style.getPropertyValue(VIEWPORT_VARS.x)).toBe('-10px')
+    expect(screen.getByTestId('canvas-root').style.getPropertyValue(VIEWPORT_VARS.x)).toBe('-10px')
   })
 
   it('announces every move it makes', () => {

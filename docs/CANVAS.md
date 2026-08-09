@@ -203,8 +203,9 @@ not move):
 4. **User guides** — dragged from the rulers.
 5. **Equal spacing** — if the moving node sits between two siblings, the position that makes the
    two gaps equal. This is the snap that makes layouts look designed, and it is the one most
-   builders skip. The pairs are the siblings adjacent along the axis that overlap each other on the
-   perpendicular one, so a list of siblings produces one candidate per opening between them.
+   builders skip. A pair is a sibling and the next one along the axis that shares its band on the
+   perpendicular one — its neighbour in the same row or column — so a card in the row below cannot
+   break an opening it merely sorts inside of.
 
 Selection rules:
 - Threshold is **4 px in screen space**, so it feels identical at every zoom level. Convert:

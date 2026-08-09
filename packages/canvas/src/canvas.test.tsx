@@ -53,12 +53,13 @@ describe('Canvas', () => {
       vi.advanceTimersToNextFrame()
     })
 
-    const scene = screen.getByTestId('canvas-scene')
+    // ADR-086: the variables live on the root, so the overlays outside the scene can read them.
+    const root = screen.getByTestId('canvas-root')
 
-    expect(scene.style.getPropertyValue(VIEWPORT_VARS.zoom)).toBe('0.5')
-    expect(scene.style.getPropertyValue(VIEWPORT_VARS.x)).toBe('12px')
+    expect(root.style.getPropertyValue(VIEWPORT_VARS.zoom)).toBe('0.5')
+    expect(root.style.getPropertyValue(VIEWPORT_VARS.x)).toBe('12px')
     // 0.5 is the top of the grid fade, so the dots are fully opaque there.
-    expect(scene.style.getPropertyValue(VIEWPORT_VARS.gridOpacity)).toBe('1')
+    expect(root.style.getPropertyValue(VIEWPORT_VARS.gridOpacity)).toBe('1')
   })
 
   it('shows the grid unless it is turned off', () => {

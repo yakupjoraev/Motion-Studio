@@ -10,6 +10,7 @@
  * scan does not follow on its own.
  */
 @source '../../../packages/ui/src';
+@source '../../../packages/canvas/src';
 @source '../app';
 @source '../src';
 

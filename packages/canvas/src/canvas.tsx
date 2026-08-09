@@ -21,6 +21,12 @@ import {
 } from './selection/selection-announcer'
 import { useCanvasSelection } from './selection/use-canvas-selection'
 import { useKeyboardSelection } from './selection/use-keyboard-selection'
+import { DistanceLabels } from './snap/guides/distance-labels'
+import { SnapGuides } from './snap/guides/snap-guides'
+import { UserGuides } from './snap/guides/user-guides'
+import { Rulers } from './snap/rulers/rulers'
+import type { CanvasGuidePort } from './snap/snap.types'
+import { SnapContext, useSnap } from './snap/use-snap'
 import { usePan } from './viewport/use-pan'
 import { type ViewportHandle, useViewport } from './viewport/use-viewport'
 import { useZoom } from './viewport/use-zoom'
@@ -42,6 +48,13 @@ export interface CanvasProps {
   readonly initialTransform?: ViewportTransform | undefined
   /** Called once per gesture, with the transform the store should record. */
   readonly onTransformCommit?: ((transform: ViewportTransform) => void) | undefined
+  readonly showRulers?: boolean | undefined
+  /** ADR-087. The list plus its three intents; the canvas stores none of it. */
+  readonly guides?: CanvasGuidePort | undefined
+  /** Screen pixels, from `viewport.guides.snapThreshold`. Defaults to the 4 of CANVAS.md. */
+  readonly snapThreshold?: number | undefined
+  /** `viewport.guides.enabled`. */
+  readonly snapEnabled?: boolean | undefined
 }
 
 /**
@@ -65,6 +78,10 @@ export function Canvas({
   gridSize,
   initialTransform,
   onTransformCommit,
+  showRulers,
+  guides,
+  snapThreshold,
+  snapEnabled,
 }: CanvasProps) {
   const artboardRef = useRef<HTMLDivElement | null>(null)
   const viewport: ViewportHandle = useViewport({
@@ -90,6 +107,7 @@ export function Canvas({
 
   const cache = useRectCache({ rootRef: viewport.rootRef, version: scene.version() })
   const announcer = useAnnouncer()
+  const snap = useSnap({ viewport, thresholdPx: snapThreshold, enabled: snapEnabled })
 
   const hitContext = useCallback(
     () => ({ rootId, isolationId: scene.isolationId(), node: scene.node.bind(scene) }),
@@ -144,32 +162,38 @@ export function Canvas({
 
   return (
     <ViewportProvider viewport={viewport}>
-      <RectCacheContext.Provider value={cache}>
-        <div
-          aria-label="Design canvas"
-          className={cn(CANVAS_ROOT_CLASS, className)}
-          data-testid="canvas-root"
-          ref={viewport.rootRef}
-          role="application"
-          // biome-ignore lint/a11y/noNoninteractiveTabindex: the canvas is one tab stop with its own key map — CANVAS.md § Keyboard operation
-          tabIndex={0}
-        >
-          <Scene sceneRef={viewport.sceneRef}>
-            <Artboard
-              artboardRef={artboardRef}
-              gridSize={gridSize}
-              showGrid={showGrid}
-              width={artboardWidth}
-            >
-              {renderNode(rootId)}
-            </Artboard>
-          </Scene>
-          <div className={OVERLAYS_CLASS} data-testid="canvas-overlays">
-            <div className={MARQUEE_CLASS} data-testid="canvas-marquee" ref={marquee.ref} />
+      <SnapContext.Provider value={snap}>
+        <RectCacheContext.Provider value={cache}>
+          <div
+            aria-label="Design canvas"
+            className={cn(CANVAS_ROOT_CLASS, className)}
+            data-testid="canvas-root"
+            ref={viewport.rootRef}
+            role="application"
+            // biome-ignore lint/a11y/noNoninteractiveTabindex: the canvas is one tab stop with its own key map — CANVAS.md § Keyboard operation
+            tabIndex={0}
+          >
+            <Scene sceneRef={viewport.sceneRef}>
+              <Artboard
+                artboardRef={artboardRef}
+                gridSize={gridSize}
+                showGrid={showGrid}
+                width={artboardWidth}
+              >
+                {renderNode(rootId)}
+              </Artboard>
+            </Scene>
+            <div className={OVERLAYS_CLASS} data-testid="canvas-overlays">
+              <div className={MARQUEE_CLASS} data-testid="canvas-marquee" ref={marquee.ref} />
+              <SnapGuides overlay={snap.overlay} />
+              <DistanceLabels overlay={snap.overlay} />
+              {guides !== undefined && <UserGuides guides={guides} viewport={viewport} />}
+              {showRulers === true && <Rulers guides={guides} viewport={viewport} />}
+            </div>
+            <SelectionAnnouncer announcer={announcer} />
           </div>
-          <SelectionAnnouncer announcer={announcer} />
-        </div>
-      </RectCacheContext.Provider>
+        </RectCacheContext.Provider>
+      </SnapContext.Provider>
     </ViewportProvider>
   )
 }

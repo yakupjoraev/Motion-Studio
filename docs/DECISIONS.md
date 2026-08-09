@@ -3818,7 +3818,7 @@ generator sets it. The resolver reads the field and knows nothing about kinds.
 
 ## ADR-084 — Equal-spacing pairs are adjacent openings between siblings that overlap each other
 
-**Date** 2026-08-09 · **Prompt** 20 · **Status** Accepted
+**Date** 2026-08-09 · **Prompt** 20 · **Status** Superseded by ADR-090
 
 ### Question
 "If the moving node sits between two siblings" — which pairs of siblings count? All disjoint pairs,
@@ -4009,3 +4009,39 @@ ADR-057 recorded and ADR-080 met again from the keyboard.
   honest state of it rather than a claim that dragging snaps today.
 - Accepted: one file beyond the deliverable list, and it is where the two gesture-shaped acceptance
   criteria are actually tested.
+
+## ADR-090 — An equal-spacing pair is a sibling and its neighbour in the same band
+
+**Date** 2026-08-09 · **Prompt** 20 · **Status** Accepted · **Supersedes** ADR-084
+
+### Question
+ADR-084 sorted the siblings along the axis, paired each with the next one in that order, and kept the
+pair when the two overlapped on the perpendicular axis. Is "next in sorted order" the same thing as
+"the box next to it"?
+
+### Criterion (set before measuring)
+Unchanged from ADR-084: the rule may read only data that is fixed for the length of the drag. What is
+added is a correctness bar the first rule was never checked against — a layout the user would call
+two rows must produce the openings of both rows.
+
+### Measurement
+Found in the browser, on the walkthrough for this prompt. The fixture is three cards in a row —
+`a` 0–120, `b` 240–360, `c` 480–600, all at y 60–140 — plus a wider block `d` at x 0–200, y 260–380.
+Sorted by leading edge the order is `a`, `d`, `b`, `c`, so the consecutive pairs are (a, d), (d, b)
+and (b, c). The first two are dropped for not overlapping, and the a–b opening — the one the box was
+being dragged into — never becomes a candidate at all. Dragging into it produced no snap and no
+distance labels; the unit tests passed throughout, because every fixture in them was a single row.
+
+### Decision
+For each sibling, walk forward through the sorted list to the first one that both starts at or after
+this sibling's trailing edge and overlaps it on the perpendicular axis. That is its neighbour in the
+same row or column, and the opening between them is the candidate. Siblings in other bands are
+skipped rather than allowed to break the pairing.
+
+### Consequences
+- Accepted: O(n²) in the worst case instead of O(n). These are the children of one container at one
+  level, and the walk stops at the first match; a fixture of 200 siblings in one row costs 200 steps.
+- Accepted: a sibling can be the `before` of one opening and the `after` of another, which is what a
+  row of three cards should produce — two openings, not one.
+- Kept from ADR-084: the moving box's live position is still never read, so candidates are still
+  generated once at drag start.
