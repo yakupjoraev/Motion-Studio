@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @import '../src/styles/theme.css';
 @import '@motion-studio/ui/styles.css';
+@import '@motion-studio/blocks/styles.css';
 
 /*
  * The base layer, and nothing more. Everything here reads a `--ms-*` variable rather than a value, so

@@ -26,6 +26,20 @@ export const SPACE_PX: Readonly<Record<SpaceScale, number>> = {
   xl: 56,
 }
 
+/** How tall a band insists on being. Viewport units, so it is a scale for the same reason ADR-106 gives. */
+export const MIN_HEIGHT_SCALE = ['auto', 'half', 'three-quarters', 'screen'] as const
+
+export type MinHeightScale = (typeof MIN_HEIGHT_SCALE)[number]
+
+export const minHeightScale = z.enum(MIN_HEIGHT_SCALE)
+
+export const MIN_HEIGHT_CLASS = {
+  auto: '',
+  half: 'min-h-[50svh]',
+  'three-quarters': 'min-h-[75svh]',
+  screen: 'min-h-svh',
+} as const
+
 export const MAX_WIDTH_SCALE = ['sm', 'md', 'lg', 'xl', 'full'] as const
 
 export type MaxWidthScale = (typeof MAX_WIDTH_SCALE)[number]

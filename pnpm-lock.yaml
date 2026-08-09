@@ -26,6 +26,9 @@ importers:
 
   apps/storybook:
     dependencies:
+      '@motion-studio/blocks':
+        specifier: workspace:*
+        version: link:../../packages/blocks
       '@motion-studio/theme':
         specifier: workspace:*
         version: link:../../packages/theme

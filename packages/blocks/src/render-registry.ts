@@ -3,6 +3,7 @@ import { MotionStudioError } from '@motion-studio/utils'
 import type { ComponentType } from 'react'
 
 import { components as content } from './content/components'
+import { components as hero } from './hero/components'
 import { components as layout } from './layout/components'
 import { DEFINITIONS } from './registry'
 
@@ -17,6 +18,7 @@ export type BlockComponent = ComponentType<never>
 
 export const renderRegistry: Readonly<Record<string, BlockComponent>> = {
   ...layout,
+  ...hero,
   ...content,
 }
 

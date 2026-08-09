@@ -127,6 +127,16 @@ describe('the registry as a whole', () => {
     expect(blockRegistry.byCategory('layout').map((one) => one.id)).toEqual(
       ['section', 'container', 'stack', 'grid', 'columns', 'spacer', 'divider'].map(blockId),
     )
+    expect(blockRegistry.byCategory('hero').map((one) => one.id)).toEqual(
+      [
+        'hero-centered',
+        'hero-split',
+        'hero-aurora',
+        'hero-video',
+        'hero-terminal',
+        'hero-app-preview',
+      ].map(blockId),
+    )
     expect(blockRegistry.byCategory('content').map((one) => one.id)).toEqual([blockId('heading')])
   })
 

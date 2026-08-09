@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @import './theme.css';
 @import '@motion-studio/ui/styles.css';
+@import '@motion-studio/blocks/styles.css';
 
 /*
  * The workshop's base layer. It mirrors `apps/web/app/globals.css` deliberately: a component has to
@@ -8,9 +9,12 @@
  * apps the same base.
  *
  * Tailwind has to be told where the classes live. The app has almost no markup of its own — the
- * classes come from `packages/ui`, which Tailwind cannot discover through a workspace link on its own.
+ * classes come from `packages/ui` and `packages/blocks`, which Tailwind cannot discover through a
+ * workspace link on its own. Without the second line every block story renders unstyled, which is the
+ * same defect ADR-086's session found in `apps/web` and is invisible until somebody opens the page.
  */
 @source '../../../../packages/ui/src';
+@source '../../../../packages/blocks/src';
 @source '../../.storybook';
 @source '..';
 

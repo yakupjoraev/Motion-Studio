@@ -1,8 +1,16 @@
 import { z } from 'zod'
 
-import { alignment, maxWidthScale, spaceScale, surfaceToken, visibility } from '../../scales'
+import {
+  MIN_HEIGHT_SCALE,
+  alignment,
+  maxWidthScale,
+  spaceScale,
+  surfaceToken,
+  visibility,
+} from '../../scales'
 
-export const MIN_HEIGHTS = ['auto', 'half', 'three-quarters', 'screen'] as const
+/** The scale is shared vocabulary now that the hero band uses it too — `scales.ts` owns it. */
+export const MIN_HEIGHTS = MIN_HEIGHT_SCALE
 
 export type SectionMinHeight = (typeof MIN_HEIGHTS)[number]
 

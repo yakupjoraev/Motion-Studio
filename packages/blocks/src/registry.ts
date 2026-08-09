@@ -1,6 +1,7 @@
 import { type BlockDefinition, type BlockRegistry, createRegistry } from '@motion-studio/schema'
 
 import { definitions as content } from './content/definitions'
+import { definitions as hero } from './hero/definitions'
 import { definitions as layout } from './layout/definitions'
 
 /**
@@ -13,6 +14,7 @@ import { definitions as layout } from './layout/definitions'
  */
 export const DEFINITIONS: readonly BlockDefinition[] = [
   ...Object.values(layout),
+  ...Object.values(hero),
   ...Object.values(content),
 ]
 
