@@ -4549,3 +4549,67 @@ which is also the control the scale deserves.
 - Accepted: a user cannot type 23 px of padding. That is the design system holding, and the escape
   hatch is the `css` control kind, which arrives with the playground.
 - Accepted: adding a step to a scale is a schema change plus a class-map entry, in one file.
+
+## ADR-107 — The metadata/component split is a module split, not two exports of one module
+
+**Date** 2026-08-09 · **Prompt** 22 · **Status** Accepted
+
+### Question
+COMPONENT_LIBRARY.md § Registry construction shows `blockRegistry` and `renderRegistry` exported
+from one `registry.ts`, and requires that `blockRegistry` be importable under `node` with no React.
+Can one module do both?
+
+### Criterion (set before measuring)
+Importing `blockRegistry` must not pull a component into the module graph. The check has to be a
+property of the graph and not of the environment: React runs perfectly well under Node, so a test
+that merely imports the module in a `node` environment passes with the split broken.
+
+### Measurement
+A module's graph is the transitive closure of its imports, so a single file exporting both maps
+loads every block component the moment anything reads a definition. The same applies one level down:
+a category `index.ts` that re-exports its blocks' `index.ts` files brings the components with it, so
+the registry has to reach the `.definition.ts` files directly. Walking the graph from `registry.ts`
+after the split gives 12 files, no `.tsx` among them, and three bare specifiers: `@motion-studio/schema`,
+`@motion-studio/utils`, `zod`.
+
+### Decision
+`registry.ts` holds `blockRegistry` and imports only `*/definitions.ts`, which import only
+`*.definition.ts`. `render-registry.ts` holds `renderRegistry` and the parity assertion — it is the
+side that has both halves, and it is already a React module. The test walks the graph rather than
+importing and hoping.
+
+### Consequences
+- Accepted: four files where the document showed one, and a rule that is easy to break by adding a
+  convenient re-export. The graph test is what catches that, and it names the file.
+- Accepted: the parity assertion cannot run for a consumer who imports only the metadata. That
+  consumer has no components to be out of parity with.
+
+## ADR-108 — Resize handles ask the registry whether the block has a size
+
+**Date** 2026-08-09 · **Prompt** 22 · **Status** Accepted
+
+### Question
+The canvas drew eight handles on any single selection (prompt 21). With a real registry behind it,
+which nodes should get them?
+
+### Criterion (set before measuring)
+A gesture must have somewhere to commit. `CanvasResizePort.commit` dispatches `setProp('width')`,
+and invariant 7 parses the result against the block's schema — so a block with no `width` prop turns
+a drag into a thrown command.
+
+### Measurement
+None of the three blocks in this prompt declares a size: a section is full-width, a container sizes
+from its content and its parent, a heading from its text. `capabilities.resizable` was `true` on the
+container, and dragging its handle would have thrown `INVALID_PROPS` on release. The registry is
+where the answer lives, and the canvas cannot read it — it imports neither `blocks` nor `editor`.
+
+### Decision
+`CanvasResizePort` gains `resizable(id)`, the host answers it from
+`capabilities.resizable`, and the overlay layer draws handles only when it is true. A meta-test
+requires any block claiming `resizable` to hold `width` and `height` in its schema, so the flag
+cannot become a lie again.
+
+### Consequences
+- Accepted: no block in the studio shows resize handles today. That is the honest state of a
+  catalogue whose blocks all size themselves, and the handles were verified on the stand in prompt 21.
+- Accepted: one more method on a port the host has to implement. It is one registry lookup.
