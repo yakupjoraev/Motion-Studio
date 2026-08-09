@@ -306,6 +306,32 @@ All overlays are in one `canvas-overlays` layer with `pointer-events: none`, exc
 opt back in. They update via a single `rAF` loop reading refs — overlay position is never React
 state during a gesture.
 
+An overlay's box is written as its node's rect **in canvas units**, on the overlay element, and the
+screen position is `calc((var(--ms-vp-x) + var(--ms-ol-x)) * var(--ms-vp-zoom))` over the viewport
+variables the root already carries. Pan and zoom therefore move every overlay with no JavaScript at
+all, and the loop writes those variables only when the geometry changed — a rect-cache pass, a
+selection change, a resize draft. On a frame where only the transform moved, the loop evaluates the
+two things CSS cannot: whether a name chip has to flip below its box to stay inside the viewport,
+and whether the zoom is above the floor where handles are drawn (ADR-091).
+
+Which overlays exist is React's business and only that. `CanvasScene.subscribe` is what the overlay
+layer listens to, with the selection ids as its snapshot, so a selection change re-renders the
+overlay layer and never the canvas root (ADR-092). The hover outline is not in that set: it is
+painted from the canvas's own hit test, because a hover that went out to the store and came back
+would cost a render ten times a second for one element's position (ADR-093).
+
+Three things the overlays need are the host's to answer, and they arrive as ports beside the
+selection one:
+
+| Port | What it answers |
+| --- | --- |
+| `CanvasMenuPort` | Whether a context-menu action is available, with the reason when it is not, and running it |
+| `CanvasResizePort` | The `setProp` a finished resize commits |
+| `CanvasMotionPort` | `viewport.motionPaused` and the entrance replay |
+
+Padding and margin come from `CanvasScene.spacing(id)` — resolved props at the current breakpoint,
+not computed style, so the numbers match the inspector's (ADR-099).
+
 ## Node rendering
 
 ```tsx
@@ -389,9 +415,12 @@ export { useViewport, useViewportTransform } from './viewport'
 export { screenToCanvas, canvasToScreen, zoomAt, fitToRect } from './coords'
 export { computeSnap, generateSnapCandidates, useSnap, majorTickStep } from './snap'
 export { useRectCache } from './rects'
+export { OverlayLayer, useOverlayRects } from './overlays'
 export type { ViewportTransform, SnapResult, ScreenPoint, CanvasPoint } from './types'
 ```
 
-Dependencies: `utils`, `schema` (types only), `hooks`, React. **Not** `editor`, **not** `blocks`.
+Dependencies: `utils`, `schema` (types only), `hooks`, `ui`, React. **Not** `editor`, **not**
+`blocks`. `ui` is there for one thing — the context menu is the same menu the layers tree opens, and
+building a second styled Radix menu inside this package would be a copy that drifts (ADR-094).
 The store is reached through props and injected selectors, which is what lets the canvas be
 tested with a fake viewport and three fake nodes.

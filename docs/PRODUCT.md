@@ -91,7 +91,9 @@ See [CANVAS.md](CANVAS.md) for the mechanism. Requirements:
 - Overlays: selection outline with the node name, hover outline, padding/margin shading on
   `Alt` hold, breakpoint frame outline.
 - Context menu on right-click: Duplicate, Copy, Paste, Paste Style, Delete, Bring Forward, Send
-  Backward, Wrap in Container, Add Motion, Copy React, Reset Overrides.
+  Backward, Wrap in Container, Unwrap, Add Motion, Copy React, Reset Overrides. Unwrap sits next to
+  Wrap because a menu that offers one and not the other is a one-way door; it is disabled, with the
+  reason shown, on a node with no children.
 - Live rendering: blocks render with their real animations. A play/pause control freezes all
   motion for inspection; a scrub control replays entrance animations.
 

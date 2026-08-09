@@ -4045,3 +4045,318 @@ skipped rather than allowed to break the pairing.
   row of three cards should produce — two openings, not one.
 - Kept from ADR-084: the moving box's live position is still never read, so candidates are still
   generated once at drag start.
+
+## ADR-091 — Overlay geometry is a canvas-unit variable resolved by `calc()`, not a position written per frame
+
+**Date** 2026-08-09 · **Prompt** 21 · **Status** Accepted
+
+### Question
+The overlay layer is outside the scene transform and must follow it. CANVAS.md § Overlays says the
+overlays update through one `rAF` loop reading refs. Should that loop write each overlay's screen
+position every frame, or write the node's canvas-space box once and let CSS resolve the screen
+position from the viewport variables?
+
+### Criterion (set before measuring)
+Style writes per pan frame, at the prompt's own load: 200 nodes with 10 selected. The transform is
+already one variable write per frame (ADR-086); an overlay mechanism that adds work proportional to
+the selection on every frame is the one to reject.
+
+### Measurement
+Four values describe a box, so a per-frame position write costs `4 × selected` property writes per
+frame — 40 at ten selected, 2 400 a second, all of them recomputing what
+`(canvas + pan) × zoom` already says. Resolving the same expression in CSS costs **0** per frame:
+`--ms-vp-x/y/zoom` are inherited by the layer, and the browser recomputes the `calc()` as part of
+the style pass it was already doing for the scene. The identical trade was measured for the rulers
+in ADR-086 and gave 4 writes a frame against ~40.
+
+### Decision
+Every overlay is positioned by `calc((var(--ms-vp-x) + var(--ms-ol-x)) * var(--ms-vp-zoom))` over
+per-element variables holding the node's box in **canvas units**. The `rAF` loop writes those
+variables only when the geometry itself changed — a rect-cache pass, a selection change, a resize
+draft — and on the frames where only the transform moved it evaluates just the two things CSS
+cannot: whether a name chip must flip, and whether the handles are above the zoom floor.
+
+### Consequences
+- Accepted: two kinds of frame, `dirty` and not, and a bug in that flag shows as a stale overlay
+  rather than a crash. The rect for a node is read through one accessor so there is one place to be
+  wrong.
+- Accepted: line weights are constant for free — the border and the outline are never multiplied by
+  the zoom, only the box is.
+- Gained: an overlay follows a pan even on frames the loop never ran, so there is no lag between the
+  node and its outline at any frame rate.
+
+## ADR-092 — The overlay layer subscribes to the scene; the canvas root does not re-render on selection
+
+**Date** 2026-08-09 · **Prompt** 21 · **Status** Accepted
+
+### Question
+Which overlays exist is a function of the selection, so something has to re-render when it changes.
+ADR-077 hands the scene in as getters precisely so the canvas does not re-render on store changes.
+Where does the selection change enter React?
+
+### Criterion (set before measuring)
+The prompt's acceptance number: zero canvas re-renders while panning with 10 nodes selected, and
+overlays still correct. Whatever re-renders must be bounded by the overlay layer.
+
+### Measurement
+`CanvasScene` had no notification of any kind: `version()` is read during render, which makes the
+host re-render the canvas — root, scene, and the whole `renderNode(rootId)` tree — for a change of
+selection that moves nothing. At 200 nodes that is 200 memo comparisons for two outlines.
+
+### Decision
+`CanvasScene` gains `subscribe(listener)`, called whenever any getter's answer may have changed.
+`OverlayLayer` reads it through `useSyncExternalStore` with the joined selection ids as the
+snapshot, so a document edit that leaves the selection alone bails out at the string compare, and a
+selection change re-renders the overlay layer and nothing above it.
+
+### Consequences
+- Accepted: one more method every host must implement. A zustand store answers it with its own
+  `subscribe`, and the fixture with a set of callbacks.
+- Accepted: the snapshot is a string, so ids may not contain a space. `NodeId` is `node_<counter>`,
+  which the schema guarantees.
+- Rejected: passing the selection as a prop. That is the re-render this entry exists to avoid.
+
+## ADR-093 — The hover outline is painted from the canvas's own hit test, not from the host
+
+**Date** 2026-08-09 · **Prompt** 21 · **Status** Accepted
+
+### Question
+`useHitTest` reports the hovered node out through `CanvasSelectionPort.hover`. The hover outline
+needs the same id. Does it read it back from the scene, or take it from the hit test directly?
+
+### Criterion (set before measuring)
+Renders per second while the pointer crosses a dense area. A hover changes on the order of ten times
+a second on a real layout; anything that turns each one into a React render of the overlay layer is
+paying a render for one element's position.
+
+### Measurement
+Reading it back means: hit test → store write → subscription → `useSyncExternalStore` snapshot
+change → overlay layer render. That is one render per hover change, ~10/s, each rendering every
+selection outline in the layer as well. Painting it directly is one attribute and four variables on
+one element that already exists, and zero renders.
+
+### Decision
+The canvas keeps the hovered id in a ref, writes the hover outline's variables from the same `rAF`
+loop as every other overlay, and still calls `selection.hover` so the host learns about it for the
+layers tree. The outline element exists from mount and is shown by `data-active`, the mechanism the
+snap guides already use.
+
+### Consequences
+- Accepted: the hovered id now lives in two places. The canvas's copy is the one the outline reads
+  and the port's is what the rest of the studio reads; they are written from the same call.
+- Accepted: a host that highlights a node from the layers tree does not get an outline on the
+  canvas. That path is the layers tree's own prompt, and it will send it in as a prop if it needs to.
+
+## ADR-094 — `packages/canvas` depends on `packages/ui` for the context menu
+
+**Date** 2026-08-09 · **Prompt** 21 · **Status** Accepted
+
+### Question
+CANVAS.md § Public API lists the canvas's dependencies as `utils`, `schema`, `hooks` and React. The
+context menu is a deliverable of this prompt and it is a Radix menu with the studio's own item,
+separator, shortcut and surface styling. Where does that styling come from?
+
+### Criterion (set before measuring)
+The menu must be the same object as the one the layers tree opens — PRODUCT.md § 3 calls the canvas
+menu a convenience and never the only path, and `ContextMenu` in `ui` already takes the same entry
+list as `Dropdown` for exactly that reason. A second implementation is a second thing to keep in
+step, and drift between them is invisible until a user finds it.
+
+### Measurement
+Building it inside `canvas` means re-declaring `@radix-ui/react-context-menu`, the floating surface,
+the item, separator, label and shortcut styles, and `Kbd` — five style modules and one component
+already written in `ui`, copied. The dependency direction stays one-way: `ui` depends on `icons`,
+`motion`, `tokens` and `utils`, and on nothing that reaches back to `canvas`.
+
+### Decision
+`packages/canvas` depends on `@motion-studio/ui`, and CANVAS.md § Public API is amended to say so.
+The canvas owns the item list, the shortcuts and the disabled reasons; `ui` owns how a menu looks.
+
+### Consequences
+- Accepted: the canvas is no longer mountable with only `utils` and `schema` present. It was already
+  rendering with the studio's Tailwind theme, so this widens an existing coupling rather than
+  creating one.
+- Accepted: a test that renders the whole canvas now pulls Radix in. The menu's own tests render the
+  menu, not the canvas.
+- Rejected: the host supplying the menu component. The item list and its disabled reasons are canvas
+  vocabulary, and handing them out as data only to have them rendered elsewhere is the same
+  dependency with an extra seam.
+
+## ADR-095 — A disabled menu item states its reason in the item, not in a tooltip
+
+**Date** 2026-08-09 · **Prompt** 21 · **Status** Accepted
+
+### Question
+An unavailable item — Paste with an empty clipboard, Unwrap on a node with no children — has to say
+why. The prompt asks for the reason in the item's tooltip.
+
+### Criterion (set before measuring)
+The reason must be readable by the user who just hit the disabled item, with the pointer where it
+already is, and by a screen reader on the same item.
+
+### Measurement
+`dropdownItemStyles` sets `data-[disabled]:pointer-events-none`, which Radix's own menu semantics
+require: a disabled item takes no pointer events at all, so it receives no `pointerenter` and a
+tooltip anchored to it never opens. Verified against the style module rather than guessed —
+`packages/ui/src/dropdown/dropdown.styles.ts`. A tooltip on a disabled Radix item is a control that
+cannot fire.
+
+### Decision
+`DropdownAction` gains `hint`, rendered where the shortcut would go, in muted text. The canvas
+passes the reason as the hint for every item it disables. The reason is part of the item's own text,
+so it is announced with the item.
+
+### Consequences
+- Accepted: an item cannot show a shortcut and a reason at once. A disabled item's shortcut is the
+  less useful of the two — it would not fire either.
+- Accepted: `Dropdown` gains the same field, which is right: the layers tree opens the same entries.
+
+## ADR-096 — Resize handles are not tab stops; keyboard resize is `Mod+Alt`+arrows
+
+**Date** 2026-08-09 · **Prompt** 21 · **Status** Accepted
+
+### Question
+The prompt asks for each handle to be a focusable button with an `aria-label`, arrows resizing by
+1 px and `Shift` by 10. ACCESSIBILITY.md § Canvas says the canvas is a **single** tab stop.
+
+### Criterion (set before measuring)
+Both documents have to come out true. Count the tab stops the canvas adds to the page, and check
+that a keyboard-only user can change a node's size.
+
+### Measurement
+Eight handles per selected node at `tabIndex=0` is eight extra tab stops, and they are unreachable
+anyway: `Tab` inside the canvas is intercepted by `useKeyboardSelection` and means "next sibling".
+The key map already answers the question — SHORTCUTS.md § Transform assigns `Mod+Alt+←/→` to width
+and `Mod+Alt+↑/↓` to height — and SHORTCUTS.md is the owner of the key map (ADR-081). Those
+combinations were being swallowed by the nudge branch, which read `Alt` as "step by the grid".
+
+### Decision
+Handles are `<button>`s with `aria-label` and `tabIndex={-1}`: named for assistive technology,
+operable with the arrows once focused — which a press on them does — and not in the tab order.
+`useKeyboardSelection` stops claiming `Mod+Alt`+arrows, and the resize hook takes them on the canvas
+root, `Shift` for ten. The canvas stays one tab stop.
+
+### Consequences
+- Accepted: a keyboard user resizes without ever focusing a handle, so the handles' arrow keys are a
+  pointer user's convenience rather than the accessible path.
+- Accepted: `Alt`+arrows still nudges by the grid size and `Mod+Alt`+arrows now resizes; the two
+  differ by `Mod`, which is what the shortcut document says.
+- Also fixed by the same guard: the canvas key map no longer fires for keys pressed inside a control
+  in the overlay layer, which was hijacking `Enter` and `Escape` from the guide input.
+
+## ADR-097 — `Alt` while resizing means both edges, which is all of from-centre that survives
+
+**Date** 2026-08-09 · **Prompt** 21 · **Status** Accepted
+
+### Question
+The prompt asks for from-centre resize on `Alt`. ADR-057 and ADR-080 recorded that the document
+model has no coordinates: a node's place comes from its parent's layout. What does "from centre"
+mean for a box that has no position to hold fixed?
+
+### Criterion (set before measuring)
+The modifier may only produce an effect the model can actually store. A resize commits
+`setProp(width)` / `setProp(height)` and nothing else.
+
+### Measurement
+From-centre is two statements: the size changes by twice the drag, and the centre does not move. The
+second is a position, and there is no property to write it to — the parent decides where the box
+sits, and for a centred child the browser already keeps the centre fixed when the width grows. The
+first is a size, and it is storable.
+
+### Decision
+`Alt` applies the pointer delta to both edges: the size changes by twice the drag. The centre is
+left to the parent's layout, where it belongs.
+
+### Consequences
+- Accepted: on a left-aligned child, `Alt` looks like a faster resize rather than a symmetric one.
+  That is the honest rendering of what the model can hold, and the alternative is a modifier that
+  silently does nothing.
+- Accepted: revisit when a node can be absolutely positioned, which is a Layout-section property and
+  a later prompt's problem.
+
+## ADR-098 — A menu item with no shortcut in SHORTCUTS.md shows none
+
+**Date** 2026-08-09 · **Prompt** 21 · **Status** Accepted
+
+### Question
+The prompt says every context-menu item shows its shortcut. Three items in PRODUCT.md § 3 — Add
+motion, Copy React, Reset overrides — have no entry anywhere in SHORTCUTS.md.
+
+### Criterion (set before measuring)
+A shortcut printed next to an item must be a key combination that actually works. A wrong one is
+worse than none: the user learns it, presses it, and nothing happens.
+
+### Measurement
+Grepped SHORTCUTS.md for all eleven items. Eight have bindings — `Mod+D`, `Mod+C`, `Mod+V`,
+`Mod+Alt+V`, `Delete`, `Mod+]`, `Mod+[`, `Mod+G`, plus `Mod+Shift+G` for Unwrap. Three have none,
+and the shortcut registry that would resolve them is prompt 33's deliverable.
+
+### Decision
+Those three render with no shortcut column. The canvas does not invent key bindings: ADR-081 already
+settled that SHORTCUTS.md owns the key map and a package that finds a gap changes that document
+rather than filling it locally.
+
+### Consequences
+- Accepted: the menu is visually ragged where those three items sit.
+- Accepted: when the command palette is built and those commands get bindings, they appear here with
+  no change to this file — the table maps an action to whatever the document says.
+
+## ADR-099 — Spacing numbers come from the scene port, not from computed style
+
+**Date** 2026-08-09 · **Prompt** 21 · **Status** Accepted
+
+### Question
+The `Alt` overlay must show the same padding and margin the inspector shows. The canvas cannot
+import `editor` and cannot resolve a responsive override itself. Where do the numbers come from?
+
+### Criterion (set before measuring)
+The numbers must equal the resolved props at the current breakpoint, including overrides. The
+prompt's own test asks for a fixture with responsive overrides to prove it.
+
+### Measurement
+`getComputedStyle` answers a different question: it returns what the browser laid out, which for a
+block whose padding comes from a Tailwind class, a theme variable, or its own default is a number
+the document does not contain. Editing the inspector's padding field would leave the two disagreeing
+in exactly the case the overlay exists for.
+
+### Decision
+`CanvasScene` gains `spacing(id)`, returning resolved padding and margin per side in canvas units,
+or `undefined`. The host resolves the override — it is the only side that can — and the canvas
+renders what it is handed.
+
+### Consequences
+- Accepted: a block that sets padding in CSS rather than through a prop shows nothing. That is
+  correct: the overlay reports the document, and a value the document does not hold is not the
+  document's to show.
+- Accepted: the third getter on the scene port. It is read only while `Alt` is held.
+
+## ADR-100 — Motion playback is a port plus an attribute on the canvas root
+
+**Date** 2026-08-09 · **Prompt** 21 · **Status** Accepted
+
+### Question
+`Mod+P` freezes motion and `Mod+Shift+P` replays entrances. The flag belongs to the store
+(`viewport.motionPaused`, STATE_MANAGEMENT.md § viewport) and the motion engine that consumes it
+arrives in prompt 31. What does the canvas actually own today?
+
+### Criterion (set before measuring)
+Whatever is built now must be the thing prompt 31 consumes, not a placeholder it replaces. The test
+of that: the motion engine must be able to read the state without importing the canvas.
+
+### Measurement
+Two consumers exist for the same fact and they are not the same shape. The store needs a value it
+can put in the status bar and serialize nothing of; a block's animation needs something it can read
+without a subscription, in CSS, on an ancestor.
+
+### Decision
+The canvas takes the two key combinations, calls `CanvasMotionPort.setPaused` / `replay`, and writes
+`data-motion-paused` on the canvas root. The port is what the store hears; the attribute is what a
+descendant reads, with no import in either direction.
+
+### Consequences
+- Accepted: the attribute freezes nothing on its own today. Nothing in the tree animates yet, and
+  prompt 31's scheduler is what will read it.
+- Accepted: the status-bar indicator this prompt asks for is not wired. `apps/web` reaches neither
+  the store nor the canvas — `canvas-area/canvas-host.tsx` is prompt 22's deliverable and is what
+  connects both — so wiring it now would mean inventing a second source of the flag in the shell and
+  deleting it one prompt later. Reported as not done rather than faked.
