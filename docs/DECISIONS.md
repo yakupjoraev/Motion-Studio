@@ -4891,3 +4891,159 @@ The structural blocks that a user hides per breakpoint — `section`, `container
   layers tree eye icon is the flag while the inspector's control is the prop.
 - Accepted: every later block that wants it declares it. The alternative is a universal control that
   most blocks would reject on write.
+
+## ADR-118 — The hero copy stack is one module, not six
+
+**Date** 2026-08-09 · **Prompt** 25 · **Status** Accepted
+
+### Question
+Six heroes share an eyebrow, one `<h1>`, a subtitle, a CTA pair and a trust row, plus a vertical
+rhythm the prompt states exactly: eyebrow → 24 px → headline → 24 px → subtitle → 40 px → CTAs. Does
+each block render that itself, or is there a shared component?
+
+### Criterion (set before measuring)
+ENGINEERING_CONTRACT.md § 3 puts one concept in one directory and forbids sibling blocks importing
+each other, so a shared piece has to sit above them — the same place `scales.ts` sits for the size
+vocabulary. The test is whether the shared thing is *one decision* or *six coincidences*: a rhythm
+written in a document is one decision, and six transcriptions of it are six places to drift.
+
+### Measurement
+The rhythm is four margin values and `first:mt-0`. Duplicated across six blocks that is 24 class
+strings; a single edit to the CTA gap then has six places to land and no test that would catch five
+of them. Against that, the shared module costs one indirection when reading a block, and the two
+props that genuinely differ by layout — `headlineSize` and `subtitleSize` — have to be parameters
+rather than constants. Those two turned out to be real: measured at 1440 px, `display-1` in a
+half-width column broke a seven-word headline onto four lines.
+
+### Decision
+`hero/hero-copy.tsx` renders the copy stack; `hero/hero.styles.ts` owns the typography;
+`hero/hero.schema.ts` supplies the schema fragments through `heroCopyFields(copy)`, a factory so the
+*words* stay per block; `hero/hero.controls.ts` exports control descriptors typed against a shape
+rather than against a block. Each hero still has its own nine files.
+
+### Consequences
+- Accepted: reading `HeroCentered` does not show you the markup of its own headline. Mitigated by
+  the shared component being one file with one job and by the schema fragments carrying their own
+  defaults.
+- Accepted: a shared `TypedControl<HeroCopyShape>` is only legal because the compiler checks that its
+  path exists on the block's own props. A block that renamed `headline` would fail to compile rather
+  than silently show a dead control — which is ADR-110's rule enforced for free.
+- Avoided: six copies of a rhythm that DESIGN_SYSTEM.md states once.
+
+## ADR-119 — A block renders `<img>`; `next/image` is the exporter's decision
+
+**Date** 2026-08-09 · **Prompt** 25 · **Status** Accepted
+
+### Question
+COMPONENT_LIBRARY.md § Rules 10 says *"Every image is `next/image` in the block"*. `hero-app-preview`
+is the first block in the catalogue with an image. Does `packages/blocks` take a dependency on Next?
+
+### Criterion (set before measuring)
+A block renders in three hosts today: the studio (`apps/web`, Next), `apps/storybook`
+(`@storybook/react-vite`), and Vitest under jsdom. A framework import is only acceptable if every
+host can satisfy it — a block that renders correctly in one host and brokenly in another is worse
+than one that renders plainly everywhere, because the broken host is the one this prompt's visual
+work is judged in.
+
+### Measurement
+Two of the three hosts have no Next runtime. `next/image` outside a Next server resolves its `src`
+through the `/_next/image` optimiser endpoint, which does not exist under Vite or jsdom, so the
+Storybook stories — the surface the prompt's manual verification uses — would show a broken image.
+Making it work means aliasing `next/image` to a stub in `apps/storybook`, which is what
+`@storybook/nextjs` exists to do; the story would then be judging the stub. Against that, the thing
+rule 10 protects — `sizes`, explicit `width`/`height`, no layout shift, priority hinting — is
+available on a plain `<img>` in all three hosts, and `fetchPriority`/`decoding` cover the rest.
+
+### Decision
+Blocks render a plain `<img>` with explicit `width`, `height`, `sizes`, `loading` and
+`fetchPriority`. Which element the *export* emits stays where COMPONENT_LIBRARY.md's own second
+clause already put it: the codegen descriptor, read by the printers in prompt 43. `packages/blocks`
+takes no framework dependency. COMPONENT_LIBRARY.md § Rules 10 is amended in the same commit.
+
+### Consequences
+- Accepted: the studio canvas does not get Next's image optimisation for a user's screenshot. The
+  canvas renders a document being edited, not a page being served, and the export is where the
+  optimisation belongs.
+- Accepted: the `next/image` attribute set and the `<img>` one have to be kept in step by the printer
+  rather than by the compiler. Prompt 43 owns that, and the golden files are where it is checked.
+- Avoided: a framework dependency in the package that `codegen` and the gallery both consume, and a
+  Storybook alias that would make every image story a fiction.
+
+## ADR-120 — One hero's LCP element is an image, and the block says so
+
+**Date** 2026-08-09 · **Prompt** 25 · **Status** Accepted
+
+### Question
+Prompt 25 states the rule as *"The LCP element must be static text"* and asserts that in
+`hero-app-preview` *"the screenshot is `priority` but the headline is still the larger element"*. Is
+that true?
+
+### Criterion (set before measuring)
+The claim is geometric and therefore checkable: measure the painted area of the `<h1>` and of the
+image plate on the same page, at the desktop width the design is drawn for and at the mobile width
+PERFORMANCE.md § Budgets measures LCP on. If the headline is larger at both, the prompt's sentence
+stands and is written into the block. If it is not, the sentence is wrong and the block must say
+what is actually true.
+
+### Measurement
+On a stand rendering all six heroes with their defaults, `getBoundingClientRect` areas:
+
+| Hero | `<h1>` @1440 | media @1440 | `<h1>` @412 | media @412 |
+| --- | --- | --- | --- | --- |
+| `hero-app-preview` | 112 347 px² | 218 597 px² | 25 005 px² | 102 289 px² |
+| `hero-split` (empty plate) | 74 898 px² | 207 936 px² | 25 005 px² | 74 529 px² |
+
+The headline is smaller at every width in both. Separately, on `/hero-lcp` — a page containing only
+`hero-aurora` — under mobile emulation, 9 Mbps and 4× CPU throttling, `PerformanceObserver` reported
+the LCP entry as `H1`, text *"Build the thing you keep sketching"*, 30 970 px², at **304 / 324 /
+324 ms** across three runs against a 2.0 s budget. The aurora backdrop is 999 360 px² and did not
+win, because a `radial-gradient` is not a contentful paint.
+
+### Decision
+The rule the catalogue enforces is the one the measurement supports: **no decoration a hero draws can
+be the LCP element**, which holds absolutely — gradients are not LCP candidates, decorative layers
+are `aria-hidden`, empty, and painted behind by z-index rather than by DOM order. Where a *user*
+supplies an image — `hero-app-preview`'s screenshot, anything in `hero-split`'s media slot — that
+image may well be the LCP element, and the block optimises for that instead of denying it: `eager`,
+`fetchPriority="high"`, and a box reserved from explicit dimensions. Both doc comments state the
+measured numbers rather than the prompt's assumption.
+
+### Consequences
+- Accepted: `hero-app-preview` on a landing page will have an image LCP. It is requested with the
+  document and its box is reserved, so the cost is the transfer and nothing else.
+- Accepted: this contradicts one sentence of prompt 25. The sentence was checkable, it was checked,
+  and § 9.2 says the number decides.
+- Avoided: a doc comment asserting something a reader can disprove with devtools in ten seconds,
+  which would cast doubt on every other comment in the package.
+
+## ADR-121 — The hero glow's strength is mode-aware; its hue is not
+
+**Date** 2026-08-09 · **Prompt** 25 · **Status** Accepted
+
+### Question
+`hero-centered`, `hero-video` and `hero-app-preview` paint an accent field behind their content.
+DESIGN_SYSTEM.md § The three curves gives `accent` a different lightness per colour mode. Can one
+declaration serve both?
+
+### Criterion (set before measuring)
+A glow adds light. The test is whether the painted field is lighter or darker than the surface it
+sits on, in each mode — a field darker than its surface is a shadow, whatever it is named.
+
+### Measurement
+`--ms-color-accent` is `oklch(46.5% 0.229 285)` in light mode and `oklch(70.0% 0.156 285)` in dark;
+`surface-0` is 98.5 % and 9.5 %. So one `color-mix` at 45 % lightens by 60 points of lightness in
+dark and *darkens* by 52 in light. Screenshotted at 1440 px in the light default, the 45 % field
+turned the whole band flat grey and dropped the secondary button's label to near-illegible.
+
+### Decision
+`.ms-hero-glow` keeps the accent token as its hue in both modes and carries its strength in
+`--ms-hero-glow-core` / `--ms-hero-glow-halo`: 16 % / 7 % on the bare selector, 45 % / 14 % under
+`:root[data-color-mode='dark']` and under `@media (prefers-color-scheme: dark)` for a root that has
+not been told — the same three-state shape the generated token stylesheet already writes.
+
+### Consequences
+- Accepted: two more custom properties, and a block stylesheet that now contains a mode selector.
+  It is the same selector `packages/tokens` emits, so there is one convention rather than two.
+- Accepted: the aurora fields deliberately do *not* do this. They are checked in both modes and read
+  correctly in both, because a large blurred field of a mid-lightness hue is a wash either way —
+  which is a different thing from a highlight and needed no correction.

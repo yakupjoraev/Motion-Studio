@@ -194,8 +194,10 @@ export function PricingTable({
    declares `defaultMotion`; the resolver applies it.
 8. **Slots render `children`,** so the editor's tree and the block's layout stay the same tree.
 9. **No layout-affecting animation.** Transform, opacity, filter, clip-path only.
-10. **Every image is `next/image`** in the block, with `sizes` set, and the codegen descriptor
-    says whether to emit `next/image` or a plain `img`.
+10. **Every image carries `sizes`, explicit `width`/`height`, and an honest priority hint.** The
+    element in the block is a plain `<img>`; the codegen descriptor says whether the *export* emits
+    `next/image` or an `img`. A block takes no framework dependency — it renders in the studio, in
+    Storybook and in jsdom, and only one of those three has a Next runtime. See ADR-119.
 
 ## Catalogue
 
@@ -206,6 +208,16 @@ export function PricingTable({
 
 ### Hero (6)
 `hero-centered` · `hero-split` · `hero-aurora` · `hero-video` · `hero-terminal` · `hero-app-preview`
+
+All six share one copy stack — eyebrow, the single `<h1>`, subtitle, CTA pair, optional trust row —
+rendered by `hero/hero-copy.tsx` and typed by the fragments in `hero/hero.schema.ts`, so the vertical
+rhythm is one decision rather than six transcriptions of it (ADR-118).
+
+**The LCP rule, as it actually holds:** no decoration a hero draws can be the largest contentful
+paint. Every decorative layer is `aria-hidden`, has no content, is painted behind by z-index rather
+than by DOM order, and is a gradient — which is not an LCP candidate at all. Where a *user* supplies
+an image the image may win LCP, and the block optimises for that rather than denying it. ADR-120
+carries the measurements.
 
 ### Content (9)
 `heading` · `text` · `rich-text` · `image` · `video` · `code-block` · `quote` · `stat` · `badge`
