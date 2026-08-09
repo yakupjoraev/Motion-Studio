@@ -43,7 +43,10 @@ jobs:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - run: pnpm check:deps # cycles, direction rules, deep imports, undeclared imports
-      # `pnpm check:registry` — added by prompt 26 (block thumbnails), which creates the registry.
+      # Every block has both thumbnails and a manifest entry, and no thumbnail outlives its block.
+      # Presence and consistency only: proving a thumbnail still matches what its block renders needs
+      # a browser, so that stays in `pnpm generate:thumbnails --verify`.
+      - run: pnpm check:registry
 
   build:
     runs-on: ubuntu-latest

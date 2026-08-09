@@ -100,11 +100,13 @@ describe.each(DEFINITIONS.map((definition) => [definition.id, definition] as con
       expect(definition.codegen.tag.length).toBeGreaterThan(0)
     })
 
-    // Prompt 26 adds the thumbnail generator; the assertion is written now so that prompt turns it
-    // on rather than inventing it.
-    it.skip('ships a thumbnail', () => {
-      expect(true).toBe(true)
-    })
+    /*
+     * The thumbnail assertion is deliberately *not* here. It was reserved in prompt 22 for this one,
+     * and prompt 26 discovered it cannot live in this package: thumbnails are written to
+     * `apps/web/public/thumbnails`, and ARCHITECTURE.md § Dependency graph forbids a package reaching
+     * into an app. It lives in `scripts/check-registry.ts`, which sees both sides and runs in CI —
+     * the same coverage, in the only place entitled to it. ADR-125.
+     */
   },
 )
 

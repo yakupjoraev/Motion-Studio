@@ -11,6 +11,9 @@ importers:
       '@biomejs/biome':
         specifier: ^1.9.4
         version: 1.9.4
+      '@motion-studio/blocks':
+        specifier: workspace:*
+        version: link:packages/blocks
       lefthook:
         specifier: ^1.13.6
         version: 1.13.6

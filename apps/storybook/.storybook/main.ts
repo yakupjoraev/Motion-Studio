@@ -14,6 +14,9 @@ import type { StorybookConfig } from '@storybook/react-vite'
 const config: StorybookConfig = {
   stories: [
     '../src/docs/**/*.mdx',
+    // The thumbnail surface is the host's own: it renders *any* block from the registry, so it
+    // belongs to neither package. `scripts/generate-thumbnails.mjs` is its only reader.
+    '../src/thumbnail/*.stories.@(ts|tsx)',
     '../../../packages/ui/src/**/*.stories.@(ts|tsx)',
     '../../../packages/blocks/src/**/*.stories.@(ts|tsx)',
   ],
