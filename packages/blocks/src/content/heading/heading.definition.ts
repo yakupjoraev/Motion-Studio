@@ -5,6 +5,7 @@ import { ALIGNMENTS, optionsFrom } from '../../scales'
 
 import { headingMotion } from './heading.motion'
 import {
+  ANCHOR_MAX_LENGTH,
   HEADING_MAX_LENGTH,
   HEADING_SIZES,
   HEADING_WEIGHTS,
@@ -38,6 +39,13 @@ export const headingDefinition = defineBlock({
           options: { maxLength: HEADING_MAX_LENGTH },
         },
         { path: 'level', kind: 'stepper', label: 'Level', options: { min: 1, max: 6 } },
+        {
+          path: 'anchor',
+          kind: 'text',
+          label: 'Anchor',
+          hint: 'A fragment id so this section can be linked to. Never generated from the text',
+          options: { maxLength: ANCHOR_MAX_LENGTH },
+        },
       ],
     },
     {
@@ -109,6 +117,7 @@ export const headingDefinition = defineBlock({
       'The level is the document outline and the size is the type scale, so a visually large heading can still be an h2.',
       'Levels are the author’s to keep in order; the editor does not renumber them behind their back.',
       'Gradient text keeps its own colour token as the fallback, so a browser without background-clip still reads it.',
+      'The anchor is the author’s to set and is never generated from the text: an id derived from wording breaks every link to it the moment a word changes.',
     ],
   },
 })

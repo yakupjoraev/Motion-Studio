@@ -2,13 +2,10 @@ export { HeroAppPreview } from './hero-app-preview'
 export { heroAppPreviewDefinition } from './hero-app-preview.definition'
 export { heroAppPreviewMotion } from './hero-app-preview.motion'
 export {
-  ALT_MAX_LENGTH,
-  IMAGE_URL_MAX_LENGTH,
   PERSPECTIVE_MAX,
   PERSPECTIVE_MIN,
   TILT_LIMIT,
   heroAppPreviewSchema,
-  imageSchema,
   type HeroImage,
 } from './hero-app-preview.schema'
 export {

@@ -31,4 +31,4 @@ export { approxEqual, clamp, inverseLerp, lerp, round, snapTo } from './math/mat
 export { deepEqual, deletePath, getPath, omit, pick, setPath } from './object/object'
 export { innerRadius } from './radius/radius'
 export { type Result, err, isOk, map, ok, unwrapOr } from './result/result'
-export { camel, escapeHtml, humanize, kebab, pascal, truncate } from './string/string'
+export { camel, decodeHtml, escapeHtml, humanize, kebab, pascal, truncate } from './string/string'

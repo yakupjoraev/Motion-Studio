@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { camel, escapeHtml, humanize, kebab, pascal, truncate } from './string'
+import { camel, decodeHtml, escapeHtml, humanize, kebab, pascal, truncate } from './string'
 
 describe('kebab', () => {
   it('converts camelCase', () => {
@@ -154,5 +154,46 @@ describe('escapeHtml', () => {
 
   it('returns an empty string for an empty input', () => {
     expect(escapeHtml('')).toBe('')
+  })
+})
+
+describe('decodeHtml', () => {
+  it('decodes the five characters escapeHtml produces', () => {
+    expect(decodeHtml('&amp;&lt;&gt;&quot;&#39;')).toBe(`&<>"'`)
+  })
+
+  it('round-trips with escapeHtml', () => {
+    const source = `a & b < c > d " e ' f`
+
+    expect(decodeHtml(escapeHtml(source))).toBe(source)
+  })
+
+  it('decodes decimal and hexadecimal references', () => {
+    expect(decodeHtml('&#65;&#x42;&#X43;')).toBe('ABC')
+  })
+
+  it('decodes a non-breaking space to a space', () => {
+    expect(decodeHtml('a&nbsp;b')).toBe('a b')
+  })
+
+  /**
+   * The named table is six entries on purpose — a parser that resolves all 2 231 is a parser that can
+   * be surprised. Anything outside the table stays exactly as written, which is safe because the
+   * result is text rather than markup.
+   */
+  it('leaves an entity it does not know exactly as written', () => {
+    expect(decodeHtml('&copy; &notreal;')).toBe('&copy; &notreal;')
+  })
+
+  it('drops a lone surrogate rather than corrupting the string', () => {
+    expect(decodeHtml('a&#xD800;b')).toBe('ab')
+  })
+
+  it('leaves an out-of-range code point as written', () => {
+    expect(decodeHtml('&#x110000;')).toBe('&#x110000;')
+  })
+
+  it('leaves text with no entities alone', () => {
+    expect(decodeHtml('plain text, 100% safe')).toBe('plain text, 100% safe')
   })
 })

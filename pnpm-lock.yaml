@@ -177,6 +177,9 @@ importers:
 
   packages/blocks:
     dependencies:
+      '@motion-studio/icons':
+        specifier: workspace:*
+        version: link:../icons
       '@motion-studio/schema':
         specifier: workspace:*
         version: link:../schema

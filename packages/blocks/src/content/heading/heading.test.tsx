@@ -43,6 +43,27 @@ describe('Heading', () => {
     expect(screen.getByRole('heading').className).not.toContain('text-balance')
   })
 
+  it('carries an anchor as an id when it is given one', () => {
+    renderBlock(definition, Heading, { anchor: 'pricing', text: 'Pricing' })
+
+    expect(screen.getByRole('heading')).toHaveAttribute('id', 'pricing')
+  })
+
+  /** An id nothing can link to is worse than none: it collides and it lies about being a target. */
+  it('emits no id at all rather than an empty one', () => {
+    renderBlock(definition, Heading)
+
+    expect(screen.getByRole('heading').hasAttribute('id')).toBe(false)
+  })
+
+  it('refuses an anchor that is not a usable fragment', () => {
+    for (const anchor of ['Pricing', 'has space', '-leading', 'trailing-', 'a/b', '#x']) {
+      expect(headingSchema.safeParse({ anchor }).success, anchor).toBe(false)
+    }
+
+    expect(headingSchema.safeParse({ anchor: 'pricing-2' }).success).toBe(true)
+  })
+
   it('refuses text past the length its control allows', () => {
     expect(() => headingSchema.parse({ text: 'x'.repeat(HEADING_MAX_LENGTH + 1) })).toThrow()
   })

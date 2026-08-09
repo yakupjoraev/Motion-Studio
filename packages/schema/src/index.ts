@@ -136,6 +136,35 @@ export {
   type SanitizeOutcome,
 } from './sanitize/sanitize'
 export { sanitizeRichText } from './sanitize/rich-text'
+/*
+ * The AST is the *stored* form of rich text (ADR-122); the string sanitiser above stays for the
+ * `html`-keyed props FILE_FORMAT.md § Security already covers, and the two share one policy.
+ */
+export {
+  MAX_BLOCKS,
+  MAX_CHILDREN,
+  MAX_HREF_LENGTH,
+  MAX_LIST_ITEMS,
+  MAX_RUN_LENGTH,
+  RICH_TEXT_MARKS,
+  parseRichText,
+  richTextBlockSchema,
+  richTextDocumentSchema,
+  richTextInlineSchema,
+  richTextLinkSchema,
+  richTextParagraphSchema,
+  richTextRunSchema,
+  richTextToHtml,
+  type RichTextBlock,
+  type RichTextDocument,
+  type RichTextInline,
+  type RichTextLink,
+  type RichTextList,
+  type RichTextListItem,
+  type RichTextMark,
+  type RichTextParagraph,
+  type RichTextRun,
+} from './rich-text/index'
 export {
   ALLOWED_IMAGE_TYPES,
   ALLOWED_SCHEMES,

@@ -20,7 +20,15 @@ const HERE = dirname(fileURLToPath(import.meta.url))
 
 const ALLOWED_PACKAGES = new Set(['@motion-studio/schema', '@motion-studio/utils', 'zod'])
 
-const IMPORT_RE = /(?:^|\n)\s*(?:import|export)[\s\S]*?from\s*['"]([^'"]+)['"]/g
+/**
+ * The clause between `import`/`export` and `from` is a name list — it never contains a quote. Saying so
+ * is what stops the scan walking *through* a string literal to reach a later `from`, which is how
+ * `code-block`'s default sample — a snippet of TypeScript containing `from '@/components/…'` — used to
+ * read as an import of a package this half of the package is not allowed to reach.
+ *
+ * A test that constrained what a block's example text may say would be testing the wrong thing.
+ */
+const IMPORT_RE = /(?:^|\n)\s*(?:import|export)(?:[^'"`;]|\n)*?from\s*['"]([^'"]+)['"]/g
 
 const resolveModule = (from: string, specifier: string): string | null => {
   const base = resolve(dirname(from), specifier)

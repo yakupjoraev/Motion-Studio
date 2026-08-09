@@ -11,6 +11,14 @@ export type HeadingWeight = (typeof HEADING_WEIGHTS)[number]
 export type HeadingTracking = (typeof TRACKING)[number]
 
 export const HEADING_MAX_LENGTH = 200
+export const ANCHOR_MAX_LENGTH = 80
+
+/**
+ * A fragment identifier, so a section can be linked to. Empty means the heading has no anchor — the
+ * block does not invent one from the text, because a generated id changes the moment somebody edits a
+ * word and every link to it breaks silently.
+ */
+export const ANCHOR_PATTERN = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/
 
 /**
  * `level` is the semantic tag and `size` is the type scale, deliberately separate: an `h2` that
@@ -26,6 +34,13 @@ export const headingSchema = z.object({
   balance: z.boolean().default(true),
   gradient: z.boolean().default(false),
   tracking: z.enum(TRACKING).default('tight'),
+  anchor: z
+    .string()
+    .max(ANCHOR_MAX_LENGTH)
+    .refine((value) => value === '' || ANCHOR_PATTERN.test(value), {
+      message: 'An anchor is lowercase letters, digits and hyphens',
+    })
+    .default(''),
 })
 
 export type HeadingProps = z.infer<typeof headingSchema>

@@ -16,10 +16,15 @@ export function Heading({
   balance,
   gradient,
   tracking,
+  anchor,
 }: HeadingProps) {
   return createElement(
     `h${level}`,
-    { className: headingStyles({ size, weight, align, balance, gradient, tracking }) },
+    {
+      className: headingStyles({ size, weight, align, balance, gradient, tracking }),
+      // An empty anchor is no attribute at all, rather than an id nothing can link to.
+      ...(anchor === '' ? {} : { id: anchor }),
+    },
     text,
   )
 }

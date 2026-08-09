@@ -1,0 +1,6 @@
+export { RichText } from './rich-text'
+export { richTextDefinition } from './rich-text.definition'
+export { richTextMotion } from './rich-text.motion'
+export { RICH_TEXT_SIZES, richTextSchema, type RichTextSize } from './rich-text.schema'
+export { richTextStyles } from './rich-text.styles'
+export type { RichTextProps } from './rich-text.types'

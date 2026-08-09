@@ -65,21 +65,15 @@ export {
   type ContainerJustify,
   type ContainerProps,
 } from './layout/container/index'
-export {
-  HEADING_MAX_LENGTH,
-  HEADING_SIZES,
-  HEADING_WEIGHTS,
-  Heading,
-  TRACKING,
-  headingDefinition,
-  headingMotion,
-  headingSchema,
-  headingStyles,
-  type HeadingProps,
-  type HeadingSize,
-  type HeadingTracking,
-  type HeadingWeight,
-} from './content/heading/index'
+export * from './content/heading/index'
+export * from './content/text/index'
+export * from './content/rich-text/index'
+export * from './content/image/index'
+export * from './content/video/index'
+export * from './content/code-block/index'
+export * from './content/quote/index'
+export * from './content/stat/index'
+export * from './content/badge/index'
 
 /*
  * The hero category. Reached through each block's own `index` rather than through the category one,

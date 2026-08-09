@@ -71,3 +71,46 @@ export function escapeHtml(input: string): string {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;')
 }
+
+/**
+ * `nbsp` decodes to an ordinary space rather than to U+00A0, and that is a decision. A contenteditable
+ * emits `&nbsp;` for the second of two consecutive spaces, so keeping the non-breaking character would
+ * put an invisible, non-wrapping code point into stored document text and make two documents that look
+ * identical compare unequal.
+ */
+const NAMED_ENTITIES: Readonly<Record<string, string>> = {
+  amp: '&',
+  lt: '<',
+  gt: '>',
+  quot: '"',
+  apos: "'",
+  nbsp: ' ',
+}
+
+const ENTITY_RE = /&(#[xX]?[0-9a-fA-F]+|[a-zA-Z]+);/g
+
+/**
+ * The inverse of `escapeHtml`, plus the numeric forms. It exists because an AST stores *text* while a
+ * clipboard carries *markup*: `&amp;` in a paste is one character in the document, and storing the six
+ * it was written with would make the value re-escape itself on every round trip.
+ *
+ * Only the five characters `escapeHtml` produces, `&nbsp;`, and numeric references are decoded — the
+ * full HTML entity table is 2 231 names, and a parser that resolves all of them is a parser that can
+ * be surprised. Anything else is left exactly as written, which is safe because the result is text.
+ */
+export function decodeHtml(input: string): string {
+  return input.replace(ENTITY_RE, (whole, body: string) => {
+    if (body.startsWith('#')) {
+      const hex = body[1] === 'x' || body[1] === 'X'
+      const code = Number.parseInt(hex ? body.slice(2) : body.slice(1), hex ? 16 : 10)
+
+      return Number.isFinite(code) && code > 0 && code <= 0x10ffff ? codePoint(code) : whole
+    }
+
+    return NAMED_ENTITIES[body.toLowerCase()] ?? whole
+  })
+}
+
+/** Surrogate halves are not characters; a lone one would corrupt the string it landed in. */
+const codePoint = (code: number): string =>
+  code >= 0xd800 && code <= 0xdfff ? '' : String.fromCodePoint(code)

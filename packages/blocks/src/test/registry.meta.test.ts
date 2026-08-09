@@ -137,7 +137,19 @@ describe('the registry as a whole', () => {
         'hero-app-preview',
       ].map(blockId),
     )
-    expect(blockRegistry.byCategory('content').map((one) => one.id)).toEqual([blockId('heading')])
+    expect(blockRegistry.byCategory('content').map((one) => one.id)).toEqual(
+      [
+        'heading',
+        'text',
+        'rich-text',
+        'image',
+        'video',
+        'code-block',
+        'quote',
+        'stat',
+        'badge',
+      ].map(blockId),
+    )
   })
 
   it('registers the block an empty document starts with', () => {
