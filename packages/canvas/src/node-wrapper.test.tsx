@@ -20,6 +20,7 @@ const fakeCache = () => {
 
       return release
     },
+    subscribe: () => () => undefined,
   }
 
   return { cache, observed, release }

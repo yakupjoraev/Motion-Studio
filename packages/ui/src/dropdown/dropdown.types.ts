@@ -6,6 +6,12 @@ export interface DropdownAction {
   readonly label: string
   /** The registry's notation. Rendered by `Kbd` in the shortcut column. */
   readonly shortcut?: string
+  /**
+   * Why the item is unavailable, in the same column as the shortcut. A disabled item takes no
+   * pointer events — `data-[disabled]:pointer-events-none` — so a tooltip on one never opens, and
+   * the reason has to be part of the item to be readable at all.
+   */
+  readonly hint?: string
   readonly icon?: ReactNode
   readonly disabled?: boolean
   /** The same status colour `Button`'s danger variant uses. */

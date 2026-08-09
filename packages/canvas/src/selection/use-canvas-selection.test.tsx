@@ -48,6 +48,45 @@ describe('useCanvasSelection', () => {
     expect(fake.modes).toEqual(['replace'])
   })
 
+  it('selects what a right click points at, so the menu describes that node', () => {
+    const fake = build()
+
+    renderCanvas(fake)
+    pointAt('gallery')
+    fireEvent.contextMenu(screen.getByTestId('canvas-root'), { clientX: 40, clientY: 40 })
+
+    expect(fake.scene.selectedIds()).toEqual([fake.id('gallery')])
+  })
+
+  it('keeps a multi-selection when the right click lands inside it', () => {
+    const fake = build()
+
+    renderCanvas(fake)
+    pointAt('hero')
+    press()
+    pointAt('gallery')
+    press({ shiftKey: true })
+    pointAt('gallery')
+    fireEvent.contextMenu(screen.getByTestId('canvas-root'), { clientX: 40, clientY: 40 })
+
+    expect(fake.scene.selectedIds()).toEqual([fake.id('hero'), fake.id('gallery')])
+  })
+
+  it('ignores a press that started on a control in the overlay layer', () => {
+    const fake = build()
+
+    renderCanvas(fake)
+    pointAt('hero')
+
+    const control = document.createElement('button')
+
+    control.setAttribute('data-overlay-control', '')
+    screen.getByTestId('canvas-overlays').append(control)
+    fireEvent.pointerDown(control, { button: 0, bubbles: true, clientX: 40, clientY: 40 })
+
+    expect(fake.scene.selectedIds()).toEqual([])
+  })
+
   it('adds with Shift and toggles with the modifier key', () => {
     const fake = build()
 

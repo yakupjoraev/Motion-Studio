@@ -180,6 +180,9 @@ importers:
       '@motion-studio/schema':
         specifier: workspace:*
         version: link:../schema
+      '@motion-studio/ui':
+        specifier: workspace:*
+        version: link:../ui
       '@motion-studio/utils':
         specifier: workspace:*
         version: link:../utils

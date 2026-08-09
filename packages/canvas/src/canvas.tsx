@@ -4,11 +4,21 @@ import type { NodeId } from '@motion-studio/schema'
 import { cn } from '@motion-studio/utils'
 import { type ReactNode, useCallback, useRef } from 'react'
 
-import { CANVAS_ROOT_CLASS, MARQUEE_CLASS, OVERLAYS_CLASS } from './canvas.styles'
-import type { CanvasScene, CanvasSelectionPort } from './canvas.types'
+import { CANVAS_ROOT_CLASS, MARQUEE_CLASS } from './canvas.styles'
+import type {
+  CanvasMenuPort,
+  CanvasMotionPort,
+  CanvasResizePort,
+  CanvasScene,
+  CanvasSelectionPort,
+} from './canvas.types'
 import { type CanvasRect, type ViewportTransform, canvasRect } from './coords/index'
 import { useHitTest } from './hit/use-hit-test'
 import { useMarquee } from './hit/use-marquee'
+import { CanvasContextMenu } from './overlays/context-menu'
+import { useHoverSource } from './overlays/hover-outline'
+import { OverlayLayer } from './overlays/overlay-layer'
+import { useMotionPlayback } from './overlays/use-motion-playback'
 import { RectCacheContext, useRectCache } from './rects/use-rect-cache'
 import { Artboard } from './scene/artboard'
 import { DEFAULT_GRID_SIZE } from './scene/grid'
@@ -55,6 +65,14 @@ export interface CanvasProps {
   readonly snapThreshold?: number | undefined
   /** `viewport.guides.enabled`. */
   readonly snapEnabled?: boolean | undefined
+  /** The breakpoint the artboard width belongs to, shown on the frame. */
+  readonly breakpointName?: string | undefined
+  /** PRODUCT.md § 3. Absent means no right-click menu, which is what a read-only canvas wants. */
+  readonly menu?: CanvasMenuPort | undefined
+  /** Where a finished resize goes. Absent means the handles have nothing to commit to. */
+  readonly resize?: CanvasResizePort | undefined
+  /** ADR-100. `Mod+P` and `Mod+Shift+P` do nothing without it. */
+  readonly motion?: CanvasMotionPort | undefined
 }
 
 /**
@@ -82,6 +100,10 @@ export function Canvas({
   guides,
   snapThreshold,
   snapEnabled,
+  breakpointName,
+  menu,
+  resize,
+  motion,
 }: CanvasProps) {
   const artboardRef = useRef<HTMLDivElement | null>(null)
   const viewport: ViewportHandle = useViewport({
@@ -141,7 +163,18 @@ export function Canvas({
     onCommit: commitMarquee,
   })
 
-  useHitTest({ rootRef: viewport.rootRef, context: hitContext, onHover: selection.hover })
+  // ADR-093: the outline reads the hover from here, and the host still hears about it.
+  const hover = useHoverSource()
+  const onHover = useCallback(
+    (id: NodeId | null) => {
+      hover.report(id)
+      selection.hover(id)
+    },
+    [hover, selection],
+  )
+
+  useHitTest({ rootRef: viewport.rootRef, context: hitContext, onHover })
+  useMotionPlayback({ rootRef: viewport.rootRef, motion })
   useCanvasSelection({
     rootRef: viewport.rootRef,
     rootId,
@@ -160,38 +193,51 @@ export function Canvas({
     announce: announcer.announce,
   })
 
+  const root = (
+    <div
+      aria-label="Design canvas"
+      className={cn(CANVAS_ROOT_CLASS, className)}
+      data-testid="canvas-root"
+      ref={viewport.rootRef}
+      role="application"
+      // biome-ignore lint/a11y/noNoninteractiveTabindex: the canvas is one tab stop with its own key map — CANVAS.md § Keyboard operation
+      tabIndex={0}
+    >
+      <Scene sceneRef={viewport.sceneRef}>
+        <Artboard
+          artboardRef={artboardRef}
+          gridSize={gridSize}
+          showGrid={showGrid}
+          width={artboardWidth}
+        >
+          {renderNode(rootId)}
+        </Artboard>
+      </Scene>
+      <OverlayLayer
+        breakpointName={breakpointName}
+        cache={cache}
+        documentRect={documentRect}
+        hover={hover}
+        resize={resize}
+        rootRef={viewport.rootRef}
+        scene={scene}
+        viewport={viewport}
+      >
+        <div className={MARQUEE_CLASS} data-testid="canvas-marquee" ref={marquee.ref} />
+        <SnapGuides overlay={snap.overlay} />
+        <DistanceLabels overlay={snap.overlay} />
+        {guides !== undefined && <UserGuides guides={guides} viewport={viewport} />}
+        {showRulers === true && <Rulers guides={guides} viewport={viewport} />}
+      </OverlayLayer>
+      <SelectionAnnouncer announcer={announcer} />
+    </div>
+  )
+
   return (
     <ViewportProvider viewport={viewport}>
       <SnapContext.Provider value={snap}>
         <RectCacheContext.Provider value={cache}>
-          <div
-            aria-label="Design canvas"
-            className={cn(CANVAS_ROOT_CLASS, className)}
-            data-testid="canvas-root"
-            ref={viewport.rootRef}
-            role="application"
-            // biome-ignore lint/a11y/noNoninteractiveTabindex: the canvas is one tab stop with its own key map — CANVAS.md § Keyboard operation
-            tabIndex={0}
-          >
-            <Scene sceneRef={viewport.sceneRef}>
-              <Artboard
-                artboardRef={artboardRef}
-                gridSize={gridSize}
-                showGrid={showGrid}
-                width={artboardWidth}
-              >
-                {renderNode(rootId)}
-              </Artboard>
-            </Scene>
-            <div className={OVERLAYS_CLASS} data-testid="canvas-overlays">
-              <div className={MARQUEE_CLASS} data-testid="canvas-marquee" ref={marquee.ref} />
-              <SnapGuides overlay={snap.overlay} />
-              <DistanceLabels overlay={snap.overlay} />
-              {guides !== undefined && <UserGuides guides={guides} viewport={viewport} />}
-              {showRulers === true && <Rulers guides={guides} viewport={viewport} />}
-            </div>
-            <SelectionAnnouncer announcer={announcer} />
-          </div>
+          {menu === undefined ? root : <CanvasContextMenu menu={menu}>{root}</CanvasContextMenu>}
         </RectCacheContext.Provider>
       </SnapContext.Provider>
     </ViewportProvider>

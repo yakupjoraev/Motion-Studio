@@ -60,6 +60,7 @@ export {
   dropdownItemStyles,
   dropdownLabelStyles,
   dropdownSeparatorStyles,
+  dropdownHintStyles,
   dropdownShortcutStyles,
   type DropdownAction,
   type DropdownEntry,

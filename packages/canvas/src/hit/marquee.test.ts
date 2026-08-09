@@ -12,6 +12,7 @@ const cacheOf = (entries: Record<string, ScreenRect>): RectCache => ({
   invalidate: () => undefined,
   refresh: () => undefined,
   observe: () => () => undefined,
+  subscribe: () => () => undefined,
 })
 
 const fake = fakeScene({

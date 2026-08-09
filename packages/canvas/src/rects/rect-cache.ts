@@ -14,6 +14,11 @@ export interface RectCache {
   refresh(): void
   /** Returns the un-observe, which is what a node wrapper runs on unmount. */
   observe(id: NodeId, element: Element): () => void
+  /**
+   * Called at the end of each batched pass. An overlay converts a rect with the transform that was
+   * in effect when it was measured (ADR-091), so it has to learn about the pass rather than poll.
+   */
+  subscribe(listener: () => void): () => void
 }
 
 export interface OwnedRectCache extends RectCache {
@@ -49,6 +54,7 @@ export function createRectCache(options: RectCacheOptions = {}): OwnedRectCache 
 
   const elements = new Map<NodeId, Element>()
   const rects = new Map<NodeId, ScreenRect>()
+  const listeners = new Set<() => void>()
 
   let frame: number | null = null
   let observer: ResizeObserver | null = null
@@ -59,6 +65,10 @@ export function createRectCache(options: RectCacheOptions = {}): OwnedRectCache 
 
     for (const [id, element] of elements) {
       rects.set(id, screenRect(element.getBoundingClientRect()))
+    }
+
+    for (const listener of listeners) {
+      listener()
     }
   }
 
@@ -104,6 +114,14 @@ export function createRectCache(options: RectCacheOptions = {}): OwnedRectCache 
       }
     },
 
+    subscribe(listener) {
+      listeners.add(listener)
+
+      return () => {
+        listeners.delete(listener)
+      }
+    },
+
     dispose() {
       if (frame !== null) {
         cancel(frame)
@@ -115,6 +133,7 @@ export function createRectCache(options: RectCacheOptions = {}): OwnedRectCache 
       observerBuilt = false
       elements.clear()
       rects.clear()
+      listeners.clear()
     },
   }
 }

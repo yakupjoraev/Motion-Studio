@@ -38,5 +38,9 @@ export const MARQUEE_CLASS =
 /**
  * `contain: layout paint` bounds invalidation to the subtree, per PERFORMANCE.md § Canvas specifics:
  * editing one node must not make the browser re-lay-out the page around it.
+ *
+ * The two `data-resizing` rules are the transient half of a resize: the gesture writes the draft size
+ * into the variables at frame rate and the store hears one `setProp` on release.
  */
-export const NODE_WRAPPER_CLASS = '[contain:layout_paint]'
+export const NODE_WRAPPER_CLASS =
+  '[contain:layout_paint] data-[resizing]:w-[var(--ms-node-w)] data-[resizing]:h-[var(--ms-node-h)]'

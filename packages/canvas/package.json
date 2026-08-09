@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "@motion-studio/schema": "workspace:*",
+    "@motion-studio/ui": "workspace:*",
     "@motion-studio/utils": "workspace:*"
   },
   "peerDependencies": {

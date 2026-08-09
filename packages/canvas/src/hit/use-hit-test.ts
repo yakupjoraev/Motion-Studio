@@ -56,7 +56,15 @@ export function useHitTest({ rootRef, context, onHover }: HitTestHookOptions): v
     }
 
     const onPointerMove = (event: PointerEvent): void => {
-      if (root.dataset['panning'] === 'true' || root.dataset['marquee'] === 'true') {
+      if (
+        root.dataset['panning'] === 'true' ||
+        root.dataset['marquee'] === 'true' ||
+        root.dataset['dragging'] === 'true'
+      ) {
+        // Not merely "stop testing": the hover outline is hidden during a gesture, and leaving the
+        // last hit standing would leave it on screen under the marquee.
+        publish(null)
+
         return
       }
 

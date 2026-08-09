@@ -13,6 +13,16 @@ import { describeEnter, describeSelection } from './selection-announcer'
 /** The primary button. The middle one pans, and `usePan` owns it. */
 const PRIMARY_BUTTON = 0
 
+/**
+ * A control in the overlay layer — a resize handle, a user guide — owns its own press. React's
+ * `stopPropagation` cannot say so: these listeners are native and on the canvas root, which the
+ * event passes on its way up to React's own container, so the guard has to be here.
+ */
+const OVERLAY_CONTROL = '[data-overlay-control]'
+
+const onOverlayControl = (event: Event): boolean =>
+  event.target instanceof Element && event.target.closest(OVERLAY_CONTROL) !== null
+
 /** SHORTCUTS.md § Selection: `Shift` adds, `Mod` toggles, a bare click replaces. */
 function modeFor(event: PointerEvent): SelectionMode {
   if (event.shiftKey) {
@@ -63,7 +73,11 @@ export function useCanvasSelection({
 
     const onPointerDown = (event: PointerEvent): void => {
       // Held space is a pan, whatever is under the cursor.
-      if (event.button !== PRIMARY_BUTTON || root.dataset['panMode'] === 'true') {
+      if (
+        event.button !== PRIMARY_BUTTON ||
+        root.dataset['panMode'] === 'true' ||
+        onOverlayControl(event)
+      ) {
         return
       }
 
@@ -123,12 +137,41 @@ export function useCanvasSelection({
       })
     }
 
+    /**
+     * A right-click acts on what it points at, so the menu that follows describes the node under the
+     * cursor. An already-selected node keeps the whole set: right-clicking one of five to Duplicate
+     * should duplicate five.
+     */
+    const onContextMenu = (event: MouseEvent): void => {
+      const {
+        scene: current,
+        selection: port,
+        announce: say,
+        rootId: documentRootId,
+      } = latest.current
+      const hit = hitTest(
+        screenPoint(event.clientX, event.clientY),
+        contextAt(current.isolationId()),
+      )
+
+      if (hit === null || current.selectedIds().includes(hit)) {
+        return
+      }
+
+      startTransition(() => {
+        port.select([hit], 'replace')
+        say(describeSelection(current, documentRootId))
+      })
+    }
+
     root.addEventListener('pointerdown', onPointerDown)
     root.addEventListener('dblclick', onDoubleClick)
+    root.addEventListener('contextmenu', onContextMenu)
 
     return () => {
       root.removeEventListener('pointerdown', onPointerDown)
       root.removeEventListener('dblclick', onDoubleClick)
+      root.removeEventListener('contextmenu', onContextMenu)
     }
   }, [rootRef])
 }

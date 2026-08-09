@@ -4,6 +4,7 @@ export {
   dropdownItemStyles,
   dropdownLabelStyles,
   dropdownSeparatorStyles,
+  dropdownHintStyles,
   dropdownShortcutStyles,
   type DropdownStyleProps,
 } from './dropdown.styles'

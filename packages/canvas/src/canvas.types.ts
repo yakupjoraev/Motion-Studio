@@ -15,6 +15,19 @@ export interface CanvasSceneNode {
 /** EDITOR_ENGINE.md § Modes. Named here so the canvas can ask for one without importing `editor`. */
 export type SelectionMode = 'replace' | 'add' | 'toggle' | 'range'
 
+/** Canvas units, per side, in the order the inspector shows them. */
+export interface CanvasEdges {
+  readonly top: number
+  readonly right: number
+  readonly bottom: number
+  readonly left: number
+}
+
+export interface NodeSpacing {
+  readonly padding: CanvasEdges
+  readonly margin: CanvasEdges
+}
+
 /**
  * ADR-077. State comes in as getters, read inside handlers and effects rather than during render, so
  * an edit to the document changes nothing React can see and the canvas root does not re-render.
@@ -29,6 +42,49 @@ export interface CanvasScene {
    * re-render when it changes; everything else here is free to be read from a ref.
    */
   version(): number
+  /** ADR-099. Resolved props at the current breakpoint, which is a question only the host can answer. */
+  spacing(id: NodeId): NodeSpacing | undefined
+  /** ADR-092. Fires when any getter's answer may have changed; the overlay layer is what listens. */
+  subscribe(listener: () => void): () => void
+}
+
+/** PRODUCT.md § 3, in the order the menu shows them. */
+export type CanvasMenuAction =
+  | 'duplicate'
+  | 'copy'
+  | 'paste'
+  | 'pasteStyle'
+  | 'delete'
+  | 'bringForward'
+  | 'sendBackward'
+  | 'wrap'
+  | 'unwrap'
+  | 'addMotion'
+  | 'copyReact'
+  | 'resetOverrides'
+
+export interface CanvasMenuPort {
+  /** The reason the action is unavailable, or `undefined` when it is available. */
+  unavailable(action: CanvasMenuAction): string | undefined
+  run(action: CanvasMenuAction): void
+}
+
+/** Canvas units. ADR-097: a resize reports a size and never a position. */
+export interface CanvasSize {
+  readonly width: number
+  readonly height: number
+}
+
+export interface CanvasResizePort {
+  /** One `setProp` per finished gesture, applied synchronously like the selection port. */
+  commit(id: NodeId, size: CanvasSize): void
+}
+
+/** ADR-100. `viewport.motionPaused` in the store; prompt 31's scheduler is the other consumer. */
+export interface CanvasMotionPort {
+  paused(): boolean
+  setPaused(paused: boolean): void
+  replay(): void
 }
 
 /**

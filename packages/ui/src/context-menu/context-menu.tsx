@@ -5,6 +5,7 @@ import type { ReactElement } from 'react'
 
 import {
   dropdownContentStyles,
+  dropdownHintStyles,
   dropdownItemStyles,
   dropdownLabelStyles,
   dropdownSeparatorStyles,
@@ -36,7 +37,8 @@ function Entry({ entry }: { entry: ContextMenuEntry }): ReactElement {
     >
       {entry.icon}
       {entry.label}
-      {entry.shortcut === undefined ? null : (
+      {entry.hint === undefined ? null : <span className={dropdownHintStyles()}>{entry.hint}</span>}
+      {entry.shortcut === undefined || entry.hint !== undefined ? null : (
         <Kbd keys={entry.shortcut} className={dropdownShortcutStyles()} />
       )}
     </RadixContextMenu.Item>

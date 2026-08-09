@@ -38,6 +38,7 @@ export function UserGuides({ viewport, guides }: UserGuidesProps) {
         <div
           className={USER_GUIDE_CLASS}
           data-axis={guide.axis}
+          data-overlay-control=""
           data-testid={`user-guide-${guide.id}`}
           key={guide.id}
           onDoubleClick={() => setEditing(guide)}

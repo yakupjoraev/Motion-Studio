@@ -208,8 +208,20 @@ export function useKeyboardSelection({
     }
 
     const onKeyDown = (event: KeyboardEvent): void => {
+      // The canvas key map belongs to the canvas, not to the controls inside it: a guide's value
+      // field owns `Enter` and `Escape` while it has focus, and a resize handle owns the arrows.
+      if (event.target !== root) {
+        return
+      }
+
       const mod = event.metaKey || event.ctrlKey
       const direction = ARROWS[event.key]
+
+      // ADR-096. `Mod+Alt`+arrows is a resize in SHORTCUTS.md § Transform, and the nudge branch below
+      // would otherwise read the `Alt` as "step by the grid size" and move the node instead.
+      if (mod && event.altKey && direction !== undefined) {
+        return
+      }
 
       if (mod && event.shiftKey && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
         event.preventDefault()

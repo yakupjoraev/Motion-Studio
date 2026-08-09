@@ -2,6 +2,7 @@ import { type NodeId, nodeId } from '@motion-studio/schema'
 import { vi } from 'vitest'
 
 import type {
+  CanvasEdges,
   CanvasScene,
   CanvasSceneNode,
   CanvasSelectionPort,
@@ -13,6 +14,24 @@ export interface FakeNodeSpec {
   readonly locked?: boolean
   readonly hidden?: boolean
   readonly name?: string
+  /**
+   * Resolved padding and margin, as the host would hand them over — ADR-099. A record keyed by
+   * breakpoint is what makes an override testable: `{ base: 16, lg: 32 }` resolves against
+   * `fakeScene`'s current breakpoint the way the responsive engine does.
+   */
+  readonly padding?: Record<string, number>
+  readonly margin?: Record<string, number>
+}
+
+const NO_EDGES: CanvasEdges = { top: 0, right: 0, bottom: 0, left: 0 }
+
+const edges = (
+  values: Record<string, number> | undefined,
+  breakpoint: string,
+): CanvasEdges | undefined => {
+  const value = values?.[breakpoint] ?? values?.['base']
+
+  return value === undefined ? undefined : { top: value, right: value, bottom: value, left: value }
 }
 
 export interface FakeScene {
@@ -22,6 +41,9 @@ export interface FakeScene {
   readonly id: (name: string) => NodeId
   readonly modes: SelectionMode[]
   bump(): void
+  /** Both notify the overlay layer, the way a store's own `subscribe` would. */
+  setBreakpoint(breakpoint: string): void
+  setSelection(ids: readonly NodeId[]): void
 }
 
 const toId = (name: string): NodeId => nodeId(`node_${name}`)
@@ -35,11 +57,13 @@ const toId = (name: string): NodeId => nodeId(`node_${name}`)
  */
 export function fakeScene(spec: Record<string, FakeNodeSpec>, rootName = 'root'): FakeScene {
   const nodes = new Map<NodeId, CanvasSceneNode>()
+  const spacings = new Map<NodeId, FakeNodeSpec>()
   const rootId = toId(rootName)
 
   for (const [name, node] of Object.entries(spec)) {
     const children = (node.children ?? []).map(toId)
 
+    spacings.set(toId(name), node)
     nodes.set(toId(name), {
       parentId: null,
       name: node.name ?? name,
@@ -62,6 +86,14 @@ export function fakeScene(spec: Record<string, FakeNodeSpec>, rootName = 'root')
   let selected: readonly NodeId[] = []
   let isolationId: NodeId | null = null
   let version = 1
+  let breakpoint = 'base'
+
+  const listeners = new Set<() => void>()
+  const notify = (): void => {
+    for (const listener of listeners) {
+      listener()
+    }
+  }
 
   const modes: SelectionMode[] = []
 
@@ -97,18 +129,39 @@ export function fakeScene(spec: Record<string, FakeNodeSpec>, rootName = 'root')
       isolationId: () => isolationId,
       selectedIds: () => selected,
       version: () => version,
+
+      spacing(id) {
+        const declared = spacings.get(id)
+        const padding = edges(declared?.padding, breakpoint)
+        const margin = edges(declared?.margin, breakpoint)
+
+        return padding === undefined && margin === undefined
+          ? undefined
+          : { padding: padding ?? NO_EDGES, margin: margin ?? NO_EDGES }
+      },
+
+      subscribe(listener) {
+        listeners.add(listener)
+
+        return () => {
+          listeners.delete(listener)
+        }
+      },
     },
 
     selection: {
       select(ids, mode) {
         modes.push(mode)
         selected = apply(ids, mode)
+        notify()
       },
       clear() {
         selected = []
+        notify()
       },
       enter(id) {
         isolationId = id
+        notify()
       },
       exit() {
         isolationId = isolationId === null ? null : (nodes.get(isolationId)?.parentId ?? null)
@@ -123,6 +176,17 @@ export function fakeScene(spec: Record<string, FakeNodeSpec>, rootName = 'root')
 
     bump() {
       version += 1
+      notify()
+    },
+
+    setBreakpoint(next) {
+      breakpoint = next
+      notify()
+    },
+
+    setSelection(ids) {
+      selected = ids
+      notify()
     },
   }
 }

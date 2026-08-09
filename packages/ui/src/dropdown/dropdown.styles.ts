@@ -28,6 +28,9 @@ export const dropdownItemStyles = cva(
 /** `ml-auto` rather than a grid: the labels vary and the hints still line up. */
 export const dropdownShortcutStyles = cva(['ml-auto pl-4'])
 
+/** The reason an item is unavailable, in the shortcut's column. */
+export const dropdownHintStyles = cva(['ml-auto pl-4 text-2xs text-foreground-subtle'])
+
 export const dropdownSeparatorStyles = cva(['-mx-1 my-1 h-px bg-border'])
 
 /** § Section headers, one level down. */

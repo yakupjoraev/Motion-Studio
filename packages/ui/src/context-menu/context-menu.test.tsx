@@ -85,6 +85,34 @@ describe('ContextMenu', () => {
     expect(screen.getByText('Ctrl+D').tagName).toBe('KBD')
   })
 
+  it('states why an item is unavailable, in the shortcut column', async () => {
+    render(
+      <ContextMenu
+        items={[
+          {
+            id: 'paste',
+            label: 'Paste',
+            shortcut: 'Mod+V',
+            hint: 'Clipboard is empty',
+            disabled: true,
+            onSelect: vi.fn(),
+          },
+        ]}
+      >
+        <div data-testid="region">Hero</div>
+      </ContextMenu>,
+    )
+
+    await rightClick()
+
+    // A disabled item takes no pointer events, so a tooltip on one would never open — the reason is
+    // part of the item instead, and is read out with it.
+    expect(screen.getByRole('menuitem', { name: 'Paste Clipboard is empty' })).toHaveAttribute(
+      'data-disabled',
+    )
+    expect(screen.queryByText('Ctrl+V')).not.toBeInTheDocument()
+  })
+
   it('reads a destructive action in the danger colour', async () => {
     render(<Fixture />)
 
