@@ -10,7 +10,10 @@ export const quoteStyles = cva('relative m-0 flex flex-col', {
   variants: {
     mark: {
       rule: 'border-accent border-l-2 pl-6',
-      glyph: 'pl-0',
+      // The glyph is drawn above the first line, so the figure has to make room for it. Without the
+      // padding it is clipped by whatever contains the block — measured in a 900 px story frame,
+      // where the top half of the mark was cut off.
+      glyph: 'pt-8 pl-0',
       none: 'pl-0',
     },
     align: {
@@ -33,7 +36,7 @@ export const quoteTextStyles = cva('m-0 text-balance text-foreground', {
 })
 
 export const QUOTE_GLYPH =
-  'pointer-events-none absolute -top-4 -left-2 select-none font-semibold text-6xl text-accent/15 leading-none'
+  'pointer-events-none absolute top-0 left-0 select-none font-semibold text-6xl text-accent/20 leading-none'
 
 export const QUOTE_FOOTER = 'mt-5 flex items-center gap-3'
 
