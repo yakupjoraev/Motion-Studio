@@ -83,21 +83,38 @@ describe('Inspector', () => {
     expect(controls.length).toBeGreaterThan(0)
   })
 
+  /**
+   * The clock is frozen for this one test, and that is the point of it. ADR-113 makes an edit one
+   * history entry by coalescing writes that share a key *within a window*, and the window is 400 ms
+   * of wall clock (`COALESCE_WINDOW_MS`). Typing seven characters through `user-event` takes however
+   * long the machine takes, so on a loaded CI runner the sequence outran the window and the entry
+   * split in two — a red build that says nothing about the behaviour under test.
+   *
+   * Freezing `Date.now` is narrow enough to be honest: `user-event` schedules on timers and React on
+   * `performance.now`, so the only consumer affected is the store's own clock. The window arithmetic
+   * itself is covered where it belongs, in `packages/editor/src/history/coalesce.test.ts`.
+   */
   it('commits an edit as one history entry', async () => {
-    const heading = insert('heading')
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(1_700_000_000_000)
 
-    act(() => state().select([heading]))
-    render(<Inspector />)
-    await screen.findByRole('textbox', { name: 'Text' })
+    try {
+      const heading = insert('heading')
 
-    const before = state().history.past.length
+      act(() => state().select([heading]))
+      render(<Inspector />)
+      await screen.findByRole('textbox', { name: 'Text' })
 
-    await userEvent.clear(screen.getByRole('textbox', { name: 'Text' }))
-    await userEvent.type(screen.getByRole('textbox', { name: 'Text' }), 'Pricing')
-    await userEvent.tab()
+      const before = state().history.past.length
 
-    expect(state().document.nodes[heading]?.props['text']).toBe('Pricing')
-    expect(state().history.past.length - before).toBe(1)
+      await userEvent.clear(screen.getByRole('textbox', { name: 'Text' }))
+      await userEvent.type(screen.getByRole('textbox', { name: 'Text' }), 'Pricing')
+      await userEvent.tab()
+
+      expect(state().document.nodes[heading]?.props['text']).toBe('Pricing')
+      expect(state().history.past.length - before).toBe(1)
+    } finally {
+      clock.mockRestore()
+    }
   })
 
   it('writes an override rather than the base value away from base', async () => {
