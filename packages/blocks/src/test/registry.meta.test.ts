@@ -123,11 +123,10 @@ describe('the registry as a whole', () => {
     expect(registryParity(ids, renderRegistry)).toEqual({ missing: [], extra: [] })
   })
 
-  it('groups by category', () => {
-    expect(blockRegistry.byCategory('layout').map((one) => one.id)).toEqual([
-      blockId('section'),
-      blockId('container'),
-    ])
+  it('groups by category, in the catalogue order the palette reads', () => {
+    expect(blockRegistry.byCategory('layout').map((one) => one.id)).toEqual(
+      ['section', 'container', 'stack', 'grid', 'columns', 'spacer', 'divider'].map(blockId),
+    )
     expect(blockRegistry.byCategory('content').map((one) => one.id)).toEqual([blockId('heading')])
   })
 

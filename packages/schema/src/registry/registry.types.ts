@@ -92,6 +92,11 @@ export interface BlockCapabilities {
   readonly supportsMotion: readonly MotionChannel[]
   readonly costClass: 'cheap' | 'moderate' | 'heavy'
   readonly minWidth?: number | undefined
+  /**
+   * ADR-115. The block only does anything inside a flex parent — a fluid spacer is `flex-1`. The
+   * inspector hints, and drop resolution reads the same field rather than knowing the block by id.
+   */
+  readonly requiresFlexParent?: boolean | undefined
 }
 
 export interface ImportSpec {

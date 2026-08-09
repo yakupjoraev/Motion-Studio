@@ -4,7 +4,13 @@ import { defineBlock } from '../../define-block'
 import { MAX_WIDTH_SCALE, SPACE_SCALE, optionsFrom } from '../../scales'
 
 import { containerMotion } from './container.motion'
-import { CONTAINER_ALIGN, CONTAINER_JUSTIFY, DIRECTIONS, containerSchema } from './container.schema'
+import {
+  CONTAINER_ALIGN,
+  CONTAINER_JUSTIFY,
+  DIRECTIONS,
+  LAYOUT_MODES,
+  containerSchema,
+} from './container.schema'
 
 export const containerDefinition = defineBlock({
   id: blockId('container'),
@@ -33,6 +39,20 @@ export const containerDefinition = defineBlock({
       id: 'layout',
       label: 'Layout',
       controls: [
+        {
+          path: 'mode',
+          kind: 'segmented',
+          label: 'Mode',
+          options: { options: optionsFrom(LAYOUT_MODES) },
+        },
+        {
+          path: 'columns',
+          kind: 'stepper',
+          label: 'Columns',
+          hint: 'Grid mode only',
+          responsive: true,
+          options: { min: 1, max: 4 },
+        },
         {
           path: 'direction',
           kind: 'segmented',
@@ -69,6 +89,7 @@ export const containerDefinition = defineBlock({
           options: { options: optionsFrom(CONTAINER_JUSTIFY) },
         },
         { path: 'wrap', kind: 'switch', label: 'Wrap', responsive: true },
+        { path: 'hidden', kind: 'switch', label: 'Hidden', responsive: true },
         {
           path: 'maxWidth',
           kind: 'select',
@@ -76,6 +97,13 @@ export const containerDefinition = defineBlock({
           responsive: true,
           options: { options: optionsFrom(MAX_WIDTH_SCALE) },
         },
+      ],
+    },
+    {
+      id: 'style',
+      label: 'Style',
+      controls: [
+        { path: 'divide', kind: 'switch', label: 'Divide', hint: 'A rule between the children' },
       ],
     },
   ],

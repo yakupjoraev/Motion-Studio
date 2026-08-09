@@ -1,8 +1,15 @@
 import { cva } from 'class-variance-authority'
 
 /** Literal classes only — ADR-106. `gap` and `padding` share the space scale the section uses. */
-export const containerStyles = cva('flex w-full', {
+export const containerStyles = cva('w-full', {
   variants: {
+    mode: { flex: 'flex', grid: 'grid' },
+    columns: {
+      1: 'grid-cols-1',
+      2: 'grid-cols-1 sm:grid-cols-2',
+      3: 'grid-cols-1 sm:grid-cols-3',
+      4: 'grid-cols-2 sm:grid-cols-4',
+    },
     direction: {
       row: 'flex-row',
       column: 'flex-col',
@@ -46,5 +53,11 @@ export const containerStyles = cva('flex w-full', {
       xl: 'max-w-screen-xl',
       full: 'max-w-none',
     },
+    divide: { true: 'divide-border', false: '' },
+    hidden: { true: 'hidden', false: '' },
   },
+  compoundVariants: [
+    { direction: 'column', divide: true, class: 'divide-y' },
+    { direction: 'row', divide: true, class: 'divide-x' },
+  ],
 })

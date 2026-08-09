@@ -32,6 +32,11 @@ export const sectionStyles = cva('flex w-full flex-col', {
       'three-quarters': 'min-h-[75svh]',
       screen: 'min-h-svh',
     },
+    sticky: { true: 'sticky top-0 z-10', false: '' },
+    // Full bleed is the band painting edge to edge; the measure inside it is unaffected either way.
+    fullBleed: { true: 'w-full', false: 'mx-auto w-full max-w-screen-2xl' },
+    overflow: { visible: '', hidden: 'overflow-hidden', clip: 'overflow-clip' },
+    hidden: { true: 'hidden', false: 'flex' },
   },
 })
 

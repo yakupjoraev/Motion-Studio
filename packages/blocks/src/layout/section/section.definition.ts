@@ -4,7 +4,7 @@ import { defineBlock } from '../../define-block'
 import { MAX_WIDTH_SCALE, SPACE_SCALE, SURFACE_TOKENS, optionsFrom } from '../../scales'
 
 import { sectionMotion } from './section.motion'
-import { MIN_HEIGHTS, sectionSchema } from './section.schema'
+import { MIN_HEIGHTS, OVERFLOW, sectionSchema } from './section.schema'
 
 export const sectionDefinition = defineBlock({
   id: blockId('section'),
@@ -55,6 +55,14 @@ export const sectionDefinition = defineBlock({
           responsive: true,
           options: { options: optionsFrom(MIN_HEIGHTS) },
         },
+        {
+          path: 'overflow',
+          kind: 'select',
+          label: 'Overflow',
+          options: { options: optionsFrom(OVERFLOW) },
+        },
+        { path: 'sticky', kind: 'switch', label: 'Sticky', hint: 'Holds the top of the viewport' },
+        { path: 'hidden', kind: 'switch', label: 'Hidden', responsive: true },
       ],
     },
     {
@@ -66,6 +74,12 @@ export const sectionDefinition = defineBlock({
           kind: 'select',
           label: 'Background',
           options: { options: optionsFrom(SURFACE_TOKENS) },
+        },
+        {
+          path: 'fullBleed',
+          kind: 'switch',
+          label: 'Full bleed',
+          hint: 'The background runs to the window edges',
         },
       ],
     },

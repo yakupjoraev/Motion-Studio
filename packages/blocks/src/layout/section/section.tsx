@@ -11,10 +11,25 @@ export function Section({
   background,
   align,
   minHeight,
+  sticky,
+  fullBleed,
+  overflow,
+  hidden,
   children,
 }: SectionProps) {
   return (
-    <section className={sectionStyles({ padding, background, align, minHeight })}>
+    <section
+      className={sectionStyles({
+        padding,
+        background,
+        align,
+        minHeight,
+        sticky,
+        fullBleed,
+        overflow,
+        hidden,
+      })}
+    >
       <div className={sectionInnerStyles({ maxWidth, align })}>{children}</div>
     </section>
   )

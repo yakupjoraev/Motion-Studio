@@ -39,6 +39,11 @@ export type SurfaceToken = (typeof SURFACE_TOKENS)[number]
 
 export const surfaceToken = z.enum(SURFACE_TOKENS)
 
+/** ADR-117: the responsive visibility prop, so an override emits `hidden md:block`. */
+export const visibility = z.boolean().default(false)
+
+export const VISIBILITY_CLASS = { true: 'hidden', false: 'block' } as const
+
 export const ALIGNMENTS = ['start', 'center', 'end'] as const
 
 export type Alignment = (typeof ALIGNMENTS)[number]

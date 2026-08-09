@@ -12,7 +12,8 @@ import { expect } from 'vitest'
 export function renderBlock<P>(
   definition: BlockDefinition<P>,
   Component: ComponentType<P & { children?: ReactNode }>,
-  overrides: Partial<P> & { children?: ReactNode } = {},
+  // Slots travel here too — `columns` takes `left` and `right`, which are not props of the schema.
+  overrides: Partial<P> & Record<string, unknown> & { children?: ReactNode } = {},
 ): RenderResult {
   const props = definition.propsSchema.parse({ ...definition.defaults, ...overrides })
 

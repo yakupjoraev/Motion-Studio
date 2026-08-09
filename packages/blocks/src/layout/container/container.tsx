@@ -6,6 +6,8 @@ import type { ContainerProps } from './container.types'
  * one `main` and a handful of sections, and a container is neither.
  */
 export function Container({
+  mode,
+  columns,
   direction,
   gap,
   padding,
@@ -13,11 +15,37 @@ export function Container({
   justify,
   wrap,
   maxWidth,
+  divide,
+  hidden,
   children,
 }: ContainerProps) {
-  return (
-    <div className={containerStyles({ direction, gap, padding, align, justify, wrap, maxWidth })}>
-      {children}
-    </div>
-  )
+  // Grid mode has no direction and no wrap: the column count is what decides the flow, and passing
+  // both would emit two class families that contradict each other.
+  const className =
+    mode === 'grid'
+      ? containerStyles({
+          mode,
+          columns: columns as 1 | 2 | 3 | 4,
+          gap,
+          padding,
+          align,
+          justify,
+          maxWidth,
+          divide,
+          hidden,
+        })
+      : containerStyles({
+          mode,
+          direction,
+          gap,
+          padding,
+          align,
+          justify,
+          wrap,
+          maxWidth,
+          divide,
+          hidden,
+        })
+
+  return <div className={className}>{children}</div>
 }
