@@ -4394,3 +4394,158 @@ Selection, hover and the breakpoint frame use `ring-*` — a spread `box-shadow`
   rectangle over the node's box. Neither would an outline have.
 - Rejected: a `border` on an element inset by 1.5 px. It is the same picture with an offset to keep
   correct at every zoom, and getting it wrong shifts the outline by a pixel rather than failing.
+
+## ADR-102 — The studio's store is composed in `apps/web`, with the real registry
+
+**Date** 2026-08-09 · **Prompt** 22 · **Status** Accepted
+
+### Question
+`createEditorStore` takes its registry at construction, and `packages/editor` exports
+`useEditorStore` built with an empty one because it must not import `packages/blocks`. The studio
+needs a store whose registry is the real catalogue. Which store does `/studio` use?
+
+### Criterion (set before measuring)
+Commands must be able to validate against the block that is being edited. Invariant 7 —
+`setProp` parses the node's props against `registry.require(node.blockId)` — is not optional, and a
+store with an empty registry throws `UnknownBlockError` on the first edit of the root container.
+
+### Measurement
+`createEditorStore` resolves `context.registry` once, in `resolveOptions`, and hands it to every
+command through `CommandContext`. There is no seam to swap it afterwards, and adding one would mean
+a store whose validation rules change under a running document.
+
+### Decision
+`apps/web/src/store/editor-store.ts` is the composition root: it calls `createEditorStore` with
+`blockRegistry` and is the store the studio subscribes to. `packages/editor`'s `useEditorStore`
+stays what its own comment says it is — the registry-free default, used by that package's tests and
+by any surface with no catalogue.
+
+### Consequences
+- Accepted: two module-level stores exist in the repository, and importing the wrong one in a studio
+  component is a mistake the compiler cannot catch. `apps/web` imports its own and nothing in
+  `apps/web` imports `useEditorStore`; a lint rule for it belongs with the ESLint-shaped work, not
+  here.
+- Accepted: STATE_MANAGEMENT.md's "one store" still holds at runtime — the studio has exactly one.
+
+## ADR-103 — `defineBlock` types control paths to depth three, and the rest is a meta-test
+
+**Date** 2026-08-09 · **Prompt** 22 · **Status** Accepted
+
+### Question
+The prompt asks for a control whose `path` is not in the schema to be a compile error "where
+possible", and a test failure where the type system cannot reach. Where is that line?
+
+### Criterion (set before measuring)
+Every path a control can legally carry, checked as early as the language allows. The measurement is
+which of the shapes in the catalogue a mapped type can actually enumerate.
+
+### Measurement
+Three shapes appear in `controls[].path` across COMPONENT_LIBRARY.md: a top-level key (`layout`), a
+dot path into a nested object (`padding.top`), and a path into an array item
+(`plans[2].label`) — the last only inside a `list` control's `itemControls`, which the registry
+types as opaque `options`. A mapped type enumerates the first two: `keyof T & string` plus recursion
+through object-valued keys. It cannot enumerate the third, because the index is a value.
+Unbounded recursion also makes the compiler unhappy on deep shapes, and three levels covers every
+schema in the catalogue.
+
+### Decision
+`ControlPath<P>` enumerates top-level keys and dot paths through nested objects to depth 3, and
+`defineBlock` requires `controls[].path` to be one of them. Array-item paths and anything inside
+`options` are checked by the registry meta-test, which walks the Zod schema itself.
+
+### Consequences
+- Accepted: a typo in `itemControls` is caught a test run later than one in `controls`.
+- Accepted: the depth limit is a number in the type. A schema nested four deep would silently lose
+  the check on its deepest level, so the meta-test walks the schema for **every** path regardless —
+  the type is the fast feedback, the test is the guarantee.
+
+## ADR-104 — A node's props are parsed through the block schema, not merged with its defaults
+
+**Date** 2026-08-09 · **Prompt** 22 · **Status** Accepted
+
+### Question
+`createEmptyDocument` writes the root container with `props: {}`, and a node only stores the props
+that were edited. The component needs a complete prop set. Where does the rest come from?
+
+### Criterion (set before measuring)
+The value the component receives must equal the value the exporter emits and the inspector shows.
+One resolution rule, used by all three, or they drift.
+
+### Measurement
+A shallow `{ ...definition.defaults, ...node.props }` is wrong the moment a prop is an object: a
+node that overrides `padding.top` would lose `padding.left`. Zod already holds the answer — every
+prop in these schemas carries `.default()`, so `propsSchema.parse({})` **is** the defaults, and
+parsing a partial node fills exactly the missing keys at every level. It is also the same call
+invariant 7 makes on the write path, so a document that was written through commands always parses.
+
+### Decision
+`NodeRenderer` resolves responsive overrides, parses the result through `definition.propsSchema`,
+and renders the parsed value. A parse failure renders the error card rather than the block, with
+the message from Zod: a node whose props do not satisfy its schema is a broken node, and rendering
+it half-configured hides that.
+
+### Consequences
+- Accepted: a parse per node per node-change. The renderer is memoised on its own node, so this is
+  not per frame; a document edit parses one node.
+- Accepted: `defaults` in the definition is now a derived value that must agree with the schema.
+  The meta-test asserts `propsSchema.parse(defaults)` equals `defaults`, so a definition that
+  disagrees with its own schema fails.
+
+## ADR-105 — Arrow nudges reach the host and stop there, until a block has a position
+
+**Date** 2026-08-09 · **Prompt** 22 · **Status** Accepted
+
+### Question
+`CanvasSelectionPort.nudge(dx, dy)` is an intent the canvas has been sending since ADR-080. The
+host now exists. What command does it dispatch?
+
+### Criterion (set before measuring)
+The command must write a property the document actually has. Inventing one to make an arrow key do
+something is the banned fourth way.
+
+### Measurement
+The three blocks in this prompt lay out in flow: a heading's place comes from its container's
+`direction`, `gap` and `align`. `Node` has `props`, `responsive`, `motion` and `effects`, and no
+coordinates — ADR-057 recorded that align and distribute write `align`/`justify` for the same
+reason. There is no property a 1 px displacement corresponds to.
+
+### Decision
+The host's `nudge` is an explicit no-op with this entry as its comment. Arrow keys still move the
+selection through the canvas's own key map; they do not move a node.
+
+### Consequences
+- Accepted: a user pressing an arrow on a selected node sees nothing happen. That is the truthful
+  behaviour of a flow-layout document, and the alternative — nudging padding, or a fake `x`/`y` —
+  would produce a document the exporter cannot honour.
+- Revisit when a block declares absolute positioning, which is a Layout-section property in a later
+  prompt.
+
+## ADR-106 — Block props are token scales, not free numbers
+
+**Date** 2026-08-09 · **Prompt** 22 · **Status** Accepted
+
+### Question
+`section.padding`, `container.gap`, `heading.size` are all "a size". Should they be numbers with a
+unit, or names from a scale?
+
+### Criterion (set before measuring)
+COMPONENT_LIBRARY.md § Rules 3 and 4: Tailwind classes only, tokens only, inline styles only for
+genuinely dynamic values. Whatever is chosen has to print as a class in the exported code.
+
+### Measurement
+A free number cannot be a static class: `p-[23px]` is an arbitrary value that Tailwind only emits if
+it can see the literal, and a value from the document is never literal at build time. The two ways
+out are an inline style — which rule 3 bans and which the exporter would have to emit as a `style`
+attribute — or a CSS variable per prop, which turns every spacing prop into a variable the exported
+project has to carry. A named scale is one lookup into a frozen map of literal classes, printable as
+`p-8` and readable in the exported file.
+
+### Decision
+Size-like props are enums over the token scale (`none | xs | sm | md | lg | xl`), mapped to literal
+Tailwind classes in the block's `.styles.ts`. The inspector renders them as `select` or `segmented`,
+which is also the control the scale deserves.
+
+### Consequences
+- Accepted: a user cannot type 23 px of padding. That is the design system holding, and the escape
+  hatch is the `css` control kind, which arrives with the playground.
+- Accepted: adding a step to a scale is a schema change plus a class-map entry, in one file.
