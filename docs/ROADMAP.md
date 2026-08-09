@@ -90,6 +90,12 @@ Deliverables:
 **Done when:** 22 blocks render on the canvas, the inspector is fully generated from schemas, every
 meta-test passes, and editing any control produces exactly one coalesced undo step.
 
+**Carried out of M4:** the animated WebM hover clip for the block palette. The still thumbnails are
+byte-identical across runs and gated in CI; a recorded video is not, because it carries encoder
+timestamps that nothing in the recording API pins. It needs one of two decisions from the owner —
+add ffmpeg and re-mux with fixed timestamps, or generate hover clips at release time and keep them
+out of the repository. ADR-125 has the measurement.
+
 ## M5 — Drag and drop (2–3 days)
 
 **Prompts 27–29**
