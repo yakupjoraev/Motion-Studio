@@ -52,6 +52,8 @@ export interface SlotDefinition {
   readonly minChildren: number
   readonly maxChildren: number | null
   readonly defaultChildren?: readonly BlockId[]
+  /** How this slot arranges children at these props — ADR-130. Absent means vertical. */
+  readonly orientation?: (props: UnknownProps) => 'vertical' | 'horizontal' | 'grid'
 }
 
 export interface BlockCapabilities {

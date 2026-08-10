@@ -80,8 +80,9 @@ Algorithm:
 1. Hit test the pointer → deepest node under the cursor (excluding the dragged subtree)
 2. Walk up until a node whose block declares a slot that accepts the dragged blockId
 3. If none found → root, or reject if root's slot rejects it
-4. Read the container's resolved layout direction (from its props, not from computed style —
-   props are the truth and are available without a DOM read)
+4. Read the container's layout direction from `SlotDefinition.orientation`, which the block computes
+   from its own resolved props (ADR-130) — not from computed style, which would be a forced layout
+   mid-drag, and not from a prop name the drag layer guessed at
 5. Compute the insertion index:
    - vertical:   compare pointer.y against each child's vertical midpoint
    - horizontal: compare pointer.x against each child's horizontal midpoint
@@ -96,16 +97,21 @@ unit-testable without a browser:
 
 ```ts
 export function resolveDropTarget(args: {
-  pointer: CanvasPoint
+  point: Point                          // screen space — the rect cache's space (ADR-126)
   hitNodeId: NodeId | null
   draggedBlockId: BlockId
   draggedNodeIds: readonly NodeId[]     // empty for palette drags
   document: MotionDocument
   registry: BlockRegistry
-  rects: RectCache
+  rects: DragRectSource                 // the cache, narrowed to `get` (ARCHITECTURE.md § Rules 8)
   isolationId: NodeId | null
+  breakpoint: BreakpointId              // step 4 resolves props, and resolving needs the breakpoint
 }): DropTarget | null
 ```
+
+`index` is a position in the parent's `children` **with the dragged nodes taken out**, because
+`moveNodes` detaches before it splices. Moving a node one place down its own list is the off-by-one
+that convention removes.
 
 ### Validation rules
 

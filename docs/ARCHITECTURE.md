@@ -106,7 +106,12 @@ cycle check.
 6. **No deep imports.** `@motion-studio/ui` yes; `@motion-studio/ui/src/button/button` no.
    Enforced by `exports` maps and a Biome rule.
 
-7. **`dnd` must not import `canvas`.** The drag layer needs the rect cache and the zoom, and both
+7. **`dnd` depends on `editor`.** A drop ends in a command, and the guards that decide whether a
+   slot accepts a block live with the commands that enforce them — so the drag layer uses `editor`'s
+   predicates rather than its own copies of them (ADR-131). The arrow runs one way and the graph stays
+   a DAG.
+
+8. **`dnd` must not import `canvas`.** The drag layer needs the rect cache and the zoom, and both
    arrive as props on `DndProvider`. Keeping the arrow out means the drag layer is testable with a
    three-entry fake cache, and it is what lets the same layer serve the layers tree, whose rows are
    not canvas nodes at all. `check:deps` enforces it.

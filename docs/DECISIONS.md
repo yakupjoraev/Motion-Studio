@@ -5389,3 +5389,96 @@ the release, to report the drop.
   because a default here would be a fake implementation of the next prompt.
 - Accepted: the resolver runs on container change rather than on every frame, which is enough for the
   announcements; the `rAF` throttle with the 2 px skip belongs to the live indicator in prompt 28.
+
+## ADR-130 — A slot says how it arranges its children; the drag layer does not guess
+
+**Date** 2026-08-10 · **Prompt** 28 · **Status** Accepted
+
+### Question
+Step 4 of DRAG_AND_DROP.md § Drop position resolution says to read the container's layout direction
+"from its props, not from computed style". `container` says `mode: 'grid'` and `direction: 'row'`,
+`stack` says `direction: 'horizontal'`, `grid` says nothing because it is always cells, and `columns`
+has one child per side. Who translates a block's own props into the axis a drop compares against?
+
+### Question resolved by
+Specification, and the specification points one way only.
+
+ARCHITECTURE.md § Rules 1–4 keep block knowledge inside `blocks`: `editor`, `canvas` and `codegen`
+learn about a block through the registry interface and never by name. A drag layer that read
+`props.direction` would be doing exactly what that boundary forbids — encoding one block's prop names
+in another package, where a rename in `stack` silently changes where a drop lands. The alternative,
+reading `getComputedStyle` mid-drag, is a forced layout on the frame the prompt's own § Performance
+budget is measured on, and it also cannot answer for a container that is off screen.
+
+That leaves the registry, which is where every other cross-boundary fact about a block already lives.
+
+### Decision
+`SlotDefinition.orientation?: (props: UnknownProps) => SlotOrientation` in `packages/schema`, declared
+by the five layout blocks that hold children:
+
+| Block | What it declares |
+| --- | --- |
+| `section` | always `vertical` |
+| `container` | `grid` when `mode` is grid, else `horizontal`/`vertical` from `direction` |
+| `stack` | `horizontal` when `direction` is horizontal, else `vertical` |
+| `grid` | always `grid` |
+| `columns` | `vertical` per side, because each side holds one child |
+
+The resolver calls it with `resolveResponsiveProps(node, breakpoint)`, so a container that is a row at
+`md` resolves as a row at `md`. Absent means vertical, which is what a slot with no opinion is.
+
+### Consequences
+- Accepted: `resolveDropTarget` needs the breakpoint, which the signature in the prompt did not carry.
+  Without it a drop at `md` into a container overridden at `md` would compare against the wrong axis —
+  a wrong answer is worse than a longer argument list. The document is updated with the reason.
+- Accepted: a new optional field on the registry seam. Optional and one line per block, and a block
+  that forgets it gets vertical rather than an exception.
+- Accepted: the function takes `UnknownProps`, so a block reads its own prop with a literal comparison
+  rather than through its typed props. `SlotDefinition` is not generic and making it generic would
+  ripple through every definition in the catalogue for a two-token gain at each call site.
+- Avoided: a computed-style read on the drag path, and a table of prop names in `packages/dnd`.
+
+## ADR-131 — The drag layer depends on `editor`, so a drop is decided once
+
+**Date** 2026-08-10 · **Prompt** 28 · **Status** Accepted
+
+### Question
+`validateDrop` has to answer "does this slot accept this block", "is there room", "is this a
+descendant of itself" — and `editor`'s command guards answer all three already, because they are what
+`insertBlock` and `moveNodes` throw on. `on-drop.ts` then has to turn a target into one of those two
+commands. Does `packages/dnd` depend on `packages/editor`, or does it keep its own copies and hand the
+host a description to translate?
+
+### Question resolved by
+Specification plus one checkable property.
+
+ARCHITECTURE.md § Rules forbids four edges and this is not one of them; `editor` depends on `schema`,
+`utils` and `hooks`, so the arrow adds no cycle — `check:deps` asserts that on every commit, and it
+passes with 17 packages and a clean graph.
+
+The property that decides it: **a drop this layer accepts and the command then throws on is a defect
+neither side can catch.** Two copies of `slotAccepts` are two things to keep in step, and the one that
+drifts is the one that shows a green line to the user and then refuses the release. One import removes
+the possibility.
+
+### Decision
+`packages/dnd` depends on `@motion-studio/editor`. `validateDrop` uses `commands.slotAccepts`,
+`commands.slotChildren` and `commands.slotHasRoom` — now exported from the commands barrel, which is
+additive — and `commandForDrop(target, payload)` returns the `insertBlock` or `moveNodes` command
+itself. The host dispatches it; the mapping is written once for the studio, the layers tree and
+anything else that mounts the layer.
+
+`dnd` still must not import `canvas` (ARCHITECTURE.md § Rules 8): geometry arrives as props, because
+the rect cache is not a decision, it is a measurement.
+
+### Consequences
+- Accepted: `dnd` now pulls `editor` — and with it immer and zustand — into its dependency closure.
+  Both are already in the studio bundle, and the resolver itself imports neither.
+- Accepted: the drag layer is no longer testable with *only* a fake registry; its tests build a real
+  document from `schema`'s factories, which is what the resolver's cases need anyway.
+- Avoided: a second implementation of the slot rules, and a `switch` on drop kind in every host.
+
+### Alternatives rejected
+- Copies of the three predicates in `dnd`: the drift is silent and user-visible.
+- `on-drop` returning a description (`{ kind: 'insert' | 'move', … }`) for the host to translate: the
+  same six lines in every host, and prompt 29's tree would be the second copy.
