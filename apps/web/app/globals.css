@@ -13,6 +13,7 @@
 @source '../../../packages/ui/src';
 @source '../../../packages/canvas/src';
 @source '../../../packages/blocks/src';
+@source '../../../packages/dnd/src';
 @source '../app';
 @source '../src';
 

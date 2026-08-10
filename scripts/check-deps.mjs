@@ -17,6 +17,7 @@ const FORBIDDEN = [
   ['@motion-studio/canvas', '@motion-studio/editor'],
   ['@motion-studio/canvas', '@motion-studio/blocks'],
   ['@motion-studio/codegen', '@motion-studio/blocks'],
+  ['@motion-studio/dnd', '@motion-studio/canvas'],
 ]
 
 const EXTENSIONS = ['.ts', '.tsx', '.mts', '.mjs', '.js', '.json']
