@@ -44,10 +44,14 @@ const sensors = useSensors(
 
 - **4 px activation distance.** Below that a pointer-down is a selection. Users click far more
   often than they drag, and a 0 px threshold makes selection feel unstable.
-- **Keyboard sensor** with a custom coordinate getter: `Space`/`Enter` picks up, arrows move by
-  one grid cell (divided by zoom so a step is one visual cell), `Space`/`Enter` drops, `Esc`
-  cancels. Between containers, arrows move through drop targets rather than by pixels — the
-  getter switches mode based on whether the pointer is over a container boundary.
+- **Keyboard sensor** with a custom coordinate getter: `Space`/`Enter` picks up, arrows move by one
+  grid cell — `gridSize × zoom` screen pixels, which is one cell *as it appears* (ADR-127) —
+  `Space`/`Enter` drops, `Esc` cancels. Between containers, arrows move through drop targets rather
+  than by pixels: a press whose step would leave the current container jumps to the next one in
+  document order instead, so the mode switch is the boundary itself rather than a threshold near it.
+
+Both sensors cancel on `Esc` and on `visibilitychange`. Leaving the window for another application
+fires neither, so the provider delivers the same cancel key on `blur` — ADR-128.
 
 ## Drop position resolution
 
@@ -145,22 +149,23 @@ dropping nothing is the worst possible feedback.
 
 ## Working inside the transformed canvas
 
-dnd-kit computes deltas in screen space. The canvas scene is scaled, so a raw delta is wrong by
-a factor of `zoom`.
+dnd-kit computes deltas in screen space and the scene is scaled, which invites a modifier that
+divides the delta by `zoom`. **Measured, that is the wrong correction for this product's ghost**
+(ADR-126): the ghost is a `DragOverlay` in a portal at `Z.dragGhost`, outside the transform, so a
+screen delta is already the delta it wants. Dividing makes it drift, and not subtly — over 320 px of
+travel the ghost ends **320 px** from the cursor at zoom 0.5 and **160 px** from it at zoom 2.
 
-```ts
-export const canvasTransformModifier = (zoom: number): Modifier =>
-  ({ transform }) => ({
-    ...transform,
-    x: transform.x / zoom,
-    y: transform.y / zoom,
-  })
-```
+So the pipeline stays in screen space from the pointer to the overlay, and zoom enters exactly twice,
+both times at an edge:
 
-Applied only to canvas-internal drags. Palette → canvas drags keep screen-space movement for the
-overlay (it follows the cursor 1:1) and convert only the final drop point via `screenToCanvas`.
+- the **drop point**, converted once with `screenToCanvas`;
+- the **keyboard step**, which is a canvas grid cell expressed on screen (§ Sensors).
 
-This is exactly the class of bug that branded coordinate types prevent — see
+A modifier that divides the transform by `zoom` belongs to the other design — the one where the
+dragged element itself is rendered inside the scaled scene. If a ghost is ever moved in there, that
+is when it comes back; ADR-126 records what to measure.
+
+Converting the drop point is exactly the class of bug that branded coordinate types prevent — see
 [CANVAS.md](CANVAS.md) § Coordinate spaces.
 
 ## Accessibility
@@ -217,6 +222,15 @@ export type { DropTarget, DropIndicator, DragPayload } from './types'
 `DndProvider` wraps the studio, owns the `DndContext`, sensors, modifiers, announcements, and the
 overlay. It receives `onDrop(target, payload)` and calls it once per successful drop — dispatching
 the command is the app's job, not the dnd layer's.
+
+Four things arrive as props because this package owns none of them (ADR-129):
+
+| Prop | Why it is not ours |
+| --- | --- |
+| `rects` | The rect cache lives in `canvas`, which `dnd` must not import |
+| `zoom`, `gridSize` | The viewport is a ref in the canvas, read at the moment of a key press |
+| `resolveTarget` | `resolveDropTarget` is pure, and its inputs — document, registry, isolation — are the store's |
+| `onDrop` | A command is dispatched by the application |
 
 ## Testing
 

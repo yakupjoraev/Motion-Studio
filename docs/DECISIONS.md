@@ -5217,3 +5217,175 @@ exists to protect. A root script sees both halves; that is why it is a root scri
   one every other visual check already uses.
 - Accepted: the blur placeholder is 8 × 5 rather than the 4 × 3 the prompt names. It is the same
   handful of bytes and it is the reason the output is stable.
+
+## ADR-126 — The drag pipeline stays in screen space; the ghost gets no zoom division
+
+**Date** 2026-08-10 · **Prompt** 27 · **Status** Accepted
+
+### Question
+DRAG_AND_DROP.md § Working inside the transformed canvas specifies a modifier that divides the drag
+transform by `zoom`, applied to canvas-internal drags. The same document specifies the ghost as a
+`DragOverlay` in a portal at `Z.dragGhost`, which is outside the scene's transform. Both cannot be
+right at once. Which correction does the ghost actually need?
+
+### Criterion (set before measuring)
+The ghost must sit on the cursor. Concretely: through a drag, the offset between the ghost's top-left
+corner and the cursor must stay **constant to within 1 px** at zoom 0.5, 1 and 2. Whichever
+configuration holds that is the correct one; the other is the drift the document warns about.
+
+### Measurement
+A stand in `apps/web` with a palette card, a scene scaled by CSS transform, and the provider
+optionally handed `canvasTransformModifier(zoom)` as a `DndContext` modifier. Chrome 151 headless
+over CDP: press on the card, then four samples across a 360 px drag, reading the ghost's rect after
+each move. The number below is the offset's change from the first sample — zero means it tracked.
+
+| zoom | modifier | offset at each sample (x) | drift |
+| --- | --- | --- | --- |
+| 0.5 | absent | −112.15 −112.15 −112.15 −112.15 | **0 px** |
+| 1 | absent | −112.15 −112.15 −112.15 −112.15 | **0 px** |
+| 2 | absent | −112.15 −112.15 −112.15 −112.15 | **0 px** |
+| 0.5 | present | −72.15 +7.85 +127.85 +247.85 | **320 px** |
+| 1 | present | −112.15 −112.15 −112.15 −112.15 | 0 px |
+| 2 | present | −132.15 −172.15 −232.15 −292.15 | **160 px** |
+
+A canvas-node drag, ghost absent of the modifier, at zoom 1: offset −27 / −12 at all four samples,
+drift 0 px.
+
+The reason is in dnd-kit's own pipeline, which the measurement confirms rather than assumes: the
+`DndContext` modifiers produce `modifiedTranslate`, and that value is both the overlay's transform
+and the basis of `collisionRect`. Dividing it moves the portal ghost by `delta / zoom` while the
+cursor moves by `delta`, so the error grows linearly with the distance dragged — `(1/z − 1) × delta`,
+which is exactly the two non-zero rows above.
+
+### Decision
+`DndProvider` passes **no** modifiers to `DndContext`. The overlay carries `snapToCursorOffset`
+only, which shifts by a constant and therefore preserves 1:1 tracking. `canvasTransformModifier` is
+not shipped: with the ghost in a portal it has no correct caller, and an exported modifier nobody may
+apply is worse than its absence.
+
+Zoom enters the pipeline twice, both times at an edge: the drop point is converted once by
+`screenToCanvas`, and the keyboard step is a canvas grid cell expressed in screen pixels (ADR-127).
+
+### Consequences
+- Accepted: prompt 27's deliverable list names `modifiers/canvas-transform.ts` and this ships
+  without it. Reported, with the numbers, rather than quietly dropped.
+- Accepted: the day a drag renders its preview *inside* the scaled scene, the division comes back —
+  and this entry says what to measure to confirm it is needed.
+- Avoided: a ghost that leaves the cursor at every zoom but 100 %, which is the exact defect the
+  document warned about while specifying the thing that causes it.
+
+### Alternatives rejected
+- Modifier on `DndContext`, ghost in the portal: measured above, drifts 160–320 px.
+- Modifier on `DragOverlay` instead: the overlay applies its modifiers on top of the same
+  `modifiedTranslate`, so it is the same division in a different place.
+- Ghost rendered inside the scene so the division is correct: contradicts § Drag preview, and it
+  would scale the outline with the scene — a 1.5 px ring becomes 6 px at zoom 4.
+
+## ADR-127 — The keyboard step is one grid cell as it appears on screen
+
+**Date** 2026-08-10 · **Prompt** 27 · **Status** Accepted
+
+### Question
+DRAG_AND_DROP.md § Sensors says an arrow key moves "one grid cell (divided by zoom so a step is one
+visual cell)". dnd-kit's coordinate getter works in screen coordinates. Is `gridSize / zoom` the
+step that lands on the visible grid?
+
+### Criterion (set before measuring)
+One press must move the drag point by one cell of the grid the user can see — the grid
+`packages/canvas` paints, which is `gridSize` canvas units and therefore `gridSize × zoom` screen
+pixels. The step is right if a press moves the ghost from one grid line to the next at zoom 0.5, 1
+and 2; wrong if the distance shrinks when the grid grows.
+
+### Measurement
+Arithmetic over the two spaces, checked against the pipeline the getter feeds. The getter returns
+screen coordinates, and the drag point moves by exactly what it returns (ADR-126: no modifier scales
+it). At `gridSize` 8, one visible cell is 4 / 8 / 16 screen px at zoom 0.5 / 1 / 2. The specified
+`gridSize / zoom` gives 16 / 8 / 4 — the inverse: at zoom 2, where a cell is drawn 16 px wide, a
+press would travel 4 px, and four presses would land inside one cell. `gridSize × zoom` gives
+4 / 8 / 16, which is the cell.
+
+The document's formula also fails under the pipeline it was written for. With a `÷ zoom` modifier in
+place, a screen step S becomes a canvas delta of `S / zoom`, so a step of one canvas cell needs
+`S = gridSize × zoom` there too. Neither pipeline makes the division correct.
+
+### Decision
+`keyboardStep(gridSize, zoom) = gridSize × zoom`, and § Sensors is corrected to say so. The
+cross-container mode is unchanged in intent and made exact: a press whose step would leave the
+current container jumps to the next container in document order instead, so the mode switch *is* the
+boundary rather than a threshold placed near it.
+
+### Consequences
+- Accepted: at zoom 0.25 a press moves 2 px, which is a slow way to cross a canvas. Crossing a canvas
+  is what the cross-container mode is for; within a container the point of the step is to land on the
+  grid.
+- Accepted: a document edit to DRAG_AND_DROP.md ahead of the code, per ENGINEERING_CONTRACT.md § 9.
+
+## ADR-128 — A drag cancels on window blur by delivering the sensor's own cancel key
+
+**Date** 2026-08-10 · **Prompt** 27 · **Status** Accepted
+
+### Question
+DRAG_AND_DROP.md § Auto-behaviours requires a drag to cancel on window blur. dnd-kit's sensors cancel
+on `Esc`, on `pointercancel` and on `visibilitychange` — and switching to another application fires
+none of those on Windows, because the page stays visible. How is the cancel delivered?
+
+### Criterion (set before measuring)
+The cancel must unwind the sensor, not just the store: after it, no ghost, no drop recorded, and no
+listener left waiting for a `pointerup` that will arrive later. Measured in a browser, not reasoned
+about.
+
+### Measurement
+`@dnd-kit/core@6.3.1` declares every member of `AbstractPointerSensor` `private`, including
+`handleCancel`, and does not export the class from its entry point; `DndContext` exposes no
+imperative cancel (`cancelDrop` runs at drop time only). So the two candidate mechanisms are calling
+`props.onCancel()` from a wrapper sensor — which ends the drag in the context while the inner
+sensor keeps its document listeners until the next `pointerup` — or delivering the key the sensor
+already treats as a cancel.
+
+Chrome 151 headless, on the stand: mid-drag, `window.dispatchEvent(new FocusEvent('blur'))` while
+the pointer button was still down. Ghost present before, **absent after**; drops recorded before and
+after both **2**; the live region read *"Cancelled. Aurora hero, marketing block returned to its
+original position."* The same run with a real `Escape` key event produced the identical three
+results, which is the point: the paths are the same path.
+
+### Decision
+`useCancelDragOnBlur(dragging)` listens for `blur` while a drag is in flight and dispatches a
+`keydown` of `Escape` on `document`. Both sensors honour it, each through its own cancel path, so the
+detach, the text-selection cleanup and the `onCancel` all happen exactly as they do for a real press.
+
+### Consequences
+- Accepted: the synthetic key reaches every other `keydown` listener on the document, exactly as a
+  real `Escape` would. During a drag that is the behaviour we want anyway — a user who presses
+  `Escape` mid-drag gets the same breadth.
+- Accepted: it is an event rather than a call, so it is one hop less direct than an imperative cancel
+  would be. That API does not exist in this version; if it appears, this entry is what to supersede.
+- Avoided: a wrapper sensor that leaves live pointer listeners behind a cancelled drag.
+
+## ADR-129 — The drop resolver reaches the drag layer as a port, not an import
+
+**Date** 2026-08-10 · **Prompt** 27 · **Status** Accepted
+
+### Question
+`DndProvider` must produce a `DropTarget` for `onDrop`. `resolveDropTarget` (prompt 28) is pure, but
+its inputs are the document, the registry, the rect cache and the isolation id. Where does the
+provider get them?
+
+### Question resolved by
+Specification. ARCHITECTURE.md § Rules forbids `dnd` from importing `canvas` (rect cache) and puts
+the live document in the store, which is `apps/web`. Every input of the resolver is therefore
+something this package cannot reach, and the seam is already the shape the rest of the repository
+uses for exactly this: the canvas takes `CanvasScene` and its ports as props (ADR-077).
+
+### Decision
+`DndProvider` takes `rects`, `zoom`, `gridSize` and `resolveTarget` as props. `resolveTarget` is a
+`DropTargetResolver` — `(attempt) => DropTarget | null` — which prompt 28 will implement by binding
+`resolveDropTarget` to the store's document, the registry and the current isolation. The provider
+calls it in two places: when the container under the drag changes, to announce the position, and at
+the release, to report the drop.
+
+### Consequences
+- Accepted: prompt 27 ships a pipeline with no policy in it. The visible feedback and the index
+  arithmetic arrive in prompt 28, and until then a host must supply a resolver — there is no default,
+  because a default here would be a fake implementation of the next prompt.
+- Accepted: the resolver runs on container change rather than on every frame, which is enough for the
+  announcements; the `rAF` throttle with the 2 px skip belongs to the live indicator in prompt 28.

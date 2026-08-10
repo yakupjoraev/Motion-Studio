@@ -106,6 +106,11 @@ cycle check.
 6. **No deep imports.** `@motion-studio/ui` yes; `@motion-studio/ui/src/button/button` no.
    Enforced by `exports` maps and a Biome rule.
 
+7. **`dnd` must not import `canvas`.** The drag layer needs the rect cache and the zoom, and both
+   arrive as props on `DndProvider`. Keeping the arrow out means the drag layer is testable with a
+   three-entry fake cache, and it is what lets the same layer serve the layers tree, whose rows are
+   not canvas nodes at all. `check:deps` enforces it.
+
 ## The registry seam
 
 The seam between `editor`/`canvas`/`codegen` and `blocks` is a single interface in `schema`:
