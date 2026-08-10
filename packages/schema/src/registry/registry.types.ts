@@ -74,6 +74,9 @@ export interface ControlGroup {
   readonly controls: readonly ControlDescriptor[]
 }
 
+/** Which axis a slot lays its children out along — DRAG_AND_DROP.md § Drop position resolution. */
+export type SlotOrientation = 'vertical' | 'horizontal' | 'grid'
+
 export interface SlotDefinition {
   readonly name: string
   readonly label: string
@@ -82,6 +85,13 @@ export interface SlotDefinition {
   readonly minChildren: number
   readonly maxChildren: number | null
   readonly defaultChildren?: readonly BlockId[]
+  /**
+   * ADR-130. A drop compares the pointer against child midpoints, and which midpoint — the top edge,
+   * the left edge, or the nearest cell — is a fact about this block's own layout at these props. Only
+   * the block can answer it, so the block says it here rather than the drag layer guessing from a
+   * prop name or reading a computed style. Absent means vertical.
+   */
+  readonly orientation?: ((props: UnknownProps) => SlotOrientation) | undefined
 }
 
 export interface BlockCapabilities {

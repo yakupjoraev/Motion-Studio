@@ -45,7 +45,7 @@ export interface DropTarget {
 
 /**
  * The rect cache of `packages/canvas`, narrowed to the one question a collision asks it.
- * ARCHITECTURE.md § Rules 7: `dnd` must not import `canvas`, so the cache arrives as a prop and
+ * ARCHITECTURE.md § Rules 8: `dnd` must not import `canvas`, so the cache arrives as a prop and
  * `check:deps` keeps it that way.
  */
 export interface DragRectSource {

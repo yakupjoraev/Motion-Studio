@@ -15,7 +15,14 @@ export {
   type DistributeNodesPayload,
 } from './distribute-nodes'
 export { duplicateNodes, type DuplicateNodesPayload } from './duplicate-nodes'
-export { COMMAND_CODES, type CommandCode } from './guards'
+export {
+  COMMAND_CODES,
+  clampIndex,
+  slotAccepts,
+  slotChildren,
+  slotHasRoom,
+  type CommandCode,
+} from './guards'
 export { insertBlock, type InsertBlockPayload } from './insert-block'
 export { insertNode, type InsertNodePayload } from './insert-node'
 export { moveNodes, type MoveNodesPayload } from './move-nodes'

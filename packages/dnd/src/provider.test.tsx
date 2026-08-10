@@ -125,6 +125,16 @@ describe('DndProvider', () => {
     expect(screen.queryByTestId('block-card-preview')).toBeNull()
   })
 
+  it('lets the pointer through the ghost, so hover still reaches what is under it', () => {
+    renderDnd()
+
+    grab('palette-card')
+
+    // Measured in a browser: dnd-kit's own wrapper is `pointer-events: auto`, and a ghost that eats
+    // `pointerenter` silently kills spring-open and every other hover affordance mid-drag.
+    expect(screen.getByTestId('block-card-preview').parentElement?.style.pointerEvents).toBe('none')
+  })
+
   it('counts the whole selection on the ghost', () => {
     renderDnd({
       nodeIds: [HERO, ROOT],

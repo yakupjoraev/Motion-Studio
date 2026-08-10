@@ -117,6 +117,7 @@ export {
   type ImportSpec,
   type RenderRegistry,
   type SlotDefinition,
+  type SlotOrientation,
   type UnknownProps,
 } from './registry/registry.types'
 export {

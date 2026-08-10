@@ -10,6 +10,13 @@ import { NodeGhost } from './node-ghost'
 
 const MODIFIERS = [snapToCursorOffset]
 
+/**
+ * Measured in a browser: dnd-kit's overlay wrapper is `pointer-events: auto`, so the ghost sits under
+ * the cursor and takes every `pointerenter` the surfaces beneath it were waiting for — which silently
+ * kills anything that reacts to hover mid-drag, spring-open first among them.
+ */
+const OVERLAY_STYLE = { pointerEvents: 'none' } as const
+
 /** ADR-075's variable answers the media query, the token and the studio's own preview in one read. */
 const reducedMotion = (): boolean =>
   getComputedStyle(document.documentElement).getPropertyValue('--ms-reduced-motion').trim() === '0'
@@ -32,6 +39,7 @@ export function DndDragOverlay({ payload }: DndDragOverlayProps) {
     <DragOverlay
       dropAnimation={null}
       modifiers={MODIFIERS}
+      style={OVERLAY_STYLE}
       transition={transition}
       zIndex={Z_INDEX.dragGhost}
     >

@@ -18,7 +18,16 @@ export const gridDefinition = defineBlock({
   defaults: gridSchema.parse({}),
   previewProps: gridSchema.parse({ mode: 'auto-fit', gapX: 'lg', gapY: 'lg' }),
 
-  slots: [{ name: 'children', label: 'Items', accepts: '*', minChildren: 0, maxChildren: null }],
+  slots: [
+    {
+      name: 'children',
+      label: 'Items',
+      accepts: '*',
+      minChildren: 0,
+      maxChildren: null,
+      orientation: () => 'grid',
+    },
+  ],
 
   controls: [
     {

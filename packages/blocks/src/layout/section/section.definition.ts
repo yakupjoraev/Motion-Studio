@@ -25,6 +25,7 @@ export const sectionDefinition = defineBlock({
       accepts: '*',
       minChildren: 0,
       maxChildren: null,
+      orientation: () => 'vertical',
     },
   ],
 

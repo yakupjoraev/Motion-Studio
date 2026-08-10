@@ -26,6 +26,9 @@ import { useAnnouncerContainer } from './announcer-container'
 import { rectCacheCollision } from './collision/rect-cache-collision'
 import type { DragPayload, DragRectSource, DropTarget, DropTargetResolver } from './dnd.types'
 import { dragPoint } from './drag-point'
+import { DropIndicatorLayer } from './indicators/drop-indicator-layer'
+import { createIndicatorHandle } from './indicators/indicator-handle'
+import { useDropResolution } from './indicators/use-drop-resolution'
 import { DndDragOverlay } from './overlay/drag-overlay'
 import { dragPayload, draggedNodeIds, dropZone, payloadLabel } from './payload'
 import { useCancelDragOnBlur } from './sensors/cancel-on-blur'
@@ -108,6 +111,16 @@ export function DndProvider({
     [resolveTarget],
   )
 
+  // The drag as the frame loop sees it: what is moving and what it is over, held in a ref because a
+  // render per pointer move is what § Performance exists to prevent.
+  const drag = useRef<{ readonly active: Active; readonly over: Over | null } | null>(null)
+  const indicator = useMemo(createIndicatorHandle, [])
+  const resolution = useDropResolution({
+    indicator,
+    resolve: () =>
+      drag.current === null ? null : describe(drag.current.active, drag.current.over).target,
+  })
+
   const announcements = useMemo<Announcements>(
     () => ({
       onDragStart: ({ active }) => announceDragStart(describe(active, null).label),
@@ -129,25 +142,38 @@ export function DndProvider({
       }}
       collisionDetection={collisionDetection}
       onDragCancel={() => {
+        drag.current = null
+        resolution.stop()
         setPayload(null)
       }}
       onDragEnd={({ active, over }) => {
         const { target } = describe(active, over)
         const dragged = dragPayload(active.data.current)
 
+        drag.current = null
+        resolution.stop()
         setPayload(null)
 
         if (dragged !== null && target !== null && target.indicator.kind !== 'reject') {
           onDrop(target, dragged)
         }
       }}
+      onDragMove={({ active, over }) => {
+        drag.current = { active, over }
+        resolution.request(point.current)
+      }}
+      onDragOver={({ active, over }) => {
+        drag.current = { active, over }
+      }}
       onDragStart={({ active }) => {
+        drag.current = { active, over: null }
         setPayload(dragPayload(active.data.current))
       }}
       sensors={sensors}
     >
       {children}
       <DndDragOverlay payload={payload} />
+      <DropIndicatorLayer handle={indicator} />
     </DndContext>
   )
 }

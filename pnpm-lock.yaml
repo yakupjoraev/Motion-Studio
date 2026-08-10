@@ -105,6 +105,9 @@ importers:
       '@motion-studio/canvas':
         specifier: workspace:*
         version: link:../../packages/canvas
+      '@motion-studio/dnd':
+        specifier: workspace:*
+        version: link:../../packages/dnd
       '@motion-studio/editor':
         specifier: workspace:*
         version: link:../../packages/editor
@@ -329,6 +332,9 @@ importers:
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@motion-studio/editor':
+        specifier: workspace:*
+        version: link:../editor
       '@motion-studio/schema':
         specifier: workspace:*
         version: link:../schema

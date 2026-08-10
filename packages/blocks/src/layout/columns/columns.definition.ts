@@ -20,8 +20,22 @@ export const columnsDefinition = defineBlock({
 
   // One child each, and named: a drop into the left column highlights the left column.
   slots: [
-    { name: 'left', label: 'Left', accepts: '*', minChildren: 0, maxChildren: 1 },
-    { name: 'right', label: 'Right', accepts: '*', minChildren: 0, maxChildren: 1 },
+    {
+      name: 'left',
+      label: 'Left',
+      accepts: '*',
+      minChildren: 0,
+      maxChildren: 1,
+      orientation: () => 'vertical',
+    },
+    {
+      name: 'right',
+      label: 'Right',
+      accepts: '*',
+      minChildren: 0,
+      maxChildren: 1,
+      orientation: () => 'vertical',
+    },
   ],
 
   controls: [

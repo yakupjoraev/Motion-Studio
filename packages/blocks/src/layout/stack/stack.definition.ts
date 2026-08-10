@@ -18,7 +18,16 @@ export const stackDefinition = defineBlock({
   defaults: stackSchema.parse({}),
   previewProps: stackSchema.parse({ gap: 'lg', divider: true }),
 
-  slots: [{ name: 'children', label: 'Content', accepts: '*', minChildren: 0, maxChildren: null }],
+  slots: [
+    {
+      name: 'children',
+      label: 'Content',
+      accepts: '*',
+      minChildren: 0,
+      maxChildren: null,
+      orientation: (props) => (props['direction'] === 'horizontal' ? 'horizontal' : 'vertical'),
+    },
+  ],
 
   controls: [
     {

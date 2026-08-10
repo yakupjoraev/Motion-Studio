@@ -31,6 +31,12 @@ export const containerDefinition = defineBlock({
       accepts: '*',
       minChildren: 0,
       maxChildren: null,
+      orientation: (props) =>
+        props['mode'] === 'grid'
+          ? 'grid'
+          : props['direction'] === 'row'
+            ? 'horizontal'
+            : 'vertical',
     },
   ],
 

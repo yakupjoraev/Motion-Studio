@@ -8,7 +8,7 @@ import { dropZone } from '../payload'
  * DRAG_AND_DROP.md § Performance. dnd-kit's `rectIntersection` measures every droppable on every
  * move, which over 200 nodes is a frame killer. The rects are already in the canvas's cache, so the
  * detector reads them from there — the cache arrives as an argument because `dnd` must not import
- * `canvas` (ARCHITECTURE.md § Rules 7).
+ * `canvas` (ARCHITECTURE.md § Rules 8).
  *
  * The deepest container under the point wins, and "deepest" is "smallest": a child container is
  * inside its parent, so it is the one with the smaller area.
