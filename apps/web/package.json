@@ -17,6 +17,7 @@
     "@motion-studio/dnd": "workspace:*",
     "@motion-studio/editor": "workspace:*",
     "@motion-studio/icons": "workspace:*",
+    "@motion-studio/motion": "workspace:*",
     "@motion-studio/schema": "workspace:*",
     "@motion-studio/theme": "workspace:*",
     "@motion-studio/tokens": "workspace:*",

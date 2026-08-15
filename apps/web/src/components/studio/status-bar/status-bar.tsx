@@ -1,30 +1,14 @@
 'use client'
 
 import { selectors } from '@motion-studio/editor'
+import { useReducedMotion } from '@motion-studio/motion'
 import { BREAKPOINTS } from '@motion-studio/schema'
 import { Separator } from '@motion-studio/ui'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { useStudioStore } from '../../../store/editor-store'
 
 import { FpsMeter } from './fps-meter'
-
-/** ANIMATION_SYSTEM.md § Reduced motion: the state the whole studio reads, reported where the user can see it. */
-function useReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(false)
-
-  useEffect(() => {
-    const query = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const read = (): void => setReduced(query.matches)
-
-    read()
-    query.addEventListener('change', read)
-
-    return () => query.removeEventListener('change', read)
-  }, [])
-
-  return reduced
-}
 
 /** "Hero selected", "3 selected", or nothing — the phrasing the canvas announces. */
 function describeSelection(count: number, name: string | null): string {
