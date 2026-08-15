@@ -1,0 +1,822 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`blur-in > emits a codegen fragment that names its imports 1`] = `
+{
+  "helpers": [
+    {
+      "name": "blurInVariants",
+      "source": "const blurInVariants = {
+  "hidden": {
+    "opacity": 0,
+    "filter": "blur(12px)"
+  },
+  "visible": {
+    "opacity": 1,
+    "filter": "blur(0px)"
+  }
+}",
+    },
+    {
+      "name": "blurInTransition",
+      "source": "const blurInTransition = {
+  "duration": 0.7,
+  "delay": 0
+}",
+    },
+  ],
+  "imports": [
+    {
+      "from": "motion/react",
+      "named": [
+        "motion",
+      ],
+    },
+  ],
+  "wrapper": {
+    "props": {
+      "initial": ""hidden"",
+      "transition": "{blurInTransition}",
+      "variants": "{blurInVariants}",
+      "viewport": "{{ once: true, amount: 0.3 }}",
+      "whileInView": ""visible"",
+    },
+    "tag": "motion.div",
+  },
+}
+`;
+
+exports[`border-beam > emits a codegen fragment that names its imports 1`] = `
+{
+  "classNames": [
+    "ms-border-beam",
+  ],
+  "css": "@property --ms-beam-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false }
+@keyframes ms-border-beam { to { --ms-beam-angle: 360deg } }
+.ms-border-beam:hover { animation: ms-border-beam 2400ms linear infinite }",
+  "imports": [],
+}
+`;
+
+exports[`clip-reveal > emits a codegen fragment that names its imports 1`] = `
+{
+  "helpers": [
+    {
+      "name": "clipRevealVariants",
+      "source": "const clipRevealVariants = {
+  "hidden": {
+    "clipPath": "inset(100% 0 0 0)"
+  },
+  "visible": {
+    "clipPath": "inset(0 0 0 0)"
+  }
+}",
+    },
+    {
+      "name": "clipRevealTransition",
+      "source": "const clipRevealTransition = {
+  "duration": 0.72,
+  "delay": 0
+}",
+    },
+  ],
+  "imports": [
+    {
+      "from": "motion/react",
+      "named": [
+        "motion",
+      ],
+    },
+  ],
+  "wrapper": {
+    "props": {
+      "initial": ""hidden"",
+      "transition": "{clipRevealTransition}",
+      "variants": "{clipRevealVariants}",
+      "viewport": "{{ once: true, amount: 0.3 }}",
+      "whileInView": ""visible"",
+    },
+    "tag": "motion.div",
+  },
+}
+`;
+
+exports[`counter > emits a codegen fragment that names its imports 1`] = `
+{
+  "helpers": [
+    {
+      "name": "formatCounter",
+      "source": "const formatCounter = new Intl.NumberFormat(undefined, {"style":"decimal"})",
+    },
+  ],
+  "hooks": [
+    "const counterRef = useRef<HTMLSpanElement>(null)",
+    "const counterInView = useInView(counterRef, { once: true, amount: 0.3 })",
+    "const [counterValue, setCounterValue] = useState(0)",
+    "useEffect(() => {
+  if (!counterInView) return
+  const controls = animate(0, 100, {
+    duration: 1.2,
+    onUpdate: (value) => setCounterValue(value),
+  })
+  return () => controls.stop()
+}, [counterInView])",
+  ],
+  "imports": [
+    {
+      "from": "motion/react",
+      "named": [
+        "animate",
+        "useInView",
+      ],
+    },
+    {
+      "from": "react",
+      "named": [
+        "useEffect",
+        "useRef",
+        "useState",
+      ],
+    },
+  ],
+  "wrapper": {
+    "props": {
+      "ref": "{counterRef}",
+    },
+    "tag": "span",
+  },
+}
+`;
+
+exports[`draw-line > emits a codegen fragment that names its imports 1`] = `
+{
+  "helpers": [
+    {
+      "name": "drawLineVariants",
+      "source": "const drawLineVariants = {
+  "hidden": {
+    "pathLength": 0,
+    "opacity": 0
+  },
+  "visible": {
+    "pathLength": 1,
+    "opacity": 1
+  }
+}",
+    },
+    {
+      "name": "drawLineTransition",
+      "source": "const drawLineTransition = {
+  "duration": 0.9,
+  "delay": 0
+}",
+    },
+  ],
+  "imports": [
+    {
+      "from": "motion/react",
+      "named": [
+        "motion",
+      ],
+    },
+  ],
+  "wrapper": {
+    "props": {
+      "initial": ""hidden"",
+      "transition": "{drawLineTransition}",
+      "variants": "{drawLineVariants}",
+      "viewport": "{{ once: true, amount: 0.3 }}",
+      "whileInView": ""visible"",
+    },
+    "tag": "motion.div",
+  },
+}
+`;
+
+exports[`fade > emits a codegen fragment that names its imports 1`] = `
+{
+  "helpers": [
+    {
+      "name": "fadeVariants",
+      "source": "const fadeVariants = {
+  "hidden": {
+    "opacity": 0
+  },
+  "visible": {
+    "opacity": 1
+  }
+}",
+    },
+    {
+      "name": "fadeTransition",
+      "source": "const fadeTransition = {
+  "duration": 0.6,
+  "delay": 0
+}",
+    },
+  ],
+  "imports": [
+    {
+      "from": "motion/react",
+      "named": [
+        "motion",
+      ],
+    },
+  ],
+  "wrapper": {
+    "props": {
+      "initial": ""hidden"",
+      "transition": "{fadeTransition}",
+      "variants": "{fadeVariants}",
+      "viewport": "{{ once: true, amount: 0.3 }}",
+      "whileInView": ""visible"",
+    },
+    "tag": "motion.div",
+  },
+}
+`;
+
+exports[`fade-down > emits a codegen fragment that names its imports 1`] = `
+{
+  "helpers": [
+    {
+      "name": "fadeDownVariants",
+      "source": "const fadeDownVariants = {
+  "hidden": {
+    "opacity": 0,
+    "y": -24
+  },
+  "visible": {
+    "opacity": 1,
+    "y": 0
+  }
+}",
+    },
+    {
+      "name": "fadeDownTransition",
+      "source": "const fadeDownTransition = {
+  "duration": 0.6,
+  "delay": 0
+}",
+    },
+  ],
+  "imports": [
+    {
+      "from": "motion/react",
+      "named": [
+        "motion",
+      ],
+    },
+  ],
+  "wrapper": {
+    "props": {
+      "initial": ""hidden"",
+      "transition": "{fadeDownTransition}",
+      "variants": "{fadeDownVariants}",
+      "viewport": "{{ once: true, amount: 0.3 }}",
+      "whileInView": ""visible"",
+    },
+    "tag": "motion.div",
+  },
+}
+`;
+
+exports[`fade-left > emits a codegen fragment that names its imports 1`] = `
+{
+  "helpers": [
+    {
+      "name": "fadeLeftVariants",
+      "source": "const fadeLeftVariants = {
+  "hidden": {
+    "opacity": 0,
+    "x": 24
+  },
+  "visible": {
+    "opacity": 1,
+    "x": 0
+  }
+}",
+    },
+    {
+      "name": "fadeLeftTransition",
+      "source": "const fadeLeftTransition = {
+  "duration": 0.6,
+  "delay": 0
+}",
+    },
+  ],
+  "imports": [
+    {
+      "from": "motion/react",
+      "named": [
+        "motion",
+      ],
+    },
+  ],
+  "wrapper": {
+    "props": {
+      "initial": ""hidden"",
+      "transition": "{fadeLeftTransition}",
+      "variants": "{fadeLeftVariants}",
+      "viewport": "{{ once: true, amount: 0.3 }}",
+      "whileInView": ""visible"",
+    },
+    "tag": "motion.div",
+  },
+}
+`;
+
+exports[`fade-right > emits a codegen fragment that names its imports 1`] = `
+{
+  "helpers": [
+    {
+      "name": "fadeRightVariants",
+      "source": "const fadeRightVariants = {
+  "hidden": {
+    "opacity": 0,
+    "x": -24
+  },
+  "visible": {
+    "opacity": 1,
+    "x": 0
+  }
+}",
+    },
+    {
+      "name": "fadeRightTransition",
+      "source": "const fadeRightTransition = {
+  "duration": 0.6,
+  "delay": 0
+}",
+    },
+  ],
+  "imports": [
+    {
+      "from": "motion/react",
+      "named": [
+        "motion",
+      ],
+    },
+  ],
+  "wrapper": {
+    "props": {
+      "initial": ""hidden"",
+      "transition": "{fadeRightTransition}",
+      "variants": "{fadeRightVariants}",
+      "viewport": "{{ once: true, amount: 0.3 }}",
+      "whileInView": ""visible"",
+    },
+    "tag": "motion.div",
+  },
+}
+`;
+
+exports[`fade-up > emits a codegen fragment that names its imports 1`] = `
+{
+  "helpers": [
+    {
+      "name": "fadeUpVariants",
+      "source": "const fadeUpVariants = {
+  "hidden": {
+    "opacity": 0,
+    "y": 24
+  },
+  "visible": {
+    "opacity": 1,
+    "y": 0
+  }
+}",
+    },
+    {
+      "name": "fadeUpTransition",
+      "source": "const fadeUpTransition = {
+  "duration": 0.6,
+  "delay": 0
+}",
+    },
+  ],
+  "imports": [
+    {
+      "from": "motion/react",
+      "named": [
+        "motion",
+      ],
+    },
+  ],
+  "wrapper": {
+    "props": {
+      "initial": ""hidden"",
+      "transition": "{fadeUpTransition}",
+      "variants": "{fadeUpVariants}",
+      "viewport": "{{ once: true, amount: 0.3 }}",
+      "whileInView": ""visible"",
+    },
+    "tag": "motion.div",
+  },
+}
+`;
+
+exports[`flip-in > emits a codegen fragment that names its imports 1`] = `
+{
+  "helpers": [
+    {
+      "name": "flipInVariants",
+      "source": "const flipInVariants = {
+  "hidden": {
+    "opacity": 0,
+    "rotateX": -24
+  },
+  "visible": {
+    "opacity": 1,
+    "rotateX": 0
+  }
+}",
+    },
+    {
+      "name": "flipInTransition",
+      "source": "const flipInTransition = {
+  "type": "spring",
+  "stiffness": 180,
+  "damping": 24,
+  "mass": 1,
+  "delay": 0
+}",
+    },
+  ],
+  "imports": [
+    {
+      "from": "motion/react",
+      "named": [
+        "motion",
+      ],
+    },
+  ],
+  "wrapper": {
+    "props": {
+      "initial": ""hidden"",
+      "transition": "{flipInTransition}",
+      "variants": "{flipInVariants}",
+      "viewport": "{{ once: true, amount: 0.3 }}",
+      "whileInView": ""visible"",
+    },
+    "tag": "motion.div",
+  },
+}
+`;
+
+exports[`glow-hover > emits a codegen fragment that names its imports 1`] = `
+{
+  "classNames": [
+    "ms-glow",
+  ],
+  "css": ".ms-glow { transition: box-shadow 200ms ease }
+.ms-glow:hover { box-shadow: 0 0 28px color-mix(in oklab, var(--ms-color-accent) 45%, transparent) }",
+  "imports": [],
+}
+`;
+
+exports[`icon-swap > emits a codegen fragment that names its imports 1`] = `
+{
+  "imports": [
+    {
+      "from": "motion/react",
+      "named": [
+        "motion",
+      ],
+    },
+  ],
+  "wrapper": {
+    "props": {
+      "whileHover": "{{ y: -16, opacity: 0 }}",
+    },
+    "tag": "motion.span",
+  },
+}
+`;
+
+exports[`lift > emits a codegen fragment that names its imports 1`] = `
+{
+  "classNames": [
+    "ms-lift",
+  ],
+  "css": ".ms-lift { transition: transform 180ms var(--ms-ease-standard), box-shadow 180ms var(--ms-ease-standard) }
+.ms-lift:hover { transform: translateY(-4px); box-shadow: 0 12px 36px rgb(0 0 0 / 0.18) }",
+  "imports": [],
+}
+`;
+
+exports[`liquid > emits a codegen fragment that names its imports 1`] = `
+{
+  "imports": [
+    {
+      "from": "motion/react",
+      "named": [
+        "motion",
+      ],
+    },
+  ],
+  "wrapper": {
+    "props": {
+      "whileHover": "{{ borderRadius: '36px 22px', skewX: -1.5 }}",
+    },
+    "tag": "motion.div",
+  },
+}
+`;
+
+exports[`magnetic > emits a codegen fragment that names its imports 1`] = `
+{
+  "css": ".ms-magnetic { transform: translate3d(var(--ms-magnetic-x, 0), var(--ms-magnetic-y, 0), 0) }",
+  "hooks": [
+    "const magneticRef = useRef<HTMLDivElement>(null)",
+    "useEffect(() => {
+  const element = magneticRef.current
+  if (element === null) return
+  const onMove = (event: PointerEvent) => {
+    const box = element.getBoundingClientRect()
+    const dx = event.clientX - (box.left + box.width / 2)
+    const dy = event.clientY - (box.top + box.height / 2)
+    const distance = Math.hypot(dx, dy)
+    const pull = distance > 180 ? 0 : 0.35
+    element.style.setProperty('--ms-magnetic-x', \`\${dx * pull}px\`)
+    element.style.setProperty('--ms-magnetic-y', \`\${dy * pull}px\`)
+  }
+  document.addEventListener('pointermove', onMove, { passive: true })
+  return () => document.removeEventListener('pointermove', onMove)
+}, [])",
+  ],
+  "imports": [
+    {
+      "from": "react",
+      "named": [
+        "useEffect",
+        "useRef",
+      ],
+    },
+  ],
+  "wrapper": {
+    "props": {
+      "className": ""ms-magnetic"",
+      "ref": "{magneticRef}",
+    },
+    "tag": "div",
+  },
+}
+`;
+
+exports[`scale-hover > emits a codegen fragment that names its imports 1`] = `
+{
+  "imports": [
+    {
+      "from": "motion/react",
+      "named": [
+        "motion",
+      ],
+    },
+  ],
+  "wrapper": {
+    "props": {
+      "transition": "{{"type":"spring","stiffness":300,"damping":26,"mass":0.9}}",
+      "whileHover": "{{ scale: 1.04 }}",
+    },
+    "tag": "motion.div",
+  },
+}
+`;
+
+exports[`scale-in > emits a codegen fragment that names its imports 1`] = `
+{
+  "helpers": [
+    {
+      "name": "scaleInVariants",
+      "source": "const scaleInVariants = {
+  "hidden": {
+    "opacity": 0,
+    "scale": 0.92
+  },
+  "visible": {
+    "opacity": 1,
+    "scale": 1
+  }
+}",
+    },
+    {
+      "name": "scaleInTransition",
+      "source": "const scaleInTransition = {
+  "type": "spring",
+  "stiffness": 300,
+  "damping": 26,
+  "mass": 0.9,
+  "delay": 0
+}",
+    },
+  ],
+  "imports": [
+    {
+      "from": "motion/react",
+      "named": [
+        "motion",
+      ],
+    },
+  ],
+  "wrapper": {
+    "props": {
+      "initial": ""hidden"",
+      "transition": "{scaleInTransition}",
+      "variants": "{scaleInVariants}",
+      "viewport": "{{ once: true, amount: 0.3 }}",
+      "whileInView": ""visible"",
+    },
+    "tag": "motion.div",
+  },
+}
+`;
+
+exports[`shine > emits a codegen fragment that names its imports 1`] = `
+{
+  "classNames": [
+    "ms-shine",
+  ],
+  "css": "@keyframes ms-shine { from { background-position: -150% 0 } to { background-position: 250% 0 } }
+.ms-shine:hover { animation: ms-shine 700ms ease-out 1 }",
+  "imports": [],
+}
+`;
+
+exports[`stagger-children > emits a codegen fragment that names its imports 1`] = `
+{
+  "helpers": [
+    {
+      "name": "staggerChildrenVariants",
+      "source": "const staggerChildrenVariants = {
+  "hidden": {},
+  "visible": {}
+}",
+    },
+    {
+      "name": "staggerChildrenTransition",
+      "source": "const staggerChildrenTransition = {
+  "staggerChildren": 0.06,
+  "delayChildren": 0
+}",
+    },
+  ],
+  "imports": [
+    {
+      "from": "motion/react",
+      "named": [
+        "motion",
+      ],
+    },
+  ],
+  "wrapper": {
+    "props": {
+      "initial": ""hidden"",
+      "transition": "{staggerChildrenTransition}",
+      "variants": "{staggerChildrenVariants}",
+      "viewport": "{{ once: true, amount: 0.3 }}",
+      "whileInView": ""visible"",
+    },
+    "tag": "motion.div",
+  },
+}
+`;
+
+exports[`text-reveal > emits a codegen fragment that names its imports 1`] = `
+{
+  "css": ".ms-split { display: inline-block; overflow: hidden }",
+  "helpers": [
+    {
+      "name": "registerSplitText",
+      "source": "gsap.registerPlugin(SplitText)",
+    },
+  ],
+  "hooks": [
+    "const splitRef = useRef<HTMLDivElement>(null)",
+    "useEffect(() => {
+  const element = splitRef.current
+  if (element === null) return
+  const split = new SplitText(element, { type: 'lines', linesClass: 'ms-split' })
+  const tween = gsap.from(split.lines, {
+    yPercent: 110,
+    opacity: 0,
+    duration: 0.7,
+    stagger: 0.06,
+    scrollTrigger: { trigger: element, once: true },
+  })
+  return () => { tween.kill(); split.revert() }
+}, [])",
+  ],
+  "imports": [
+    {
+      "default": "gsap",
+      "from": "gsap",
+    },
+    {
+      "from": "gsap/SplitText",
+      "named": [
+        "SplitText",
+      ],
+    },
+    {
+      "from": "react",
+      "named": [
+        "useEffect",
+        "useRef",
+      ],
+    },
+  ],
+  "wrapper": {
+    "props": {
+      "aria-label": "{text}",
+      "ref": "{splitRef}",
+    },
+    "tag": "div",
+  },
+}
+`;
+
+exports[`text-scramble > emits a codegen fragment that names its imports 1`] = `
+{
+  "hooks": [
+    "const scrambleRef = useRef<number | null>(null)",
+    "const [scrambled, setScrambled] = useState(text)",
+    "const startScramble = () => {
+  const charset = "!<>-_\\\\/[]{}—=+*^?#"
+  let frame = 0
+  const run = () => {
+    setScrambled(
+      text
+        .split('')
+        .map((character, index) =>
+          index < frame ? character : charset[Math.floor(Math.random() * charset.length)],
+        )
+        .join(''),
+    )
+    frame += 0.5
+    if (frame <= text.length) scrambleRef.current = window.setTimeout(run, 40)
+  }
+  run()
+}",
+  ],
+  "imports": [
+    {
+      "from": "react",
+      "named": [
+        "useRef",
+        "useState",
+      ],
+    },
+  ],
+  "wrapper": {
+    "props": {
+      "aria-label": "{text}",
+      "onPointerEnter": "{startScramble}",
+    },
+    "tag": "span",
+  },
+}
+`;
+
+exports[`tilt-3d > emits a codegen fragment that names its imports 1`] = `
+{
+  "css": ".ms-tilt-scene { perspective: 800px }
+.ms-tilt { transform: rotateX(var(--ms-tilt-x, 0deg)) rotateY(var(--ms-tilt-y, 0deg)) }",
+  "hooks": [
+    "const tiltRef = useRef<HTMLDivElement>(null)",
+  ],
+  "imports": [
+    {
+      "from": "react",
+      "named": [
+        "useRef",
+      ],
+    },
+  ],
+  "wrapper": {
+    "props": {
+      "className": ""ms-tilt-scene"",
+      "onPointerMove": "{(event) => {
+  const element = tiltRef.current
+  if (element === null) return
+  const box = element.getBoundingClientRect()
+  const px = (event.clientX - box.left) / box.width - 0.5
+  const py = (event.clientY - box.top) / box.height - 0.5
+  element.style.setProperty('--ms-tilt-y', \`\${px * 10}deg\`)
+  element.style.setProperty('--ms-tilt-x', \`\${-py * 10}deg\`)
+}}",
+    },
+    "tag": "div",
+  },
+}
+`;
+
+exports[`underline-grow > emits a codegen fragment that names its imports 1`] = `
+{
+  "classNames": [
+    "ms-underline",
+  ],
+  "css": ".ms-underline::after { transform: scaleX(0); transform-origin: left; transition: transform 200ms ease }
+.ms-underline:hover::after { transform: scaleX(1) }",
+  "imports": [],
+}
+`;

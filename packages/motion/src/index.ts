@@ -109,3 +109,14 @@ export { GsapMotion, type GsapMotionProps } from './apply/gsap-motion'
 export { toStyle, toTransition } from './apply/to-style'
 export { useResolvedMotion, type NodeMotion } from './apply/use-resolved-motion'
 export { useWillChange, type WillChangeHandle } from './apply/use-will-change'
+
+export { PRESETS, presetRegistry } from './presets/index'
+export { ENTRANCE_PRESETS } from './presets/entrance/index'
+export { HOVER_PRESETS, magneticOffset, tiltAngles } from './presets/hover/index'
+export {
+  EASING_OPTIONS,
+  FLASH_SAFE_MIN_MS,
+  SPRING_OPTIONS,
+  easingNameSchema,
+  springNameSchema,
+} from './presets/shared'
