@@ -36,11 +36,24 @@ const shift = (grab: number, source: number, ghost: number): number =>
   source === 0 ? 0 : grab * (1 - ghost / source)
 
 /**
- * A pointer drag activates on a `PointerEvent`, which is a `MouseEvent` and carries the cursor. A
- * keyboard drag activates on a key press and carries nothing, and that is the `null` the caller
- * returns the transform unchanged for.
+ * A pointer drag activates on a `PointerEvent`, which carries the cursor. A keyboard drag activates
+ * on a key press and carries nothing, and that is the `null` the caller returns the transform
+ * unchanged for.
+ *
+ * The test is the two fields rather than `instanceof MouseEvent`, because `instanceof` evaluates its
+ * right operand: the studio prerenders its chrome, dnd-kit runs the modifier list during that render,
+ * and on the server there is no `MouseEvent` to name.
  */
 const eventCoordinates = (
   event: Event | null,
-): { readonly x: number; readonly y: number } | null =>
-  event instanceof MouseEvent ? { x: event.clientX, y: event.clientY } : null
+): { readonly x: number; readonly y: number } | null => {
+  if (event === null || !('clientX' in event) || !('clientY' in event)) {
+    return null
+  }
+
+  const { clientX, clientY } = event
+
+  return typeof clientX === 'number' && typeof clientY === 'number'
+    ? { x: clientX, y: clientY }
+    : null
+}

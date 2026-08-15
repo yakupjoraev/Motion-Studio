@@ -34,8 +34,10 @@ export function useAutoPan({
   point,
   pan,
   active,
-  schedule = requestAnimationFrame,
-  cancel = cancelAnimationFrame,
+  // Wrapped rather than passed by name: a default parameter is evaluated when the hook runs, and on
+  // the server there is no such identifier to evaluate — the studio prerenders its chrome.
+  schedule = (callback) => requestAnimationFrame(callback),
+  cancel = (handle) => cancelAnimationFrame(handle),
 }: AutoPanOptions): void {
   const latest = useRef({ point, pan })
   latest.current = { point, pan }
