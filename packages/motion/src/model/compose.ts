@@ -17,9 +17,17 @@ export interface MotionConflict {
   readonly reason: string
 }
 
+/** One channel's own resolution, kept beside the merge so a host can ask which engine wants what. */
+export interface MotionPart {
+  readonly channel: MotionChannel
+  readonly resolved: ResolvedMotion
+}
+
 export interface ComposedMotion {
   readonly resolved: ResolvedMotion
   readonly conflicts: readonly MotionConflict[]
+  /** In precedence order, and only the channels that resolved to something. */
+  readonly parts: readonly MotionPart[]
 }
 
 /**
@@ -99,7 +107,7 @@ export function composeMotion(
   const conflicts: MotionConflict[] = []
   /** Property → the channel that got there first, in precedence order. */
   const claimed = new Map<string, MotionChannel>()
-  const parts: { readonly channel: MotionChannel; readonly resolved: ResolvedMotion }[] = []
+  const parts: MotionPart[] = []
 
   for (const channel of CHANNEL_PRECEDENCE) {
     const spec = specs[channel]
@@ -138,7 +146,7 @@ export function composeMotion(
     parts.push({ channel, resolved: strip(resolved, new Set(taken.keys())) })
   }
 
-  return { resolved: merge(parts.map((part) => part.resolved)), conflicts }
+  return { resolved: merge(parts.map((part) => part.resolved)), conflicts, parts }
 }
 
 /** The first channel that already writes something this property cannot share with. */
