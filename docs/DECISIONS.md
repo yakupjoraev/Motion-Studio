@@ -5713,3 +5713,183 @@ buys cross-surface drag rather than one panel's, and the budget conversation has
 - Accepted: the sentence in DRAG_AND_DROP.md § Public API is true of the finished studio and not of this
   build. It is left as written rather than edited to describe a temporary position.
 - Avoided: 20 kB over a budget the contract calls enforced, spent on a context with one consumer.
+
+## ADR-138 — The catalogue reaches resolution as a port, not as an import
+
+**Date** 2026-08-15 · **Prompt** 30 · **Status** Accepted
+
+### Question
+`resolveMotion(spec, ctx)` takes a `MotionSpec`, which carries a `presetId` and nothing else. The
+preset objects are prompt 32's. How does the resolver get from the id to the preset?
+
+### Question resolved by
+Specification. ARCHITECTURE.md § The registry seam already answers the identical question for blocks:
+`editor` resolves a `blockId` through a registry it is handed, never through an import, and ADR-102 put
+the composition root in the application for exactly that reason. Motion presets are the same shape of
+fact — a catalogue that the model plays and does not own.
+
+### Decision
+`ResolveContext` carries `presets: MotionPresetRegistry` (`get`, `list`). `resolveMotion` and
+`composeMotion` look presets up through it, so the model compiles and tests with a fake catalogue of
+two presets and never imports prompt 32's files.
+
+An id the registry does not know resolves to `DISABLED_MOTION` rather than throwing: a document written
+by a newer build must lose its animation, not its node.
+
+### Consequences
+- Accepted: every caller must build a context. The studio builds one where it builds the block registry.
+- Accepted: `MotionPreset<P>` declares `resolve`/`resolveReduced`/`codegen` as **methods**, so a typed
+  preset stays assignable to the erased `MotionPreset` the registry holds. Method bivariance is the
+  mechanism; the alternative is a cast at every registration, which the contract bans.
+- Avoided: `motion` importing `presets`, and a resolver no test can isolate.
+
+## ADR-139 — Bad params fall back to the preset's defaults
+
+**Date** 2026-08-15 · **Prompt** 30 · **Status** Accepted
+
+### Question
+`MotionSpec.params` is `Record<string, number | string | boolean>` in the file format; a preset's
+`paramsSchema` is a second, stricter contract the format does not check. What happens when a stored
+param fails the preset's schema — a renamed param, a value from an older build?
+
+### Criterion (set before choosing)
+The same one ADR-071 used for an unknown block on the clipboard: **a document from another build must
+degrade in place, never take a node off the canvas.** Motion resolution runs inside the node's render,
+under the error boundary of prompt 22 — so a throw here costs the whole node, not the animation.
+
+### Decision
+`resolveMotion` parses with `safeParse` and falls back to `preset.defaults` when the parse fails. An
+unknown preset id and a `disabled: true` spec both resolve to `DISABLED_MOTION`.
+
+This differs from ADR-104, where a block's props are parsed strictly: a block with unusable props has
+nothing to render, while a preset with unusable params has its own defaults, which are by construction
+a complete and valid set.
+
+### Consequences
+- Accepted: a typo in a param is silent at the engine. The inspector is where it is visible — the motion
+  panel is generated from `controls`, so an unknown param has no control and a wrong value fails its own
+  control's validation.
+- Avoided: an editing session where changing one number blanks a section behind an error card.
+
+## ADR-140 — `ResolvedMotion` names the properties it animates when no variant does
+
+**Date** 2026-08-15 · **Prompt** 30 · **Status** Accepted
+
+### Question
+Composition detects conflicts by comparing the **property sets** two resolutions touch, not their
+channel names. For the `motion` engine those properties are the keys of `variants`. A `css` preset that
+animates through a class, and a `gsap` preset that animates through a timeline, name no properties
+anywhere in the shape ANIMATION_SYSTEM.md § The model prints — so they read as touching nothing and
+compose with everything.
+
+### Criterion
+A conflict that the resolver cannot see is a conflict the user meets as a flickering element. The test
+is whether the detection is correct for **presets nobody has written yet**, which is the prompt's own
+requirement; a scheme that only works for one of the three engines fails it.
+
+### Decision
+One optional field beyond the documented shape: `properties?: readonly string[]`, meaning "this
+resolution also animates these, and no variant says so". `motionProperties(resolved)` is the union of
+the variant keys and that list. `cssVars` are deliberately **not** in it, which is the mechanism behind
+"cursor presets compose with everything" — a custom property is not an animated property.
+
+ANIMATION_SYSTEM.md § The model is left as written: it prints the shape a preset usually returns, and
+this is an addition for the two engines it did not enumerate.
+
+### Consequences
+- Accepted: a css or gsap preset that forgets the field composes silently. A meta-test over the
+  catalogue can require it for those engines when prompt 32 fills the catalogue.
+- Avoided: conflict detection that is correct only for the engine the first presets happened to use.
+
+## ADR-141 — `motionScale: 0` takes the reduced path, so both mechanisms are one
+
+**Date** 2026-08-15 · **Prompt** 30 · **Status** Accepted
+
+### Question
+DESIGN_SYSTEM.md § Motion tokens says `motionScale: 0` "is the reduced-motion equivalent";
+ANIMATION_SYSTEM.md § Reduced motion says both mechanisms "converge". Multiplying every duration by
+zero is not the same output as the reduced policy — the policy also drops transforms and disables two
+channels. Which does `resolve(spec, { scale: 0 })` produce?
+
+### Criterion
+The prompt states it: the two must converge **on one code path**, and the convergence must be provable
+by a test rather than asserted in a comment.
+
+### Decision
+`isReduced(ctx) = ctx.reduced || ctx.scale === 0`. A scale of zero therefore resolves through
+`resolveReduced` and the per-channel policy, and the scaling step then multiplies the policy's own
+durations by zero. The proof is an equality test: for a sample of specs,
+`resolve(spec, { reduced: false, scale: 0 })` deep-equals `resolve(spec, { reduced: true, scale: 0 })`,
+and every duration in both is `0`.
+
+`reduced: true` with `scale: 1` keeps the policy's timings (120 ms for an entrance), which is the
+reduced *experience* rather than no experience — the two are the same path, not the same numbers.
+
+### Consequences
+- Accepted: a designer who sets `motionScale: 0` gets the reduced experience with zero durations, not a
+  zero-length version of the full one. That is the stronger reading of "equivalent" and the only one
+  where the mechanisms share code.
+- Accepted: the cache key carries `scale` and `reduced` separately, so the two contexts are two entries
+  with identical contents rather than one.
+
+## ADR-142 — The reduced policy runs after the preset, as an enforcing net
+
+**Date** 2026-08-15 · **Prompt** 30 · **Status** Accepted
+
+### Question
+Every preset must supply `resolveReduced` (ANIMATION_SYSTEM.md § Preset definition), and the same
+document states a per-channel policy table. If the preset already returns a reduced resolution, what is
+`reduce(resolved, policy)` for — and which wins?
+
+### Criterion
+The table's two hardest lines are requirements, not preferences: `cursor` and `continuous` are
+**disabled entirely**, not slowed. A guarantee that depends on every future preset implementing it
+correctly is not a guarantee.
+
+### Decision
+`resolveMotion` calls the preset's `resolveReduced` and then applies `reduce(resolved, policyFor(
+channel))`. The policy is the floor: it filters variants to the properties its channel allows, forces
+the documented durations, and returns `DISABLED_MOTION` for `cursor` and `continuous` whatever the
+preset returned.
+
+The net filters what it can read — variants and `properties`. It leaves `className` and `keyframes`
+alone: a class cannot be filtered property by property, and a preset's own reduced class is the thing
+the preset was required to provide.
+
+### Consequences
+- Accepted: a preset whose `resolveReduced` returns a full-strength transform gets it stripped, and the
+  preset's test will show that as a difference. That is the net doing its job.
+- Accepted: a css preset can still smuggle a transform through a class under reduced motion. The
+  catalogue's own tests are where that is caught; the alternative is dropping every reduced class,
+  which breaks the presets that did the work.
+
+## ADR-143 — `transform` collides with its components; the components do not collide with each other
+
+**Date** 2026-08-15 · **Prompt** 30 · **Status** Accepted
+
+### Question
+Composition compares property sets (ADR-140). A Motion preset animates `y`; a css preset animates
+`transform` through a class. Compared by name those are two properties and compose cleanly — on screen
+they are one property and the class wins whenever it repaints. Meanwhile two Motion presets animating
+`x` and `y` compare as two properties and genuinely are two: Motion keeps a motion value per component
+and composes them into one matrix itself.
+
+### Criterion
+The comparison has to answer the question the browser answers: **can both writers' output survive in
+the same computed style?** Two transform components can (Motion composes them; CSS `translate` and
+`rotate` are separate properties). A whole `transform` and any component cannot — writing `transform`
+replaces the lot.
+
+### Decision
+`collides(a, b)` is name equality, plus the asymmetric case: `transform` collides with every name in
+`TRANSFORM_COMPONENTS` (`x`, `y`, `z`, the three translates, the scales, the rotates, the skews).
+Two components never collide with each other.
+
+### Consequences
+- Accepted: a gsap timeline that declares `properties: ['transform']` conflicts with an entrance's `y`,
+  which is the outcome the § Composition example describes and the reason the field exists.
+- Accepted: the list is a table of names, and a preset that invents a component name outside it will
+  compose when it should not. It is a table of the CSS transform functions, so growing it is a change
+  in CSS, not in the catalogue.
+- Avoided: the class-versus-motion-value conflict that would have reached a user as a flicker rather
+  than as a warning chip.
