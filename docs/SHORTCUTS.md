@@ -148,8 +148,10 @@ Applies to the selection, or to the parent when only one node is selected.
 | `↑` / `↓` | Move focus |
 | `←` / `→` | Collapse / expand |
 | `Shift+↑` / `↓` | Extend selection |
-| `Enter` | Rename |
 | `Space` | Toggle selection |
+| `F2` | Rename — inside the tree `F2` renames rather than cycling panels (ADR-136) |
+| `Enter` | Pick up for a drag; see § Drag with the keyboard |
+| `Mod+Shift+H` / `Mod+Shift+L` | Toggle the focused row's visibility / lock |
 | `Mod+↑` / `↓` | Move the layer up / down among siblings |
 | `Alt+Click` a disclosure | Expand or collapse the whole subtree |
 
@@ -157,7 +159,8 @@ Applies to the selection, or to the parent when only one node is selected.
 
 | Shortcut | Action |
 | --- | --- |
-| `Space` / `Enter` on a focused block card or layer row | Pick up |
+| `Space` / `Enter` on a focused block card | Pick up |
+| `Enter` on a focused layer row | Pick up — `Space` toggles that row's selection (ADR-136) |
 | Arrows | Move between drop positions |
 | `Space` / `Enter` | Drop |
 | `Esc` | Cancel |

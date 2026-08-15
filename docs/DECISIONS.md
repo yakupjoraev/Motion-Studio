@@ -5482,3 +5482,234 @@ the rect cache is not a decision, it is a measurement.
 - Copies of the three predicates in `dnd`: the drift is silent and user-visible.
 - `on-drop` returning a description (`{ kind: 'insert' | 'move', … }`) for the host to translate: the
   same six lines in every host, and prompt 29's tree would be the second copy.
+
+## ADR-132 — Which rows are open is the panel's state, not the store's and not the document's
+
+**Date** 2026-08-15 · **Prompt** 29 · **Status** Accepted
+
+### Question
+The layers tree collapses subtrees, and a collapsed subtree is excluded from the flat list. Where does
+"node N is collapsed" live: in the document, in the store's `ui` slice, in `localStorage`, or in the
+panel component?
+
+### Question resolved by
+Specification, by the same test ADR-114 applied to the inspector's open sections.
+
+FILE_FORMAT.md's `.motion` is what a user ships and re-opens elsewhere; STATE_MANAGEMENT.md
+§ Anti-patterns keeps view state out of it. A collapsed row changes nothing about the page being
+built, so it is not document state — it fails the first test the way ADR-114's sections did.
+
+The second test is what separates the store from the component: `ui.rightPanel.openSections` is in the
+store because two surfaces read it (the inspector and the reset action) and its keys are a fixed set of
+section ids. Collapse keys are **node ids of the open document**. Nothing outside the tree reads them,
+and they are meaningless against the next document — which is exactly why ADR-114 put section state in
+`localStorage` and why this cannot go there: a persisted map of ids from a document that is no longer
+open is stale on load rather than useful.
+
+### Decision
+`useState<ReadonlySet<NodeId>>` in `layers-panel.tsx`, holding the **collapsed** ids — so a node that
+has never been touched, and a node that has just been created, are open. The tree is the accessible
+structure of the canvas (ACCESSIBILITY.md § Layers tree: "screen-reader users work in the tree"), and a
+default-collapsed tree hides the document from the one user for whom it is the only representation.
+Virtualization makes the cost of an open tree the size of the window, not the size of the document.
+
+Search does not write to it. A query filters to matches plus their ancestors and shows those paths
+open; clearing the query returns the tree to the structure the user left it in.
+
+### Consequences
+- Accepted: switching the left panel away from Layers and back re-opens every row. The alternative is a
+  persisted map of ids that outlives the document they belong to.
+- Accepted: a 500-node document puts 500 rows in the flat list on first open. The list is an array of
+  ten-field records built once per document version; the DOM holds the virtual window, which is what
+  PERFORMANCE.md § Virtualization budgets and what the 500-node scroll is measured against.
+- Avoided: a `.motion` diff that changes because someone folded a row, and a `localStorage` key that
+  accumulates ids for every document ever opened.
+
+## ADR-133 — A tree drop is the same seven steps, given tree geometry
+
+**Date** 2026-08-15 · **Prompt** 29 · **Status** Accepted
+
+### Question
+`resolveDropTarget` (ADR-131) decides where a drop lands from rects in screen space. The layers tree is
+not the canvas: its containers are not nested boxes, they are rows in one flat scrolling list. Does the
+tree get its own placement rule, or does it feed the existing resolver rects of its own?
+
+### Criterion (set before choosing)
+**Every insertion position the document admits must be reachable with the pointer**, and reachable
+without a second rule — no dead pixels, no threshold constant invented for this surface. A scheme that
+cannot express "between these two containers" fails, whatever else it does.
+
+### The three candidates, against the criterion
+
+| Rect for node N | Between two leaves | Into a container | Between two open containers |
+| --- | --- | --- | --- |
+| N's own row | yes | never — the row is the parent's | yes |
+| N's row + its descendants' rows | yes | yes | **unreachable** — the blocks are contiguous, there is no gap between them |
+| N's descendants' rows, or N's own row when it has none | yes | yes | yes |
+
+The second fails the criterion outright: with the container's own row inside its own block, the whole
+strip between two open containers belongs to one of them and no pointer position means "between". It
+can be rescued with a band of a few pixels at each block edge, which is a constant this surface invents
+and pixels that belong to no zone at all.
+
+### Decision
+The tree publishes a `DragRectSource` whose rect for a node is the strip its **descendants' rows**
+occupy, or its own row when it has none open. `resolveDropTarget` is called unchanged, with
+`hitNodeId` set to the zone the collision picked.
+
+It follows that hovering a row means "before this node", hovering inside an open container's children
+means "inside it", and hovering a leaf, an empty container or a collapsed one means "into it" — each
+reachable, none overlapping. The rects are arithmetic: rows are `DENSITY.layerRow` tall and the flat
+list gives every index, so the source reads the viewport's own box once and computes the rest.
+
+### Consequences
+- Accepted: a drop into a container with more than one slot lands in the first slot that accepts the
+  block, because a tree row does not say which slot it belongs to. The canvas is where slot-precise
+  placement happens — its geometry distinguishes the slots and the tree's cannot.
+- Accepted: dropping into a **collapsed** container appends at the end of its children: its rows are not
+  in the flat list, so there are no sibling rects to compare against. Spring-open (600 ms) opens the
+  group first, which is the path a user who wants a position takes anyway.
+- Avoided: a second implementation of validation, rejection reasons and index arithmetic — the defect
+  ADR-131 exists to prevent.
+
+## ADR-134 — A keyboard step on the tree is one row
+
+**Date** 2026-08-15 · **Prompt** 29 · **Status** Accepted
+
+### Question
+`DndProvider` reads `zoom()` and `gridSize()` at the moment of a key press and steps
+`gridSize × zoom` screen pixels (ADR-127). The canvas grid is 8 units; a tree row is 26 px. On the
+tree, three presses of `↓` would move within one row and the fourth would leave it.
+
+### Question resolved by
+Specification. SHORTCUTS.md § Drag with the keyboard says arrows "move between drop positions", not
+between pixels, and DRAG_AND_DROP.md § Sensors states the same in the sensor's own words. A step that
+lands inside the row it started in is not a position.
+
+### Decision
+The studio's `DndHost` answers `gridSize: () => DENSITY.layerRow` and `zoom: () => 1`, so one press is
+one row. Both are functions read at the press, which is what makes a per-surface answer possible at all.
+
+### Consequences
+- Accepted: while the tree is the only drag surface in the studio, these two answers are the whole map.
+  When the canvas becomes a drag source, this is the place that has to answer per surface — the
+  functions already have the shape for it, and the drag payload does not carry which surface it started
+  on, so that prompt adds the flag.
+- Avoided: a keyboard drag that needs three presses to reach the next row.
+
+## ADR-135 — Visibility and lock are keyboard-operable through their own shortcuts, not through Tab
+
+**Date** 2026-08-15 · **Prompt** 29 · **Status** Accepted
+
+### Question
+Each row carries an eye and a lock button. ACCESSIBILITY.md § Layers tree requires a roving tabindex —
+one tab stop for the whole tree — and the contract requires a keyboard path to everything interactive.
+Two rendered windows of thirty rows would otherwise add sixty tab stops.
+
+### Question resolved by
+Specification. SHORTCUTS.md § Edit already binds `Mod+Shift+H` to toggle visibility and `Mod+Shift+L` to
+toggle lock, on the selection. There is no gap to fill — only a scope to choose.
+
+### Decision
+The two buttons are `tabIndex={-1}`, named ("Hide Hero", "Lock Hero") and `aria-pressed`, and the tree's
+key map handles both bindings on the focused row. The registry that will own the map globally is
+prompt 33's; until it exists the tree scope is where a user standing on a row can reach them.
+
+### Consequences
+- Accepted: the same two bindings will be registered twice for a moment — once here, once globally in
+  prompt 33 — and that prompt removes this handler.
+- Avoided: sixty tab stops, and a second pair of bindings invented for one surface.
+
+## ADR-136 — `Space` selects, `Enter` picks up, `F2` renames: SHORTCUTS.md contradicted itself on the tree
+
+**Date** 2026-08-15 · **Prompt** 29 · **Status** Accepted
+
+### Question
+SHORTCUTS.md binds the same two keys twice on the same surface:
+
+| Section | Binding |
+| --- | --- |
+| § Layers tree | `Space` toggles selection, `Enter` renames |
+| § Drag with the keyboard | `Space` / `Enter` on a focused layer row picks up |
+
+A row cannot both start a drag and toggle a selection on one press. `F2` is bound twice as well —
+§ Global cycles the focus scopes, § Edit renames the selection — and prompt 11 implemented the cycle.
+Three actions on a focused row (select, rename, pick up), two keys that mean two things each.
+
+### Criterion (set before choosing)
+**No action on the surface may lose its only keyboard path**, and the assignment must break the fewest
+documented bindings. Where the count ties, the platform convention decides, because a key map a user
+already knows costs nothing to learn.
+
+### The count
+
+| Assignment | Select | Rename | Pick up | Documented bindings broken |
+| --- | --- | --- | --- | --- |
+| A — `Space` select, `Enter` pick up, `F2` rename | `Space` | `F2` | `Enter` | 2: § Layers tree's `Enter`, § Global's `F2` inside the tree |
+| B — `Space` pick up, `Enter` rename, arrows select | arrows, and no toggle | `Enter` | `Space` | 2: § Layers tree's `Space` and its `↑`/`↓` "move focus" |
+| C — `Space` select, `Enter` rename, no keyboard drag | `Space` | `Enter` | **none** | 1, and it fails the criterion outright |
+
+C is out on the criterion: DRAG_AND_DROP.md § Accessibility requires the full drag on the keyboard and
+prompt 29 owes an E2E spec for it. A and B tie at two, so the convention decides: `F2` is rename on every
+desktop file tree, § Edit already binds it that way, and `Enter` is one of the two pick-up keys
+§ Drag itself offers. B also has to invent selection-follows-focus, which APG advises against in a
+multi-selectable tree — every arrow press would rewrite the canvas selection and fire an announcement.
+
+### Decision
+On a focused layer row: `Space` toggles selection, `Enter` picks up and drops, `Esc` cancels the drag,
+`F2` renames. Inside the tree `F2` renames rather than cycling panels — the tree stops the event, and
+`Tab` still leaves the panel, so no scope becomes unreachable. SHORTCUTS.md § Layers tree and § Drag
+with the keyboard are corrected in the same commit as this entry.
+
+`Space` is kept out of dnd-kit's activator at the row rather than in `DndProvider`: prompt 37's block
+palette is documented to pick up with `Space`, and it has no second meaning for the key.
+
+### Consequences
+- Accepted: `F2` inside the layers tree no longer moves to the inspector. It is the only scope where the
+  cycle is interrupted, and it is the only scope with a rename.
+- Accepted: a keyboard drag started with `Enter` also ends on `Space`, which is dnd-kit's default end
+  code. Ending a drag has no competing meaning, so the extra key costs nothing; the tree's own map is
+  inert while a drag is in flight.
+- Avoided: a binding invented for this surface, and a tree where a keyboard user cannot select a row.
+
+## ADR-137 — The drag layer is mounted by the surface that drags, until a second one exists
+
+**Date** 2026-08-15 · **Prompt** 29 · **Status** Accepted
+
+### Question
+DRAG_AND_DROP.md § Public API says `DndProvider` wraps the studio. The studio's shell is in the initial
+chunk, so a provider mounted there puts `@dnd-kit/core` and the whole drag layer in it too. Where is it
+mounted while the layers tree is the only surface that can start a drag?
+
+### Criterion (set before measuring, by the contract)
+ENGINEERING_CONTRACT.md § 6: `/studio` first-load JS ≤ 250 kB gzip. § 6 also states the rule this is an
+instance of — heavy modules are dynamically imported and never in the initial studio chunk.
+
+### Measurement
+Three builds of `/studio`, Next's own first-load figure and the manifest sum for the one that ships:
+
+| Build | Next first load | Manifest, gzip |
+| --- | --- | --- |
+| Provider around `StudioShell` | 270 kB | — |
+| Provider inside the Layers panel | 251 kB | **245.2 kB** |
+| No provider at all (control) | 251 kB | — |
+
+The drag layer costs **19 kB gzip**. In the initial chunk it breaks the budget by 20 kB; in the Layers
+chunk it costs the initial chunk nothing, and the panel that needs it downloads it when its tab opens.
+
+### Decision
+`DndHost` is rendered by `LayersPanel`, which is itself a `next/dynamic` chunk. The provider therefore
+covers every surface that can drag today, and every drag the studio has — operation 3 of
+DRAG_AND_DROP.md § The four operations, and the keyboard drag on the same rows.
+
+It moves up to the shell in the prompt that gives the studio a **second** drag surface: prompt 37's
+block palette, and the canvas wiring that makes a canvas node a drag source. At that point the 19 kB
+buys cross-surface drag rather than one panel's, and the budget conversation has something to weigh.
+
+### Consequences
+- Accepted: operation 4 — a tree row dropped on the canvas — cannot work while the two surfaces are in
+  different contexts. It could not work today regardless: the canvas registers no drop zone and its
+  nodes are not drag sources, both of which are that same prompt's work.
+- Accepted: the sentence in DRAG_AND_DROP.md § Public API is true of the finished studio and not of this
+  build. It is left as written rather than edited to describe a temporary position.
+- Avoided: 20 kB over a budget the contract calls enforced, spent on a context with one consumer.
