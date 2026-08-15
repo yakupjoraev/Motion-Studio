@@ -97,6 +97,12 @@ describe('canvasAwareCoordinateGetter', () => {
     expect(result).toEqual({ x: 180, y: -25 })
   })
 
+  it('steps by pixels when nothing is over yet and the step lands in a container', () => {
+    // Where every keyboard drag starts: the box is inside `top`, and `over` is only known after a
+    // move. Jumping to a container from inside one would skip every position in it.
+    expect(move('ArrowDown', 1, { overId: null })).toEqual({ x: 180, y: 88 })
+  })
+
   it('starts from the first container when the drag is over nothing', () => {
     const result = move('ArrowDown', 1, { overId: null, dragged: box(1000, 1000, 40, 40) })
 

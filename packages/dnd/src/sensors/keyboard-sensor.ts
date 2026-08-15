@@ -57,8 +57,13 @@ export function canvasAwareCoordinateGetter(options: CanvasKeyboardOptions) {
     const from = centre(context.collisionRect)
     const stepped = { x: from.x + direction.x * step, y: from.y + direction.y * step }
     const here = context.over?.rect ?? null
+    // With a zone under the drag, the question is whether the step leaves it. With none — which is
+    // where every keyboard drag begins, because `over` is only known after a move — the question is
+    // whether the step lands in one at all. Jumping from a point that is already inside a container
+    // skips every position in it.
+    const stays = here === null ? zoneUnder(context, stepped) : contains(here, stepped)
 
-    if (here !== null && contains(here, stepped)) {
+    if (stays) {
       return {
         x: currentCoordinates.x + direction.x * step,
         y: currentCoordinates.y + direction.y * step,
@@ -78,6 +83,15 @@ export function canvasAwareCoordinateGetter(options: CanvasKeyboardOptions) {
       y: currentCoordinates.y + (destination.y - from.y),
     }
   }
+}
+
+/** Whether any measured zone holds the point — the rects are dnd-kit's, measured at drag start. */
+function zoneUnder(context: KeyboardDragContext, point: Point): boolean {
+  return context.droppableContainers.getEnabled().some((entry) => {
+    const rect = context.droppableRects.get(entry.id)
+
+    return rect !== undefined && contains(rect, point)
+  })
 }
 
 /**
