@@ -136,12 +136,15 @@ Rationale per choice: [`docs/TECH_STACK.md`](docs/TECH_STACK.md).
 The visual bar for this project is set by [impeccable.style](https://impeccable.style), with
 secondary influence from [Aceternity UI](https://ui.aceternity.com),
 [Magic UI](https://magicui.design), and [React Bits](https://reactbits.dev). The chrome's density and
-restraint follow Linear and Figma.
+restraint follow Linear and Figma. Credit where it is due: these are the projects that made the
+standard obvious.
 
-Effects here are implemented independently against this project's schema, tokens, motion model and
-reduced-motion policy — the techniques are studied, not the source copied. Each block's doc comment
-names its influence and explains its technique; verified licences are recorded in
-`packages/blocks/LICENSES.md`. The full workflow is in
+**No reference implementation is adapted here.** Every effect and every block is built from an
+understanding of the technique, against this project's schema, tokens, motion model and
+reduced-motion policy; each doc comment states the technique in a paragraph. Licences were verified
+on 2026-08-16 and recorded, per reference, in
+[`packages/blocks/LICENSES.md`](packages/blocks/LICENSES.md) — two of the four forbid redistributing
+component source, which is precisely what this project's export engine produces. The workflow is in
 [`docs/DESIGN_REFERENCES.md`](docs/DESIGN_REFERENCES.md).
 
 ## Contributing

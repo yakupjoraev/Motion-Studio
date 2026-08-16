@@ -5893,3 +5893,56 @@ Two components never collide with each other.
   in CSS, not in the catalogue.
 - Avoided: the class-versus-motion-value conflict that would have reached a user as a flicker rather
   than as a warning chip.
+
+## ADR-144 — No effect adapts reference source; the catalogue is built from technique alone
+
+**Date** 2026-08-16 · **Prompt** 33 · **Status** Accepted
+
+### Question
+Prompt 33 owns the licence check for the effects category and instructs: open impeccable.style, find
+the closest treatment, study it, then implement against our constraints. Before writing thirteen
+effects, what did the check actually find, and what does the catalogue inherit from a reference?
+
+### Criterion (set before checking)
+Adapting source is permitted only when the licence is permissive **and** permits redistribution of the
+component itself. Motion Studio is MIT and its product *is* redistributed component source — a user
+exports a block and ships it. So a licence that forbids redistributing the component, in any bundle or
+port, forbids adaptation here even where it permits ordinary use.
+
+### Measurement (verified 2026-08-16, recorded in `packages/blocks/LICENSES.md`)
+- **impeccable.style** — not a gallery of surface effects. It is a design-vocabulary plugin for coding
+  agents: one `/impeccable` command with 23 subcommands, `DESIGN.md` / `PRODUCT.md` context files and
+  59 anti-pattern detectors. Repository `pbakaus/impeccable`, **Apache-2.0**. The site states no terms
+  of its own; the footer offers changelog, faq and privacy only. Its own page is a dark textured
+  surface with a single gold accent and monospace annotation labels — a visual language, not an
+  effect catalogue. **There is no aurora, mesh, beam or spotlight implementation on it to study.**
+- **Aceternity UI** — proprietary terms: source files may not be redistributed "regardless of
+  modifications", and derivative works may not be distributed on any marketplace.
+- **Magic UI** — MIT (`magicuidesign/magicui`).
+- **React Bits** — **MIT + Commons Clause**: use is free, but the components may not be sold,
+  sublicensed or redistributed "alone, in a bundle, or as a ported version".
+- **shadcn/ui** — MIT, distributed as copy-into-your-project source. Already vendored under
+  `packages/ui/LICENSES.md`.
+
+### Decision
+No effect in `packages/blocks/src/effects/` adapts any reference implementation. Each is built from an
+understanding of the technique and named as such in its doc comment. Three of the five references
+forbid the redistribution our export engine performs (Aceternity, React Bits) or do not contain the
+technique at all (impeccable.style); the two that would permit it (Magic UI, shadcn/ui) are not needed
+for effects, and copying from one while refusing the others would put an inconsistent rule in the same
+directory.
+
+The consequence for the prompt's instruction "compare each effect side by side with the reference and
+judge it" is that there is nothing to compare against for this category. The bar is held instead by
+the eight requirements in `DESIGN_REFERENCES.md` § What we are aiming for, each of which is checkable,
+plus the contrast measurement over real text on a light and a dark surface.
+
+### Consequences
+- Accepted: the visual verdict for effects is an argued one against stated criteria, not a
+  side-by-side. Recorded here so no later reader assumes the comparison happened and was passed.
+- Accepted: `DESIGN_REFERENCES.md` and `packages/blocks/LICENSES.md` described impeccable.style as the
+  source of the surface-effect vocabulary. Both were written before this check. They are corrected in
+  the same commit as this entry; the earlier hero blocks keep their doc comments, which claim only
+  that a technique was understood and rebuilt.
+- Accepted: nothing in the catalogue may later be pasted from a reference without superseding this
+  entry, including from the two permissive ones.

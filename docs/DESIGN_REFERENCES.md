@@ -12,7 +12,7 @@ undermine that completely.
 
 | Reference | What we take from it | Role |
 | --- | --- | --- |
-| [impeccable.style](https://impeccable.style) | The whole visual language: surface effects, gradient and glass treatment, depth, typographic scale, motion character, level of finish | **Primary reference for the entire product** |
+| [impeccable.style](https://impeccable.style) | The level of finish: surface treatment, depth, typographic scale, restraint, motion character. **Not** an effect library — see the note below | **Primary reference for the entire product** |
 | [Aceternity UI](https://ui.aceternity.com) | Scroll-driven composition ideas, card treatments | Secondary |
 | [Magic UI](https://magicui.design) | Micro-interaction vocabulary, marquee and dock patterns | Secondary |
 | [React Bits](https://reactbits.dev) | Text animation techniques | Secondary |
@@ -124,6 +124,27 @@ first adapts from it, and record what you found in `packages/blocks/LICENSES.md`
 this document's summary or on any assumption about it — terms change, and this file was written
 before that check happened.
 
+### What the check found (2026-08-16, ADR-144)
+
+It found something this document had assumed away. impeccable.style is **a design-vocabulary plugin
+for coding agents** — one command with 23 subcommands, context files, and 59 anti-pattern detectors,
+under Apache-2.0 as `pbakaus/impeccable`. Its own page is a dark textured surface with a single gold
+accent and monospace annotation labels: a visual language held to a very high standard, and worth
+measuring our surfaces against. It is **not** a catalogue of aurora, mesh, beam or spotlight
+implementations, and there is no such implementation on it to open in devtools and study.
+
+Two consequences, both permanent:
+
+1. **The effects category has no side-by-side.** Its bar is held by § What we are aiming for below —
+   eight requirements, each checkable — and by contrast measurement over real text in both colour
+   modes. An argued verdict against stated criteria, never "it looks close to the reference".
+2. **The other three references are read-only for us.** Aceternity's terms forbid redistributing
+   source "regardless of modifications"; React Bits is MIT **plus Commons Clause**, which forbids
+   redistributing the components in a bundle or as a port. Motion Studio's product is redistributed
+   component source — a user exports a block and ships it — so neither may be adapted here even
+   though both may be freely *used* in an ordinary app. Magic UI is plain MIT; shadcn/ui is MIT and
+   distributed to be copied, which is why it alone is vendored.
+
 ## Attribution
 
 Every block or preset whose *design* came from a reference carries a doc comment:
@@ -136,7 +157,7 @@ Every block or preset whose *design* came from a reference carries a doc comment
  * `background-position` cycle at slightly different periods so the interference pattern never
  * visibly repeats. A noise overlay at `mix-blend-mode: overlay` hides gradient banding.
  *
- * Design reference: impeccable.style — aurora treatment.
+ * Built from technique, not from source: no reference implementation was adapted (ADR-144).
  * Implemented independently against our schema, tokens, and reduced-motion policy.
  * See docs/DESIGN_REFERENCES.md.
  */
