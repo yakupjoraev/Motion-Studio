@@ -6,6 +6,7 @@ import { BREAKPOINTS } from '@motion-studio/schema'
 import { Separator } from '@motion-studio/ui'
 import { useState } from 'react'
 
+import { BACKDROP_CAP, useBackdropCount } from '../../../hooks/use-backdrop-count'
 import { useStudioStore } from '../../../store/editor-store'
 
 import { FpsMeter } from './fps-meter'
@@ -39,6 +40,7 @@ export function StatusBar() {
   const motionPaused = useStudioStore((state) => state.viewport.motionPaused)
   const dirty = useStudioStore(selectors.selectDirty)
   const [showFps, setShowFps] = useState(process.env.NODE_ENV === 'development')
+  const glass = useBackdropCount()
 
   return (
     <footer className="col-span-3 flex h-[28px] items-center gap-2 border-border border-t bg-surface-1 px-3 text-2xs text-foreground-muted">
@@ -60,6 +62,19 @@ export function StatusBar() {
         {showFps ? <FpsMeter /> : 'fps'}
       </button>
       <div className="flex-1" />
+      {glass > BACKDROP_CAP && (
+        <>
+          {/*
+           * DESIGN_SYSTEM.md § Glass, rule 2: four at once. The canvas counts what it is actually
+           * compositing — a computed `backdrop-filter`, whoever wrote it — and says so here rather
+           * than leaving a user to wonder why a section became expensive.
+           */}
+          <output className="text-warning" data-testid="status-backdrop">
+            {glass} glass surfaces — over the cap of {BACKDROP_CAP}
+          </output>
+          <Separator className="h-3" decorative orientation="vertical" />
+        </>
+      )}
       {motionPaused && (
         <>
           <span className="text-warning" data-testid="status-motion">

@@ -3,8 +3,15 @@
 import { commands } from '@motion-studio/editor'
 import { EASINGS, type MotionPreset, SPRINGS } from '@motion-studio/motion'
 import type { MotionSpec, NodeId } from '@motion-studio/schema'
-import { ControlRenderer, ControlRow, CurveEditor, SpringEditor } from '@motion-studio/ui'
-import { useCallback } from 'react'
+import {
+  ControlRenderer,
+  ControlRow,
+  type CubicBezier,
+  CurveEditor,
+  SpringEditor,
+  type SpringValue,
+} from '@motion-studio/ui'
+import { useCallback, useState } from 'react'
 
 import { useStudioStore } from '../../../store/editor-store'
 
@@ -44,8 +51,22 @@ export function MotionParams({
     [nodeId, spec],
   )
 
-  const easing = spec.params['easing']
-  const spring = spec.params['spring']
+  /*
+   * The spec stores only what the user changed, so an untouched preset has an empty `params` — the
+   * value comes from the preset's own defaults. Reading `spec.params` alone is why the editors did
+   * not appear at all on a freshly applied preset, which the browser walkthrough caught.
+   */
+  const easing = spec.params['easing'] ?? preset.defaults['easing']
+  const spring = spec.params['spring'] ?? preset.defaults['spring']
+
+  /*
+   * The drag is continuous and the commit snaps to a named curve (ADR-151). Without a draft the
+   * editor would be pinned to the name's own values while the pointer moved — measured in the
+   * browser: dragging stiffness left the handle exactly where it started, which reads as a broken
+   * control rather than as a quantised one. The draft is what moves; the document still gets a name.
+   */
+  const [curveDraft, setCurveDraft] = useState<CubicBezier | null>(null)
+  const [springDraft, setSpringDraft] = useState<SpringValue | null>(null)
 
   return (
     <div className="flex flex-col" data-testid="motion-params">
@@ -69,9 +90,15 @@ export function MotionParams({
             <CurveEditor
               {...slot}
               label="Easing curve"
-              onChange={(curve) => write('easing', nearestEasing(curve))}
-              onCommit={(curve) => write('easing', nearestEasing(curve))}
-              value={EASINGS[easing]}
+              onChange={(curve) => {
+                setCurveDraft(curve)
+                write('easing', nearestEasing(curve))
+              }}
+              onCommit={(curve) => {
+                setCurveDraft(null)
+                write('easing', nearestEasing(curve))
+              }}
+              value={curveDraft ?? EASINGS[easing]}
             />
           )}
         </ControlRow>
@@ -83,9 +110,15 @@ export function MotionParams({
             <SpringEditor
               {...slot}
               label="Spring"
-              onChange={(config) => write('spring', nearestSpring(config))}
-              onCommit={(config) => write('spring', nearestSpring(config))}
-              value={SPRINGS[spring]}
+              onChange={(config) => {
+                setSpringDraft(config)
+                write('spring', nearestSpring(config))
+              }}
+              onCommit={(config) => {
+                setSpringDraft(null)
+                write('spring', nearestSpring(config))
+              }}
+              value={springDraft ?? SPRINGS[spring]}
             />
           )}
         </ControlRow>

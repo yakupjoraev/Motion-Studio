@@ -29,6 +29,12 @@ export const PresetCard = memo(function PresetCard({
 
   return (
     <button
+      /*
+       * The accessible name is stated rather than computed. A css preset's preview injects its
+       * `@keyframes` as a `<style>` element inside this button, and a computed name would read the
+       * whole stylesheet aloud — measured in the browser, not guessed.
+       */
+      aria-label={preset.name}
       aria-pressed={applied}
       className="flex w-full flex-col gap-2 rounded-sm border border-border bg-surface-1 p-2 text-left transition-colors hover:border-border-strong disabled:opacity-50 data-[applied=true]:border-accent"
       data-applied={applied}

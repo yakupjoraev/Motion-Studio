@@ -6214,3 +6214,35 @@ hydration; the palette and the sheet are separate chunks below it and mount only
   something, which is the budget working rather than failing.
 - Accepted: `F2` stays in the shell's own listener (ADR-150) and therefore still works before the
   chunk lands, which is the one binding that has to.
+
+## ADR-153 — The palette's 50 ms budget is met on every open but the first
+
+**Date** 2026-08-16 · **Prompt** 33 · **Status** Accepted
+
+### Question
+SHORTCUTS.md § Command palette: "opens in under 50 ms with the item list precomputed and memoised on
+`version`". ADR-152 made the palette a chunk to keep `/studio` under 250 kB. What does that cost the
+first `Mod+K` of a session, and is it acceptable?
+
+### Criterion (set before measuring)
+50 ms from the key press to the first option being in the DOM, measured with a `MutationObserver` on
+the production build rather than in dev.
+
+### Measurement (production build, five consecutive opens)
+322.2 ms · 11.1 ms · 4.7 ms · 7.7 ms · 8.0 ms.
+
+The first open pays for the chunk and the first build of the 164-item list; every later one is the
+memoised path and lands between 4.7 and 11.1 ms. An idle-time prefetch of the chunk was tried and
+measured at 325.1 ms for the first open — no change, because the cost is the first render of the list
+and the dialog, not the fetch — so it was removed rather than kept as decoration.
+
+### Decision
+Accepted as it stands, and reported as two numbers rather than one. The alternative is putting the
+palette back in the first chunk, which costs 6 kB of a budget with 0.5 kB of headroom (ADR-152) to
+save 300 ms once per session.
+
+### Consequences
+- Accepted: the very first `Mod+K` after a page load is visibly slower than every subsequent one.
+- Accepted: the number will move when the item sources grow — the layer source alone scales with the
+  document. A palette that opens slowly on a 500-node document is a real risk, and the measurement
+  above is the baseline it will be compared against.

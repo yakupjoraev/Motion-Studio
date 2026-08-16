@@ -44,6 +44,12 @@ describe('CommandPalette', () => {
     useStudioStore.getState().setCommandPaletteOpen(false)
   })
 
+  it('takes focus on open, so the first keystroke reaches the search field', () => {
+    open()
+
+    expect(screen.getByRole('combobox', { name: 'Search commands' })).toHaveFocus()
+  })
+
   it('is a combobox over a listbox, as the pattern requires', () => {
     open()
 
@@ -109,6 +115,20 @@ describe('CommandPalette', () => {
     fireEvent(input, event)
 
     expect(event.defaultPrevented).toBe(true)
+  })
+
+  it('remembers the item it just ran, even though running one unmounts it', () => {
+    window.localStorage.clear()
+    open()
+
+    fireEvent.change(screen.getByRole('combobox', { name: 'Search commands' }), {
+      target: { value: 'panel: motion' },
+    })
+    fireEvent.keyDown(screen.getByRole('combobox', { name: 'Search commands' }), { key: 'Enter' })
+
+    expect(JSON.parse(window.localStorage.getItem('motion-studio.palette.recent') ?? '[]')).toEqual(
+      ['shortcut:panel-motion'],
+    )
   })
 
   it('says so when nothing matches', () => {

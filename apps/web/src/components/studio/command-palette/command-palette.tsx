@@ -125,6 +125,13 @@ export function CommandPalette({ context }: { readonly context: StudioShortcutCo
           aria-expanded
           aria-label="Search commands"
           autoComplete="off"
+          /*
+           * The field takes focus on open, not the dialog. Measured in the browser: without it the
+           * palette opened with focus on the dialog container, so the first keystroke went nowhere
+           * and Enter ran nothing — a palette you have to click into is not a palette.
+           */
+          // biome-ignore lint/a11y/noAutofocus: a modal search field is the case the rule exempts — the palette exists to be typed into
+          autoFocus
           className="h-9 w-full rounded-sm border border-border bg-surface-1 px-3 text-foreground text-sm outline-none focus-visible:border-accent"
           data-testid="palette-input"
           onChange={(event) => setQuery(event.target.value)}
