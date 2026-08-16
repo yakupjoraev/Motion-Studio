@@ -1,5 +1,27 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`aurora > emits a codegen fragment that names its imports 1`] = `
+{
+  "classNames": [
+    "ms-aurora",
+  ],
+  "css": "@keyframes ms-aurora-drift { to { transform: translate3d(6%, 4%, 0) rotate(8deg) } }
+.ms-aurora { filter: blur(80px); animation: ms-aurora-drift 27000ms ease-in-out infinite alternate }",
+  "imports": [],
+}
+`;
+
+exports[`beam > emits a codegen fragment that names its imports 1`] = `
+{
+  "classNames": [
+    "ms-beam",
+  ],
+  "css": "@keyframes ms-beam { from { background-position: -120% 0 } to { background-position: 220% 0 } }
+.ms-beam { animation: ms-beam 3200ms linear infinite }",
+  "imports": [],
+}
+`;
+
 exports[`blur-in > emits a codegen fragment that names its imports 1`] = `
 {
   "helpers": [
@@ -39,6 +61,49 @@ exports[`blur-in > emits a codegen fragment that names its imports 1`] = `
       "variants": "{blurInVariants}",
       "viewport": "{{ once: true, amount: 0.3 }}",
       "whileInView": ""visible"",
+    },
+    "tag": "motion.div",
+  },
+}
+`;
+
+exports[`blur-out > emits a codegen fragment that names its imports 1`] = `
+{
+  "helpers": [
+    {
+      "name": "blurOutVariants",
+      "source": "const blurOutVariants = {
+  "visible": {
+    "opacity": 1,
+    "filter": "blur(0px)"
+  },
+  "exit": {
+    "opacity": 0,
+    "filter": "blur(8px)"
+  }
+}",
+    },
+    {
+      "name": "blurOutTransition",
+      "source": "const blurOutTransition = {
+  "duration": 0.24
+}",
+    },
+  ],
+  "imports": [
+    {
+      "from": "motion/react",
+      "named": [
+        "motion",
+      ],
+    },
+  ],
+  "wrapper": {
+    "props": {
+      "animate": ""visible"",
+      "initial": ""hidden"",
+      "transition": "{blurOutTransition}",
+      "variants": "{blurOutVariants}",
     },
     "tag": "motion.div",
   },
@@ -100,6 +165,49 @@ exports[`clip-reveal > emits a codegen fragment that names its imports 1`] = `
 }
 `;
 
+exports[`collapse > emits a codegen fragment that names its imports 1`] = `
+{
+  "helpers": [
+    {
+      "name": "collapseVariants",
+      "source": "const collapseVariants = {
+  "visible": {
+    "height": "auto",
+    "opacity": 1
+  },
+  "exit": {
+    "height": 0,
+    "opacity": 0
+  }
+}",
+    },
+    {
+      "name": "collapseTransition",
+      "source": "const collapseTransition = {
+  "duration": 0.26
+}",
+    },
+  ],
+  "imports": [
+    {
+      "from": "motion/react",
+      "named": [
+        "motion",
+      ],
+    },
+  ],
+  "wrapper": {
+    "props": {
+      "animate": ""visible"",
+      "initial": ""hidden"",
+      "transition": "{collapseTransition}",
+      "variants": "{collapseVariants}",
+    },
+    "tag": "motion.div",
+  },
+}
+`;
+
 exports[`counter > emits a codegen fragment that names its imports 1`] = `
 {
   "helpers": [
@@ -144,6 +252,26 @@ exports[`counter > emits a codegen fragment that names its imports 1`] = `
     },
     "tag": "span",
   },
+}
+`;
+
+exports[`cursor-follow > emits a codegen fragment that names its imports 1`] = `
+{
+  "classNames": [
+    "ms-cursor-follow",
+  ],
+  "css": ".ms-cursor-follow { position: fixed; width: 28px; height: 28px; pointer-events: none; transition: translate 108ms ease-out }",
+  "imports": [],
+}
+`;
+
+exports[`cursor-glow > emits a codegen fragment that names its imports 1`] = `
+{
+  "classNames": [
+    "ms-cursor-glow",
+  ],
+  "css": ".ms-cursor-glow::before { width: 160px; height: 160px; filter: blur(48px); opacity: 0.4 }",
+  "imports": [],
 }
 `;
 
@@ -325,6 +453,47 @@ exports[`fade-left > emits a codegen fragment that names its imports 1`] = `
 }
 `;
 
+exports[`fade-out > emits a codegen fragment that names its imports 1`] = `
+{
+  "helpers": [
+    {
+      "name": "fadeOutVariants",
+      "source": "const fadeOutVariants = {
+  "visible": {
+    "opacity": 1
+  },
+  "exit": {
+    "opacity": 0
+  }
+}",
+    },
+    {
+      "name": "fadeOutTransition",
+      "source": "const fadeOutTransition = {
+  "duration": 0.24
+}",
+    },
+  ],
+  "imports": [
+    {
+      "from": "motion/react",
+      "named": [
+        "motion",
+      ],
+    },
+  ],
+  "wrapper": {
+    "props": {
+      "animate": ""visible"",
+      "initial": ""hidden"",
+      "transition": "{fadeOutTransition}",
+      "variants": "{fadeOutVariants}",
+    },
+    "tag": "motion.div",
+  },
+}
+`;
+
 exports[`fade-right > emits a codegen fragment that names its imports 1`] = `
 {
   "helpers": [
@@ -463,6 +632,17 @@ exports[`flip-in > emits a codegen fragment that names its imports 1`] = `
 }
 `;
 
+exports[`float > emits a codegen fragment that names its imports 1`] = `
+{
+  "classNames": [
+    "ms-float",
+  ],
+  "css": "@keyframes ms-float { 50% { transform: translateY(-10px) } }
+.ms-float { animation: ms-float 4000ms ease-in-out infinite }",
+  "imports": [],
+}
+`;
+
 exports[`glow-hover > emits a codegen fragment that names its imports 1`] = `
 {
   "classNames": [
@@ -471,6 +651,81 @@ exports[`glow-hover > emits a codegen fragment that names its imports 1`] = `
   "css": ".ms-glow { transition: box-shadow 200ms ease }
 .ms-glow:hover { box-shadow: 0 0 28px color-mix(in oklab, var(--ms-color-accent) 45%, transparent) }",
   "imports": [],
+}
+`;
+
+exports[`gradient-follow > emits a codegen fragment that names its imports 1`] = `
+{
+  "classNames": [
+    "ms-gradient-follow",
+  ],
+  "css": ".ms-gradient-follow { background-image: radial-gradient(80% 80% at var(--ms-cursor-x, 50%) var(--ms-cursor-y, 50%), var(--ms-color-accent), transparent) }",
+  "imports": [],
+}
+`;
+
+exports[`gradient-shift > emits a codegen fragment that names its imports 1`] = `
+{
+  "classNames": [
+    "ms-gradient-shift",
+  ],
+  "css": "@keyframes ms-gradient-shift { to { background-position: 200% 50% } }
+.ms-gradient-shift { background-size: 200% 200%; animation: ms-gradient-shift 8000ms linear infinite }",
+  "imports": [],
+}
+`;
+
+exports[`horizontal-scroll > emits a codegen fragment that names its imports 1`] = `
+{
+  "helpers": [
+    {
+      "name": "registerScrollTrigger",
+      "source": "gsap.registerPlugin(ScrollTrigger)",
+    },
+  ],
+  "hooks": [
+    "const trackRef = useRef<HTMLDivElement>(null)",
+    "useEffect(() => {
+  const track = trackRef.current
+  if (track === null) return
+  const tween = gsap.to(track, {
+    x: -1600,
+    ease: 'none',
+    scrollTrigger: {
+      trigger: track.parentElement,
+      pin: true,
+      scrub: 1,
+      end: '+=1600',
+    },
+  })
+  return () => { tween.scrollTrigger?.kill(); tween.kill() }
+}, [])",
+  ],
+  "imports": [
+    {
+      "default": "gsap",
+      "from": "gsap",
+    },
+    {
+      "from": "gsap/ScrollTrigger",
+      "named": [
+        "ScrollTrigger",
+      ],
+    },
+    {
+      "from": "react",
+      "named": [
+        "useEffect",
+        "useRef",
+      ],
+    },
+  ],
+  "wrapper": {
+    "props": {
+      "ref": "{trackRef}",
+    },
+    "tag": "div",
+  },
 }
 `;
 
@@ -563,6 +818,109 @@ exports[`magnetic > emits a codegen fragment that names its imports 1`] = `
 }
 `;
 
+exports[`marquee > emits a codegen fragment that names its imports 1`] = `
+{
+  "classNames": [
+    "ms-marquee",
+  ],
+  "css": "@keyframes ms-marquee { to { transform: translateX(-50%) } }
+.ms-marquee { display: flex; width: max-content; animation: ms-marquee 18000ms linear infinite }
+.ms-marquee:hover { animation-play-state: paused }",
+  "imports": [],
+}
+`;
+
+exports[`mask-reveal > emits a codegen fragment that names its imports 1`] = `
+{
+  "classNames": [
+    "ms-mask-reveal",
+  ],
+  "css": ".ms-mask-reveal { mask-image: radial-gradient(140px circle at var(--ms-cursor-x, 50%) var(--ms-cursor-y, 50%), black 70%, transparent) }",
+  "imports": [],
+}
+`;
+
+exports[`noise-shift > emits a codegen fragment that names its imports 1`] = `
+{
+  "classNames": [
+    "ms-noise",
+  ],
+  "css": "@keyframes ms-noise { 25% { transform: translate3d(-2%, 1%, 0) } 50% { transform: translate3d(1%, -2%, 0) } 75% { transform: translate3d(2%, 2%, 0) } }
+.ms-noise { opacity: 0.35; animation: ms-noise 1600ms steps(4, end) infinite }",
+  "imports": [],
+}
+`;
+
+exports[`orbit > emits a codegen fragment that names its imports 1`] = `
+{
+  "classNames": [
+    "ms-orbit",
+  ],
+  "css": "@keyframes ms-orbit { to { transform: rotate(360deg) translateX(120px) rotate(-360deg) } }
+.ms-orbit > * { animation: ms-orbit 14000ms linear infinite }",
+  "imports": [],
+}
+`;
+
+exports[`parallax > emits a codegen fragment that names its imports 1`] = `
+{
+  "hooks": [
+    "const { scrollYProgress } = useScroll()",
+    "const parallaxOffset = useTransform(scrollYProgress, [0, 1], [0, -120])",
+  ],
+  "imports": [
+    {
+      "from": "motion/react",
+      "named": [
+        "motion",
+        "useScroll",
+        "useTransform",
+      ],
+    },
+  ],
+  "wrapper": {
+    "props": {
+      "style": "{{ y: parallaxOffset }}",
+    },
+    "tag": "motion.div",
+  },
+}
+`;
+
+exports[`progress-bar > emits a codegen fragment that names its imports 1`] = `
+{
+  "hooks": [
+    "const { scrollYProgress } = useScroll()",
+  ],
+  "imports": [
+    {
+      "from": "motion/react",
+      "named": [
+        "motion",
+        "useScroll",
+      ],
+    },
+  ],
+  "wrapper": {
+    "props": {
+      "style": "{{ scaleX: scrollYProgress, transformOrigin: 'left' }}",
+    },
+    "tag": "motion.div",
+  },
+}
+`;
+
+exports[`pulse > emits a codegen fragment that names its imports 1`] = `
+{
+  "classNames": [
+    "ms-pulse",
+  ],
+  "css": "@keyframes ms-pulse { 50% { transform: scale(1.06); opacity: 0.82 } }
+.ms-pulse { animation: ms-pulse 2400ms ease-in-out infinite }",
+  "imports": [],
+}
+`;
+
 exports[`scale-hover > emits a codegen fragment that names its imports 1`] = `
 {
   "imports": [
@@ -631,6 +989,174 @@ exports[`scale-in > emits a codegen fragment that names its imports 1`] = `
 }
 `;
 
+exports[`scale-out > emits a codegen fragment that names its imports 1`] = `
+{
+  "helpers": [
+    {
+      "name": "scaleOutVariants",
+      "source": "const scaleOutVariants = {
+  "visible": {
+    "opacity": 1,
+    "scale": 1
+  },
+  "exit": {
+    "opacity": 0,
+    "scale": 0.94
+  }
+}",
+    },
+    {
+      "name": "scaleOutTransition",
+      "source": "const scaleOutTransition = {
+  "duration": 0.22
+}",
+    },
+  ],
+  "imports": [
+    {
+      "from": "motion/react",
+      "named": [
+        "motion",
+      ],
+    },
+  ],
+  "wrapper": {
+    "props": {
+      "animate": ""visible"",
+      "initial": ""hidden"",
+      "transition": "{scaleOutTransition}",
+      "variants": "{scaleOutVariants}",
+    },
+    "tag": "motion.div",
+  },
+}
+`;
+
+exports[`scroll-fade > emits a codegen fragment that names its imports 1`] = `
+{
+  "hooks": [
+    "const { scrollYProgress } = useScroll()",
+    "const scrollFadeOpacity = useTransform(scrollYProgress, [0, 0.4], [0, 1])",
+  ],
+  "imports": [
+    {
+      "from": "motion/react",
+      "named": [
+        "motion",
+        "useScroll",
+        "useTransform",
+      ],
+    },
+  ],
+  "wrapper": {
+    "props": {
+      "style": "{{ opacity: scrollFadeOpacity }}",
+    },
+    "tag": "motion.div",
+  },
+}
+`;
+
+exports[`scroll-rotate > emits a codegen fragment that names its imports 1`] = `
+{
+  "hooks": [
+    "const { scrollYProgress } = useScroll()",
+    "const scrollRotation = useTransform(scrollYProgress, [0, 1], [0, 24])",
+  ],
+  "imports": [
+    {
+      "from": "motion/react",
+      "named": [
+        "motion",
+        "useScroll",
+        "useTransform",
+      ],
+    },
+  ],
+  "wrapper": {
+    "props": {
+      "style": "{{ rotate: scrollRotation }}",
+    },
+    "tag": "motion.div",
+  },
+}
+`;
+
+exports[`scroll-scale > emits a codegen fragment that names its imports 1`] = `
+{
+  "hooks": [
+    "const { scrollYProgress } = useScroll()",
+    "const scrollScaleValue = useTransform(scrollYProgress, [0, 1], [0.9, 1])",
+  ],
+  "imports": [
+    {
+      "from": "motion/react",
+      "named": [
+        "motion",
+        "useScroll",
+        "useTransform",
+      ],
+    },
+  ],
+  "wrapper": {
+    "props": {
+      "style": "{{ scale: scrollScaleValue }}",
+    },
+    "tag": "motion.div",
+  },
+}
+`;
+
+exports[`scroll-timeline > emits a codegen fragment that names its imports 1`] = `
+{
+  "helpers": [
+    {
+      "name": "registerScrollTrigger",
+      "source": "gsap.registerPlugin(ScrollTrigger)",
+    },
+  ],
+  "hooks": [
+    "const timelineRef = useRef<HTMLDivElement>(null)",
+    "useEffect(() => {
+  const element = timelineRef.current
+  if (element === null) return
+  const timeline = gsap.timeline({
+    scrollTrigger: { trigger: element, scrub: 1, start: 'top bottom', end: 'bottom top' },
+  })
+  timeline.to(element, {"opacity":0}) // at-0
+  timeline.to(element, {"opacity":1}) // at-0.5
+  timeline.to(element, {"y":-40}) // at-1
+  return () => { timeline.scrollTrigger?.kill(); timeline.kill() }
+}, [])",
+  ],
+  "imports": [
+    {
+      "default": "gsap",
+      "from": "gsap",
+    },
+    {
+      "from": "gsap/ScrollTrigger",
+      "named": [
+        "ScrollTrigger",
+      ],
+    },
+    {
+      "from": "react",
+      "named": [
+        "useEffect",
+        "useRef",
+      ],
+    },
+  ],
+  "wrapper": {
+    "props": {
+      "ref": "{timelineRef}",
+    },
+    "tag": "div",
+  },
+}
+`;
+
 exports[`shine > emits a codegen fragment that names its imports 1`] = `
 {
   "classNames": [
@@ -639,6 +1165,80 @@ exports[`shine > emits a codegen fragment that names its imports 1`] = `
   "css": "@keyframes ms-shine { from { background-position: -150% 0 } to { background-position: 250% 0 } }
 .ms-shine:hover { animation: ms-shine 700ms ease-out 1 }",
   "imports": [],
+}
+`;
+
+exports[`slide-out > emits a codegen fragment that names its imports 1`] = `
+{
+  "helpers": [
+    {
+      "name": "slideOutVariants",
+      "source": "const slideOutVariants = {
+  "visible": {
+    "opacity": 1,
+    "y": 0
+  },
+  "exit": {
+    "opacity": 0,
+    "y": 24
+  }
+}",
+    },
+    {
+      "name": "slideOutTransition",
+      "source": "const slideOutTransition = {
+  "duration": 0.24
+}",
+    },
+  ],
+  "imports": [
+    {
+      "from": "motion/react",
+      "named": [
+        "motion",
+      ],
+    },
+  ],
+  "wrapper": {
+    "props": {
+      "animate": ""visible"",
+      "initial": ""hidden"",
+      "transition": "{slideOutTransition}",
+      "variants": "{slideOutVariants}",
+    },
+    "tag": "motion.div",
+  },
+}
+`;
+
+exports[`spotlight > emits a codegen fragment that names its imports 1`] = `
+{
+  "css": ".ms-spotlight { background-image: radial-gradient(240px circle at var(--ms-cursor-x, 50%) var(--ms-cursor-y, 50%), color-mix(in oklab, var(--ms-color-accent) 35%, transparent), transparent 70%) }",
+  "hooks": [
+    "const spotlightRef = useRef<HTMLDivElement>(null)",
+  ],
+  "imports": [
+    {
+      "from": "react",
+      "named": [
+        "useRef",
+      ],
+    },
+  ],
+  "wrapper": {
+    "props": {
+      "className": ""ms-spotlight"",
+      "onPointerMove": "{(event) => {
+  const element = spotlightRef.current
+  if (element === null) return
+  const box = element.getBoundingClientRect()
+  element.style.setProperty('--ms-cursor-x', \`\${event.clientX - box.left}px\`)
+  element.style.setProperty('--ms-cursor-y', \`\${event.clientY - box.top}px\`)
+}}",
+      "ref": "{spotlightRef}",
+    },
+    "tag": "div",
+  },
 }
 `;
 
@@ -678,6 +1278,16 @@ exports[`stagger-children > emits a codegen fragment that names its imports 1`] 
     },
     "tag": "motion.div",
   },
+}
+`;
+
+exports[`sticky-stack > emits a codegen fragment that names its imports 1`] = `
+{
+  "classNames": [
+    "ms-sticky-stack",
+  ],
+  "css": ".ms-sticky-stack > * { position: sticky; top: 24px }",
+  "imports": [],
 }
 `;
 
@@ -806,6 +1416,43 @@ exports[`tilt-3d > emits a codegen fragment that names its imports 1`] = `
 }}",
     },
     "tag": "div",
+  },
+}
+`;
+
+exports[`typewriter > emits a codegen fragment that names its imports 1`] = `
+{
+  "css": "@keyframes ms-caret { 50% { opacity: 0 } }
+.ms-typewriter::after { content: '|'; animation: ms-caret 1000ms steps(1, end) infinite }",
+  "hooks": [
+    "const phrases = ["Design it.","Ship it."]",
+    "const [typed, setTyped] = useState(phrases[0] ?? "")",
+    "useEffect(() => {
+  let phrase = 0
+  let letter = 0
+  const timer = window.setInterval(() => {
+    const current = phrases[phrase] ?? ''
+    letter = letter < current.length ? letter + 1 : 0
+    if (letter === 0) phrase = (phrase + 1) % phrases.length
+    setTyped(current.slice(0, letter))
+  }, 70)
+  return () => window.clearInterval(timer)
+}, [])",
+  ],
+  "imports": [
+    {
+      "from": "react",
+      "named": [
+        "useEffect",
+        "useState",
+      ],
+    },
+  ],
+  "wrapper": {
+    "props": {
+      "className": ""ms-typewriter"",
+    },
+    "tag": "span",
   },
 }
 `;

@@ -37,7 +37,7 @@ export function FramerMotion({ resolved, className, active = true, children }: F
   const hover = events.get('hover')
   const press = events.get('press')
   const initial = variants === undefined ? undefined : Object.keys(variants)[0]
-  const settled = variants === undefined ? undefined : Object.keys(variants).at(-1)
+  const settled = settledVariant(variants)
   /** Where the element starts: the first variant while it may animate, the last while it may not. */
   const state = active ? initial : settled
 
@@ -61,6 +61,24 @@ export function FramerMotion({ resolved, className, active = true, children }: F
       {children}
     </motion.div>
   )
+}
+
+/**
+ * Where a paused or capped element stands: the state in which it is **present and finished**.
+ *
+ * For an entrance that is the last variant, and for an exit it is the first — an exit's last variant
+ * is the element gone, and holding a card statically at "gone" is how a cap turns into a blank space.
+ * The catalogue names those states `visible` and `rest`, so the convention is readable rather than
+ * positional.
+ */
+export function settledVariant(variants: Variants | undefined): string | undefined {
+  if (variants === undefined) {
+    return undefined
+  }
+
+  const names = Object.keys(variants)
+
+  return names.find((name) => name === 'visible' || name === 'rest') ?? names.at(-1)
 }
 
 /** Milliseconds here, seconds there — that conversion is the whole of this function. */

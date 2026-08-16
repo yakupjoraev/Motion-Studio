@@ -113,6 +113,10 @@ export { useWillChange, type WillChangeHandle } from './apply/use-will-change'
 export { PRESETS, presetRegistry } from './presets/index'
 export { ENTRANCE_PRESETS } from './presets/entrance/index'
 export { HOVER_PRESETS, magneticOffset, tiltAngles } from './presets/hover/index'
+export { CONTINUOUS_PRESETS } from './presets/continuous/index'
+export { SCROLL_PRESETS, marqueeTrack } from './presets/scroll/index'
+export { CURSOR_PRESETS } from './presets/cursor/index'
+export { EXIT_PRESETS } from './presets/exit/index'
 export {
   EASING_OPTIONS,
   FLASH_SAFE_MIN_MS,

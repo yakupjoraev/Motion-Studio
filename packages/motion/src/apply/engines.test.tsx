@@ -7,16 +7,22 @@ import { MotionSchedulerProvider, useScheduler } from '../scheduler/scheduler-co
 import type { ScrollSource } from '../scheduler/scroll-bus'
 import { registry, spec } from '../test/presets'
 
-import { FramerMotion } from './framer-motion'
+import { FramerMotion, settledVariant } from './framer-motion'
 import { GsapMotion } from './gsap-motion'
 import { MotionNode } from './motion-node'
 
 const timeline = {
-  fromTo: vi.fn().mockReturnThis(),
+  set: vi.fn().mockReturnThis(),
+  to: vi.fn().mockReturnThis(),
   progress: vi.fn().mockReturnThis(),
+  kill: vi.fn(),
 }
 
-vi.mock('gsap', () => ({ gsap: { timeline: () => timeline } }))
+const gsapSet = vi.fn()
+
+vi.mock('gsap', () => ({
+  gsap: { timeline: () => timeline, set: (...args: unknown[]) => gsapSet(...args) },
+}))
 
 /** A source the test drives by hand, standing in for a window or a scrolling panel. */
 const source = () => {
@@ -47,7 +53,10 @@ class ObserverStub {
 
 beforeEach(() => {
   clearResolutionCache()
-  timeline.fromTo.mockClear()
+  gsapSet.mockClear()
+  timeline.set.mockClear()
+  timeline.to.mockClear()
+  timeline.kill.mockClear()
   timeline.progress.mockClear()
   vi.stubGlobal('IntersectionObserver', ObserverStub)
 })
@@ -204,11 +213,35 @@ describe('FramerMotion', () => {
   })
 })
 
+describe('settledVariant', () => {
+  it('holds an entrance at its visible state and an exit at the one before it leaves', () => {
+    expect(settledVariant({ hidden: {}, visible: {} })).toBe('visible')
+    expect(settledVariant({ visible: {}, exit: {} })).toBe('visible')
+    expect(settledVariant({ rest: {}, hover: {} })).toBe('rest')
+    expect(settledVariant({ start: {}, end: {} })).toBe('end')
+    expect(settledVariant(undefined)).toBeUndefined()
+  })
+
+  it('keeps a capped exit on screen rather than rendering it gone', () => {
+    render(
+      <FramerMotion
+        active={false}
+        resolved={{ engine: 'motion', variants: { visible: { opacity: 1 }, exit: { opacity: 0 } } }}
+      >
+        <span>card</span>
+      </FramerMotion>,
+    )
+
+    expect(screen.getByText('card').parentElement?.style.opacity).toBe('1')
+  })
+})
+
 describe('GsapMotion', () => {
   const scrub = {
     engine: 'gsap',
     variants: { start: { y: 0 }, end: { y: -80 } },
     transition: { duration: 0 },
+    listeners: [{ event: 'scroll', variant: 'end' }],
   } as const
 
   it('loads the library on first use and scrubs the timeline from the shared scroll bus', async () => {
@@ -229,9 +262,10 @@ describe('GsapMotion', () => {
       </MotionSchedulerProvider>,
     )
 
-    await waitFor(() => expect(timeline.fromTo).toHaveBeenCalled())
+    await waitFor(() => expect(timeline.set).toHaveBeenCalled())
 
-    expect(timeline.fromTo.mock.calls[0]?.[1]).toEqual({ transform: 'translateY(0px)' })
+    expect(timeline.set.mock.calls[0]?.[1]).toEqual({ transform: 'translateY(0px)' })
+    expect(timeline.to.mock.calls[0]?.[1]).toMatchObject({ transform: 'translateY(-80px)' })
 
     state.offset = 500
 
@@ -244,6 +278,23 @@ describe('GsapMotion', () => {
     })
 
     expect(timeline.progress).toHaveBeenCalledWith(0.5)
+  })
+
+  it('clears the inline styles it wrote when it stops driving the element', async () => {
+    const { scrollSource } = source()
+    const view = render(
+      <MotionSchedulerProvider source={scrollSource}>
+        <GsapMotion resolved={scrub}>
+          <span>parallax</span>
+        </GsapMotion>
+      </MotionSchedulerProvider>,
+    )
+
+    await waitFor(() => expect(timeline.set).toHaveBeenCalled())
+
+    view.unmount()
+
+    expect(gsapSet).toHaveBeenCalledWith(expect.anything(), { clearProps: 'all' })
   })
 
   it('shows the end state and loads nothing while it is inactive', () => {

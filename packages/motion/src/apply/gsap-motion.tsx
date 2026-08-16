@@ -47,6 +47,20 @@ export function GsapMotion({ resolved, className, active = true, children }: Gsa
 
     let disposed = false
     let quickSet: ((progress: number) => void) | null = null
+    /** How the timeline is undone: GSAP writes inline styles, and they outlive the timeline. */
+    let revert: (() => void) | null = null
+    /** The progress asked for before the library arrived, applied as soon as it does. */
+    let queued: number | null = null
+
+    const seek = (progress: number): void => {
+      if (quickSet === null) {
+        queued = progress
+
+        return
+      }
+
+      quickSet(progress)
+    }
 
     void import('gsap').then(({ gsap }) => {
       if (disposed) {
@@ -54,16 +68,47 @@ export function GsapMotion({ resolved, className, active = true, children }: Gsa
       }
 
       const timeline = gsap.timeline({ paused: true })
+      const [first, ...rest] = variants
 
-      timeline.fromTo(element, vars(from), { ...vars(to), duration: 1, ease: 'none' })
+      // Every stop, in order — a three-keyframe scrub is three tweens, not a jump from the first
+      // state to the last. GSAP normalises the whole timeline to a progress of 0…1 itself.
+      timeline.set(element, vars(first ?? {}))
+
+      for (const stop of rest) {
+        timeline.to(element, { ...vars(stop), duration: 1, ease: 'none' })
+      }
+
       quickSet = (progress: number) => timeline.progress(progress)
+      revert = () => {
+        timeline.kill()
+        gsap.set(element, { clearProps: 'all' })
+      }
+
+      if (queued !== null) {
+        quickSet(queued)
+        queued = null
+      }
     })
 
-    const stop = scheduler?.onScroll(({ progress }) => quickSet?.(progress))
+    // A gsap preset is either scrubbed by scroll or played once when it arrives. `text-reveal` is the
+    // second kind, and treating every gsap preset as a scrub would leave it at its first frame.
+    const scrubbed = (resolved.listeners ?? []).some((listener) => listener.event === 'scroll')
+    const stop = scrubbed
+      ? scheduler?.onScroll(({ progress }) => seek(progress))
+      : scheduler?.observe(
+          element,
+          (visible) => {
+            if (visible) {
+              seek(1)
+            }
+          },
+          0.25,
+        )
 
     return () => {
       disposed = true
       stop?.()
+      revert?.()
     }
   }, [active, resolved, scheduler])
 

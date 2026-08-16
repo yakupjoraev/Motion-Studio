@@ -72,9 +72,8 @@ describe('the catalogue', () => {
   it('uses GSAP for exactly the presets that need what Motion cannot do', () => {
     const gsap = PRESETS.filter((preset) => preset.engine === 'gsap').map((preset) => preset.id)
 
-    // Three in the finished catalogue — `horizontal-scroll` and `scroll-timeline` arrive with the
-    // scroll channel; `text-reveal` is the one this build has.
-    expect(gsap).toEqual(['text-reveal'])
+    // The count is the specification, not a guideline — prompt 32 § Engine selection.
+    expect(gsap).toEqual(['text-reveal', 'horizontal-scroll', 'scroll-timeline'])
   })
 })
 
@@ -105,8 +104,29 @@ describe.each(PRESETS.map((preset) => [preset.id, preset] as const))('%s', (_id,
     expect(preset.capabilities.composableWith.length).toBeGreaterThan(0)
   })
 
-  it('keeps no transform in its reduced variant', () => {
+  it('reduces the way its channel says it must', () => {
     const reduced = preset.resolveReduced(preset.defaults, ctx({ reduced: true }))
+
+    if (preset.channel === 'cursor' || preset.channel === 'continuous') {
+      expect(reduced).toEqual({ engine: 'css' })
+
+      return
+    }
+
+    if (preset.channel === 'scroll') {
+      // § Reduced motion: the static end state. A transform *value* is allowed — what is not
+      // allowed is anything that still moves, so nothing may be listening or timed.
+      expect(reduced.listeners).toBeUndefined()
+      expect(reduced.transition?.duration ?? 0).toBe(0)
+
+      return
+    }
+
+    if (preset.channel === 'exit') {
+      expect(reduced.transition).toEqual({ duration: 0 })
+
+      return
+    }
 
     for (const property of motionProperties(reduced)) {
       expect(TRANSFORMS.has(property)).toBe(false)
@@ -145,6 +165,35 @@ describe.each(PRESETS.map((preset) => [preset.id, preset] as const))('%s', (_id,
 })
 
 describe('per-channel reduced policy', () => {
+  it('disables every cursor and continuous preset outright', () => {
+    for (const preset of PRESETS) {
+      if (preset.channel !== 'cursor' && preset.channel !== 'continuous') {
+        continue
+      }
+
+      const reduced = preset.resolveReduced(preset.defaults, ctx({ reduced: true }))
+
+      expect(reduced).toEqual({ engine: 'css' })
+    }
+  })
+
+  it('leaves a scroll preset standing at its end state', () => {
+    for (const preset of PRESETS.filter((entry) => entry.channel === 'scroll')) {
+      const reduced = preset.resolveReduced(preset.defaults, ctx({ reduced: true }))
+
+      expect(reduced.listeners).toBeUndefined()
+      expect(reduced.transition?.duration ?? 0).toBe(0)
+    }
+  })
+
+  it('makes every exit instant', () => {
+    for (const preset of PRESETS.filter((entry) => entry.channel === 'exit')) {
+      expect(preset.resolveReduced(preset.defaults, ctx({ reduced: true })).transition).toEqual({
+        duration: 0,
+      })
+    }
+  })
+
   it('holds an entrance to opacity at 120 ms', () => {
     const entrances = PRESETS.filter((preset) => preset.channel === 'entrance')
     const registry = createPresetRegistry(entrances)
