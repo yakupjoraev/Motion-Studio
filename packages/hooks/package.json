@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "sideEffects": false,
   "exports": {
     ".": "./src/index.ts",
     "./package.json": "./package.json"
@@ -12,10 +13,22 @@
     "test": "vitest run --passWithNoTests",
     "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "@motion-studio/utils": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": ">=19"
+  },
   "devDependencies": {
     "@motion-studio/config": "workspace:*",
+    "@testing-library/jest-dom": "^7.0.0",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/react": "^19.2.18",
     "@vitest/coverage-v8": "^2.1.9",
     "jsdom": "^25.0.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "vitest": "^2.1.9"
   }
 }
