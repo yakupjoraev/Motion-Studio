@@ -203,7 +203,9 @@ Why a registry rather than handlers:
    list to maintain.
 2. The `Mod+/` reference sheet is generated from it.
 3. Conflicts are detectable: a startup assertion fails in development if two shortcuts share
-   `keys` within an overlapping scope.
+   `keys` within the **same** scope. Sharing `keys` across scopes is an override rather than a
+   conflict — `F2` renames inside the layers tree and cycles panels everywhere else — because
+   resolution decides those deterministically. ADR-146.
 4. Rebinding becomes possible later without touching any handler.
 
 ### Resolution order
@@ -212,7 +214,10 @@ Why a registry rather than handlers:
 keydown
    │
    ├─ Is the target a text input / textarea / contenteditable?
-   │     └─ Yes → only allow `escape`, `mod+enter`, `mod+s`, `mod+z` (native undo in the field)
+   │     └─ Yes → only `escape`, `mod+enter` and `mod+s` reach the registry.
+   │              `mod+z` is left to the browser, which is what makes it a native
+   │              field undo rather than a document undo (ADR-148). Everything
+   │              else is dropped without preventDefault.
    │
    ├─ Is a modal dialog open?
    │     └─ Yes → 'dialog' scope only
@@ -223,7 +228,7 @@ keydown
    │
    ├─ Evaluate `when(ctx)`
    │
-   └─ Run; call preventDefault if declared
+   └─ Run; preventDefault unless the shortcut declares `preventDefault: false` (ADR-147)
 ```
 
 The text-input guard is the rule that prevents the classic bug of `Delete` removing a node while
@@ -237,8 +242,12 @@ export function normalizeKeys(event: KeyboardEvent): string
 
 - `mod` maps to `metaKey` on macOS and `ctrlKey` elsewhere. `Mod+Z` written once works on both.
 - Modifier order is canonical: `mod+alt+shift+key`.
-- Uses `event.code` for physical keys (arrows, `Space`) and `event.key` for characters, so a
-  non-US layout does not break arrow navigation.
+- Resolves the key name from `event.code` — for the physical keys (arrows, `Space`, `F2`) and for
+  letters, digits and punctuation alike — falling back to `event.key` only when no usable code
+  arrives. A declaration therefore names a *position* and spells it with the character a US layout
+  prints there: `mod+z` is the key left of `X` whether it types `z`, `w` or `я`. ADR-145 carries the
+  measurement; resolving characters by `event.key` broke `Mod+Z`, `Mod+A` and `Mod+1` on the two
+  layouts it was tested against, and made `Mod+A` run `Mod+Q`'s command on AZERTY.
 - Display strings are platform-aware: `⌘⇧Z` on macOS, `Ctrl+Shift+Z` elsewhere, in tooltips, the
   palette, and the reference sheet.
 

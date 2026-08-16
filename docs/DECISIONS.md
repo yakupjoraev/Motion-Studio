@@ -5946,3 +5946,165 @@ plus the contrast measurement over real text on a light and a dark surface.
   that a technique was understood and rebuilt.
 - Accepted: nothing in the catalogue may later be pasted from a reference without superseding this
   entry, including from the two permissive ones.
+
+## ADR-145 — A binding names a key by its position, and spells it with the US character
+
+**Date** 2026-08-16 · **Prompt** 33 · **Status** Accepted
+
+### Question
+SHORTCUTS.md § Platform normalization says `normalizeKeys` uses `event.code` for physical keys
+(arrows, `Space`) and `event.key` for characters, "so a non-US layout does not break arrow
+navigation". Applied literally, which does a letter key use?
+
+### Criterion (set before checking)
+A shortcut is broken on a layout if the user cannot produce it at all. Two layouts decide it:
+a Russian layout, where `KeyZ` types `я`, and AZERTY, where `KeyA` types `q` and `Digit1` types `&`.
+`Mod+Z` (undo), `Mod+A` (select all) and `Mod+1` (base breakpoint) must fire on both.
+
+### Measurement
+By `event.key`: on the Russian layout `Mod+Z` produces `mod+я` and matches nothing; on AZERTY
+`Mod+A` produces `mod+q` — which is a *different registered binding* — and `Mod+1` produces
+`mod+&`. Three of three broken, one of them silently running the wrong command.
+By `event.code`: `KeyZ` → `z`, `KeyA` → `a`, `Digit1` → `1` on both layouts. Three of three fire.
+
+### Decision
+`normalizeKeys` resolves the key name from `event.code` for physical keys, letters (`KeyA`–`KeyZ`),
+digits (`Digit0`–`Digit9`, numpad) and the punctuation the map names (`Quote`, `Slash`, `BracketLeft`
+and the rest), falling back to `event.key` only when the code is unknown or absent — a synthetic
+event, an IME, or an on-screen keyboard. A declaration therefore spells the *US* character for a
+position: `mod+z` is the key left of `X`, whatever it prints locally.
+
+SHORTCUTS.md § Platform normalization is corrected in the same commit; its intent — a non-US layout
+must not break the studio — is what this implements, and its letter would have defeated it.
+
+### Consequences
+- Accepted: a user on a layout where `z` sits elsewhere presses the physical position, as they
+  already do in every editor built this way (VS Code, Figma).
+- Accepted: the reference sheet shows the US spelling, which is a lie on AZERTY and the same lie
+  every other tool tells. Rebinding, when it arrives, is the honest fix.
+- Avoided: the AZERTY case where `Mod+A` would have run `Mod+Q`'s command instead of failing.
+
+## ADR-146 — A conflict is two bindings in the same scope, not a scope overriding global
+
+**Date** 2026-08-16 · **Prompt** 33 · **Status** Accepted
+
+### Question
+Prompt 33 requires a startup assertion that throws when "two shortcuts with the same `keys` in
+overlapping scopes" are registered. `global` is consulted for every scope, so read one way every
+scope overlaps `global` — and the registry the same document mandates contains `F2` twice on
+purpose (ADR-136: cycle panels globally, rename inside the layers tree).
+
+### Criterion
+An assertion is worth having only if what it forbids is genuinely ambiguous. The test: given one
+focus position and one key press, can resolution pick two different shortcuts? If resolution is
+deterministic, there is nothing to warn about.
+
+### Measurement
+Over the populated registry: same-scope duplicates are undecidable — the match order within a scope
+is registration order, which is not a design anyone stated. Cross-scope pairs are decided by the
+documented order (scope first, then `global`) and produce one answer: `F2` in the tree renames,
+`F2` on the canvas cycles panels; `space` in the tree toggles selection, `space` on the canvas pans.
+Deliberate overrides in the populated registry: 6. False positives a global-overlaps-everything rule
+would have raised: 6.
+
+### Decision
+`findConflicts` reports two shortcuts as conflicting when they share canonical `keys` **and** the
+same `scope`. Cross-scope pairs are overrides and are legal — they are the reason scopes exist.
+`dialog` is exclusive rather than overlapping: while a dialog is open nothing else is consulted.
+
+### Consequences
+- Accepted: a `global` binding shadowed in every scope becomes dead without the assertion noticing.
+  The reference sheet is where that shows, because it lists both and greys neither.
+- Accepted: the assertion is weaker than the prompt's wording. It is also the only version that can
+  stay switched on with the registry the same prompt requires.
+
+## ADR-147 — `preventDefault` is on by default; a shortcut opts out of it
+
+**Date** 2026-08-16 · **Prompt** 33 · **Status** Accepted
+
+### Question
+SHORTCUTS.md § Resolution order ends "Run; call preventDefault if declared", which reads as opt-in.
+With ninety bindings, is opt-in or opt-out the safer default?
+
+### Criterion
+Compare the cost of each mistake. A forgotten opt-in means the browser runs its own command *as well
+as* ours — `Mod+S` saves the page while the studio downloads a `.motion`, `Mod+P` opens the print
+dialog over the canvas. That is silent and reaches the user. A wrong opt-out means we swallow a key
+the browser wanted, which shows up immediately as a key that stopped working.
+
+### Measurement
+Of the bindings registered in `apps/web/src/components/studio/shortcuts/`, the ones that collide with
+a browser default and would need the opt-in: `mod+s`, `mod+o`, `mod+p`, `mod+d`, `mod+f`, `mod+g`,
+`mod+,`, `mod+/`, `mod+[`, `mod+]`, `mod+1`…`mod+6`, `mod+0`, `mod+=`, `mod+-`, `mod+shift+p`,
+`mod+shift+e`, `mod+a`, `tab`, `space`, `delete`, `backspace` — over half the registry.
+
+### Decision
+`useShortcuts` calls `event.preventDefault()` for every shortcut it runs unless the shortcut declares
+`preventDefault: false`. The opt-out exists and is used: `tab` walks siblings on the canvas and must
+not eat the browser's focus order elsewhere.
+
+### Consequences
+- Accepted: the field name now reads as an opt-out while the document's prose read as an opt-in. The
+  document is corrected to match in the same commit.
+- Accepted: a shortcut that should not swallow its key has to say so, and forgetting is visible on
+  the first press.
+
+## ADR-148 — `Mod+Z` in a text field means "let the field undo", not "run our undo"
+
+**Date** 2026-08-16 · **Prompt** 33 · **Status** Accepted
+
+### Question
+The text-input guard "only allows `escape`, `mod+enter`, `mod+s`, `mod+z`". Allowed to reach the
+registry, or allowed to reach the browser?
+
+### Criterion
+SHORTCUTS.md § Testing states the observable outcome: "`Mod+Z` inside a text field does a native
+field undo, not a document undo." Whichever reading produces that is the right one.
+
+### Decision
+Three keys reach the registry from inside a field — `escape`, `mod+enter`, `mod+s` — because each has
+a document-level meaning a typing user still wants. `mod+z` is blocked instead: the guard returns
+before matching and, crucially, before `preventDefault`, so the keystroke continues to the field and
+the browser undoes the typing.
+
+### Consequences
+- Accepted: a user who wants to undo the *document* while the caret sits in a heading field has to
+  leave the field first. That is the behaviour of every editor with an inline text field, and the
+  alternative loses their typing.
+- Accepted: the guard's passthrough list is three keys where the document names four. The fourth is
+  handled by not handling it, and the comment above the list says so.
+
+## ADR-149 — Effects are entries in the block registry, and a bad param never takes the node down
+
+**Date** 2026-08-16 · **Prompt** 33 · **Status** Accepted
+
+### Question
+`EffectInstance` carries an `EffectId` and a `params` bag; a node carries a `BlockId` and `props`.
+Do effects need their own registry, and what happens when `params` do not match the effect's schema?
+
+### Criterion
+Two things decide it. First: does anything dispatch on the difference? A second registry is worth its
+weight only if effects need lookup, categories, controls or codegen that blocks do not — they need
+exactly the same four. Second, for the failure: what does the user see? The node's own props failing
+to parse shows an "invalid props" card because the block *is* the content (ADR-104). An effect is
+decoration; losing the section because a decoration is misconfigured is a worse outcome than the
+decoration looking wrong.
+
+### Decision
+Effects are `BlockDefinition`s in `blockRegistry` under `category: 'effects'` — COMPONENT_LIBRARY.md
+§ Catalogue already lists them there, and `renderRegistry`'s lazy example already names `particles`.
+The brands stay separate because a node holding an `EffectId` is a real mistake, and
+`effectBlockId(id)` is the single legal crossing; it revalidates rather than casting.
+
+Params that fail the effect's schema fall back to that effect's `defaults`, and the layer renders.
+This is the opposite of ADR-104 for node props and the same as ADR-139 for motion params, for the
+reason both give: the resolution happens inside the render of something decorative.
+
+### Consequences
+- Accepted: the block palette will list effects among insertable blocks unless it filters the
+  category. The palette is prompt 37 and it has to filter, because an effect is not a node.
+- Accepted: `check:registry` now demands a thumbnail per effect, which is thirteen more images in the
+  generator's run. That is the same gate every block passes and it is the reason the palette can show
+  a catalogue without loading thirteen animated layers.
+- Accepted: an effect with wrong params looks wrong rather than announcing itself. The inspector's
+  stack editor is where a user sees the values that produced it.
