@@ -283,3 +283,65 @@ describe('running a shortcut', () => {
     expect(run).not.toHaveBeenCalled()
   })
 })
+
+describe('a delegated binding (ADR-150)', () => {
+  it('matches, so the registry knows the key is taken, and then stands aside', () => {
+    const run = vi.fn()
+    const registry = build([
+      {
+        id: 'tree-arrow',
+        keys: 'up',
+        label: 'Move focus',
+        group: 'Layers',
+        scope: 'layers',
+        delegated: true,
+        run,
+      },
+    ])
+
+    render(<Harness registry={registry} />)
+    const layers = screen.getByTestId('layers')
+    layers.focus()
+
+    const event = new KeyboardEvent('keydown', {
+      key: 'ArrowUp',
+      code: 'ArrowUp',
+      cancelable: true,
+      bubbles: true,
+    })
+    layers.dispatchEvent(event)
+
+    expect(run).not.toHaveBeenCalled()
+    expect(event.defaultPrevented).toBe(false)
+  })
+
+  it('still shadows a global binding, which is the point of declaring it', () => {
+    const globalRun = vi.fn()
+    const registry = build([
+      {
+        id: 'nudge',
+        keys: 'up',
+        label: 'Nudge',
+        group: 'Transform',
+        scope: 'global',
+        run: globalRun,
+      },
+      {
+        id: 'tree-arrow',
+        keys: 'up',
+        label: 'Move focus',
+        group: 'Layers',
+        scope: 'layers',
+        delegated: true,
+        run: vi.fn(),
+      },
+    ])
+
+    render(<Harness registry={registry} />)
+    const layers = screen.getByTestId('layers')
+    layers.focus()
+    press(layers, 'ArrowUp', { code: 'ArrowUp' })
+
+    expect(globalRun).not.toHaveBeenCalled()
+  })
+})

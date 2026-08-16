@@ -36,6 +36,12 @@ export const meshGradientDefinition = defineBlock({
         intensityControl('intensity'),
         { path: 'spread', kind: 'slider', label: 'Spread', options: MESH_SPREAD },
         { path: 'blur', kind: 'slider', label: 'Blur', options: MESH_BLUR },
+        {
+          path: 'scrim',
+          kind: 'switch',
+          label: 'Scrim',
+          hint: 'Keeps text in front of the mesh legible. Off only for a band with no copy on it',
+        },
       ],
     },
     { id: 'motion', label: 'Motion', controls: [speedControl('speed')] },

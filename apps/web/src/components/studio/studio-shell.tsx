@@ -1,6 +1,7 @@
 'use client'
 
 import { cn } from '@motion-studio/utils'
+import dynamic from 'next/dynamic'
 import { type ReactNode, useEffect, useState } from 'react'
 
 import { type PanelSide, isCollapsed } from '../../hooks/panel-layout'
@@ -10,6 +11,7 @@ import { useViewportGuard } from '../../hooks/use-viewport-guard'
 import { Inspector } from './inspector/inspector'
 import { LeftPanel } from './left-panel/left-panel'
 import { PanelResizer } from './panel-resizer'
+
 import { StatusBar } from './status-bar/status-bar'
 import { TopBar } from './top-bar/top-bar'
 
@@ -37,6 +39,16 @@ const nextScope = (): FocusScope => {
 
   return FOCUS_CYCLE[(index + 1) % FOCUS_CYCLE.length] ?? 'canvas'
 }
+
+/**
+ * The keyboard map is a chunk of its own, loaded right after hydration rather than with the shell.
+ * ADR-152 carries the measurement: the registry, the two overlay entry points and the hooks package
+ * are 6 kB of a 250 kB budget, and nothing can be typed at a studio that has not hydrated yet.
+ */
+const ShortcutHost = dynamic(
+  () => import('./shortcuts/shortcut-host').then((module) => module.ShortcutHost),
+  { ssr: false },
+)
 
 const REGION_CLASS = 'relative min-w-0 outline-none focus-visible:shadow-focus'
 
@@ -67,30 +79,33 @@ export function StudioShell({ canvas }: StudioShellProps) {
     toggleCollapsed(side)
   }
 
-  // No dependency array: the handler closes over `mode` and the current layout, and re-subscribing a
-  // single keydown listener costs less than the ref indirection that would avoid it.
+  /*
+   * `F2` stays here and is declared `delegated` in the registry (ADR-150): cycling the focus scopes
+   * needs `document.activeElement` at the moment of the press, which a central `run` cannot see.
+   * Everything else the shell used to listen for is in the registry now.
+   */
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent): void => {
-      if (event.key === 'F2') {
-        event.preventDefault()
-        focusScope(nextScope())
-
-        return
-      }
-
-      // SHORTCUTS.md § Global. The registry that owns the rest of the map arrives in prompt 33.
-      if (event.key !== '\\' || !(event.metaKey || event.ctrlKey)) {
+      if (event.key !== 'F2') {
         return
       }
 
       event.preventDefault()
-      togglePanel(event.altKey ? 'right' : 'left')
+      focusScope(nextScope())
     }
 
     window.addEventListener('keydown', onKeyDown)
 
     return () => window.removeEventListener('keydown', onKeyDown)
-  })
+  }, [])
+
+  /**
+   * What the panel bindings call. Built fresh on every render rather than memoised: both closures
+   * read the current layout, and a stale one would toggle a panel from a width that has moved. It
+   * costs nothing — `useShortcuts` keeps the context in a ref, so the keydown listener does not move
+   * when this object does.
+   */
+  const panels = { toggle: togglePanel, isOpen }
 
   return (
     <>
@@ -153,6 +168,8 @@ export function StudioShell({ canvas }: StudioShellProps) {
 
         <StatusBar />
       </div>
+
+      <ShortcutHost panels={panels} />
 
       <div className="ms-studio-notice h-dvh place-content-center gap-3 px-6 text-center">
         <p className="text-sm">Motion Studio needs a wider screen.</p>

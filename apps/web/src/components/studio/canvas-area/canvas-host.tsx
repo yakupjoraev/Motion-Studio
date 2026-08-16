@@ -2,6 +2,7 @@
 
 import { Canvas } from '@motion-studio/canvas'
 import { selectors } from '@motion-studio/editor'
+import { MotionSchedulerProvider } from '@motion-studio/motion'
 import { BREAKPOINTS } from '@motion-studio/schema'
 import { useCallback, useMemo } from 'react'
 
@@ -31,6 +32,7 @@ const countCanvasRender = (): void => {
  */
 export function CanvasHost() {
   const ports = useCanvasPorts()
+  const motionPaused = useStudioStore((state) => state.viewport.motionPaused)
   const rootId = useStudioStore(selectors.selectRootId)
   const breakpoint = useStudioStore((state) => state.viewport.breakpoint)
   const grid = useStudioStore((state) => state.viewport.grid)
@@ -67,23 +69,25 @@ export function CanvasHost() {
   const artboardWidth = breakpoint === 'base' ? canvasWidth : BREAKPOINTS[breakpoint].frame
 
   return (
-    <Canvas
-      artboardWidth={artboardWidth}
-      breakpointName={BREAKPOINTS[breakpoint].label}
-      gridSize={grid.size as 4 | 8 | 16 | 24}
-      initialTransform={initialTransform}
-      menu={ports.menu}
-      motion={ports.motion}
-      onTransformCommit={onTransformCommit}
-      renderNode={renderNode}
-      resize={ports.resize}
-      rootId={rootId}
-      scene={ports.scene}
-      selection={ports.selection}
-      showGrid={grid.enabled}
-      showRulers={rulers}
-      snapEnabled={guides.enabled}
-      snapThreshold={guides.snapThreshold}
-    />
+    <MotionSchedulerProvider paused={motionPaused}>
+      <Canvas
+        artboardWidth={artboardWidth}
+        breakpointName={BREAKPOINTS[breakpoint].label}
+        gridSize={grid.size as 4 | 8 | 16 | 24}
+        initialTransform={initialTransform}
+        menu={ports.menu}
+        motion={ports.motion}
+        onTransformCommit={onTransformCommit}
+        renderNode={renderNode}
+        resize={ports.resize}
+        rootId={rootId}
+        scene={ports.scene}
+        selection={ports.selection}
+        showGrid={grid.enabled}
+        showRulers={rulers}
+        snapEnabled={guides.enabled}
+        snapThreshold={guides.snapThreshold}
+      />
+    </MotionSchedulerProvider>
   )
 }

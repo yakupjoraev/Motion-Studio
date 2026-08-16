@@ -7,6 +7,7 @@ import {
   CodeSection,
   EffectsSection,
   LayoutSection,
+  MotionSection,
   StyleSection,
   TypographySection,
   orderedGroups,
@@ -55,6 +56,7 @@ export function BlockInspector({ definition, nodeIds, only }: BlockInspectorProp
         return <BlockSection group={narrowed} id={id} key={id} label={label} nodeIds={nodeIds} />
       })}
 
+      <MotionSection nodeIds={nodeIds} />
       <EffectsSection nodeIds={nodeIds} />
       <CodeSection nodeIds={nodeIds} />
     </div>

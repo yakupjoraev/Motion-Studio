@@ -14,6 +14,7 @@
 @source '../../../packages/canvas/src';
 @source '../../../packages/blocks/src';
 @source '../../../packages/dnd/src';
+@source '../../../packages/hooks/src';
 @source '../app';
 @source '../src';
 

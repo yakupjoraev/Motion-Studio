@@ -13,4 +13,10 @@ export const auroraBackgroundSchema = z.object({
   blur: z.number().min(AURORA_BLUR.min).max(AURORA_BLUR.max).default(80),
   /** Gradient banding is visible on a wide blurred field; a noise layer at low opacity hides it. */
   grain: z.boolean().default(true),
+  /**
+   * A wash of the surface colour over the fields. Measured on the thumbnail stage: without it, body
+   * copy over a bright field reads at roughly 2:1 and the effect is unusable behind the text it is
+   * meant to sit behind. On by default for that reason; off is for a decorative band with no copy.
+   */
+  scrim: z.boolean().default(true),
 })

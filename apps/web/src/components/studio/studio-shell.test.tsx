@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { axe } from 'jest-axe'
 import { useRef } from 'react'
@@ -20,6 +20,24 @@ beforeEach(() => {
 afterEach(() => {
   vi.useRealTimers()
 })
+
+const BACKSLASH = String.fromCharCode(92)
+
+/**
+ * The panel binding, sent as a real key event. `user.keyboard` cannot express it: a backslash is its
+ * own escape character, so the sequence reaches its parser as an escaped brace and no character
+ * event is sent at all — which is why this used to look like a working test of nothing.
+ */
+const togglePanelKey = async (init: KeyboardEventInit = {}): Promise<void> => {
+  await act(async () => {
+    fireEvent.keyDown(document, {
+      key: BACKSLASH,
+      code: 'Backslash',
+      ctrlKey: true,
+      ...init,
+    })
+  })
+}
 
 describe('StudioShell', () => {
   it('renders the three focus regions and the two bars', () => {
@@ -93,34 +111,32 @@ describe('StudioShell', () => {
 
   describe('panel shortcuts', () => {
     it('collapses the left panel on Mod+\\ and restores it', async () => {
-      const user = userEvent.setup()
-
       renderShell()
+      // The keyboard map arrives in its own chunk (ADR-152); this is it, mounted.
+      await screen.findByTestId('shortcut-host')
 
-      await user.keyboard('{Control>}\\{/Control}')
+      await togglePanelKey()
       expect(readVariable(PANEL_VARIABLE.left.track)).toBe('0px')
 
-      await user.keyboard('{Control>}\\{/Control}')
+      await togglePanelKey()
       expect(readVariable(PANEL_VARIABLE.left.track)).toBe(`${PANEL_BOUNDS.left.initial}px`)
     })
 
     it('collapses the inspector on Mod+Alt+\\ and leaves the left panel alone', async () => {
-      const user = userEvent.setup()
-
       renderShell()
+      await screen.findByTestId('shortcut-host')
 
-      await user.keyboard('{Control>}{Alt>}\\{/Alt}{/Control}')
+      await togglePanelKey({ altKey: true })
 
       expect(readVariable(PANEL_VARIABLE.right.track)).toBe('0px')
       expect(readVariable(PANEL_VARIABLE.left.track)).toBe('')
     })
 
     it('keeps the collapsed panel out of the tab order', async () => {
-      const user = userEvent.setup()
-
       renderShell()
+      await screen.findByTestId('shortcut-host')
 
-      await user.keyboard('{Control>}\\{/Control}')
+      await togglePanelKey()
 
       expect(screen.getByRole('complementary', { name: 'Left panel' })).toHaveAttribute('inert')
     })

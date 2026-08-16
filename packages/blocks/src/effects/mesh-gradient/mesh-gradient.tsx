@@ -24,6 +24,7 @@ export function MeshGradient({
   speed,
   blur,
   spread,
+  scrim,
 }: MeshGradientProps) {
   return (
     <div
@@ -36,6 +37,7 @@ export function MeshGradient({
         className="absolute inset-[-20%] ms-fx-mesh"
         style={{ backgroundImage: meshBackground([tint, secondaryTint, tertiaryTint], spread) }}
       />
+      {scrim ? <span className="ms-fx-scrim" data-testid="mesh-scrim" /> : null}
     </div>
   )
 }

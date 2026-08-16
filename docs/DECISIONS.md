@@ -6108,3 +6108,109 @@ reason both give: the resolution happens inside the render of something decorati
   a catalogue without loading thirteen animated layers.
 - Accepted: an effect with wrong params looks wrong rather than announcing itself. The inspector's
   stack editor is where a user sees the values that produced it.
+
+## ADR-150 — A binding a surface implements itself is declared, and marked delegated
+
+**Date** 2026-08-16 · **Prompt** 33 · **Status** Accepted
+
+### Question
+"Register every shortcut from SHORTCUTS.md. All of them, in this prompt." Roughly a third of that map
+is implemented by the component that holds focus: the layers tree walks its rows, a number field
+steps its own value, the canvas holds `Space` down to pan. A central `run` cannot do any of those —
+each needs state that only exists inside the focused component. So what does the registry hold?
+
+### Criterion
+The registry earns its place through three consumers: the palette, the reference sheet, and the
+conflict assertion. A binding missing from it is missing from all three — which is exactly how a
+later prompt ends up adding an ad-hoc listener, the thing the registry exists to prevent. So the test
+is: can every documented key be listed, searched and checked for conflicts, without the registry
+pretending to run something it cannot?
+
+### Decision
+`Shortcut.delegated?: boolean`. A delegated entry carries id, keys, label, group and scope like any
+other; `useShortcuts` matches it — which is how it still shadows a `global` binding on the same
+keys — and then stands aside without running anything and without `preventDefault`. The surface named
+by `scope` receives the event as it always did.
+
+Twenty-nine entries are delegated: the layers tree's thirteen, the inspector's eleven, the canvas's
+`Space` and `Tab`/`Shift+Tab`, `F2`'s focus cycle, and the playground's six, which are reserved for
+prompt 49.
+
+### Consequences
+- Accepted: the registry can now contain an entry nothing runs, and a typo in its `scope` would be
+  invisible. The palette filters delegated entries out for exactly that reason — an item that does
+  nothing when clicked is worse than an absent one.
+- Accepted: `delegated` is a claim about another file. The test asserting which scopes carry
+  delegated entries is what stops it drifting into "not implemented yet".
+- Avoided: eighty bindings in the sheet and thirty-one silently missing.
+
+## ADR-151 — Curve editors drag continuously and commit the nearest named curve
+
+**Date** 2026-08-16 · **Prompt** 33 · **Status** Accepted
+
+### Question
+Prompt 33: "dragging stiffness redraws the curve *and* re-runs the preview animation. That feedback
+loop is the reason this panel exists." But a preset's curve parameters are **names** — `easing:
+'standard'`, `spring: 'snappy'` — because `MotionSpec.params` may hold a number, a string or a
+boolean (FILE_FORMAT.md) and every preset in the catalogue declares them that way. A continuous drag
+produces a curve the document has no field for.
+
+### Criterion
+Two properties, both required: the drag has to be continuous, or there is no feedback loop; and the
+document has to stay portable, or an export emits four magic numbers where it used to emit a token
+and a `.motion` file stops round-tripping through a theme's motion scale.
+
+### Options
+1. Widen every preset's schema to accept a raw `[x1,y1,x2,y2]` and a `{mass,stiffness,damping}`. Cost:
+   all fifty-one presets, their codegen fragments and the file format. Prompt 32's catalogue and the
+   export engine both assume the token.
+2. Replace the editors with a select of names. Cost: the feedback loop the prompt names as the
+   panel's reason to exist.
+3. Drag continuously, snap on commit.
+
+### Decision
+Option 3. The editor moves freely and redraws while the pointer is down, and the preview re-runs
+because the committed name changes as the drag passes each neighbour's midpoint. What lands in the
+document is a name.
+
+### Consequences
+- Accepted: the drag is continuous but the *result* is quantised to the eight easings and five
+  springs the vocabulary defines, so a user cannot dial an arbitrary curve. Between named neighbours
+  the preview does not change, which reads as a curve that snaps.
+- Accepted: this is a smaller loop than the prompt describes and it is recorded as such rather than
+  reported as done.
+- Deferred, and escalated in the session report: raw curve parameters would be a change to the preset
+  model, the file format and every printer, and belong in a prompt that owns all three.
+
+## ADR-152 — The keyboard map is a chunk, loaded after hydration
+
+**Date** 2026-08-16 · **Prompt** 33 · **Status** Accepted
+
+### Question
+The registry, its ninety entries, the palette entry point and `@motion-studio/hooks` all arrive with
+the shell. `/studio` first-load JS is capped at 250 kB gzip (ENGINEERING_CONTRACT.md § 6). Does the
+keyboard map fit in the first chunk?
+
+### Criterion (set before measuring)
+250 kB gzip, measured off `app-build-manifest.json` rather than from Next's rounded console figure —
+the same method prompt 26 established. Under the cap: keep it eager. Over: the cheapest thing to move
+is whatever cannot be used before hydration anyway.
+
+### Measurement
+- Everything eager: **256.0 kB** — over.
+- All thirteen effect components lazy as well: **255.2 kB**. The effects are small; this is not where
+  the weight is, and it stays because a document without effects should not carry thirteen of them.
+- Shortcut host lazy (`ssr: false`), which takes the registry, both overlays and the hooks package
+  with it: **249.5 kB** — under, by 0.5 kB.
+
+### Decision
+`ShortcutHost` is a dynamic import mounted by the shell. The map is registered on the frame after
+hydration; the palette and the sheet are separate chunks below it and mount only while open.
+
+### Consequences
+- Accepted: for the moment between first paint and hydration, no shortcut fires. Nothing else on the
+  page responds in that window either — the store is not attached and the canvas has not mounted.
+- Accepted: 0.5 kB of headroom is thin. The next prompt to add a first-load import will have to move
+  something, which is the budget working rather than failing.
+- Accepted: `F2` stays in the shell's own listener (ADR-150) and therefore still works before the
+  chunk lands, which is the one binding that has to.

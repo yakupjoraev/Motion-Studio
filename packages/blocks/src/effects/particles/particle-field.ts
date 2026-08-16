@@ -24,7 +24,12 @@ function hash(seed: number, index: number, salt: number): number {
 export function particleField(count: number, size: number, seed: number): readonly Particle[] {
   return Array.from({ length: count }, (_unused, index) => ({
     left: Math.round(hash(seed, index, 1) * 10000) / 100,
-    bottom: Math.round(hash(seed, index, 2) * -3000) / 100,
+    /*
+     * Spread through the box rather than queued below it. Measured on the thumbnail stage: starting
+     * every particle under the bottom edge left the reduced-motion composition — the one a stopped
+     * document shows — completely empty, because the rise is what used to bring them into view.
+     */
+    bottom: Math.round(hash(seed, index, 2) * 8000) / 100 - 10,
     size: Math.round((0.6 + hash(seed, index, 3) * 0.8) * size * 100) / 100,
     drift: Math.round((hash(seed, index, 4) - 0.5) * 12000) / 100,
     cycle: Math.round((8 + hash(seed, index, 5) * 10) * 100) / 100,

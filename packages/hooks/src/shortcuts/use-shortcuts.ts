@@ -161,7 +161,9 @@ export function useShortcuts<Ctx>({
         owner,
       )
 
-      if (shortcut === undefined) {
+      // A delegated binding is owned by its surface (ADR-150): matching it is how the registry
+      // knows the key is taken, and standing aside is how the surface still gets it.
+      if (shortcut === undefined || shortcut.delegated === true) {
         return
       }
 

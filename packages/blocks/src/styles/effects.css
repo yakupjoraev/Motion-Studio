@@ -125,7 +125,19 @@
 
 .ms-fx-noise {
   background-image: var(--ms-noise-texture);
+  /* Its own tile size, not `--ms-fx-size`: that one is the effect's spacing — a 24 px grain would be
+     a grey wash, and an untiled SVG scales with the element and turns into blotches. */
+  background-size: var(--ms-fx-grain, 160px) var(--ms-fx-grain, 160px);
   opacity: var(--ms-fx-intensity);
+}
+
+/* The scrim an aurora needs to stay behind text: a wash of the surface colour over the fields, under
+ * the content. Without it a wide bright field puts foreground text at 2:1 and the effect is unusable
+ * on the thing it is supposed to sit behind. */
+.ms-fx-scrim {
+  position: absolute;
+  inset: 0;
+  background-color: color-mix(in oklab, var(--ms-color-surface-0) 55%, transparent);
 }
 
 .ms-fx-grain {
@@ -133,6 +145,7 @@
   position: absolute;
   inset: -10%;
   background-image: var(--ms-noise-texture);
+  background-size: var(--ms-fx-grain, 160px) var(--ms-fx-grain, 160px);
   opacity: var(--ms-fx-intensity);
   animation: ms-fx-grain calc(var(--ms-fx-cycle) * 4) steps(8, end) infinite;
 }

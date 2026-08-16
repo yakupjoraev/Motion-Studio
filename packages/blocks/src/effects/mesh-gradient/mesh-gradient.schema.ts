@@ -14,4 +14,6 @@ export const meshGradientSchema = z.object({
   blur: z.number().min(MESH_BLUR.min).max(MESH_BLUR.max).default(40),
   /** How far each stop reaches before it fades out. Small spreads read as spots, wide ones as haze. */
   spread: z.number().min(MESH_SPREAD.min).max(MESH_SPREAD.max).default(55),
+  /** The same wash the aurora carries, for the same measured reason: text in front has to stay legible. */
+  scrim: z.boolean().default(true),
 })

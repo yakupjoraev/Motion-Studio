@@ -63,11 +63,14 @@ describe('EffectStack', () => {
     expect(layer.style.opacity).toBe('0.4')
   })
 
-  it('falls back to the effect defaults when params do not parse (ADR-149)', () => {
+  it('falls back to the effect defaults when params do not parse (ADR-149)', async () => {
     stack([instance({ id: 'fx_1', params: { spacing: 'not a number' } })])
 
-    // The layer is still there: a decorative layer never takes the node down with it.
-    expect(screen.getByTestId('dot-grid').style.getPropertyValue('--ms-fx-size')).toBe('24px')
+    // The layer is still there: a decorative layer never takes the node down with it. `findBy`
+    // because every effect component is loaded on demand (ADR-152).
+    const layer = await screen.findByTestId('dot-grid')
+
+    expect(layer.style.getPropertyValue('--ms-fx-size')).toBe('24px')
   })
 
   it('skips an effect the registry does not know', () => {
@@ -76,10 +79,10 @@ describe('EffectStack', () => {
     expect(screen.queryAllByTestId('effect-layer')).toHaveLength(0)
   })
 
-  it('is transparent to the pointer at every level', () => {
+  it('is transparent to the pointer at every level', async () => {
     stack([instance({ id: 'fx_1' })])
 
     expect(screen.getByTestId('effect-layer').className).toContain('pointer-events-none')
-    expect(screen.getByTestId('dot-grid').className).toContain('pointer-events-none')
+    expect((await screen.findByTestId('dot-grid')).className).toContain('pointer-events-none')
   })
 })

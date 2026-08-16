@@ -2,6 +2,7 @@ export { BlockSection, type BlockSectionProps } from './block-section'
 export { CodeSection, type CodeSectionProps } from './code-section'
 export { EffectsSection, type EffectsSectionProps } from './effects-section'
 export { LayoutSection, type LayoutSectionProps } from './layout-section'
+export { MotionSection, type MotionSectionProps } from './motion-section'
 export {
   CANONICAL_SECTIONS,
   orderedGroups,

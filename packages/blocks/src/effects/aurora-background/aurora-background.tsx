@@ -11,7 +11,9 @@ import type { AuroraBackgroundProps } from './aurora-background.types'
  * and 5 multiples of the shared cycle, which share no common factor small enough for the
  * interference pattern to visibly repeat. Two hues rather than one, because a single hue blurred
  * this far reads as a glow; the overlap between them is what makes it an aurora. A noise layer at
- * `mix-blend-mode: overlay` hides the banding a wide gradient shows on an 8-bit display.
+ * `mix-blend-mode: overlay` hides the banding a wide gradient shows on an 8-bit display, and a scrim
+ * of the surface colour goes over the lot so text in front of it stays legible — the requirement
+ * most implementations of this treatment skip.
  *
  * Built from technique, not from source: no reference implementation was adapted (ADR-144).
  * Implemented against our schema, tokens and reduced-motion policy — see docs/DESIGN_REFERENCES.md.
@@ -23,6 +25,7 @@ export function AuroraBackground({
   speed,
   blur,
   grain,
+  scrim,
 }: AuroraBackgroundProps) {
   return (
     <div
@@ -38,6 +41,7 @@ export function AuroraBackground({
       />
       <span className={auroraFieldStyles({ field: 'c' })} style={{ background: tintVar(tint) }} />
       {grain ? <span className={auroraGrainStyles} data-testid="aurora-grain" /> : null}
+      {scrim ? <span className="ms-fx-scrim" data-testid="aurora-scrim" /> : null}
     </div>
   )
 }

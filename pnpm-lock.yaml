@@ -111,6 +111,9 @@ importers:
       '@motion-studio/editor':
         specifier: workspace:*
         version: link:../../packages/editor
+      '@motion-studio/hooks':
+        specifier: workspace:*
+        version: link:../../packages/hooks
       '@motion-studio/icons':
         specifier: workspace:*
         version: link:../../packages/icons

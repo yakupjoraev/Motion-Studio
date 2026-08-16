@@ -1,6 +1,6 @@
 'use client'
 
-import { blockRegistry, renderRegistry } from '@motion-studio/blocks'
+import { EffectStack, blockRegistry, renderRegistry } from '@motion-studio/blocks'
 import { NodeWrapper } from '@motion-studio/canvas'
 import { selectors } from '@motion-studio/editor'
 import type { NodeId } from '@motion-studio/schema'
@@ -44,6 +44,9 @@ export const NodeRenderer = memo(function NodeRenderer({ id }: { readonly id: No
 
   return (
     <NodeWrapper id={id}>
+      {/* The node's effects are siblings of its markup, never a wrapper around it: a block must not
+          learn that it has any, which is what keeps its export honest. */}
+      <EffectStack effects={node.effects} registry={blockRegistry} />
       <NodeErrorBoundary blockId={node.blockId} nodeName={node.name}>
         {parsed.success ? (
           // The boundary is per node and so is this: a suspending node inside a tree-wide boundary

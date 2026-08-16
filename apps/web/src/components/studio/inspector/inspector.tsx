@@ -68,7 +68,7 @@ export function Inspector() {
           <BlockInspector definition={definition} nodeIds={nodeIds} />
         )}
         {nodeIds.length === 1 && definition === undefined && (
-          <p className="p-3 text-xs text-foreground-muted">
+          <p className="p-3 text-foreground-muted text-xs">
             No block is registered as “{blockId}”, so there is nothing to edit.
           </p>
         )}

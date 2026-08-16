@@ -21,7 +21,7 @@ export const auroraBackgroundDefinition = defineBlock({
 
   propsSchema: auroraBackgroundSchema,
   defaults: auroraBackgroundSchema.parse({}),
-  previewProps: auroraBackgroundSchema.parse({ intensity: 0.7, blur: 64 }),
+  previewProps: auroraBackgroundSchema.parse({ intensity: 0.6, blur: 64 }),
 
   slots: [],
 
@@ -39,6 +39,12 @@ export const auroraBackgroundDefinition = defineBlock({
           kind: 'switch',
           label: 'Grain',
           hint: 'Hides the banding a wide gradient shows on an 8-bit display',
+        },
+        {
+          path: 'scrim',
+          kind: 'switch',
+          label: 'Scrim',
+          hint: 'Keeps text in front of the aurora legible. Off only for a band with no copy on it',
         },
       ],
     },

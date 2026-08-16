@@ -1,4 +1,4 @@
-import { DEFINITIONS, renderRegistry } from '@motion-studio/blocks'
+import { DEFINITIONS, EffectStage, renderRegistry } from '@motion-studio/blocks'
 import type { Meta, StoryObj } from '@storybook/react'
 import { type ComponentType, Suspense } from 'react'
 
@@ -69,7 +69,19 @@ function Thumbnail({ blockId }: ThumbnailArgs) {
     >
       <div className="w-full">
         <Suspense fallback={null}>
-          <Component {...(definition.previewProps as Record<string, unknown>)} />
+          {definition.category === 'effects' ? (
+            /*
+             * An effect is an absolutely positioned layer inside its target, so on a bare stage it
+             * has nothing to fill and the thumbnail comes back empty. It gets the same surface its
+             * stories use — a real card with real text — which is also what the palette should show:
+             * the effect doing its job rather than a coloured rectangle.
+             */
+            <EffectStage>
+              <Component {...(definition.previewProps as Record<string, unknown>)} />
+            </EffectStage>
+          ) : (
+            <Component {...(definition.previewProps as Record<string, unknown>)} />
+          )}
         </Suspense>
       </div>
     </div>
