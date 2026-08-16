@@ -104,3 +104,9 @@ export * from './hero/hero-aurora/index'
 export * from './hero/hero-video/index'
 export * from './hero/hero-terminal/index'
 export * from './hero/hero-app-preview/index'
+
+/*
+ * The effects category, through its own barrel: thirteen blocks plus the stack that mounts them on a
+ * node, and the shared vocabulary every one of them is built from.
+ */
+export * from './effects/index'

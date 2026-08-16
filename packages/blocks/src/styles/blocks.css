@@ -1,3 +1,8 @@
+/* The effects category keeps its own file: thirteen techniques in here would put this one over the
+ * 300-line limit, and they are a category rather than a section. One import, one stylesheet for a
+ * consumer to load. */
+@import './effects.css';
+
 /*
  * The registry's own stylesheet, arranged the way `packages/ui/src/styles/chrome.css` is and for the
  * same reason: a keyframe set is not a utility, so Tailwind is the wrong place to put one.

@@ -1,0 +1,5 @@
+export { Spotlight } from './spotlight'
+export { spotlightDefinition } from './spotlight.definition'
+export { SPOTLIGHT_REACH, spotlightSchema } from './spotlight.schema'
+export type { SpotlightProps } from './spotlight.types'
+export { usePointerLight } from './use-pointer-light'

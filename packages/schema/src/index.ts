@@ -11,6 +11,7 @@ export {
   blockId,
   blockIdSchema,
   documentIdSchema,
+  effectBlockId,
   effectId,
   effectIdSchema,
   effectInstanceIdSchema,

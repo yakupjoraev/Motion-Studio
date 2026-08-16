@@ -58,6 +58,15 @@ export const blockId = idConstructor<BlockId>('BlockId', CATALOGUE_ID_RE)
 export const assetId = idConstructor<AssetId>('AssetId', ASSET_ID_RE)
 export const effectId = idConstructor<EffectId>('EffectId', CATALOGUE_ID_RE)
 
+/**
+ * The effects category lives in the same registry as every other block — COMPONENT_LIBRARY.md
+ * § Catalogue lists it there — so looking one up means presenting its id as the `BlockId` the
+ * registry takes. The two brands stay separate because a *node* holds a `BlockId` and an
+ * *effect instance* holds an `EffectId`, and swapping those is the mistake the brands exist to
+ * catch; this is the one place the crossing is legal, and it revalidates rather than casting.
+ */
+export const effectBlockId = (id: EffectId): BlockId => blockId(id)
+
 /** Untrusted input goes through these instead, where a bad id is a reported failure. */
 export const nodeIdSchema = z
   .string()

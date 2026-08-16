@@ -154,6 +154,36 @@ describe('the registry as a whole', () => {
     )
   })
 
+  it('groups the effects category in catalogue order too', () => {
+    expect(blockRegistry.byCategory('effects').map((one) => one.id)).toEqual(
+      [
+        'aurora-background',
+        'mesh-gradient',
+        'noise-overlay',
+        'grain-overlay',
+        'dot-grid',
+        'grid-lines',
+        'spotlight',
+        'beams',
+        'glow',
+        'border-beam',
+        'shine',
+        'particles',
+        'scanlines',
+      ].map(blockId),
+    )
+  })
+
+  it('attaches every effect to a node rather than replacing one', () => {
+    for (const definition of blockRegistry.byCategory('effects')) {
+      // No slots and no motion channels: an effect is a layer, not a container, and it is its own
+      // animation rather than something a preset drives.
+      expect(definition.slots, definition.id).toEqual([])
+      expect(definition.capabilities.supportsMotion, definition.id).toEqual([])
+      expect(definition.capabilities.resizable, definition.id).toBe(false)
+    }
+  })
+
   it('registers the block an empty document starts with', () => {
     expect(blockRegistry.get(blockId('container'))).toBeDefined()
   })
