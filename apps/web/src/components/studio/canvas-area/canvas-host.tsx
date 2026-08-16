@@ -8,6 +8,7 @@ import { useCallback, useMemo } from 'react'
 
 import { useStudioStore } from '../../../store/editor-store'
 
+import { MotionSettingsProvider } from './motion-settings'
 import { NodeRenderer } from './node-renderer'
 import { useCanvasPorts } from './use-canvas-ports'
 
@@ -70,24 +71,26 @@ export function CanvasHost() {
 
   return (
     <MotionSchedulerProvider paused={motionPaused}>
-      <Canvas
-        artboardWidth={artboardWidth}
-        breakpointName={BREAKPOINTS[breakpoint].label}
-        gridSize={grid.size as 4 | 8 | 16 | 24}
-        initialTransform={initialTransform}
-        menu={ports.menu}
-        motion={ports.motion}
-        onTransformCommit={onTransformCommit}
-        renderNode={renderNode}
-        resize={ports.resize}
-        rootId={rootId}
-        scene={ports.scene}
-        selection={ports.selection}
-        showGrid={grid.enabled}
-        showRulers={rulers}
-        snapEnabled={guides.enabled}
-        snapThreshold={guides.snapThreshold}
-      />
+      <MotionSettingsProvider>
+        <Canvas
+          artboardWidth={artboardWidth}
+          breakpointName={BREAKPOINTS[breakpoint].label}
+          gridSize={grid.size as 4 | 8 | 16 | 24}
+          initialTransform={initialTransform}
+          menu={ports.menu}
+          motion={ports.motion}
+          onTransformCommit={onTransformCommit}
+          renderNode={renderNode}
+          resize={ports.resize}
+          rootId={rootId}
+          scene={ports.scene}
+          selection={ports.selection}
+          showGrid={grid.enabled}
+          showRulers={rulers}
+          snapEnabled={guides.enabled}
+          snapThreshold={guides.snapThreshold}
+        />
+      </MotionSettingsProvider>
     </MotionSchedulerProvider>
   )
 }

@@ -16,6 +16,7 @@ import { useMemo } from 'react'
 import { useStudioStore } from '../../../store/editor-store'
 
 import { menuAvailability, runMenuAction } from './menu-actions'
+import { motionPlayback } from './motion-playback'
 import { nodeSpacing } from './node-spacing'
 
 export interface CanvasPorts {
@@ -108,9 +109,9 @@ export function useCanvasPorts(): CanvasPorts {
             state().toggleMotionPaused()
           }
         },
-        // Prompt 31's scheduler is what replays; the canvas already writes `data-motion-paused` for
-        // it to read, and there is nothing animating to replay until then.
-        replay: () => undefined,
+        // Remounting the motion wrappers is the replay: an entrance is what happens when an element
+        // mounts, so there is no "play again" on a variant already at its destination.
+        replay: () => motionPlayback.replay(),
       },
     }
   }, [])

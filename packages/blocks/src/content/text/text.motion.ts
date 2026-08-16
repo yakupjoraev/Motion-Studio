@@ -1,4 +1,8 @@
 import type { MotionChannel, MotionSpec } from '@motion-studio/schema'
 
-/** A paragraph arrives with the band it sits in; the entrance belongs to the section, not the line. */
-export const textMotion: Readonly<Partial<Record<MotionChannel, MotionSpec>>> = {}
+import { contentEntrance } from '../content.motion'
+
+/** The same 16 px lift the heading takes, so a heading and its paragraph arrive as one movement. */
+export const textMotion: Readonly<Partial<Record<MotionChannel, MotionSpec>>> = {
+  entrance: contentEntrance('fade-up', { distance: 16 }),
+}

@@ -57,7 +57,10 @@ export function insertOneNode(
     children: [],
     props: requireProps(definition, { ...definition.defaults, ...payload.props }),
     responsive: {},
-    motion: {},
+    // ADR-154: the block's `defaultMotion` is materialised into the node, exactly as `defaults` is
+    // for props. A node therefore states its own motion, which is what lets `clearMotion` remove an
+    // entrance rather than have the block hand it straight back.
+    motion: structuredClone(definition.defaultMotion),
     effects: [],
     locked: false,
     hidden: false,

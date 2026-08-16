@@ -1,8 +1,12 @@
 import type { MotionChannel, MotionSpec } from '@motion-studio/schema'
 
+import { contentEntrance } from '../content.motion'
+
 /**
- * No default. `counter` exists in ANIMATION_SYSTEM.md § Entrance and is the obvious preset here, but
- * the value is a *string* — `1.8s`, `−32%`, `3×` — and a count-up that has to parse a format back out
- * of it would be guessing. A user who wants it picks it in the motion panel, where the format is theirs.
+ * `fade-up`, not `counter`. The count-up preset is the obvious one and it is deliberately not the
+ * default: the value is a *string* — `1.8s`, `−32%`, `3×` — and counting it up means guessing its
+ * format. A user who wants it picks it in the motion panel, where the format is theirs to state.
  */
-export const statMotion: Readonly<Partial<Record<MotionChannel, MotionSpec>>> = {}
+export const statMotion: Readonly<Partial<Record<MotionChannel, MotionSpec>>> = {
+  entrance: contentEntrance('fade-up'),
+}

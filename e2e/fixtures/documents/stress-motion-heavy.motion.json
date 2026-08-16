@@ -1,0 +1,3827 @@
+{
+  "version": 1,
+  "meta": {
+    "id": "doc_stressmotion",
+    "name": "Stress — motion heavy",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "generator": "motion-studio@0.0.0",
+    "canvas": {
+      "background": "surface-0",
+      "width": 1440
+    }
+  },
+  "theme": {
+    "colorMode": "dark",
+    "elevationStyle": "soft",
+    "id": "studio-dark",
+    "motionScale": 1,
+    "name": "Studio Dark",
+    "palette": {
+      "accent": "oklch(70.00% 0.1560 285.00)",
+      "accentHueShift": 0,
+      "neutral": "slate",
+      "saturation": 1
+    },
+    "radiusScale": 1,
+    "spacingScale": 1,
+    "surface": {
+      "borderStyle": "hairline",
+      "glassLevel": "subtle",
+      "noiseLevel": "none"
+    },
+    "typography": {
+      "baseSize": 14,
+      "pairing": "geist",
+      "scaleRatio": 1.2
+    }
+  },
+  "rootId": "node_f001",
+  "nodes": {
+    "node_f001": {
+      "id": "node_f001",
+      "blockId": "container",
+      "name": "Container",
+      "parentId": null,
+      "slot": "root",
+      "children": [
+        "node_f002",
+        "node_f007",
+        "node_f012",
+        "node_f017",
+        "node_f022",
+        "node_f027",
+        "node_f032",
+        "node_f037",
+        "node_f042",
+        "node_f047",
+        "node_f052",
+        "node_f057",
+        "node_f062",
+        "node_f067",
+        "node_f072",
+        "node_f077",
+        "node_f082",
+        "node_f087",
+        "node_f092",
+        "node_f097"
+      ],
+      "props": {
+        "align": "stretch",
+        "columns": 2,
+        "direction": "column",
+        "divide": false,
+        "gap": "md",
+        "hidden": false,
+        "justify": "start",
+        "maxWidth": "full",
+        "mode": "flex",
+        "padding": "none",
+        "wrap": false
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f002": {
+      "id": "node_f002",
+      "blockId": "section",
+      "name": "Section",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": ["node_f003"],
+      "props": {
+        "align": "start",
+        "background": "transparent",
+        "fullBleed": true,
+        "hidden": false,
+        "maxWidth": "lg",
+        "minHeight": "auto",
+        "overflow": "visible",
+        "padding": "lg",
+        "sticky": false
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 24,
+            "duration": 500
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 60,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.2,
+            "kind": "inView",
+            "margin": "0px 0px -10% 0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [
+        {
+          "id": "fx_heavy0",
+          "effectId": "aurora-background",
+          "params": {
+            "blur": 80,
+            "grain": true,
+            "intensity": 0.45,
+            "scrim": true,
+            "secondaryTint": "info",
+            "speed": 1,
+            "tint": "accent"
+          },
+          "layer": "behind",
+          "blendMode": "normal",
+          "opacity": 1
+        }
+      ],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f003": {
+      "id": "node_f003",
+      "blockId": "container",
+      "name": "Container",
+      "parentId": "node_f002",
+      "slot": "children",
+      "children": ["node_f004", "node_f005", "node_f006"],
+      "props": {
+        "align": "stretch",
+        "columns": 2,
+        "direction": "column",
+        "divide": false,
+        "gap": "md",
+        "hidden": false,
+        "justify": "start",
+        "maxWidth": "full",
+        "mode": "flex",
+        "padding": "none",
+        "wrap": false
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f004": {
+      "id": "node_f004",
+      "blockId": "heading",
+      "name": "Heading",
+      "parentId": "node_f003",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "anchor": "",
+        "balance": true,
+        "gradient": false,
+        "level": 2,
+        "size": "xl",
+        "text": "Heading",
+        "tracking": "tight",
+        "weight": "semibold"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f005": {
+      "id": "node_f005",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f003",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "default",
+        "size": "md",
+        "text": "A paragraph is the unit a reader actually consumes. Keep it to one idea, keep the measure inside the readable range, and the page reads as though somebody meant it.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f006": {
+      "id": "node_f006",
+      "blockId": "stat",
+      "name": "Stat",
+      "parentId": "node_f003",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "delta": "−32%",
+        "deltaDirection": "down-is-good",
+        "deltaRose": false,
+        "hidden": false,
+        "label": "Median export time",
+        "series": [8, 7, 9, 6, 5, 6, 4, 3, 3, 2],
+        "showSparkline": true,
+        "size": "lg",
+        "value": "1.8s"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {},
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f007": {
+      "id": "node_f007",
+      "blockId": "section",
+      "name": "Section",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": ["node_f008"],
+      "props": {
+        "align": "start",
+        "background": "transparent",
+        "fullBleed": true,
+        "hidden": false,
+        "maxWidth": "lg",
+        "minHeight": "auto",
+        "overflow": "visible",
+        "padding": "lg",
+        "sticky": false
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 24,
+            "duration": 500
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 60,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.2,
+            "kind": "inView",
+            "margin": "0px 0px -10% 0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [
+        {
+          "id": "fx_heavy1",
+          "effectId": "mesh-gradient",
+          "params": {
+            "blur": 40,
+            "intensity": 0.55,
+            "scrim": true,
+            "secondaryTint": "info",
+            "speed": 0.6,
+            "spread": 55,
+            "tertiaryTint": "success",
+            "tint": "accent"
+          },
+          "layer": "behind",
+          "blendMode": "normal",
+          "opacity": 1
+        }
+      ],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f008": {
+      "id": "node_f008",
+      "blockId": "container",
+      "name": "Container",
+      "parentId": "node_f007",
+      "slot": "children",
+      "children": ["node_f009", "node_f010", "node_f011"],
+      "props": {
+        "align": "stretch",
+        "columns": 2,
+        "direction": "column",
+        "divide": false,
+        "gap": "md",
+        "hidden": false,
+        "justify": "start",
+        "maxWidth": "full",
+        "mode": "flex",
+        "padding": "none",
+        "wrap": false
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f009": {
+      "id": "node_f009",
+      "blockId": "heading",
+      "name": "Heading",
+      "parentId": "node_f008",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "anchor": "",
+        "balance": true,
+        "gradient": false,
+        "level": 2,
+        "size": "xl",
+        "text": "Heading",
+        "tracking": "tight",
+        "weight": "semibold"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f010": {
+      "id": "node_f010",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f008",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "default",
+        "size": "md",
+        "text": "A paragraph is the unit a reader actually consumes. Keep it to one idea, keep the measure inside the readable range, and the page reads as though somebody meant it.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f011": {
+      "id": "node_f011",
+      "blockId": "stat",
+      "name": "Stat",
+      "parentId": "node_f008",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "delta": "−32%",
+        "deltaDirection": "down-is-good",
+        "deltaRose": false,
+        "hidden": false,
+        "label": "Median export time",
+        "series": [8, 7, 9, 6, 5, 6, 4, 3, 3, 2],
+        "showSparkline": true,
+        "size": "lg",
+        "value": "1.8s"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {},
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f012": {
+      "id": "node_f012",
+      "blockId": "section",
+      "name": "Section",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": ["node_f013"],
+      "props": {
+        "align": "start",
+        "background": "transparent",
+        "fullBleed": true,
+        "hidden": false,
+        "maxWidth": "lg",
+        "minHeight": "auto",
+        "overflow": "visible",
+        "padding": "lg",
+        "sticky": false
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 24,
+            "duration": 500
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 60,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.2,
+            "kind": "inView",
+            "margin": "0px 0px -10% 0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [
+        {
+          "id": "fx_heavy2",
+          "effectId": "beams",
+          "params": {
+            "angle": -18,
+            "count": 3,
+            "intensity": 0.35,
+            "speed": 0.8,
+            "tint": "accent",
+            "width": 64
+          },
+          "layer": "behind",
+          "blendMode": "normal",
+          "opacity": 1
+        }
+      ],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f013": {
+      "id": "node_f013",
+      "blockId": "container",
+      "name": "Container",
+      "parentId": "node_f012",
+      "slot": "children",
+      "children": ["node_f014", "node_f015", "node_f016"],
+      "props": {
+        "align": "stretch",
+        "columns": 2,
+        "direction": "column",
+        "divide": false,
+        "gap": "md",
+        "hidden": false,
+        "justify": "start",
+        "maxWidth": "full",
+        "mode": "flex",
+        "padding": "none",
+        "wrap": false
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f014": {
+      "id": "node_f014",
+      "blockId": "heading",
+      "name": "Heading",
+      "parentId": "node_f013",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "anchor": "",
+        "balance": true,
+        "gradient": false,
+        "level": 2,
+        "size": "xl",
+        "text": "Heading",
+        "tracking": "tight",
+        "weight": "semibold"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f015": {
+      "id": "node_f015",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f013",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "default",
+        "size": "md",
+        "text": "A paragraph is the unit a reader actually consumes. Keep it to one idea, keep the measure inside the readable range, and the page reads as though somebody meant it.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f016": {
+      "id": "node_f016",
+      "blockId": "stat",
+      "name": "Stat",
+      "parentId": "node_f013",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "delta": "−32%",
+        "deltaDirection": "down-is-good",
+        "deltaRose": false,
+        "hidden": false,
+        "label": "Median export time",
+        "series": [8, 7, 9, 6, 5, 6, 4, 3, 3, 2],
+        "showSparkline": true,
+        "size": "lg",
+        "value": "1.8s"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {},
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f017": {
+      "id": "node_f017",
+      "blockId": "section",
+      "name": "Section",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": ["node_f018"],
+      "props": {
+        "align": "start",
+        "background": "transparent",
+        "fullBleed": true,
+        "hidden": false,
+        "maxWidth": "lg",
+        "minHeight": "auto",
+        "overflow": "visible",
+        "padding": "lg",
+        "sticky": false
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 24,
+            "duration": 500
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 60,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.2,
+            "kind": "inView",
+            "margin": "0px 0px -10% 0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [
+        {
+          "id": "fx_heavy3",
+          "effectId": "particles",
+          "params": {
+            "count": 28,
+            "intensity": 0.5,
+            "seed": 7,
+            "size": 2,
+            "speed": 0.6,
+            "tint": "accent"
+          },
+          "layer": "behind",
+          "blendMode": "normal",
+          "opacity": 1
+        }
+      ],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f018": {
+      "id": "node_f018",
+      "blockId": "container",
+      "name": "Container",
+      "parentId": "node_f017",
+      "slot": "children",
+      "children": ["node_f019", "node_f020", "node_f021"],
+      "props": {
+        "align": "stretch",
+        "columns": 2,
+        "direction": "column",
+        "divide": false,
+        "gap": "md",
+        "hidden": false,
+        "justify": "start",
+        "maxWidth": "full",
+        "mode": "flex",
+        "padding": "none",
+        "wrap": false
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f019": {
+      "id": "node_f019",
+      "blockId": "heading",
+      "name": "Heading",
+      "parentId": "node_f018",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "anchor": "",
+        "balance": true,
+        "gradient": false,
+        "level": 2,
+        "size": "xl",
+        "text": "Heading",
+        "tracking": "tight",
+        "weight": "semibold"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f020": {
+      "id": "node_f020",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f018",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "default",
+        "size": "md",
+        "text": "A paragraph is the unit a reader actually consumes. Keep it to one idea, keep the measure inside the readable range, and the page reads as though somebody meant it.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f021": {
+      "id": "node_f021",
+      "blockId": "stat",
+      "name": "Stat",
+      "parentId": "node_f018",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "delta": "−32%",
+        "deltaDirection": "down-is-good",
+        "deltaRose": false,
+        "hidden": false,
+        "label": "Median export time",
+        "series": [8, 7, 9, 6, 5, 6, 4, 3, 3, 2],
+        "showSparkline": true,
+        "size": "lg",
+        "value": "1.8s"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {},
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f022": {
+      "id": "node_f022",
+      "blockId": "section",
+      "name": "Section",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": ["node_f023"],
+      "props": {
+        "align": "start",
+        "background": "transparent",
+        "fullBleed": true,
+        "hidden": false,
+        "maxWidth": "lg",
+        "minHeight": "auto",
+        "overflow": "visible",
+        "padding": "lg",
+        "sticky": false
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 24,
+            "duration": 500
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 60,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.2,
+            "kind": "inView",
+            "margin": "0px 0px -10% 0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [
+        {
+          "id": "fx_heavy4",
+          "effectId": "shine",
+          "params": {
+            "angle": 20,
+            "intensity": 0.25,
+            "speed": 1,
+            "tint": "foreground",
+            "width": 40
+          },
+          "layer": "behind",
+          "blendMode": "normal",
+          "opacity": 1
+        }
+      ],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f023": {
+      "id": "node_f023",
+      "blockId": "container",
+      "name": "Container",
+      "parentId": "node_f022",
+      "slot": "children",
+      "children": ["node_f024", "node_f025", "node_f026"],
+      "props": {
+        "align": "stretch",
+        "columns": 2,
+        "direction": "column",
+        "divide": false,
+        "gap": "md",
+        "hidden": false,
+        "justify": "start",
+        "maxWidth": "full",
+        "mode": "flex",
+        "padding": "none",
+        "wrap": false
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f024": {
+      "id": "node_f024",
+      "blockId": "heading",
+      "name": "Heading",
+      "parentId": "node_f023",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "anchor": "",
+        "balance": true,
+        "gradient": false,
+        "level": 2,
+        "size": "xl",
+        "text": "Heading",
+        "tracking": "tight",
+        "weight": "semibold"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f025": {
+      "id": "node_f025",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f023",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "default",
+        "size": "md",
+        "text": "A paragraph is the unit a reader actually consumes. Keep it to one idea, keep the measure inside the readable range, and the page reads as though somebody meant it.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f026": {
+      "id": "node_f026",
+      "blockId": "stat",
+      "name": "Stat",
+      "parentId": "node_f023",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "delta": "−32%",
+        "deltaDirection": "down-is-good",
+        "deltaRose": false,
+        "hidden": false,
+        "label": "Median export time",
+        "series": [8, 7, 9, 6, 5, 6, 4, 3, 3, 2],
+        "showSparkline": true,
+        "size": "lg",
+        "value": "1.8s"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {},
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f027": {
+      "id": "node_f027",
+      "blockId": "section",
+      "name": "Section",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": ["node_f028"],
+      "props": {
+        "align": "start",
+        "background": "transparent",
+        "fullBleed": true,
+        "hidden": false,
+        "maxWidth": "lg",
+        "minHeight": "auto",
+        "overflow": "visible",
+        "padding": "lg",
+        "sticky": false
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 24,
+            "duration": 500
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 60,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.2,
+            "kind": "inView",
+            "margin": "0px 0px -10% 0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [
+        {
+          "id": "fx_heavy5",
+          "effectId": "border-beam",
+          "params": {
+            "arc": 40,
+            "borderWidth": 1.5,
+            "intensity": 0.9,
+            "speed": 1,
+            "tint": "accent"
+          },
+          "layer": "behind",
+          "blendMode": "normal",
+          "opacity": 1
+        }
+      ],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f028": {
+      "id": "node_f028",
+      "blockId": "container",
+      "name": "Container",
+      "parentId": "node_f027",
+      "slot": "children",
+      "children": ["node_f029", "node_f030", "node_f031"],
+      "props": {
+        "align": "stretch",
+        "columns": 2,
+        "direction": "column",
+        "divide": false,
+        "gap": "md",
+        "hidden": false,
+        "justify": "start",
+        "maxWidth": "full",
+        "mode": "flex",
+        "padding": "none",
+        "wrap": false
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f029": {
+      "id": "node_f029",
+      "blockId": "heading",
+      "name": "Heading",
+      "parentId": "node_f028",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "anchor": "",
+        "balance": true,
+        "gradient": false,
+        "level": 2,
+        "size": "xl",
+        "text": "Heading",
+        "tracking": "tight",
+        "weight": "semibold"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f030": {
+      "id": "node_f030",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f028",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "default",
+        "size": "md",
+        "text": "A paragraph is the unit a reader actually consumes. Keep it to one idea, keep the measure inside the readable range, and the page reads as though somebody meant it.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f031": {
+      "id": "node_f031",
+      "blockId": "stat",
+      "name": "Stat",
+      "parentId": "node_f028",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "delta": "−32%",
+        "deltaDirection": "down-is-good",
+        "deltaRose": false,
+        "hidden": false,
+        "label": "Median export time",
+        "series": [8, 7, 9, 6, 5, 6, 4, 3, 3, 2],
+        "showSparkline": true,
+        "size": "lg",
+        "value": "1.8s"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {},
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f032": {
+      "id": "node_f032",
+      "blockId": "section",
+      "name": "Section",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": ["node_f033"],
+      "props": {
+        "align": "start",
+        "background": "transparent",
+        "fullBleed": true,
+        "hidden": false,
+        "maxWidth": "lg",
+        "minHeight": "auto",
+        "overflow": "visible",
+        "padding": "lg",
+        "sticky": false
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 24,
+            "duration": 500
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 60,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.2,
+            "kind": "inView",
+            "margin": "0px 0px -10% 0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f033": {
+      "id": "node_f033",
+      "blockId": "container",
+      "name": "Container",
+      "parentId": "node_f032",
+      "slot": "children",
+      "children": ["node_f034", "node_f035", "node_f036"],
+      "props": {
+        "align": "stretch",
+        "columns": 2,
+        "direction": "column",
+        "divide": false,
+        "gap": "md",
+        "hidden": false,
+        "justify": "start",
+        "maxWidth": "full",
+        "mode": "flex",
+        "padding": "none",
+        "wrap": false
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f034": {
+      "id": "node_f034",
+      "blockId": "heading",
+      "name": "Heading",
+      "parentId": "node_f033",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "anchor": "",
+        "balance": true,
+        "gradient": false,
+        "level": 2,
+        "size": "xl",
+        "text": "Heading",
+        "tracking": "tight",
+        "weight": "semibold"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f035": {
+      "id": "node_f035",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f033",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "default",
+        "size": "md",
+        "text": "A paragraph is the unit a reader actually consumes. Keep it to one idea, keep the measure inside the readable range, and the page reads as though somebody meant it.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f036": {
+      "id": "node_f036",
+      "blockId": "stat",
+      "name": "Stat",
+      "parentId": "node_f033",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "delta": "−32%",
+        "deltaDirection": "down-is-good",
+        "deltaRose": false,
+        "hidden": false,
+        "label": "Median export time",
+        "series": [8, 7, 9, 6, 5, 6, 4, 3, 3, 2],
+        "showSparkline": true,
+        "size": "lg",
+        "value": "1.8s"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {},
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f037": {
+      "id": "node_f037",
+      "blockId": "section",
+      "name": "Section",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": ["node_f038"],
+      "props": {
+        "align": "start",
+        "background": "transparent",
+        "fullBleed": true,
+        "hidden": false,
+        "maxWidth": "lg",
+        "minHeight": "auto",
+        "overflow": "visible",
+        "padding": "lg",
+        "sticky": false
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 24,
+            "duration": 500
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 60,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.2,
+            "kind": "inView",
+            "margin": "0px 0px -10% 0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f038": {
+      "id": "node_f038",
+      "blockId": "container",
+      "name": "Container",
+      "parentId": "node_f037",
+      "slot": "children",
+      "children": ["node_f039", "node_f040", "node_f041"],
+      "props": {
+        "align": "stretch",
+        "columns": 2,
+        "direction": "column",
+        "divide": false,
+        "gap": "md",
+        "hidden": false,
+        "justify": "start",
+        "maxWidth": "full",
+        "mode": "flex",
+        "padding": "none",
+        "wrap": false
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f039": {
+      "id": "node_f039",
+      "blockId": "heading",
+      "name": "Heading",
+      "parentId": "node_f038",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "anchor": "",
+        "balance": true,
+        "gradient": false,
+        "level": 2,
+        "size": "xl",
+        "text": "Heading",
+        "tracking": "tight",
+        "weight": "semibold"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f040": {
+      "id": "node_f040",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f038",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "default",
+        "size": "md",
+        "text": "A paragraph is the unit a reader actually consumes. Keep it to one idea, keep the measure inside the readable range, and the page reads as though somebody meant it.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f041": {
+      "id": "node_f041",
+      "blockId": "stat",
+      "name": "Stat",
+      "parentId": "node_f038",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "delta": "−32%",
+        "deltaDirection": "down-is-good",
+        "deltaRose": false,
+        "hidden": false,
+        "label": "Median export time",
+        "series": [8, 7, 9, 6, 5, 6, 4, 3, 3, 2],
+        "showSparkline": true,
+        "size": "lg",
+        "value": "1.8s"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {},
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f042": {
+      "id": "node_f042",
+      "blockId": "section",
+      "name": "Section",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": ["node_f043"],
+      "props": {
+        "align": "start",
+        "background": "transparent",
+        "fullBleed": true,
+        "hidden": false,
+        "maxWidth": "lg",
+        "minHeight": "auto",
+        "overflow": "visible",
+        "padding": "lg",
+        "sticky": false
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 24,
+            "duration": 500
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 60,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.2,
+            "kind": "inView",
+            "margin": "0px 0px -10% 0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f043": {
+      "id": "node_f043",
+      "blockId": "container",
+      "name": "Container",
+      "parentId": "node_f042",
+      "slot": "children",
+      "children": ["node_f044", "node_f045", "node_f046"],
+      "props": {
+        "align": "stretch",
+        "columns": 2,
+        "direction": "column",
+        "divide": false,
+        "gap": "md",
+        "hidden": false,
+        "justify": "start",
+        "maxWidth": "full",
+        "mode": "flex",
+        "padding": "none",
+        "wrap": false
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f044": {
+      "id": "node_f044",
+      "blockId": "heading",
+      "name": "Heading",
+      "parentId": "node_f043",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "anchor": "",
+        "balance": true,
+        "gradient": false,
+        "level": 2,
+        "size": "xl",
+        "text": "Heading",
+        "tracking": "tight",
+        "weight": "semibold"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f045": {
+      "id": "node_f045",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f043",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "default",
+        "size": "md",
+        "text": "A paragraph is the unit a reader actually consumes. Keep it to one idea, keep the measure inside the readable range, and the page reads as though somebody meant it.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f046": {
+      "id": "node_f046",
+      "blockId": "stat",
+      "name": "Stat",
+      "parentId": "node_f043",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "delta": "−32%",
+        "deltaDirection": "down-is-good",
+        "deltaRose": false,
+        "hidden": false,
+        "label": "Median export time",
+        "series": [8, 7, 9, 6, 5, 6, 4, 3, 3, 2],
+        "showSparkline": true,
+        "size": "lg",
+        "value": "1.8s"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {},
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f047": {
+      "id": "node_f047",
+      "blockId": "section",
+      "name": "Section",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": ["node_f048"],
+      "props": {
+        "align": "start",
+        "background": "transparent",
+        "fullBleed": true,
+        "hidden": false,
+        "maxWidth": "lg",
+        "minHeight": "auto",
+        "overflow": "visible",
+        "padding": "lg",
+        "sticky": false
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 24,
+            "duration": 500
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 60,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.2,
+            "kind": "inView",
+            "margin": "0px 0px -10% 0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f048": {
+      "id": "node_f048",
+      "blockId": "container",
+      "name": "Container",
+      "parentId": "node_f047",
+      "slot": "children",
+      "children": ["node_f049", "node_f050", "node_f051"],
+      "props": {
+        "align": "stretch",
+        "columns": 2,
+        "direction": "column",
+        "divide": false,
+        "gap": "md",
+        "hidden": false,
+        "justify": "start",
+        "maxWidth": "full",
+        "mode": "flex",
+        "padding": "none",
+        "wrap": false
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f049": {
+      "id": "node_f049",
+      "blockId": "heading",
+      "name": "Heading",
+      "parentId": "node_f048",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "anchor": "",
+        "balance": true,
+        "gradient": false,
+        "level": 2,
+        "size": "xl",
+        "text": "Heading",
+        "tracking": "tight",
+        "weight": "semibold"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f050": {
+      "id": "node_f050",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f048",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "default",
+        "size": "md",
+        "text": "A paragraph is the unit a reader actually consumes. Keep it to one idea, keep the measure inside the readable range, and the page reads as though somebody meant it.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f051": {
+      "id": "node_f051",
+      "blockId": "stat",
+      "name": "Stat",
+      "parentId": "node_f048",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "delta": "−32%",
+        "deltaDirection": "down-is-good",
+        "deltaRose": false,
+        "hidden": false,
+        "label": "Median export time",
+        "series": [8, 7, 9, 6, 5, 6, 4, 3, 3, 2],
+        "showSparkline": true,
+        "size": "lg",
+        "value": "1.8s"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {},
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f052": {
+      "id": "node_f052",
+      "blockId": "section",
+      "name": "Section",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": ["node_f053"],
+      "props": {
+        "align": "start",
+        "background": "transparent",
+        "fullBleed": true,
+        "hidden": false,
+        "maxWidth": "lg",
+        "minHeight": "auto",
+        "overflow": "visible",
+        "padding": "lg",
+        "sticky": false
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 24,
+            "duration": 500
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 60,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.2,
+            "kind": "inView",
+            "margin": "0px 0px -10% 0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f053": {
+      "id": "node_f053",
+      "blockId": "container",
+      "name": "Container",
+      "parentId": "node_f052",
+      "slot": "children",
+      "children": ["node_f054", "node_f055", "node_f056"],
+      "props": {
+        "align": "stretch",
+        "columns": 2,
+        "direction": "column",
+        "divide": false,
+        "gap": "md",
+        "hidden": false,
+        "justify": "start",
+        "maxWidth": "full",
+        "mode": "flex",
+        "padding": "none",
+        "wrap": false
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f054": {
+      "id": "node_f054",
+      "blockId": "heading",
+      "name": "Heading",
+      "parentId": "node_f053",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "anchor": "",
+        "balance": true,
+        "gradient": false,
+        "level": 2,
+        "size": "xl",
+        "text": "Heading",
+        "tracking": "tight",
+        "weight": "semibold"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f055": {
+      "id": "node_f055",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f053",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "default",
+        "size": "md",
+        "text": "A paragraph is the unit a reader actually consumes. Keep it to one idea, keep the measure inside the readable range, and the page reads as though somebody meant it.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f056": {
+      "id": "node_f056",
+      "blockId": "stat",
+      "name": "Stat",
+      "parentId": "node_f053",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "delta": "−32%",
+        "deltaDirection": "down-is-good",
+        "deltaRose": false,
+        "hidden": false,
+        "label": "Median export time",
+        "series": [8, 7, 9, 6, 5, 6, 4, 3, 3, 2],
+        "showSparkline": true,
+        "size": "lg",
+        "value": "1.8s"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {},
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f057": {
+      "id": "node_f057",
+      "blockId": "section",
+      "name": "Section",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": ["node_f058"],
+      "props": {
+        "align": "start",
+        "background": "transparent",
+        "fullBleed": true,
+        "hidden": false,
+        "maxWidth": "lg",
+        "minHeight": "auto",
+        "overflow": "visible",
+        "padding": "lg",
+        "sticky": false
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 24,
+            "duration": 500
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 60,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.2,
+            "kind": "inView",
+            "margin": "0px 0px -10% 0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f058": {
+      "id": "node_f058",
+      "blockId": "container",
+      "name": "Container",
+      "parentId": "node_f057",
+      "slot": "children",
+      "children": ["node_f059", "node_f060", "node_f061"],
+      "props": {
+        "align": "stretch",
+        "columns": 2,
+        "direction": "column",
+        "divide": false,
+        "gap": "md",
+        "hidden": false,
+        "justify": "start",
+        "maxWidth": "full",
+        "mode": "flex",
+        "padding": "none",
+        "wrap": false
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f059": {
+      "id": "node_f059",
+      "blockId": "heading",
+      "name": "Heading",
+      "parentId": "node_f058",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "anchor": "",
+        "balance": true,
+        "gradient": false,
+        "level": 2,
+        "size": "xl",
+        "text": "Heading",
+        "tracking": "tight",
+        "weight": "semibold"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f060": {
+      "id": "node_f060",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f058",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "default",
+        "size": "md",
+        "text": "A paragraph is the unit a reader actually consumes. Keep it to one idea, keep the measure inside the readable range, and the page reads as though somebody meant it.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f061": {
+      "id": "node_f061",
+      "blockId": "stat",
+      "name": "Stat",
+      "parentId": "node_f058",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "delta": "−32%",
+        "deltaDirection": "down-is-good",
+        "deltaRose": false,
+        "hidden": false,
+        "label": "Median export time",
+        "series": [8, 7, 9, 6, 5, 6, 4, 3, 3, 2],
+        "showSparkline": true,
+        "size": "lg",
+        "value": "1.8s"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {},
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f062": {
+      "id": "node_f062",
+      "blockId": "section",
+      "name": "Section",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": ["node_f063"],
+      "props": {
+        "align": "start",
+        "background": "transparent",
+        "fullBleed": true,
+        "hidden": false,
+        "maxWidth": "lg",
+        "minHeight": "auto",
+        "overflow": "visible",
+        "padding": "lg",
+        "sticky": false
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 24,
+            "duration": 500
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 60,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.2,
+            "kind": "inView",
+            "margin": "0px 0px -10% 0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f063": {
+      "id": "node_f063",
+      "blockId": "container",
+      "name": "Container",
+      "parentId": "node_f062",
+      "slot": "children",
+      "children": ["node_f064", "node_f065", "node_f066"],
+      "props": {
+        "align": "stretch",
+        "columns": 2,
+        "direction": "column",
+        "divide": false,
+        "gap": "md",
+        "hidden": false,
+        "justify": "start",
+        "maxWidth": "full",
+        "mode": "flex",
+        "padding": "none",
+        "wrap": false
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f064": {
+      "id": "node_f064",
+      "blockId": "heading",
+      "name": "Heading",
+      "parentId": "node_f063",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "anchor": "",
+        "balance": true,
+        "gradient": false,
+        "level": 2,
+        "size": "xl",
+        "text": "Heading",
+        "tracking": "tight",
+        "weight": "semibold"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f065": {
+      "id": "node_f065",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f063",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "default",
+        "size": "md",
+        "text": "A paragraph is the unit a reader actually consumes. Keep it to one idea, keep the measure inside the readable range, and the page reads as though somebody meant it.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f066": {
+      "id": "node_f066",
+      "blockId": "stat",
+      "name": "Stat",
+      "parentId": "node_f063",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "delta": "−32%",
+        "deltaDirection": "down-is-good",
+        "deltaRose": false,
+        "hidden": false,
+        "label": "Median export time",
+        "series": [8, 7, 9, 6, 5, 6, 4, 3, 3, 2],
+        "showSparkline": true,
+        "size": "lg",
+        "value": "1.8s"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {},
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f067": {
+      "id": "node_f067",
+      "blockId": "section",
+      "name": "Section",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": ["node_f068"],
+      "props": {
+        "align": "start",
+        "background": "transparent",
+        "fullBleed": true,
+        "hidden": false,
+        "maxWidth": "lg",
+        "minHeight": "auto",
+        "overflow": "visible",
+        "padding": "lg",
+        "sticky": false
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 24,
+            "duration": 500
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 60,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.2,
+            "kind": "inView",
+            "margin": "0px 0px -10% 0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f068": {
+      "id": "node_f068",
+      "blockId": "container",
+      "name": "Container",
+      "parentId": "node_f067",
+      "slot": "children",
+      "children": ["node_f069", "node_f070", "node_f071"],
+      "props": {
+        "align": "stretch",
+        "columns": 2,
+        "direction": "column",
+        "divide": false,
+        "gap": "md",
+        "hidden": false,
+        "justify": "start",
+        "maxWidth": "full",
+        "mode": "flex",
+        "padding": "none",
+        "wrap": false
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f069": {
+      "id": "node_f069",
+      "blockId": "heading",
+      "name": "Heading",
+      "parentId": "node_f068",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "anchor": "",
+        "balance": true,
+        "gradient": false,
+        "level": 2,
+        "size": "xl",
+        "text": "Heading",
+        "tracking": "tight",
+        "weight": "semibold"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f070": {
+      "id": "node_f070",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f068",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "default",
+        "size": "md",
+        "text": "A paragraph is the unit a reader actually consumes. Keep it to one idea, keep the measure inside the readable range, and the page reads as though somebody meant it.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f071": {
+      "id": "node_f071",
+      "blockId": "stat",
+      "name": "Stat",
+      "parentId": "node_f068",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "delta": "−32%",
+        "deltaDirection": "down-is-good",
+        "deltaRose": false,
+        "hidden": false,
+        "label": "Median export time",
+        "series": [8, 7, 9, 6, 5, 6, 4, 3, 3, 2],
+        "showSparkline": true,
+        "size": "lg",
+        "value": "1.8s"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {},
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f072": {
+      "id": "node_f072",
+      "blockId": "section",
+      "name": "Section",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": ["node_f073"],
+      "props": {
+        "align": "start",
+        "background": "transparent",
+        "fullBleed": true,
+        "hidden": false,
+        "maxWidth": "lg",
+        "minHeight": "auto",
+        "overflow": "visible",
+        "padding": "lg",
+        "sticky": false
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 24,
+            "duration": 500
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 60,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.2,
+            "kind": "inView",
+            "margin": "0px 0px -10% 0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f073": {
+      "id": "node_f073",
+      "blockId": "container",
+      "name": "Container",
+      "parentId": "node_f072",
+      "slot": "children",
+      "children": ["node_f074", "node_f075", "node_f076"],
+      "props": {
+        "align": "stretch",
+        "columns": 2,
+        "direction": "column",
+        "divide": false,
+        "gap": "md",
+        "hidden": false,
+        "justify": "start",
+        "maxWidth": "full",
+        "mode": "flex",
+        "padding": "none",
+        "wrap": false
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f074": {
+      "id": "node_f074",
+      "blockId": "heading",
+      "name": "Heading",
+      "parentId": "node_f073",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "anchor": "",
+        "balance": true,
+        "gradient": false,
+        "level": 2,
+        "size": "xl",
+        "text": "Heading",
+        "tracking": "tight",
+        "weight": "semibold"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f075": {
+      "id": "node_f075",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f073",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "default",
+        "size": "md",
+        "text": "A paragraph is the unit a reader actually consumes. Keep it to one idea, keep the measure inside the readable range, and the page reads as though somebody meant it.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f076": {
+      "id": "node_f076",
+      "blockId": "stat",
+      "name": "Stat",
+      "parentId": "node_f073",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "delta": "−32%",
+        "deltaDirection": "down-is-good",
+        "deltaRose": false,
+        "hidden": false,
+        "label": "Median export time",
+        "series": [8, 7, 9, 6, 5, 6, 4, 3, 3, 2],
+        "showSparkline": true,
+        "size": "lg",
+        "value": "1.8s"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {},
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f077": {
+      "id": "node_f077",
+      "blockId": "section",
+      "name": "Section",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": ["node_f078"],
+      "props": {
+        "align": "start",
+        "background": "transparent",
+        "fullBleed": true,
+        "hidden": false,
+        "maxWidth": "lg",
+        "minHeight": "auto",
+        "overflow": "visible",
+        "padding": "lg",
+        "sticky": false
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 24,
+            "duration": 500
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 60,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.2,
+            "kind": "inView",
+            "margin": "0px 0px -10% 0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f078": {
+      "id": "node_f078",
+      "blockId": "container",
+      "name": "Container",
+      "parentId": "node_f077",
+      "slot": "children",
+      "children": ["node_f079", "node_f080", "node_f081"],
+      "props": {
+        "align": "stretch",
+        "columns": 2,
+        "direction": "column",
+        "divide": false,
+        "gap": "md",
+        "hidden": false,
+        "justify": "start",
+        "maxWidth": "full",
+        "mode": "flex",
+        "padding": "none",
+        "wrap": false
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f079": {
+      "id": "node_f079",
+      "blockId": "heading",
+      "name": "Heading",
+      "parentId": "node_f078",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "anchor": "",
+        "balance": true,
+        "gradient": false,
+        "level": 2,
+        "size": "xl",
+        "text": "Heading",
+        "tracking": "tight",
+        "weight": "semibold"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f080": {
+      "id": "node_f080",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f078",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "default",
+        "size": "md",
+        "text": "A paragraph is the unit a reader actually consumes. Keep it to one idea, keep the measure inside the readable range, and the page reads as though somebody meant it.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f081": {
+      "id": "node_f081",
+      "blockId": "stat",
+      "name": "Stat",
+      "parentId": "node_f078",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "delta": "−32%",
+        "deltaDirection": "down-is-good",
+        "deltaRose": false,
+        "hidden": false,
+        "label": "Median export time",
+        "series": [8, 7, 9, 6, 5, 6, 4, 3, 3, 2],
+        "showSparkline": true,
+        "size": "lg",
+        "value": "1.8s"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {},
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f082": {
+      "id": "node_f082",
+      "blockId": "section",
+      "name": "Section",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": ["node_f083"],
+      "props": {
+        "align": "start",
+        "background": "transparent",
+        "fullBleed": true,
+        "hidden": false,
+        "maxWidth": "lg",
+        "minHeight": "auto",
+        "overflow": "visible",
+        "padding": "lg",
+        "sticky": false
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 24,
+            "duration": 500
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 60,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.2,
+            "kind": "inView",
+            "margin": "0px 0px -10% 0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f083": {
+      "id": "node_f083",
+      "blockId": "container",
+      "name": "Container",
+      "parentId": "node_f082",
+      "slot": "children",
+      "children": ["node_f084", "node_f085", "node_f086"],
+      "props": {
+        "align": "stretch",
+        "columns": 2,
+        "direction": "column",
+        "divide": false,
+        "gap": "md",
+        "hidden": false,
+        "justify": "start",
+        "maxWidth": "full",
+        "mode": "flex",
+        "padding": "none",
+        "wrap": false
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f084": {
+      "id": "node_f084",
+      "blockId": "heading",
+      "name": "Heading",
+      "parentId": "node_f083",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "anchor": "",
+        "balance": true,
+        "gradient": false,
+        "level": 2,
+        "size": "xl",
+        "text": "Heading",
+        "tracking": "tight",
+        "weight": "semibold"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f085": {
+      "id": "node_f085",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f083",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "default",
+        "size": "md",
+        "text": "A paragraph is the unit a reader actually consumes. Keep it to one idea, keep the measure inside the readable range, and the page reads as though somebody meant it.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f086": {
+      "id": "node_f086",
+      "blockId": "stat",
+      "name": "Stat",
+      "parentId": "node_f083",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "delta": "−32%",
+        "deltaDirection": "down-is-good",
+        "deltaRose": false,
+        "hidden": false,
+        "label": "Median export time",
+        "series": [8, 7, 9, 6, 5, 6, 4, 3, 3, 2],
+        "showSparkline": true,
+        "size": "lg",
+        "value": "1.8s"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {},
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f087": {
+      "id": "node_f087",
+      "blockId": "section",
+      "name": "Section",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": ["node_f088"],
+      "props": {
+        "align": "start",
+        "background": "transparent",
+        "fullBleed": true,
+        "hidden": false,
+        "maxWidth": "lg",
+        "minHeight": "auto",
+        "overflow": "visible",
+        "padding": "lg",
+        "sticky": false
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 24,
+            "duration": 500
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 60,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.2,
+            "kind": "inView",
+            "margin": "0px 0px -10% 0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f088": {
+      "id": "node_f088",
+      "blockId": "container",
+      "name": "Container",
+      "parentId": "node_f087",
+      "slot": "children",
+      "children": ["node_f089", "node_f090", "node_f091"],
+      "props": {
+        "align": "stretch",
+        "columns": 2,
+        "direction": "column",
+        "divide": false,
+        "gap": "md",
+        "hidden": false,
+        "justify": "start",
+        "maxWidth": "full",
+        "mode": "flex",
+        "padding": "none",
+        "wrap": false
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f089": {
+      "id": "node_f089",
+      "blockId": "heading",
+      "name": "Heading",
+      "parentId": "node_f088",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "anchor": "",
+        "balance": true,
+        "gradient": false,
+        "level": 2,
+        "size": "xl",
+        "text": "Heading",
+        "tracking": "tight",
+        "weight": "semibold"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f090": {
+      "id": "node_f090",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f088",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "default",
+        "size": "md",
+        "text": "A paragraph is the unit a reader actually consumes. Keep it to one idea, keep the measure inside the readable range, and the page reads as though somebody meant it.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f091": {
+      "id": "node_f091",
+      "blockId": "stat",
+      "name": "Stat",
+      "parentId": "node_f088",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "delta": "−32%",
+        "deltaDirection": "down-is-good",
+        "deltaRose": false,
+        "hidden": false,
+        "label": "Median export time",
+        "series": [8, 7, 9, 6, 5, 6, 4, 3, 3, 2],
+        "showSparkline": true,
+        "size": "lg",
+        "value": "1.8s"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {},
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f092": {
+      "id": "node_f092",
+      "blockId": "section",
+      "name": "Section",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": ["node_f093"],
+      "props": {
+        "align": "start",
+        "background": "transparent",
+        "fullBleed": true,
+        "hidden": false,
+        "maxWidth": "lg",
+        "minHeight": "auto",
+        "overflow": "visible",
+        "padding": "lg",
+        "sticky": false
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 24,
+            "duration": 500
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 60,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.2,
+            "kind": "inView",
+            "margin": "0px 0px -10% 0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f093": {
+      "id": "node_f093",
+      "blockId": "container",
+      "name": "Container",
+      "parentId": "node_f092",
+      "slot": "children",
+      "children": ["node_f094", "node_f095", "node_f096"],
+      "props": {
+        "align": "stretch",
+        "columns": 2,
+        "direction": "column",
+        "divide": false,
+        "gap": "md",
+        "hidden": false,
+        "justify": "start",
+        "maxWidth": "full",
+        "mode": "flex",
+        "padding": "none",
+        "wrap": false
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f094": {
+      "id": "node_f094",
+      "blockId": "heading",
+      "name": "Heading",
+      "parentId": "node_f093",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "anchor": "",
+        "balance": true,
+        "gradient": false,
+        "level": 2,
+        "size": "xl",
+        "text": "Heading",
+        "tracking": "tight",
+        "weight": "semibold"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f095": {
+      "id": "node_f095",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f093",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "default",
+        "size": "md",
+        "text": "A paragraph is the unit a reader actually consumes. Keep it to one idea, keep the measure inside the readable range, and the page reads as though somebody meant it.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f096": {
+      "id": "node_f096",
+      "blockId": "stat",
+      "name": "Stat",
+      "parentId": "node_f093",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "delta": "−32%",
+        "deltaDirection": "down-is-good",
+        "deltaRose": false,
+        "hidden": false,
+        "label": "Median export time",
+        "series": [8, 7, 9, 6, 5, 6, 4, 3, 3, 2],
+        "showSparkline": true,
+        "size": "lg",
+        "value": "1.8s"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {},
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f097": {
+      "id": "node_f097",
+      "blockId": "section",
+      "name": "Section",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": ["node_f098"],
+      "props": {
+        "align": "start",
+        "background": "transparent",
+        "fullBleed": true,
+        "hidden": false,
+        "maxWidth": "lg",
+        "minHeight": "auto",
+        "overflow": "visible",
+        "padding": "lg",
+        "sticky": false
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 24,
+            "duration": 500
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 60,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.2,
+            "kind": "inView",
+            "margin": "0px 0px -10% 0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f098": {
+      "id": "node_f098",
+      "blockId": "container",
+      "name": "Container",
+      "parentId": "node_f097",
+      "slot": "children",
+      "children": ["node_f099", "node_f100", "node_f101"],
+      "props": {
+        "align": "stretch",
+        "columns": 2,
+        "direction": "column",
+        "divide": false,
+        "gap": "md",
+        "hidden": false,
+        "justify": "start",
+        "maxWidth": "full",
+        "mode": "flex",
+        "padding": "none",
+        "wrap": false
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f099": {
+      "id": "node_f099",
+      "blockId": "heading",
+      "name": "Heading",
+      "parentId": "node_f098",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "anchor": "",
+        "balance": true,
+        "gradient": false,
+        "level": 2,
+        "size": "xl",
+        "text": "Heading",
+        "tracking": "tight",
+        "weight": "semibold"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f100": {
+      "id": "node_f100",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f098",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "default",
+        "size": "md",
+        "text": "A paragraph is the unit a reader actually consumes. Keep it to one idea, keep the measure inside the readable range, and the page reads as though somebody meant it.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f101": {
+      "id": "node_f101",
+      "blockId": "stat",
+      "name": "Stat",
+      "parentId": "node_f098",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "delta": "−32%",
+        "deltaDirection": "down-is-good",
+        "deltaRose": false,
+        "hidden": false,
+        "label": "Median export time",
+        "series": [8, 7, 9, 6, 5, 6, 4, 3, 3, 2],
+        "showSparkline": true,
+        "size": "lg",
+        "value": "1.8s"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {},
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    }
+  },
+  "assets": {}
+}

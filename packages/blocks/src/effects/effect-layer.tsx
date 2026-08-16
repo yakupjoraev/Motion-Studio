@@ -1,7 +1,9 @@
 import { type BlockRegistry, type EffectInstance, effectBlockId } from '@motion-studio/schema'
-import { type ComponentType, Suspense } from 'react'
+import { type ComponentType, Suspense, useRef } from 'react'
 
 import { renderRegistry } from '../render-registry'
+
+import { useEffectVisibility } from './use-effect-visibility'
 
 /**
  * One instance of the stack. The wrapper owns what `EffectInstance` describes — where it sits
@@ -12,6 +14,10 @@ import { renderRegistry } from '../render-registry'
  * `behind` is `z-index: -1` rather than `0`: an absolutely positioned child paints over static
  * content at `auto`, and the node wrapper's `contain: paint` keeps the negative layer inside the
  * node rather than letting it fall behind the canvas.
+ *
+ * It also holds still while it is off screen (`data-effect-offscreen`), which is what keeps the
+ * compositing layer count following the viewport instead of the document — PERFORMANCE.md
+ * § Layer count.
  */
 export function EffectLayer({
   instance,
@@ -20,7 +26,11 @@ export function EffectLayer({
   readonly instance: EffectInstance
   readonly registry: BlockRegistry
 }) {
+  const ref = useRef<HTMLDivElement>(null)
   const definition = registry.get(effectBlockId(instance.effectId))
+
+  useEffectVisibility(ref, { heavy: definition?.capabilities.costClass === 'heavy' })
+
   const Component = renderRegistry[instance.effectId] as
     | ComponentType<Record<string, unknown>>
     | undefined
@@ -44,6 +54,7 @@ export function EffectLayer({
       data-effect={instance.effectId}
       data-effect-layer={instance.layer}
       data-testid="effect-layer"
+      ref={ref}
       style={{ mixBlendMode: instance.blendMode, opacity: instance.opacity }}
     >
       <Suspense fallback={null}>

@@ -64,7 +64,6 @@
   animation-timing-function: var(--ms-ease-standard);
   animation-iteration-count: infinite;
   animation-direction: alternate;
-  will-change: transform;
 }
 
 .ms-fx-field-a {
@@ -105,7 +104,6 @@
   filter: blur(calc(var(--ms-fx-blur) / 2));
   opacity: var(--ms-fx-intensity);
   animation: ms-fx-mesh calc(var(--ms-fx-cycle) * 6) var(--ms-ease-standard) infinite;
-  will-change: background-position;
 }
 
 /*
@@ -250,7 +248,6 @@
   filter: blur(calc(var(--ms-fx-blur) / 4));
   opacity: var(--ms-fx-intensity);
   animation: ms-fx-sweep calc(var(--ms-fx-cycle) * 2) var(--ms-ease-standard) infinite;
-  will-change: transform;
 }
 
 /*
@@ -280,7 +277,6 @@
 
 .ms-fx-breathe {
   animation: ms-fx-breathe calc(var(--ms-fx-cycle) * 2) var(--ms-ease-standard) infinite alternate;
-  will-change: opacity, transform;
 }
 
 /*
@@ -317,7 +313,6 @@
   );
   opacity: var(--ms-fx-intensity);
   animation: ms-fx-orbit calc(var(--ms-fx-cycle) * 1.5) linear infinite;
-  will-change: transform;
 }
 
 /*
@@ -348,7 +343,6 @@
   );
   opacity: var(--ms-fx-intensity);
   animation: ms-fx-shine calc(var(--ms-fx-cycle) * 2) var(--ms-ease-standard) infinite;
-  will-change: transform;
 }
 
 /*
@@ -379,7 +373,6 @@
   background-color: var(--ms-fx-tint);
   opacity: 0;
   animation: ms-fx-rise var(--ms-fx-particle-cycle, 12s) linear infinite;
-  will-change: transform, opacity;
 }
 
 /*
@@ -434,4 +427,45 @@
   .ms-fx-spotlight {
     transition: none;
   }
+}
+
+/*
+ * Off screen, an effect holds still. PERFORMANCE.md § Motion performance rule 3 asks for it, and
+ * § Layer count is why it matters: a running composited animation is a compositing layer, so twenty
+ * bands of effects are twenty bands of layers whether or not anybody can see them. The flag is
+ * written by `EffectLayer` from the scheduler's shared observer — one observer for the document, not
+ * one per effect.
+ *
+ * `will-change` appears nowhere above for the same reason: an element whose transform or opacity is
+ * animating is promoted by the browser for exactly as long as it animates, and a permanent
+ * declaration is a permanent layer — the anti-pattern § Layer count names first.
+ */
+[data-effect-offscreen='true'],
+[data-effect-offscreen='true'] * {
+  animation-play-state: paused;
+}
+
+/*
+ * Past the cap on simultaneous heavy effects, a layer renders the composition without the movement —
+ * the same still image reduced motion gets, for the same reason: these effects are designed to be
+ * looked at while stopped. A paused animation still owns its compositing layer; a removed one does
+ * not, which is why this is `animation: none` rather than another `paused`.
+ */
+[data-effect-capped='true']
+  :is(
+    .ms-fx-field,
+    .ms-fx-mesh,
+    .ms-fx-grain,
+    .ms-fx-beam,
+    .ms-fx-breathe,
+    .ms-fx-border-beam-ring,
+    .ms-fx-shine,
+    .ms-fx-particle,
+    .ms-fx-scanlines-drift
+  ) {
+  animation: none;
+}
+
+[data-effect-capped='true'] .ms-fx-particle {
+  opacity: var(--ms-fx-intensity);
 }

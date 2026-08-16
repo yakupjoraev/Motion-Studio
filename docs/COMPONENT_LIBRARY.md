@@ -193,7 +193,9 @@ export function PricingTable({
 6. **Semantic HTML.** `section`, `article`, `nav`, `h1`–`h6` in order, `button` for actions,
    `a` for navigation.
 7. **Motion via `MotionNode`,** never a hard-coded `motion.div` with inline animation. The block
-   declares `defaultMotion`; the resolver applies it.
+   declares `defaultMotion`; `insertNode` writes it into the node it creates, exactly as it writes
+   `defaults` into `props` (ADR-154), and the resolver applies what the node holds. A block that
+   animated from its own definition at render time would make an entrance the user cannot remove.
 8. **Slots render `children`,** so the editor's tree and the block's layout stay the same tree.
 9. **No layout-affecting animation.** Transform, opacity, filter, clip-path only.
 10. **Every image carries `sizes`, explicit `width`/`height`, and an honest priority hint.** The

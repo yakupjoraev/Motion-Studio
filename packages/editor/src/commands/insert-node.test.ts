@@ -1,4 +1,5 @@
 import {
+  type MotionSpec,
   doc,
   fakeRegistry,
   fixtureBlockId,
@@ -218,6 +219,30 @@ describe('insertNode', () => {
           ),
       ),
     ).toBe(COMMAND_CODES.slotFull)
+  })
+
+  // ADR-154: the block's default entrance is written into the node, so the document says what it
+  // animates and `clearMotion` can take it off again.
+  it('materialises the block default motion into the node', () => {
+    const entrance: MotionSpec = {
+      presetId: 'fade-up',
+      channel: 'entrance',
+      trigger: { kind: 'inView', amount: 0.3, once: true, margin: '0px' },
+      params: { distance: 16 },
+    }
+    const harnessed = harness({
+      registry: fakeRegistry({ container: {}, card: { defaultMotion: { entrance } } }),
+    })
+
+    harnessed.store
+      .getState()
+      .dispatch(insertNode({ blockId: CARD, parentId: id('root'), index: 0, slot: 'children' }))
+
+    const inserted = harnessed.document().nodes[nodeId('node_1')]
+
+    expect(inserted?.motion).toEqual({ entrance })
+    // A copy, not the registry's object: editing one node's motion cannot reach the block.
+    expect(inserted?.motion.entrance).not.toBe(entrance)
   })
 
   it('rejects props the block schema does not accept', () => {

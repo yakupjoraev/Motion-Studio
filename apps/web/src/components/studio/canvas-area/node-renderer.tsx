@@ -9,6 +9,7 @@ import { type ComponentType, type ReactNode, Suspense, memo, useCallback, useMem
 import { useStudioStore } from '../../../store/editor-store'
 
 import { NodeErrorBoundary } from './node-error-boundary'
+import { NodeMotion } from './node-motion'
 
 /**
  * CANVAS.md § Node rendering, as written. Each renderer subscribes to **its own node only**, so
@@ -52,7 +53,11 @@ export const NodeRenderer = memo(function NodeRenderer({ id }: { readonly id: No
           // The boundary is per node and so is this: a suspending node inside a tree-wide boundary
           // would unmount every sibling's DOM while it loaded.
           <Suspense fallback={<NodeSkeleton />}>
-            <Component {...(parsed.data as Record<string, unknown>)}>{children}</Component>
+            {/* Inside the boundary, so a preset that throws takes the node's card and not the
+                canvas; outside the block, so the block never learns that it animates. */}
+            <NodeMotion motion={node.motion}>
+              <Component {...(parsed.data as Record<string, unknown>)}>{children}</Component>
+            </NodeMotion>
           </Suspense>
         ) : (
           <InvalidProps blockId={node.blockId} message={parsed.error.issues[0]?.message ?? ''} />

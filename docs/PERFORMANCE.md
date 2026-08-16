@@ -150,7 +150,13 @@ Every `will-change`, `transform: translateZ(0)`, and `backdrop-filter` creates a
 layer. Fifty layers is a memory problem and can be *slower* than none.
 
 Rules:
-- `will-change` only during an active gesture.
+- `will-change` only during an active gesture, and **never in a stylesheet**. A looping effect does
+  not need it: the browser promotes an element for as long as its transform or opacity is animating,
+  and a permanent declaration keeps the layer after the animation stops. Seven of the thirteen
+  surface effects declared one until prompt 34 measured what they cost.
+- An effect that is off screen holds still — `EffectLayer` writes `data-effect-offscreen` from the
+  scheduler's pooled observer and `effects.css` pauses on it. A paused animation is not a layer, so
+  the layer count follows the viewport rather than the document.
 - `backdrop-filter` capped at 4 simultaneous instances in the viewport; the canvas counts and
   warns.
 - The overlay layer is one promoted element, not one per overlay.
@@ -170,6 +176,49 @@ Detailed in [ANIMATION_SYSTEM.md](ANIMATION_SYSTEM.md) § GPU discipline. The lo
 
 Measured: a landing page with 8 animated sections and 3 continuous effects holds 60 fps on a
 2019 MacBook Air. If it does not, the effect budget is wrong, not the hardware.
+
+### Measured — the three stress fixtures
+
+Production build, Chrome, 1440 × 900, five seconds of wheel scrolling that reverses direction so it
+stays over the document. Fixtures in `e2e/fixtures/documents`; the specs that keep these honest are
+`e2e/perf`. Taken 2026-08-16.
+
+| | 200 nodes | Motion heavy (101) | Glass (33) |
+| --- | --- | --- | --- |
+| Median frame | 16.7 ms | 16.7 ms | 16.7 ms |
+| p95 frame | 16.8 ms | 16.8 ms | 16.8 ms |
+| Worst frame | 16.8 ms | 16.8 ms | 16.8 ms |
+| Long tasks | 0 | 0 | 0 |
+| Compositing layers, settled | 8 | 8 | 8 |
+| Compositing layers, peak | 45 | 63 | 40 |
+| `scroll` / `pointermove` / `resize` listeners | 0 / 0 / 1 | 0 / 0 / 1 | 0 / 0 / 1 |
+| `IntersectionObserver` instances | 2 | 3 | 3 |
+| JS heap, before → after the leak run | 11.28 → 11.78 MB | 9.60 → 9.42 MB | 8.60 → 8.94 MB |
+| Main-thread seconds over 5 s hidden | 0.02 | 0.01 | 0.01 |
+
+The same three under **4× CPU throttling**, which is the profile a five-year-old laptop approximates:
+
+| | 200 nodes | Motion heavy | Glass |
+| --- | --- | --- | --- |
+| Median frame | 16.7 ms | 16.7 ms | 16.7 ms |
+| p95 frame | 66.7 ms | 50.0 ms | 16.8 ms |
+| Worst frame | 116.7 ms | 83.4 ms | 33.4 ms |
+| Long tasks | 14 | 12 | 0 |
+| Total blocking time | 227 ms | 89 ms | 0 ms |
+
+Read those two tables together. At full speed every fixture holds 60 fps with no long task at all —
+that is the budget in ENGINEERING_CONTRACT.md § 6, and it is met. At a quarter of a processor the
+frame time doubles on the two large fixtures, and the control run says why: the **same 200-node
+document with reduced motion forced** — the canvas alone, no entrances — measures p95 33.3 ms, worst
+50.0 ms, zero long tasks. So half of the throttled cost is the scene and half is the motion over it.
+ADR-160 is the threshold that follows from it.
+
+Two notes on reading the numbers:
+
+- `scroll` and `pointermove` are **zero**, not one. The buses exist and idle: no preset in these
+  fixtures subscribes to either, and the scheduler only attaches a listener when something does.
+- The settled layer count is 8 on all three. The peaks are what the effects cost while they are on
+  screen and animating — see ADR-159 for the 63.
 
 ## Virtualization
 

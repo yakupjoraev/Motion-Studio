@@ -1,3 +1,4 @@
+import { presetRegistry } from '@motion-studio/motion'
 import { CONTROL_KINDS, blockId } from '@motion-studio/schema'
 import { describe, expect, it } from 'vitest'
 
@@ -70,6 +71,18 @@ describe.each(DEFINITIONS.map((definition) => [definition.id, definition] as con
     it('animates only on channels it says it supports', () => {
       for (const channel of Object.keys(definition.defaultMotion)) {
         expect(definition.capabilities.supportsMotion).toContain(channel)
+      }
+    })
+
+    // COMPONENT_LIBRARY.md § Testing. A spec naming a preset the catalogue does not have resolves to
+    // `DISABLED_MOTION` (ADR-138) rather than throwing, so without this the block is simply silent.
+    it('defaults to presets the catalogue has, on their own channel', () => {
+      for (const [channel, spec] of Object.entries(definition.defaultMotion)) {
+        const preset = presetRegistry.get(spec.presetId)
+
+        expect(preset, `${id}: ${channel} → ${spec.presetId}`).toBeDefined()
+        expect(preset?.channel, `${id}: ${spec.presetId}`).toBe(channel)
+        expect(() => preset?.paramsSchema.parse(spec.params), `${id}: ${channel}`).not.toThrow()
       }
     })
 

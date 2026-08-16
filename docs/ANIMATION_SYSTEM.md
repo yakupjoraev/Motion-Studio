@@ -286,6 +286,9 @@ Animate only `transform`, `opacity`, `filter`, and `clip-path`. Never `width`, `
   stylesheet. A permanent `will-change` on 40 elements is a memory problem, not an optimisation.
 - Presets marked `gpuHeavy` (aurora, mesh drift, blur animations) are capped at 3 simultaneous
   instances by the scheduler; beyond the cap the newest instances render their static end state.
+  A **surface effect** whose definition declares `costClass: 'heavy'` claims the same pool, so the
+  cap counts everything expensive on screen rather than presets alone (ADR-158). Every effect also
+  pauses while it is off screen, which is why a twenty-band document animates what is visible.
 - Blur animation is the single most expensive thing here. `blur-in` animates blur only on
   entrance, at most 12 px, and never on more than 6 elements at once.
 - Every preset has a documented cost class: `cheap` / `moderate` / `heavy`. The block gallery

@@ -6246,3 +6246,243 @@ save 300 ms once per session.
 - Accepted: the number will move when the item sources grow — the layer source alone scales with the
   document. A palette that opens slowly on a 500-node document is a real risk, and the measurement
   above is the baseline it will be compared against.
+
+## ADR-154 — A block's default motion is materialised into the node it creates
+
+**Date** 2026-08-16 · **Prompt** 34 · **Status** Accepted
+
+### Question
+`BlockDefinition.defaultMotion` states what a block animates when nobody has chosen anything. Two
+places can apply it: the renderer, falling back to it when `node.motion` is empty, or `insertNode`,
+copying it into the node it creates. Which one owns it?
+
+### Criterion (set before deciding)
+The document is the specification of the page — FILE_FORMAT.md § Export requires a `.motion` file to
+describe what it produces without consulting a registry version. The deciding question is therefore
+behavioural and checkable: **can the user remove a default entrance?** A renderer fallback makes
+`clearMotion` a no-op — the panel deletes the channel, the block hands it straight back, and the only
+escape is a `disabled: true` spec the user never asked for. Materialising it makes removal ordinary.
+
+### Decision
+`insertOneNode` writes `structuredClone(definition.defaultMotion)` into the new node, exactly as it
+already writes `defaults` into `props`. The renderer reads `node.motion` and nothing else.
+
+### Consequences
+- Accepted: a document written before this prompt keeps whatever motion it stored, which for every
+  existing document is none. Changing a block's default does not reach documents already made — the
+  same rule `defaults` has always had for props, and the same trade-off.
+- Accepted: `duplicateNodes` and `pasteNodes` already copy `node.motion`, so they need no change.
+- Accepted: the fixture generator writes nodes the same way, which is what makes a fixture and a
+  hand-built document the same thing.
+
+## ADR-155 — The glass stress fixture measures the surfaces the catalogue actually has
+
+**Date** 2026-08-16 · **Prompt** 34 · **Status** Accepted
+
+### Question
+Prompt 34 asks for `stress-glass.motion.json` — "8 glass surfaces" — and a layer count under 40 on
+it. Which blocks produce a glass surface today?
+
+### Criterion (set before building)
+A glass surface is an element whose computed `backdrop-filter` is not `none`; that is the definition
+`useBackdropCount` already counts by, and the reason the cap of 4 exists (DESIGN_SYSTEM.md § Blur and
+glass rule 2).
+
+### Measurement
+`backdrop-filter` appears **once** in the repository outside the studio chrome: `packages/ui`'s
+popover surface. No block and no effect writes it — grep over `packages/blocks/src` returns nothing.
+The blocks that will (marketing cards, panels, navigation) arrive with prompts 38–41.
+
+### Decision
+The fixture stacks the eight blur-based surface effects the catalogue does have — aurora, mesh
+gradient, glow, grain, noise, spotlight, dot grid, grid lines — one per band. The layer count is
+measured on that, because compositing layers are what the measurement is about and `filter: blur`
+promotes exactly as `backdrop-filter` does.
+
+### Consequences
+- Accepted: the cap of four simultaneous glass surfaces is **not** exercised by this fixture. It was
+  exercised by hand against the studio chrome in prompt 33 and stays unproven on a document.
+- Accepted: when a glass block ships, this fixture is replaced rather than extended, and the layer
+  numbers in PERFORMANCE.md are taken again. The generator is one file, so that is one edit.
+
+## ADR-156 — The prompt's default-motion table overrides the per-block reasoning
+
+**Date** 2026-08-16 · **Prompt** 34 · **Status** Accepted (owner)
+
+### Question
+Prompt 34 sets `defaultMotion` per block group: `heading`/`text` a 16 px `fade-up`, `image`
+`blur-in`, `badge` `scale-in`, `code-block` `fade`. Prompts 25 and 26 shipped those four blocks with
+**no** entrance, each with a written reason — "a heading arrives with the band it sits in", "an image
+that fades in is an image whose paint the user waits for twice". Both are specifications, and they
+disagree.
+
+### Criterion
+Not answerable by measurement: it is a question of what the product's default taste is, and both
+positions are coherent. Escalated.
+
+### Decision
+The owner chose the prompt's table (2026-08-16). Every block in it is filled in accordingly; the
+earlier comments are removed rather than left contradicting the code.
+
+### Consequences
+- Accepted: a section and the heading inside it now both animate. The distances differ — 24 px for
+  the band, 16 px for the line — so the two reads as one movement rather than two, and the 60 ms
+  stagger the section carries orders them.
+- Accepted: `image` uses the catalogue's only `gpuHeavy` entrance. The scheduler caps those at three
+  at once and the rest render their end state, which for an image is the image (ANIMATION_SYSTEM.md
+  § GPU discipline).
+- Accepted: `rich-text` and `video` are not in the table and keep no entrance. The table is sparse on
+  purpose, and adding rows to it is not a decision this prompt is entitled to make.
+
+## ADR-157 — Wiring motion puts `/studio` 0.1 kB over its first-load budget
+
+**Date** 2026-08-16 · **Prompt** 34 · **Status** Accepted, with an escalation
+
+### Question
+ENGINEERING_CONTRACT.md § 6 caps `/studio` first-load JS at 250 kB gzip. Prompt 34 fills in
+`defaultMotion` for 22 blocks and mounts the motion wrapper. What does that cost, and does it fit?
+
+### Criterion (set before measuring)
+250 kB gzip, summed over the page's entries in `app-build-manifest.json` — the method ADR-152
+established. Over the cap: move something out of the first chunk. Still over: report the number
+rather than round it.
+
+### Measurement (production build, four builds)
+- Before this prompt: **249.9 kB**.
+- With everything this prompt adds: **250.2 kB**.
+- With the fixture loader moved behind a dynamic import (it is test scaffolding and nothing on first
+  load needs it): **250.1 kB**.
+- With the block defaults reverted and everything else kept: **250.0 kB** — so the 22 `defaultMotion`
+  specs are 0.1 kB of it and the wiring is the other 0.2 kB, of which 0.1 kB was recovered.
+
+The definitions are in the first chunk because the store is (ADR-102): `createEditorStore` needs a
+registry at construction, the shell needs the store, so every byte of every block definition is a
+first-load byte. Data added to a definition therefore always lands here.
+
+### Decision
+Accepted at 250.1 kB and escalated rather than resolved by trimming the specs to fit. Trimming a
+`duration` to buy 40 bytes is choosing the threshold to match the number — the defect § 9 names.
+
+### Consequences
+- Accepted: the studio is 102 bytes over a 256,000-byte budget, and the next prompt that adds a
+  block or a definition field will be further over. The structural fix — the registry arriving as a
+  chunk rather than as an import of the store — is a change to ADR-102 and belongs to the owner.
+- Accepted: the fixture loader is a dynamic import, so `?fixture=` costs one request and no bytes on
+  a normal session.
+
+## ADR-158 — Surface effects pause off screen and claim the same cap presets do
+
+**Date** 2026-08-16 · **Prompt** 34 · **Status** Accepted
+
+### Question
+PERFORMANCE.md § Motion performance rule 3 says continuous animations pause off screen and on tab
+hide. The thirteen surface effects are CSS animations owned by no preset and connected to no
+scheduler, so nothing was enforcing it. What does that cost, and what enforces it?
+
+### Criterion (set before measuring)
+Two numbers from the measurement pass: main-thread time over five seconds with the tab hidden
+(target near zero), and the compositing layer count on `stress-motion-heavy` (target under 40).
+
+### Measurement (production build, Chrome, `stress-motion-heavy`, 101 nodes, 6 effects)
+| | Before | After |
+| --- | --- | --- |
+| Running animations after scrolling past | 37 | 0 |
+| Main-thread seconds over 5 s hidden | 0.29 | 0.01 |
+| Same, `stress-glass` | 0.17 | 0.01 |
+| Peak compositing layers | 71 | 71 |
+
+### Decision
+`EffectLayer` subscribes to the scheduler's pooled observer and writes `data-effect-offscreen`;
+`effects.css` pauses on it. An effect whose definition declares `costClass: 'heavy'` also registers
+in the scheduler's `gpuHeavy` pool, and past the cap of three renders its static composition
+(`animation: none`) rather than a paused one — a paused animation still owns its layer.
+
+The seven `will-change` declarations in `effects.css` were removed in the same pass: a looping
+composited animation promotes its element for as long as it runs, and the declaration only extended
+that to forever.
+
+### Consequences
+- Accepted: the layer count did **not** move, because the fixture holds one instance of each effect
+  and the cap is three. The 71 is 28 `particles` elements plus the other five effects' own layers —
+  a property of the effects, not of how many are running. See the escalation in ADR-159.
+- Accepted: an effect outside a scheduler (Storybook, an exported page) runs unconditionally. Export
+  emits CSS with no runtime, so there is nothing there to pause it — the reduced-motion media query
+  is what an exported page honours.
+- Accepted: `EffectLayer` now takes a dependency on `@motion-studio/motion`, which `packages/blocks`
+  already declares.
+
+## ADR-159 — 71 compositing layers on a six-effect document, and what it would take to lower it
+
+**Date** 2026-08-16 · **Prompt** 34 · **Status** Escalated
+
+### Question
+PERFORMANCE.md § Layer count sets a dev-mode assertion at 40 compositing layers. `stress-motion-heavy`
+peaks at 71 while its effects are on screen. Is that a defect to fix, and where?
+
+### Measurement
+71 layers, of which the largest single contributor is `particles`: 28 elements, each with its own
+`transform` animation, each therefore its own layer. The remaining five effects (aurora's three
+fields, mesh, beams, shine, border beam) account for the rest along with the canvas and overlay
+layers. Pausing off screen (ADR-158) does not change the peak, because the peak is what is on screen;
+the `gpuHeavy` cap does not either, because the fixture holds one of each and the cap is three.
+
+### The options
+1. **Redraw `particles` as one layer** — the field as several radial gradients in one background with
+   an animated `background-position`. One layer instead of 28, at the cost of every point sharing a
+   period, which is what makes the field read as a field.
+2. **Lower the default count** from 28 to about 12. Cheap, and it is choosing the visual to fit the
+   metric rather than the other way round.
+3. **Accept it and scope the assertion**: the 40 is a studio-chrome number; a document that asks for
+   a heavy effect gets the layers that effect costs, and the `gpuHeavy` cap of three is what bounds
+   the total.
+
+Prompt 26's own note on `particles` — "a canvas would be cheaper per particle and is the wrong trade
+here" — was a deliberate choice with a stated reason, so overriding it is the owner's call.
+
+### Recommendation
+Option 3, with the assertion counting layers **outside** the effect stack, plus option 1 if the field
+ever needs to appear more than twice on one page. Awaiting the owner.
+
+## ADR-160 — What a performance spec asserts, and at which CPU rate
+
+**Date** 2026-08-16 · **Prompt** 34 · **Status** Accepted
+
+### Question
+Prompt 34's example spec asserts `p95FrameTime < 20` under 4× CPU throttling. Measured on the
+200-node fixture, the real number is 66.7 ms. Is that a defect in the product, in the threshold, or
+in the measurement?
+
+### Criterion (set before measuring)
+Run the **same document with reduced motion forced** — the same canvas, the same 200 nodes, no
+entrance animations — under the same throttling. Whatever that costs is the scene; the difference is
+what this prompt's motion costs. A motion layer that costs about as much again as the scene it
+animates is acceptable; one that costs several times as much is a defect.
+
+### Measurement (production build, Chrome, 5 s of scrolling)
+| | Median | p95 | Worst | Long tasks | TBT |
+| --- | --- | --- | --- | --- | --- |
+| 200 nodes, 4×, with motion | 16.7 ms | 66.7 ms | 116.7 ms | 14 | 227 ms |
+| 200 nodes, 4×, reduced motion | 16.7 ms | 33.3 ms | 50.0 ms | 0 | 0 ms |
+| 200 nodes, no throttling | 16.7 ms | 16.8 ms | 16.8 ms | 0 | 0 ms |
+
+The 20 ms in the prompt is unreachable at 4× **with the animations disabled**, so it was never a
+threshold about motion. At full speed the fixture is exactly 60 fps.
+
+### Decision
+Each perf spec asserts twice:
+
+1. **Unthrottled and strict** — median and p95 under 20 ms, zero long tasks. This is
+   ENGINEERING_CONTRACT.md § 6's "60 fps with 200 nodes", stated as a test.
+2. **Throttled and loose** — p95 under 90 ms, fewer than 25 long tasks. Derived from the measured
+   66.7 ms with room for a noisy runner. It catches a regression of kind — an animation that starts
+   triggering layout, a component bypassing the scheduler — not a slow machine.
+
+### Consequences
+- Accepted: the throttled thresholds are two-thirds above the measurement, so a 30 % regression
+  passes. The unthrottled assertions are what has teeth; the throttled ones exist because a change
+  that makes frames three times longer is worth a red build.
+- Accepted: the numbers were taken on one machine. The tables in PERFORMANCE.md carry the date and
+  the conditions, so the next person can retake them rather than guess what changed.
+- Accepted: scrolling in the measurement reverses direction. Scrolling one way ran off the end of the
+  document and spent most of its time over an empty artboard, which measured nothing — the first
+  version of this harness did exactly that and reported frame times a third lower.

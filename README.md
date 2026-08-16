@@ -60,9 +60,24 @@ pnpm dev            # http://localhost:3000
 pnpm dev:storybook  # http://localhost:6006
 pnpm test           # unit (Vitest)
 pnpm test:e2e       # end-to-end (Playwright)
+pnpm test:e2e:perf  # frame timings, listener counts and reduced motion, on a production build
 pnpm lint           # Biome
 pnpm typecheck      # tsc --noEmit, all packages
 pnpm build          # Turborepo pipeline
+```
+
+Generators, run when their source changes rather than on every build:
+
+```bash
+pnpm generate:tokens      # design tokens → CSS variables
+pnpm generate:thumbnails  # block thumbnails, deterministic; --verify to check them in CI
+pnpm generate:fixtures    # the stress documents in e2e/fixtures/documents
+```
+
+The performance run opens a real browser. Add `--headed` to watch it, or `--ui` for the timeline:
+
+```bash
+pnpm --filter e2e exec playwright test perf --headed
 ```
 
 Docker:
