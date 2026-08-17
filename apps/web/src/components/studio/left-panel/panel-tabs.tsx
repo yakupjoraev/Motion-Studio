@@ -1,7 +1,7 @@
 'use client'
 
 import type { LeftTab } from '@motion-studio/editor'
-import { EmptyState, type TabItem } from '@motion-studio/ui'
+import type { TabItem } from '@motion-studio/ui'
 import dynamic from 'next/dynamic'
 
 import { ThemeTabBadge } from './theme/theme-tab-badge'
@@ -20,6 +20,10 @@ const PanelSkeleton = () => (
  * they pull fifty-one presets, thirteen effect components and the motion applier. The theme builder
  * joins them: the colour picker alone is react-aria.
  */
+const BlocksTab = dynamic(() => import('./blocks/blocks-tab').then((module) => module.BlocksTab), {
+  loading: () => <PanelSkeleton />,
+})
+
 const LayersPanel = dynamic(
   () => import('./layers/layers-panel').then((module) => module.LayersPanel),
   { loading: () => <PanelSkeleton /> },
@@ -38,19 +42,13 @@ const ThemeTab = dynamic(() => import('./theme/theme-tab').then((module) => modu
 })
 
 /**
- * PRODUCT.md § 2, in order. A tab whose content does not exist yet shows its empty state: one
- * sentence, no illustration, and no action, because the thing that would fill it — the block
- * palette — has no reader until its own prompt.
+ * PRODUCT.md § 2, in order.
  *
  * `contrastNotices` puts the theme's repair count on the Theme tab, so a failing pair stays visible
  * from the other four tabs.
  */
 export const panelTabs = (contrastNotices = 0): readonly TabItem[] => [
-  {
-    value: 'blocks',
-    label: 'Blocks',
-    content: <EmptyState className="h-full" message="No blocks are registered." />,
-  },
+  { value: 'blocks', label: 'Blocks', content: <BlocksTab /> },
   { value: 'motion', label: 'Motion', content: <MotionTab /> },
   { value: 'effects', label: 'Effects', content: <EffectsTab /> },
   {
