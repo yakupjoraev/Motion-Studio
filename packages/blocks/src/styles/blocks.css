@@ -199,9 +199,127 @@
   animation: ms-terminal-caret calc(var(--ms-duration-slowest) * 1.4) step-end infinite;
 }
 
+/*
+ * Glass, from the theme's own recipe rather than from a blur a block picked. `--ms-glass-*` is written
+ * by `resolveTheme` from `theme.surface.glassLevel`, so a card marked glass follows the document: four
+ * blur strengths on the presets that want it, and none on the ones that do not.
+ *
+ * DESIGN_SYSTEM.md § Blur and glass, rules 3 and 4, are both here: the hairline border is not optional
+ * — without it the edge disappears — and there are two fallbacks, because there are two ways to end up
+ * with no blur. The theme saying `none` leaves the recipe transparent, which would make the card
+ * invisible rather than flat; a browser without `backdrop-filter` leaves it unblurred, which would make
+ * it a tinted pane over live content. Both land on an opaque `surface-2` with a real border.
+ */
+.ms-glass {
+  border: 1px solid var(--ms-glass-border);
+  background-color: var(--ms-glass-background);
+  backdrop-filter: var(--ms-glass-backdrop-filter);
+}
+
+:root[data-glass='none'] .ms-glass {
+  border-color: var(--ms-color-border);
+  background-color: var(--ms-color-surface-2);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .ms-glass {
+    border-color: var(--ms-color-border);
+    background-color: var(--ms-color-surface-2);
+  }
+}
+
+/*
+ * The marquee's own geometry. The `marquee` preset (ANIMATION_SYSTEM.md § Scroll) owns the animation,
+ * the duration and the pause-on-hover rule, and it emits `.ms-marquee` on the track — these are the two
+ * declarations that belong to the *row* rather than to the animation: the mask that fades both ends, so
+ * content does not appear to be cut by the viewport edge, and the gap between copies.
+ *
+ * The mask is a variable so a row on a coloured band can turn it off; masking to transparent over an
+ * opaque parent shows the page behind it.
+ */
+.ms-marquee-row {
+  --ms-marquee-fade: 8%;
+
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    black var(--ms-marquee-fade),
+    black calc(100% - var(--ms-marquee-fade)),
+    transparent 100%
+  );
+}
+
+/*
+ * The CTA band's gradient.
+ *
+ * Every stop is on the **accent ramp** and that is a contrast decision rather than a colour preference:
+ * `packages/tokens/semantic/contrast.test.ts` already asserts `foreground-onAccent` against `accent`,
+ * `accent-hover` and `accent-active` in both modes, so a band painted from those three is legible by the
+ * same proof. A stop on another ramp would need its own.
+ *
+ * The first stop is `accent` rather than `accent-hover`, and that came out of looking at the band: in dark
+ * mode the ramp runs *lighter* for interaction states, so hover → active is violet 300 → 200, which is
+ * 86 % to 92.5 % lightness at 0.068 and 0.036 chroma. Painted at 1440 that is a pastel rectangle with no
+ * visible gradient in it. `accent` is violet 400 at 0.156 chroma, so the pair becomes 70 % → 92.5 % and the
+ * band reads as accent-coloured instead of washed out. In light mode it runs the other way, 46.5 % → 27 %,
+ * and gets deeper — the same decision seen from the other side.
+ *
+ * The specular highlight is white at 10 % from the top-left, which is what stops a two-stop gradient
+ * reading as a flat fill with a tint. It is the same trick a metal surface uses, and it is why the band
+ * looks lit rather than filled.
+ */
+.ms-cta-gradient {
+  background-color: var(--ms-color-accent);
+  background-image: radial-gradient(120% 100% at 15% 0%, oklch(100% 0 0 / 0.1) 0%, transparent 60%),
+    linear-gradient(140deg, var(--ms-color-accent) 0%, var(--ms-color-accent-active) 100%);
+}
+
+/*
+ * The price swapping when the interval toggle changes. The element is keyed by interval, so React
+ * replaces it and the animation plays on the new one — the "real state change, animated" prompt 38 asks
+ * of the pricing table, expressed as one keyframe rather than as a spring on a number.
+ *
+ * Only opacity and a 4 px lift: the number's box does not change, because `tabular-nums` already keeps
+ * 19 and 490 the same width and a price that reflows is worse than a price that fades.
+ */
+@keyframes ms-price-swap {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 4px, 0);
+  }
+}
+
+.ms-price-swap {
+  animation: ms-price-swap var(--ms-duration-quick) var(--ms-ease-standard);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ms-aurora-layer,
-  .ms-terminal-caret {
+  .ms-terminal-caret,
+  .ms-price-swap {
+    animation: none;
+  }
+
+  /*
+   * The track is a flex row `width: max-content` wide, and with the animation off that row would
+   * simply overflow to the right — half its content unreachable. Under reduced motion it becomes a
+   * wrapping grid, which is the static composition the two marquee blocks are designed to fall back
+   * to, and the mask goes with it because there is nothing left to fade into.
+   *
+   * The `animation: none` is on `.ms-marquee` itself and it is not redundant: the preset's stylesheet
+   * (`MARQUEE_CSS`, emitted by the block — ADR-186) declares an infinite animation with no media query
+   * of its own, because when the *preset* is applied to a node the resolver switches to
+   * `resolveReduced` before any of it reaches the DOM. A block that lays out its own track has no
+   * resolver in the path, so this is where the policy is enforced.
+   */
+  .ms-marquee-row {
+    mask-image: none;
+  }
+
+  .ms-marquee-row .ms-marquee {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
     animation: none;
   }
 }

@@ -167,6 +167,34 @@ describe('the registry as a whole', () => {
     )
   })
 
+  it('groups the marketing category in catalogue order too', () => {
+    expect(blockRegistry.byCategory('marketing').map((one) => one.id)).toEqual(
+      [
+        'feature-grid',
+        'feature-split',
+        'bento-grid',
+        'pricing-table',
+        'testimonial-card',
+        'testimonial-marquee',
+        'logo-cloud',
+        'cta-banner',
+        'cta-split',
+        'faq-accordion',
+        'comparison-table',
+        'newsletter-form',
+      ].map(blockId),
+    )
+  })
+
+  it('opts four blocks into container queries and no others (ADR-184)', () => {
+    const opted = DEFINITIONS.filter((one) => one.capabilities.containerQuery === true).map(
+      (one) => one.id,
+    )
+
+    // RESPONSIVE_ENGINE.md § Container queries names four; `stat-grid` arrives with prompt 41.
+    expect(opted).toEqual(['feature-grid', 'bento-grid', 'testimonial-card'].map(blockId))
+  })
+
   it('groups the effects category in catalogue order too', () => {
     expect(blockRegistry.byCategory('effects').map((one) => one.id)).toEqual(
       [

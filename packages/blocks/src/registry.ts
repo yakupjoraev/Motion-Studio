@@ -4,6 +4,7 @@ import { definitions as content } from './content/definitions'
 import { definitions as effects } from './effects/definitions'
 import { definitions as hero } from './hero/definitions'
 import { definitions as layout } from './layout/definitions'
+import { definitions as marketing } from './marketing/definitions'
 
 /**
  * The catalogue, in the order COMPONENT_LIBRARY.md § Catalogue lists it — `list()` preserves that
@@ -17,6 +18,7 @@ export const DEFINITIONS: readonly BlockDefinition[] = [
   ...Object.values(layout),
   ...Object.values(hero),
   ...Object.values(content),
+  ...Object.values(marketing),
   ...Object.values(effects),
 ]
 

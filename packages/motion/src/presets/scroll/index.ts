@@ -16,7 +16,14 @@ export {
   scrollTimeline,
   stickyStack,
 }
-export { marqueeTrack } from './marquee'
+export {
+  MARQUEE_CLASS,
+  MARQUEE_CSS,
+  MARQUEE_PAUSABLE_CLASS,
+  marqueeCssVars,
+  marqueeTrack,
+  type MarqueeDirection,
+} from './marquee'
 export { ON_SCROLL } from './progress'
 
 /** ANIMATION_SYSTEM.md § Scroll, in the order the document lists it. */

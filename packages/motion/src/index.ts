@@ -114,7 +114,15 @@ export { PRESETS, presetRegistry } from './presets/index'
 export { ENTRANCE_PRESETS } from './presets/entrance/index'
 export { HOVER_PRESETS, magneticOffset, tiltAngles } from './presets/hover/index'
 export { CONTINUOUS_PRESETS } from './presets/continuous/index'
-export { SCROLL_PRESETS, marqueeTrack } from './presets/scroll/index'
+export {
+  MARQUEE_CLASS,
+  MARQUEE_CSS,
+  MARQUEE_PAUSABLE_CLASS,
+  SCROLL_PRESETS,
+  marqueeCssVars,
+  marqueeTrack,
+  type MarqueeDirection,
+} from './presets/scroll/index'
 export { CURSOR_PRESETS } from './presets/cursor/index'
 export { EXIT_PRESETS } from './presets/exit/index'
 export {

@@ -107,6 +107,17 @@ export interface BlockCapabilities {
    * inspector hints, and drop resolution reads the same field rather than knowing the block by id.
    */
   readonly requiresFlexParent?: boolean | undefined
+  /**
+   * RESPONSIVE_ENGINE.md § Container queries. The block's own cells respond to the width they are
+   * given rather than to the viewport, so it draws a `container-type: inline-size` element around
+   * each one and sizes its contents with `@sm:` / `@md:` classes.
+   *
+   * Not the default, and the reason is the canvas: a `@container` inside a transform-scaled artboard
+   * measures the untransformed width, so a cell at zoom 0.5 answers the same query it would answer at
+   * 1. That is right for the export and slightly wrong for the preview, which is a trade only the
+   * blocks that need it should pay (ADR-167 deferred the field here for its first real caller).
+   */
+  readonly containerQuery?: boolean | undefined
 }
 
 export interface ImportSpec {
@@ -130,6 +141,24 @@ export interface CodegenDescriptor {
   readonly dependencies?: Readonly<Record<string, string>>
   /** Props that print as attributes rather than as classes. */
   readonly passthroughProps?: readonly string[]
+  /**
+   * Comments the printers emit above the element, verbatim. For the one thing generated markup cannot
+   * say for itself: where the reader has to plug something in. `newsletter-form` ships a no-op submit
+   * handler, and an export that did not say so would look finished while doing nothing.
+   */
+  readonly notes?: readonly string[]
+  /**
+   * Structured data the export emits beside the element, which the canvas never renders — a
+   * `<script type="application/ld+json">` inside an artboard would be markup the user cannot see,
+   * cannot select, and would carry into a screenshot of their page.
+   *
+   * `enabledBy` is the boolean prop that turns it on, so the printer reads the user's answer rather
+   * than emitting it for everyone.
+   */
+  readonly structuredData?: {
+    readonly type: 'FAQPage'
+    readonly enabledBy: string
+  }
 }
 
 export interface A11yNotes {

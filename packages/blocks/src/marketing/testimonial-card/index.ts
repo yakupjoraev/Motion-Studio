@@ -1,0 +1,8 @@
+export { TestimonialAttribution } from './testimonial-attribution'
+export { TestimonialAvatar } from './testimonial-avatar'
+export { TestimonialCard } from './testimonial-card'
+export { testimonialCardDefinition } from './testimonial-card.definition'
+export { testimonialCardMotion } from './testimonial-card.motion'
+export { attributionLine, testimonialCardSchema } from './testimonial-card.schema'
+export { testimonialCardStyles } from './testimonial-card.styles'
+export type { TestimonialCardProps } from './testimonial-card.types'

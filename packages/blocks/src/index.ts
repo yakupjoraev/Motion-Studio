@@ -106,6 +106,90 @@ export * from './hero/hero-terminal/index'
 export * from './hero/hero-app-preview/index'
 
 /*
+ * The marketing category, through each block's own index for the reason the hero category gives — the
+ * category barrel exports a `definitions` and a `components`, and twelve of those would collide here. The
+ * shared vocabulary is exported too: a later category that wants the same section rhythm, card surface or
+ * nested-radius arithmetic should use it rather than transcribe it.
+ */
+export {
+  ACTION_VARIANTS,
+  ALT_MAX_LENGTH,
+  BODY_MAX_LENGTH,
+  CARD_TREATMENTS,
+  DESCRIPTION_MAX_LENGTH,
+  HEADING_LEVELS,
+  HEADING_TAGS,
+  MARQUEE_MAX_DURATION,
+  MARQUEE_MIN_DURATION,
+  MAX_ACTIONS,
+  TESTIMONIAL_ATTRIBUTION_MAX_LENGTH,
+  TESTIMONIAL_QUOTE_MAX_LENGTH,
+  TITLE_MAX_LENGTH,
+  actionSchema,
+  cardTreatment,
+  headingLevel,
+  mediaSchema,
+  nextHeadingLevel,
+  sectionCopyFields,
+  sectionFrameFields,
+  type Action,
+  type ActionVariant,
+  type CardTreatment,
+  type HeadingLevel,
+  type Media,
+  type SectionCopyDefaults,
+  type SectionCopyShape,
+  type SectionFrameShape,
+} from './marketing/marketing.schema'
+export {
+  SECTION_COPY_CONTROLS,
+  SECTION_FRAME_CONTROLS,
+  sectionCopyGroup,
+} from './marketing/marketing.controls'
+export {
+  MARKETING_FOCUS,
+  MARKETING_INNER,
+  MARKETING_TRANSITION,
+  actionRowStyles,
+  actionStyles,
+  marketingSectionStyles,
+  sectionHeadingStyles,
+} from './marketing/marketing.styles'
+export { CARD_RADIUS, cardStyles } from './marketing/card.styles'
+export { MARQUEE_ROWS, marqueeRowStyles } from './marketing/marquee.styles'
+export {
+  RADIUS_CLASS,
+  innerRadiusClass,
+  innerRadiusToken,
+  radiusPx,
+} from './marketing/nested-radius'
+export { ActionButton } from './marketing/action-button'
+export { MarketingSection } from './marketing/marketing-section'
+export { MarqueeRow } from './marketing/marquee-row'
+export { MarqueeStyles } from './marketing/marquee-styles'
+export { MediaFrame } from './marketing/media-frame'
+export { SectionHeader } from './marketing/section-header'
+export { SectionHeading } from './marketing/section-heading'
+export {
+  cardHover,
+  marketingCardMotion,
+  marketingEntrance,
+  marketingMotion,
+} from './marketing/marketing.motion'
+export * from './marketing/feature-grid/index'
+export * from './marketing/feature-split/index'
+export * from './marketing/bento-grid/index'
+export * from './marketing/pricing-table/index'
+export * from './marketing/testimonial-card/index'
+export * from './marketing/testimonial-marquee/index'
+export * from './marketing/logo-cloud/index'
+export * from './marketing/cta-banner/index'
+export * from './marketing/cta-split/index'
+export * from './marketing/faq-accordion/index'
+export * from './marketing/comparison-table/index'
+export * from './marketing/newsletter-form/index'
+
+/*
  * The effects category, through its own barrel: thirteen blocks plus the stack that mounts them on a
  * node, and the shared vocabulary every one of them is built from.
  */

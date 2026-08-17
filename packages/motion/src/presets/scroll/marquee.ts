@@ -11,6 +11,40 @@ import {
 
 const DIRECTIONS = ['left', 'right'] as const
 
+export type MarqueeDirection = (typeof DIRECTIONS)[number]
+
+/** The class the animated track carries, and the one that adds the pause-on-hover rule. */
+export const MARQUEE_CLASS = 'ms-marquee'
+export const MARQUEE_PAUSABLE_CLASS = 'ms-marquee-pausable'
+
+/**
+ * The definition of those two classes, as one string.
+ *
+ * ADR-186: `testimonial-marquee` and `logo-cloud` lay out their **own** tracks, because a block with
+ * three rows running in alternating directions cannot be expressed by one motion channel on its node —
+ * a channel animates the node's wrapper, and there is exactly one of those. So the blocks take the
+ * animation from here rather than writing a second one: this text is the only place the keyframes, the
+ * track's layout and the pause rule exist, and `resolve` below emits the same string.
+ */
+export const MARQUEE_CSS = `@keyframes ms-marquee { to { transform: translate3d(var(--ms-marquee-direction), 0, 0) } }
+.ms-marquee { display: flex; width: max-content; animation: ms-marquee var(--ms-marquee-duration) linear infinite }
+.ms-marquee-pausable:hover { animation-play-state: paused }`
+
+/**
+ * The two custom properties the track reads. `-50 %` is the seamless offset explained below; a caller
+ * that repeated its content four times still translates by half the track, because half of four copies
+ * is two and the second pair sits exactly where the first began.
+ */
+export function marqueeCssVars(params: {
+  readonly duration: number
+  readonly direction: MarqueeDirection
+}): Readonly<Record<'--ms-marquee-duration' | '--ms-marquee-direction', string>> {
+  return {
+    '--ms-marquee-duration': `${params.duration}ms`,
+    '--ms-marquee-direction': params.direction === 'left' ? '-50%' : '50%',
+  }
+}
+
 /**
  * An infinite loop with no seam. The track holds the content **twice** and translates by exactly
  * -50 %: at the end of the cycle the second copy sits where the first began, so the jump back to 0 %
@@ -43,17 +77,12 @@ export const marquee = definePreset({
   capabilities: { composableWith: ['hover', 'cursor'], requiresChildren: true, cost: 'moderate' },
   resolve: (params) => ({
     engine: 'css',
-    className: params.pauseOnHover ? 'ms-marquee ms-marquee-pausable' : 'ms-marquee',
+    className: params.pauseOnHover ? `${MARQUEE_CLASS} ${MARQUEE_PAUSABLE_CLASS}` : MARQUEE_CLASS,
     properties: ['transform'],
-    cssVars: {
-      '--ms-marquee-duration': `${params.duration}ms`,
-      '--ms-marquee-direction': params.direction === 'left' ? '-50%' : '50%',
-    },
+    cssVars: marqueeCssVars(params),
     transition: { duration: params.duration, repeat: 'infinite' },
     listeners: [{ event: 'scroll', variant: 'end' }],
-    keyframes: `@keyframes ms-marquee { to { transform: translate3d(var(--ms-marquee-direction), 0, 0) } }
-.ms-marquee { display: flex; width: max-content; animation: ms-marquee var(--ms-marquee-duration) linear infinite }
-.ms-marquee-pausable:hover { animation-play-state: paused }`,
+    keyframes: MARQUEE_CSS,
   }),
   /** § Reduced motion, scroll: the end state. A marquee standing still is its content, readable. */
   resolveReduced: () => ({
