@@ -5674,7 +5674,7 @@ palette is documented to pick up with `Space`, and it has no second meaning for 
 
 ## ADR-137 — The drag layer is mounted by the surface that drags, until a second one exists
 
-**Date** 2026-08-15 · **Prompt** 29 · **Status** Accepted
+**Date** 2026-08-15 · **Prompt** 29 · **Status** Superseded by ADR-179
 
 ### Question
 DRAG_AND_DROP.md § Public API says `DndProvider` wraps the studio. The studio's shell is in the initial
@@ -6957,3 +6957,219 @@ commit. The colour picker already worked this way for the same reason.
   `THEME_ENGINE.md` § Rules, 5 measures.
 - Accepted: if a command changed the same token from elsewhere mid-drag, the draft would win until
   release. Nothing else can move a theme token while a pointer is down on its slider.
+
+## ADR-176 — The palette has nine categories, and PRODUCT.md listed ten
+
+**Date** 2026-08-17 · **Prompt** 37 · **Status** Accepted
+
+### Question
+Prompt 37 asks for "the ten categories from `COMPONENT_LIBRARY.md`". That document's § Catalogue lists
+**nine** — Layout, Hero, Content, Marketing, Navigation, Interactive, Data, Forms, Effects — and so does
+`BLOCK_CATEGORIES` in `packages/schema`, which is the type every block is validated against.
+`PRODUCT.md` § 2 lists ten, with `Feedback` and `Media` and without `Interactive`. Which list does the
+chip row come from?
+
+### Criterion
+§ 9.1: the answer is already specified, and where two documents disagree the one the code is built
+against wins — a category that is not in `BLOCK_CATEGORIES` cannot be the category of any block, so a
+chip for it could only ever empty the grid.
+
+### Decision
+Nine, read from `BLOCK_CATEGORIES` rather than written out in the panel, and `PRODUCT.md` § 2 is
+corrected in the same commit as this entry — the document was wrong, not the schema.
+
+### Consequences
+- Accepted: `Feedback` and `Media` blocks, if they are ever wanted, are a change to the schema, the
+  catalogue and this list together. Nothing in the palette hard-codes the nine.
+- Accepted: chips are shown only for categories the registry has entries in, which today is four of the
+  nine. A "Forms 0" chip is a filter whose only effect is to empty the grid.
+
+## ADR-177 — An inserted node is panned into view, not zoomed to
+
+**Date** 2026-08-17 · **Prompt** 37 · **Status** Accepted
+
+### Question
+Prompt 37: "the inserted node is **selected** and **scrolled into view** on the canvas". The canvas has
+no scrollbars — CANVAS.md § Pan — so "scrolled into view" has to become either a pan or a zoom. Which?
+
+### Criterion
+Specification, twice over. The prompt says *scrolled*, and CANVAS.md § Zoom already assigns the zoom
+gesture to `Shift+2` ("zoom to selection, padded 64 px, capped at 200 %"). A second, implicit zoom on
+every insert would move everything the user is looking at in order to show them one new block.
+
+### Decision
+`CanvasHandle.reveal(id)` pans the least amount that brings the node's box inside the viewport, padded
+by the `FIT_PADDING` § Zoom already names, and leaves the zoom alone. Already-visible is a no-op. It
+reports whether the node was measured at all, because a caller that has just inserted it needs to tell
+"already visible" from "not rendered yet" — the palette retries for three frames on the second.
+
+### Consequences
+- Accepted: a node inserted far outside the viewport at 10 % zoom arrives on screen very small. That is
+  the zoom the user chose; `Shift+2` is how they change it.
+- Accepted: `reveal` is a fifth reader on a handle whose comment said "four readers and one command".
+  The comment is updated with it.
+
+## ADR-178 — Selected category chips are session state, held in a module
+
+**Date** 2026-08-17 · **Prompt** 37 · **Status** Accepted
+
+### Question
+Prompt 37: "selected filters persist for the session". Where does that state live — the document, the
+store, `localStorage`, or component state?
+
+### Criterion
+The three questions ADR-114 and ADR-132 were decided by: does it export, does it belong to another
+session, and does losing it lose work? A filter exports nothing, belongs to this tab only, and costs one
+click to redo.
+
+### Decision
+A module-level set with a `useSyncExternalStore` subscription, exactly as ADR-165 holds the
+editing-scope hint. Not the document (it changes nothing that exports), not `localStorage` (a filter
+still applied tomorrow reads as an empty catalogue), and not component state (the tab unmounts when
+another tab is selected, which is not the end of the session).
+
+### Consequences
+- Accepted: a reload clears the filter. That is what "for the session" means.
+- Accepted: the tests reset it explicitly, because module state outlives a test file's `beforeEach`.
+
+## ADR-179 — The drag layer moves to the shell, and `/studio` is 282 kB
+
+**Date** 2026-08-17 · **Prompt** 37 · **Status** Accepted, on the owner's call · Supersedes ADR-137
+
+### Question
+ADR-137 mounted `DndProvider` inside the lazy Layers panel and said it would move up "in the prompt that
+gives the studio a second drag surface". Prompt 37 is that prompt. Moving it up puts the drag layer in
+the initial chunk of a route whose budget is already at its limit. Move it, or keep the palette inside
+its own context and leave the canvas undroppable?
+
+### Criterion
+ENGINEERING_CONTRACT.md § 6: `/studio` first-load JS ≤ 250 kB gzip, summed over the page's entries in
+`app-build-manifest.json` (the method of ADR-152). A cross-surface drag cannot work from two contexts,
+so measurement alone cannot settle this — the cost is measured and the trade is the owner's.
+
+### Measurement (production builds, one method throughout)
+| Build | `/studio` first load |
+| --- | --- |
+| `HEAD` before this prompt | **257.8 kB** |
+| plus the palette, the canvas drop zones, `reveal` | 257.8 kB |
+| plus `ToastProvider` in the shell | 262.3 kB (+4.5) |
+| plus `DndHost` in the shell | **282.1 kB** (+19.8) |
+
+The palette costs the initial chunk nothing: it is a `next/dynamic` chunk, like the four tabs beside it.
+The drag layer is 19.8 kB and the toast queue 4.5 kB. ADR-157 recorded 250.1 kB by a slightly narrower
+sum; the four numbers above are measured the same way as each other, so the **+24.3 kB** is the figure
+that means anything.
+
+### Decision
+Escalated with the numbers; the owner chose to move the provider to the shell and to wire the canvas as
+a drop target, accepting the overrun. `DndHost` now wraps `ms-studio`, and `ToastProvider` wraps the
+shell — a rejected insert has to be able to say why from any surface, and the command palette will want
+the same queue.
+
+### Consequences
+- Accepted: `/studio` is 32.1 kB over a budget the contract calls enforced. The structural fix is still
+  ADR-157's: the block registry arriving as a chunk rather than as an import of the store.
+- Accepted: operation 1 of DRAG_AND_DROP.md § The four operations now works by pointer and by keyboard.
+  Operations 2 and 4 still need a canvas node to be a drag source.
+- Avoided: two drag contexts, which cannot hand a drag from one to the other at all.
+
+## ADR-180 — A grid row states its set size with `aria-rowcount`, not `aria-setsize`
+
+**Date** 2026-08-17 · **Prompt** 37 · **Status** Accepted
+
+### Question
+Prompt 37's test list asks for "grid `role`/`aria` attributes, including virtualized `aria-setsize`". The
+palette is a `role="grid"` (ACCESSIBILITY.md § Block palette). Do its rows carry `aria-setsize`?
+
+### Criterion
+ENGINEERING_CONTRACT.md § 1.7 makes accessibility a build gate and `jest-axe` is what runs it. An
+attribute axe rejects is not an accessibility improvement.
+
+### Measurement
+With `aria-setsize` / `aria-posinset` on each row, axe fails every row with `aria-conditional-attr`:
+"These attributes are supported with treegrid rows, but not grid". With `aria-rowcount` on the grid and
+`aria-rowindex` on each row, axe passes and the same fact is stated — eighteen rows exist, this is the
+first of them.
+
+### Decision
+`aria-rowcount` + `aria-rowindex`. `aria-setsize` is the `listbox` form of the statement and belongs to
+the command palette (ACCESSIBILITY.md § Command palette), which is a real listbox.
+
+### Consequences
+- Accepted: the prompt's wording is not followed literally. The property it asks for — a screen reader
+  learning that the rendered window is a window — is delivered, and a test asserts the absence of
+  `aria-setsize` so it does not get "fixed" back.
+
+## ADR-181 — A drop zone states which surface drew it
+
+**Date** 2026-08-17 · **Prompt** 37 · **Status** Accepted
+
+### Question
+With the canvas a drop target and the layers tree already one, two surfaces register a zone for the
+**same node id**: the tree's rect is the strip of ADR-133, the canvas's is the node's own box. The
+collision detector asks one `DragRectSource` for "the rect of node N". Which of the two answers?
+
+### Criterion
+The resolver has to read the geometry of the surface being pointed at, and a node id alone cannot say
+which that is. Any scheme that guesses — DOM ancestry, mount order, one cache winning — is a second
+answer to a question that has one right answer.
+
+### Decision
+`DropZone` carries `surface: 'canvas' | 'tree'`, `dropZoneId` includes it (two droppables under one id
+would leave dnd-kit holding whichever mounted last), and the provider's `rects` prop becomes a
+`ZoneRectSource` — `get(zone)` rather than `get(id)`. `DndHost` routes: tree zones to `layerRects`,
+canvas zones to the canvas rect cache through `CanvasHandle.nodeRect`. `resolveDropTarget` keeps taking
+a `DragRectSource`, because by then the host has already chosen the surface.
+
+### Consequences
+- Accepted: a sixth field on a value that crosses the dnd-kit `data` boundary, so `dropZone()` validates
+  it and rejects an unknown surface — a zone with a bad surface is a zone with no geometry.
+- Accepted: the keyboard step is per surface too (one row in the tree, one grid cell × zoom on the
+  canvas), so `DndHost` remembers the surface of the last resolution and answers `gridSize` / `zoom`
+  from it.
+- Accepted: `NodeWrapper` takes a `dropRef`, so a zone's element is the node's own box. The alternatives
+  were an absolutely-positioned overlay per node — which needs a positioned ancestor the wrapper does
+  not have — or an extra wrapper element around every block on the canvas.
+
+## ADR-183 — Cached rects are converted to the current transform, and re-read at drag start
+
+**Date** 2026-08-17 · **Prompt** 37 · **Status** Accepted
+
+### Question
+The first pointer drop from the palette landed one position away from where the indicator promised. Why,
+and what makes the geometry the resolver reads trustworthy?
+
+### Criterion
+The indicator and the drop are the same computation over the same numbers, so they cannot disagree. Any
+answer that leaves them disagreeing under some condition is not a fix.
+
+### Measurement (Chrome, `next dev`, a section with two headings)
+- The heading's DOM rect was `y = 112`; the canvas rect cache held `y = 136`. **24 px**, stable for the
+  rest of the session, and it moved the drop from index 2 to index 1.
+- The cache re-measures on a document version change and on a `ResizeObserver` callback. The heading had
+  neither: its entrance preset *moved* it after the first measurement, and a move is not a resize. Proof
+  by the same measurement after an unrelated edit to the document — cache `y = 112`, DOM `y = 112`.
+- A first attempt, re-measuring on `animationend` / `transitionend` on the wrapper, changed nothing: the
+  catalogue's entrance presets animate through the motion engine, which fires neither event there. It was
+  removed rather than left in unverified.
+- Auto-pan then showed a second fault: `edgeSpeed` reads a point beyond an edge as full speed, so a drag
+  that starts on a palette card — outside the canvas — panned the scene 240 px before it arrived, and the
+  drop landed on nothing ("not over a valid target").
+
+### Decision
+Three things, all measured:
+1. `CanvasHandle.nodeRect` converts a cached rect out of the transform it was measured under (ADR-091)
+   and into the current one, so a pan mid-drag does not stale every rect.
+2. `CanvasHandle.remeasure()` drops the cache and reads it again; the canvas host calls it when a drag
+   starts, which is the moment the rects begin to matter.
+3. Auto-pan runs only while the pointer is inside the canvas box.
+
+After all three: the indicator sat on the bottom edge of the second heading and the drop landed at index
+2 — `[heading, heading, section]`, matching the announcement "position 3 of 3".
+
+### Consequences
+- Accepted: a node that animates in still holds a stale rect until something asks for a pass, so a
+  selection outline drawn inside that window is off by the animation's distance. Same root cause, wider
+  fix than this prompt owns — reported rather than quietly patched.
+- Accepted: `remeasure` reads layout for every observed node in one pass at drag start. 200 nodes, one
+  batched read, which is what the cache does on every document edit already.

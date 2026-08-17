@@ -113,6 +113,11 @@ accumulate error. On `pointerup`, one `setPan` command commits to the store.
 Momentum: on release with velocity above a threshold, decay at `v *= 0.92` per frame until below
 0.1 px/frame. Disabled under reduced motion.
 
+**Revealing a node** is a pan and never a zoom — `CanvasHandle.reveal(id)` moves the scene the least
+amount that brings the node's box inside the viewport, padded by `FIT_PADDING`, and does nothing when
+it is already there. Zoom stays where the user put it; `Shift+2` is the deliberate zoom (ADR-177).
+The block palette calls it after an insert, so a new node is never off screen.
+
 ## Zoom
 
 ```ts
@@ -418,6 +423,26 @@ export { useRectCache } from './rects'
 export { OverlayLayer, useOverlayRects } from './overlays'
 export type { ViewportTransform, SnapResult, ScreenPoint, CanvasPoint } from './types'
 ```
+
+`Canvas` hands a `CanvasHandle` to `onReady` — the measured half a host cannot compute for itself:
+
+```ts
+export interface CanvasHandle {
+  documentRect(): CanvasRect          // canvas units — the artboard's box
+  viewportRect(): ViewportRect        // screen — the canvas element's box
+  nodeRect(id: NodeId): Rect | undefined  // screen, under the *current* transform (ADR-183)
+  transform(): ViewportTransform
+  fitDocument(): void
+  panBy(dx: number, dy: number): void // screen pixels; auto-pan during a drag
+  remeasure(): void                   // drop the cached geometry and read it again (ADR-183)
+  reveal(id: NodeId): boolean         // pan the minimum that brings a node into view
+}
+```
+
+A cached rect is measured under the transform of the moment it was read (ADR-091), so `nodeRect`
+converts it out under the current one — a host asking "where is this node now" gets an answer that
+survives a pan. `remeasure` exists because the cache re-measures on a document change or a resize and
+a node that merely *moved* is neither: an entrance animation leaves its rect a frame behind.
 
 Dependencies: `utils`, `schema` (types only), `hooks`, `ui`, React. **Not** `editor`, **not**
 `blocks`. `ui` is there for one thing — the context menu is the same menu the layers tree opens, and

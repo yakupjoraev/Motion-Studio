@@ -55,7 +55,9 @@ Four tabs plus a Layers tree.
 **Blocks** — searchable, category-grouped list of registry entries. Each entry is a card with a
 static thumbnail (animated on hover, respecting reduced motion), name, and category chip.
 Cards are drag sources; `Enter` inserts into the current selection's parent.
-Categories: Layout, Hero, Content, Marketing, Navigation, Forms, Data, Feedback, Media, Effects.
+Categories: Layout, Hero, Content, Marketing, Navigation, Interactive, Data, Forms, Effects —
+the nine of [COMPONENT_LIBRARY.md](COMPONENT_LIBRARY.md) § Catalogue, which is the list the registry
+is built from (ADR-176).
 
 **Motion** — the preset catalogue, grouped by channel (Entrance, Scroll, Hover, Cursor,
 Continuous). Each preset previews on hover. Clicking applies to selection. Applying is a

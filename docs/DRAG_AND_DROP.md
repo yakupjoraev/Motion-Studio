@@ -28,6 +28,10 @@ accessible, and retrofitting keyboard drag onto HTML5 DnD is not possible.
 
 All four end in a command. Nothing about drag state lives in the document until drop.
 
+Operations 1 and 3 are wired; 2 and 4 need a canvas node to be a drag *source*, which is the work that
+follows. Both surfaces register a zone per node, under the same node id and with different geometry, so
+a zone states which surface drew it — `DropZone.surface` (ADR-181).
+
 ## Sensors
 
 ```ts
@@ -220,6 +224,7 @@ export { DndProvider } from './provider'
 export { useDraggableBlock } from './use-draggable-block'
 export { useDraggableNode } from './use-draggable-node'
 export { useDropZone } from './use-drop-zone'
+export { useDragActive } from './use-drag-active'
 export { resolveDropTarget } from './resolve-drop-target'
 export { DropIndicatorLayer } from './drop-indicator'
 export type { DropTarget, DropIndicator, DragPayload } from './types'
@@ -233,7 +238,7 @@ Four things arrive as props because this package owns none of them (ADR-129):
 
 | Prop | Why it is not ours |
 | --- | --- |
-| `rects` | The rect cache lives in `canvas`, which `dnd` must not import |
+| `rects` | Live geometry per zone (`ZoneRectSource`); the caches live in `canvas` and in the tree, which `dnd` must not import |
 | `zoom`, `gridSize` | The viewport is a ref in the canvas, read at the moment of a key press |
 | `resolveTarget` | `resolveDropTarget` is pure, and its inputs — document, registry, isolation — are the store's |
 | `onDrop` | A command is dispatched by the application |
