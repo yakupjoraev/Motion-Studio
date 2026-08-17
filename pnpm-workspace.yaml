@@ -12,7 +12,10 @@ packages:
 # place every `vitest run` fails to start.
 # lefthook — its postinstall places the platform binary that `lefthook install` and every hook then
 # invoke. Skipped, the `prepare` script fails and the repository silently has no hooks.
+# ffmpeg-static — its postinstall downloads the platform ffmpeg the thumbnail generator muxes hover
+# clips with (ADR-182). Skipped, `require('ffmpeg-static')` resolves to a path with no file at it.
 onlyBuiltDependencies:
   - sharp
   - esbuild
   - lefthook
+  - ffmpeg-static

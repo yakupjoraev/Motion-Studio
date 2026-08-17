@@ -19,7 +19,9 @@
  *   3. Chrome encodes the WebP itself at a fixed quality, so there is no second encoder to disagree;
  *   4. the manifest is written with sorted keys and a trailing newline.
  *
- * ADR-125 records why this drives Chrome directly rather than through Playwright.
+ * ADR-125 records why this drives Chrome directly rather than through Playwright. ADR-182 records how
+ * the animated hover clip — carried out of M4 because a recording cannot be byte-identical — is made
+ * byte-identical after all: paused animations stepped by hand, then VP9 muxed `bitexact`.
  */
 import { createHash } from 'node:crypto'
 import { existsSync } from 'node:fs'
@@ -28,6 +30,7 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { connect, launchChrome } from './thumbnails/browser.mjs'
+import { CLIP, captureClip, hasRunningAnimation } from './thumbnails/clip.mjs'
 import { serveStatic } from './thumbnails/serve.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
@@ -67,6 +70,35 @@ const storyUrl = (blockId, mode) =>
   `http://127.0.0.1:${PORT}/iframe.html?id=thumbnail-block--preview` +
   `&globals=theme:${mode === 'dark' ? 'studio-dark' : 'studio-light'};colorMode:${mode}` +
   `&args=blockId:${encodeURIComponent(blockId)}`
+
+/**
+ * The clip runs at **full motion** — it exists to show what the block does — while the still is taken
+ * under a reduced-motion preference, which is what makes it a still at all.
+ */
+async function captureBlockClip(page, blockId, mode) {
+  await page.call('Emulation.setEmulatedMedia', {
+    features: [{ name: 'prefers-color-scheme', value: mode }],
+  })
+  await page.call('Page.navigate', { url: storyUrl(blockId, mode) })
+  await page.waitFor(
+    async () =>
+      await page
+        .evaluate(
+          `document.readyState === 'complete' &&
+           document.querySelector('[data-thumbnail-ready="${blockId}"] > div > *') !== null`,
+        )
+        .catch(() => false),
+    20_000,
+    `${blockId} (${mode}) to render for its clip`,
+  )
+  await page.evaluate('document.fonts.ready.then(() => true)')
+
+  if (!(await hasRunningAnimation(page))) {
+    return null
+  }
+
+  return await captureClip(page, { blockId, mode, stage: STAGE, width: THUMBNAIL.width })
+}
 
 async function capture(page, blockId, mode) {
   /*
@@ -162,6 +194,8 @@ async function generate() {
   for (const blockId of targets.sort()) {
     manifest[blockId] = manifest[blockId] ?? {}
 
+    const clips = {}
+
     for (const mode of MODES) {
       const { thumbnail, blur } = await capture(page, blockId, mode)
       const file = `${blockId}-${mode}.webp`
@@ -174,9 +208,25 @@ async function generate() {
         height: THUMBNAIL.height,
         blurDataUrl: `data:image/webp;base64,${blur.toString('base64')}`,
       }
+
+      const clip = await captureBlockClip(page, blockId, mode)
+
+      if (clip !== null) {
+        const clipFile = `${blockId}-${mode}.webm`
+
+        await writeFile(join(OUT_DIR, clipFile), clip)
+        clips[mode] = `/thumbnails/${clipFile}`
+      }
     }
 
-    console.log(`  ${blockId}`)
+    /*
+     * A block that stopped animating loses its clip rather than keeping a stale one. `undefined`
+     * rather than `delete`: `JSON.stringify` drops the key either way, and the sorted-keys pass below
+     * carries it through.
+     */
+    manifest[blockId].clip = Object.keys(clips).length === MODES.length ? clips : undefined
+
+    console.log(`  ${blockId}${Object.keys(clips).length === MODES.length ? ' + clip' : ''}`)
   }
 
   await writeFile(MANIFEST, `${JSON.stringify(sortKeys(manifest), null, 2)}\n`)
@@ -200,16 +250,27 @@ const sortKeys = (value) =>
         )
       : value
 
+/** Per file rather than one hash over all of them: a failing `--verify` has to name what churned. */
 const digest = async () => {
   const files = (await readdir(OUT_DIR)).sort()
-  const hash = createHash('sha256')
+  const hashes = new Map()
 
   for (const file of files) {
-    hash.update(file)
-    hash.update(await readFile(join(OUT_DIR, file)))
+    hashes.set(
+      file,
+      createHash('sha256')
+        .update(await readFile(join(OUT_DIR, file)))
+        .digest('hex'),
+    )
   }
 
-  return hash.digest('hex')
+  return hashes
+}
+
+const changed = (first, second) => {
+  const names = new Set([...first.keys(), ...second.keys()])
+
+  return [...names].filter((name) => first.get(name) !== second.get(name)).sort()
 }
 
 console.log(`generate-thumbnails: writing to ${OUT_DIR}`)
@@ -224,21 +285,37 @@ if (verify) {
   await generate()
 
   const second = await digest()
+  const differences = changed(first, second)
 
-  if (first !== second) {
-    fail(`two runs produced different bytes (${first.slice(0, 12)} vs ${second.slice(0, 12)})`)
+  if (differences.length > 0) {
+    for (const name of differences) {
+      console.error(`  churned: ${name}`)
+    }
+
+    fail(`two runs produced different bytes in ${differences.length} file(s)`)
   }
 
-  console.log(`generate-thumbnails: identical across two runs (${first.slice(0, 12)})`)
+  console.log(`generate-thumbnails: identical across two runs (${first.size} files)`)
 }
 
-console.log(`generate-thumbnails: ${written.length} block(s), ${MODES.length} modes each`)
+console.log(
+  `generate-thumbnails: ${written.length} block(s), ${MODES.length} modes each, ` +
+    `clips at ${CLIP.frames} frames / ${CLIP.fps} fps`,
+)
 
 // A stale file for a block that no longer exists would pass `check:registry` unnoticed otherwise.
 if (only === null) {
-  const expected = new Set(written.flatMap((id) => MODES.map((mode) => `${id}-${mode}.webp`)))
+  const manifest = JSON.parse(await readFile(MANIFEST, 'utf8'))
+  const expected = new Set([
+    ...written.flatMap((id) => MODES.map((mode) => `${id}-${mode}.webp`)),
+    ...written.flatMap((id) =>
+      MODES.filter((mode) => manifest[id]?.clip?.[mode] !== undefined).map(
+        (mode) => `${id}-${mode}.webm`,
+      ),
+    ),
+  ])
   const stale = (await readdir(OUT_DIR)).filter(
-    (file) => file.endsWith('.webp') && !expected.has(file),
+    (file) => (file.endsWith('.webp') || file.endsWith('.webm')) && !expected.has(file),
   )
 
   for (const file of stale) {

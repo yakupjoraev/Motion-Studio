@@ -38,6 +38,11 @@ interface ThumbnailEntry {
   readonly blurDataUrl?: unknown
 }
 
+/** ADR-182: only blocks that animate have one, and a block that has one has it in both modes. */
+interface BlockEntry extends Record<string, unknown> {
+  readonly clip?: Record<string, unknown>
+}
+
 const problems: string[] = []
 
 const complain = (message: string): void => {
@@ -47,7 +52,7 @@ const complain = (message: string): void => {
 // Definition/component parity is asserted where it can be: `registry.meta.test.ts` in the package
 // itself, which sees both maps. This script is about the half that lives outside any package.
 /** A manifest that will not parse is a broken build, and it should read as one rather than as a stack. */
-const readManifest = (): Record<string, Record<string, ThumbnailEntry>> | null => {
+const readManifest = (): Record<string, Record<string, ThumbnailEntry> & BlockEntry> | null => {
   try {
     const parsed: unknown = JSON.parse(readFileSync(MANIFEST, 'utf8'))
 
@@ -57,7 +62,7 @@ const readManifest = (): Record<string, Record<string, ThumbnailEntry>> | null =
       return null
     }
 
-    return parsed as Record<string, Record<string, ThumbnailEntry>>
+    return parsed as Record<string, Record<string, ThumbnailEntry> & BlockEntry>
   } catch (error) {
     complain(`The manifest is not readable JSON: ${error instanceof Error ? error.message : ''}`)
 
@@ -110,6 +115,28 @@ if (!existsSync(MANIFEST)) {
     }
   }
 
+  for (const id of ids) {
+    const clip = manifest[id]?.clip
+
+    if (clip === undefined) {
+      continue
+    }
+
+    for (const mode of MODES) {
+      const named = clip[mode]
+
+      if (typeof named !== 'string') {
+        complain(`${id}: the manifest has a hover clip for one mode and not for ${mode}.`)
+
+        continue
+      }
+
+      if (!existsSync(join(THUMBNAILS, `${id}-${mode}.webm`))) {
+        complain(`${id}: the manifest names a ${mode} hover clip that is not on disk.`)
+      }
+    }
+  }
+
   // A thumbnail for a block that no longer exists is worse than a missing one: it never fails, and
   // the palette shows a picture of something a user cannot place.
   for (const id of Object.keys(manifest)) {
@@ -129,4 +156,10 @@ if (problems.length > 0) {
   process.exit(1)
 }
 
-console.log(`check-registry: ${DEFINITIONS.length} blocks, ${MODES.length} thumbnails each — ok`)
+const clips =
+  manifest === null ? 0 : Object.values(manifest).filter((block) => block.clip !== undefined).length
+
+console.log(
+  `check-registry: ${DEFINITIONS.length} blocks, ${MODES.length} thumbnails each, ` +
+    `${clips} with hover clips — ok`,
+)

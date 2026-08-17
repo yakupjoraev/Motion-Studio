@@ -85,7 +85,7 @@ describe('BlocksTab', () => {
     expect(both).toBeGreaterThan(Number.parseInt(layoutOnly ?? '0', 10))
   })
 
-  it('inserts on Enter, selects the new node, and plays the hover clip for nobody under full motion', async () => {
+  it('inserts on Enter and selects the new node', async () => {
     tab()
 
     const card = screen.getByRole('button', { name: 'Section, layout block' })
@@ -101,6 +101,29 @@ describe('BlocksTab', () => {
         ? undefined
         : useStudioStore.getState().document.nodes[selected]?.blockId,
     ).toBe('section')
+  })
+
+  it('plays a block’s hover clip on hover, and only while the pointer is on it', async () => {
+    tab()
+
+    // `hero-aurora` is one of the nine blocks the generator found a running animation on (ADR-182).
+    await userEvent.type(screen.getByRole('searchbox'), 'aurora')
+
+    const card = screen.getByRole('button', { name: /^Hero — aurora/ })
+
+    expect(document.querySelector('video')).toBeNull()
+
+    await userEvent.hover(card)
+
+    const clip = screen.getByTestId('block-thumbnail-clip')
+
+    expect(clip).toHaveAttribute('preload', 'none')
+    expect(clip).toHaveAttribute('aria-hidden', 'true')
+    expect(clip.getAttribute('src')).toMatch(/hero-aurora-(dark|light)\.webm$/)
+
+    await userEvent.unhover(card)
+
+    expect(screen.queryByTestId('block-thumbnail-clip')).toBeNull()
   })
 
   it('has no accessibility violations', async () => {
