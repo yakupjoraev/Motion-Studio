@@ -112,12 +112,14 @@ interface ViewportSlice {
     rulers: boolean
     motionPaused: boolean
     previewReducedMotion: boolean
+    multiFrame: boolean             // base / md / xl side by side — ADR-162
   }
   // committed setters — call on gesture end, not during
   setZoom(zoom: number, origin?: Point): void
   setPan(pan: Point): void
   setBreakpoint(id: BreakpointId): void
   toggleGrid(): void
+  toggleMultiFrame(): void
 }
 ```
 

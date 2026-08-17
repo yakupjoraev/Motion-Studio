@@ -6486,3 +6486,223 @@ Each perf spec asserts twice:
 - Accepted: scrolling in the measurement reverses direction. Scrolling one way ran off the end of the
   document and spent most of its time over an empty artboard, which measured nothing — the first
   version of this harness did exactly that and reported frame times a third lower.
+
+## ADR-161 — A control row's breakpoint marker arrives as a node and a description
+
+**Date** 2026-08-17 · **Prompt** 35 · **Status** Accepted
+
+### Question
+`RESPONSIVE_ENGINE.md` § Editing semantics defines **three** row states: overridden at the active
+breakpoint (accent dot), inherited from a smaller one (muted dot, naming it), and the base value (no
+marker). `ControlRow` in `packages/ui` takes `overriddenAt: string`, draws one dot, and writes both
+the dot's `title` and the `sr-only` description itself. Prompt 35's deliverable list puts
+`override-indicator.tsx` in the inspector, not in `ui`. Where do the marker's markup and its wording
+live?
+
+### Criterion (set before deciding)
+The row API is right when a change to the wording of one state touches **one** file, and when the
+visible `title` and the assistive description are read from the same value rather than assembled
+twice. Count the sites that hold the text under each shape.
+
+### Measurement
+| Shape | Sites holding the wording | Sites that can disagree |
+| --- | --- | --- |
+| `overriddenAt: string` extended to three states | `control-row.tsx` (dot `title`), `control-row.tsx` (`sr-only` span), `control-row-binding.tsx` (which state, which breakpoint label) | 2 — the dot's title and the description are two literals |
+| `indicator: ReactNode` + `description: string`, both from `describeOverride()` | `override-indicator.tsx` | 0 — the component receives the same string it is given for the description |
+
+### Decision
+`ControlRowProps.overriddenAt` is replaced by two props: `indicator?: ReactNode`, rendered in the
+row's existing 8 px dot gutter, and `description?: string`, which the row puts in its `sr-only` span
+and wires into the control's `aria-describedby`. The inspector's `override-indicator.tsx` owns
+`describeOverride(state)` — the one function that turns an override state into English — and the
+dot's colour.
+
+### Consequences
+- Accepted: the row can now be handed an indicator with no description, which would be a colour-only
+  signal. The inspector is the only caller and passes both from one call; `ControlRow`'s own test
+  asserts that the description reaches `aria-describedby`.
+- Accepted: `ui` no longer says the word "breakpoint" anywhere in the control row. That is the point
+  — `UI_GUIDELINES.md` § Control rows specifies a 4 px dot and nothing about the cascade.
+- Avoided: a `state: 'overridden' | 'inherited'` union in `ui`, which would put the responsive model
+  in the package that knows least about it.
+
+## ADR-162 — Multi-frame comparison is viewport state
+
+**Date** 2026-08-17 · **Prompt** 35 · **Status** Accepted
+
+### Question
+`Mod+Shift+M` toggles the side-by-side comparison of `base`, `md` and `xl`. `STATE_MANAGEMENT.md`
+§ Store shape does not list the flag. Which slice holds it — `viewport`, `ui`, or the shell's own
+local state, as the panels do (ADR-049)?
+
+### Criterion (set before deciding)
+Two tests, both answerable from documents already written. **One**: is it a property of how the
+document is being *viewed* (like `grid`, `rulers`, `motionPaused`) or of the *chrome around it* (like
+panel widths)? **Two**: does the binding that toggles it need measured geometry, which would put it
+behind `hasCanvas` and out of the store?
+
+### Measurement
+`viewport` already holds `breakpoint`, `motionPaused` and `rulers` — three flags that change what the
+canvas shows without changing the document. Multi-frame changes which breakpoints the canvas draws:
+the same class of fact. The binding is a plain flip with no measurement, unlike `fit-document` and
+`zoom-to-selection`, the two bindings that carry `when: hasCanvas`.
+
+### Decision
+`viewport.multiFrame: boolean`, with `toggleMultiFrame()` beside `toggleRulers()`, and the shortcut
+runs off the store. `STATE_MANAGEMENT.md` § ViewportSlice is updated in the same commit as this
+entry, before the code.
+
+### Consequences
+- Accepted: the flag is not persisted, so a reload returns to the single frame. That matches its cost
+  — three live frames is not a state to be restored into unknowingly.
+- Accepted: `viewport` is now eight fields. The next addition should be weighed against splitting it.
+
+## ADR-163 — A comparison frame resolves props at its own breakpoint
+
+**Date** 2026-08-17 · **Prompt** 35 · **Status** Accepted
+
+### Question
+In the canvas a breakpoint is not a media query: `selectResolvedNode` folds `responsive[bp]` into
+`props` for `viewport.breakpoint`, and Tailwind's `md:` prefixes are a codegen concern. Multi-frame
+draws `base`, `md` and `xl` at once. What does each frame resolve against?
+
+### Criterion (set before deciding)
+The comparison is only worth rendering if the three frames can differ. Take a node with
+`responsive.md.columns = 2`: if all three frames read the store's active breakpoint, they draw the
+same number of columns at three widths, and the feature shows nothing it claims to show.
+
+### Measurement
+`selectResolvedNode(id)` keys on `[state.document.nodes[id], state.viewport.breakpoint]`. Three
+frames sharing it produce one resolution — the failure above, by construction.
+
+### Decision
+`selectResolvedNode(id, breakpoint?)` takes an optional breakpoint; absent means the store's active
+one, which leaves every existing call site unchanged. `NodeRenderer` takes the same optional prop and
+passes it to its children. The comparison frames pass theirs; the editing canvas passes none.
+
+### Consequences
+- Accepted: one more memoised selector per node per frame — three caches of size one instead of one.
+  That is the render cost the feature is off by default for.
+- Accepted: `NodeRenderer` threads a prop through the tree. It is one optional argument, and it is
+  what makes a frame a frame rather than a copy.
+
+## ADR-164 — The artboard animates its own width; the fit happens after
+
+**Date** 2026-08-17 · **Prompt** 35 · **Status** Accepted
+
+### Question
+`RESPONSIVE_ENGINE.md` § Canvas preview: switching breakpoints animates the artboard width over
+200 ms so the reflow is legible. The width is a React prop on `Canvas`. Does the host tween it, or
+does the artboard transition it in CSS?
+
+### Criterion (set before measuring)
+`PERFORMANCE.md` § The core rule: the canvas renders on commit, never per frame. Count canvas renders
+per breakpoint switch. One is the commit. Anything per frame is the rule broken.
+
+### Measurement
+CSS transition path, measured with the `__canvasRenders` counter the perf tests read (`apps/web`,
+jsdom, `setBreakpoint('base' → 'lg')` with the host mounted): **1 render per switch**. A tween in
+React state is one render per animation frame by construction — at 200 ms that is roughly 12 renders
+of the canvas root, each re-rendering the artboard and its subtree.
+
+### Decision
+The artboard carries `transition: width var(--ms-duration-quick) var(--ms-ease-standard)`. The
+duration token is the one `UI_GUIDELINES.md` § Timing's 200 ms row already resolves to in
+`chrome.css` (panel collapse → `--ms-duration-quick`, 180 ms), and it is zeroed under
+`prefers-reduced-motion` and under the studio's reduced preview by ADR-021's `--ms-reduced-motion`
+factor, so no component branches on it.
+
+What `artboard-resize.tsx` owns in `apps/web` is the other half of the requirement: once the width
+has changed, if the frame no longer fits the viewport, run `fitToRect`. It waits for the transition
+to finish before measuring, because fitting to a width that is still travelling fits the wrong rect.
+
+### Consequences
+- Accepted: 180 ms rather than the document's 200 ms. Using the token is what keeps motion scale and
+  reduced motion working; the alternative is a hard-coded duration that ignores both.
+- Accepted: the fit runs after the transition, so a fast sequence of switches fits once, at the end.
+  The pending fit is cancelled on each switch.
+- Accepted: under reduced motion the transition is 0 s and the fit runs on the next frame — the same
+  code path, because the wait is a timer of the token's own length read from the element.
+
+## ADR-165 — The editing-scope hint is tab state, held in a module
+
+**Date** 2026-08-17 · **Prompt** 35 · **Status** Accepted
+
+### Question
+The guardrail shows once per session, is dismissible, and fires after three responsive-prop commands
+within 30 seconds. Where do the counter and the dismissal live: the store, `localStorage` (as the
+inspector's open sections do, ADR-114), or a module in `apps/web`?
+
+### Criterion (set before deciding)
+What must survive what. A preference the user set deliberately survives a reload — that is ADR-114's
+reasoning for the section state. A hint the user waved away has no such claim: `RESPONSIVE_ENGINE.md`
+§ Guardrail says *once per session*, and a session ends when the tab does.
+
+### Measurement
+Three candidates against the sentence "shown once per session": `localStorage` outlives the session
+and would silence the hint forever after one dismissal; the store outlives nothing but adds a slice
+field no selector but the hint reads, and that a document load would have to leave alone; a
+module-scoped counter matches the lifetime exactly.
+
+### Decision
+`use-responsive-edit.ts` holds the counter and the dismissal in module scope, exports
+`recordResponsiveEdit()` for the commit path to call, and exposes a hook the hint subscribes to.
+Nothing about it reaches the store or `localStorage`.
+
+### Consequences
+- Accepted: module state is not resettable from the UI, so the unit tests need an exported reset. It
+  exists and is used by tests only.
+- Accepted: two tabs count independently. That is what "session" means here.
+
+## ADR-166 — The artboard is the breakpoint's frame at every breakpoint, `base` included
+
+**Date** 2026-08-17 · **Prompt** 35 · **Status** Accepted
+
+### Question
+`CanvasHost` drew `base` at `document.meta.canvas.width` (1440 by default) and every other breakpoint
+at its frame. `GLOSSARY.md` and `RESPONSIVE_ENGINE.md` § Canvas preview both say the artboard equals
+the active breakpoint's frame, and that `base` renders at 375 px. Which is it, and what is
+`meta.canvas.width` then for?
+
+### Criterion (set before deciding)
+Resolution #1: the documents answer it. Two of them say the same thing in different words
+(`GLOSSARY.md` § Frame: "`base` renders at 375 px"), and no document says the artboard follows
+document metadata.
+
+### Decision
+The artboard width is `BREAKPOINTS[active].frame` at every breakpoint, so `base` is 375 px and the
+mobile-first model is what the editor shows first. `meta.canvas.width` stays what `set-document-meta`
+made it — a document setting shown in the inspector's no-selection state — and stops driving the
+canvas.
+
+### Consequences
+- Accepted: a document authored against a 1440 artboard now opens at 375. That is the behaviour the
+  documents describe, and the correction belongs in this prompt rather than being carried further.
+- Accepted: `meta.canvas.width` is now edited in the inspector and read by nothing on the canvas. It
+  is not removed here — the file format is not this prompt's, and export has not been built yet.
+
+## ADR-167 — Container-query opt-in waits for the blocks it is declared on
+
+**Date** 2026-08-17 · **Prompt** 35 · **Status** Accepted (owner)
+
+### Question
+Prompt 35 asks for `capabilities.containerQuery` to be wired for the four blocks
+`RESPONSIVE_ENGINE.md` § Container queries names: `feature-grid` cells, `bento-grid` items,
+`stat-grid` items, `testimonial-card`. None of the four exists — they arrive with prompts 38 and 41.
+Build the mechanism now against no caller, or move it to the prompt that builds the blocks?
+
+### Options put to the owner
+1. **Build now**: add the capability to `BlockCapabilities`, wrap opted-in nodes in a
+   `container-type: inline-size` element, and test it against a fake block from the schema fixtures.
+   Prompt 38 then sets one flag per block.
+2. **Defer**: build nothing, and let prompt 38 add the capability with its first real caller.
+
+### Decision
+Option 2, decided by the owner on 2026-08-17. Prompt 38 carries the capability, the wrapper, and the
+caveat comment about container queries inside a transform-scaled canvas.
+
+### Consequences
+- Accepted: prompt 35 closes with one of its Done-when boxes owned by prompt 38, stated in the
+  session report rather than silently ticked.
+- Avoided: a capability field, a render wrapper and a test whose only subject is a fixture — the
+  "abstraction with one speculative caller" the global rules forbid.
