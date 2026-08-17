@@ -8,6 +8,7 @@ import { type PresetId, PRESETS as THEME_PRESETS } from '@motion-studio/theme'
 import { useMemo } from 'react'
 
 import { useStudioStore } from '../../../store/editor-store'
+import { insertBlockAtSelection } from '../left-panel/blocks/use-insert-block'
 import type { StudioShortcutContext } from '../shortcuts/shortcut.types'
 import { studioShortcuts } from '../shortcuts/studio-registry'
 
@@ -103,23 +104,9 @@ export function usePaletteItems(context: StudioShortcutContext): readonly Palett
             return
           }
 
-          const parentId = selected ?? current.document.rootId
-          const parent = current.document.nodes[parentId]
-          const slot =
-            parent === undefined ? undefined : blockRegistry.get(parent.blockId)?.slots[0]?.name
-
-          if (parent === undefined || slot === undefined) {
-            return
-          }
-
-          current.dispatch(
-            commands.insertBlock({
-              blockId: definition.id,
-              parentId,
-              slot,
-              index: parent.children.length,
-            }),
-          )
+          // The one implementation of "where does a new block land" — the same one the block palette
+          // and paste use. This used to walk the document itself, which was a second set of rules.
+          insertBlockAtSelection(definition)
         },
       })
     }
