@@ -63,8 +63,29 @@ export interface BlockCapabilities {
   readonly supportsMotion: readonly MotionChannel[]
   readonly costClass: 'cheap' | 'moderate' | 'heavy'
   readonly minWidth?: number
+  readonly requiresFlexParent?: boolean    // ADR-115
+  readonly containerQuery?: boolean        // RESPONSIVE_ENGINE.md § Container queries
 }
 ```
+
+`containerQuery` says the block sizes its own cells against the width they are given rather than
+against the viewport: it draws a `container-type: inline-size` element around each cell and reaches for
+`@sm:` / `@md:` classes inside it. Four blocks declare it — `feature-grid`, `bento-grid`,
+`testimonial-card`, and `stat-grid` when it arrives. It is opt-in because a `@container` inside the
+transform-scaled artboard answers the query with the untransformed width, which is right for the export
+and slightly wrong for the preview.
+
+The two codegen fields that exist for a block that cannot finish its own story:
+
+```ts
+readonly notes?: readonly string[]        // comments the printers emit above the element
+readonly structuredData?: { readonly type: 'FAQPage'; readonly enabledBy: string }
+```
+
+`notes` is where `newsletter-form` says its submit handler is a no-op the reader has to replace.
+`structuredData` is where `faq-accordion` says the export emits `FAQPage` JSON-LD when the user asked
+for it — beside the element, never inside the canvas, because a `<script>` in an artboard is markup the
+user can neither see nor select.
 
 ## Controls drive the inspector
 

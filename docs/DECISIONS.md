@@ -7243,3 +7243,70 @@ After all three: the indicator sat on the bottom edge of the second heading and 
   fix than this prompt owns — reported rather than quietly patched.
 - Accepted: `remeasure` reads layout for every observed node in one pass at drag start. 200 nodes, one
   batched read, which is what the cache does on every document edit already.
+
+## ADR-184 — Container queries are the block's own wrapper, not the canvas's
+
+**Date** 2026-08-17 · **Prompt** 38 · **Status** Accepted · Closes the carry-over of ADR-167
+
+### Question
+ADR-167 deferred `capabilities.containerQuery` to this prompt, with "the capability, the wrapper, and
+the caveat comment". Where does the `container-type: inline-size` element live — in `NodeWrapper`, which
+already surrounds every node on the canvas, or inside the block that opted in?
+
+### Criterion
+COMPONENT_LIBRARY.md § Rules 1 and the export honesty property it protects: the same component runs in
+the canvas and in the user's app. A containment element the canvas draws exists in the preview and not
+in the export, so a cell that reads `@md:` inside the studio would read nothing after export. Whichever
+option keeps one element in both is the correct one; there is nothing to measure.
+
+### Decision
+The block draws it. `feature-grid`, `bento-grid` and `testimonial-card` put `@container` on the element
+that owns a cell's width, and their contents step at `@sm:` / `@md:`. `capabilities.containerQuery` is a
+declaration for the inspector and the responsive panel to read, not an instruction to the renderer.
+
+### Consequences
+- Accepted: the caveat ADR-167 named is real and stays. A `@container` measures the *untransformed*
+  inline size, so a cell 320 px wide at zoom 0.5 answers the query for 320 and not for 160. That is the
+  behaviour the exported page has, and the preview is the surface that is slightly wrong — stated in
+  `RESPONSIVE_ENGINE.md` § Container queries and in the capability's own doc comment.
+- Accepted: a block that wants container behaviour has to spend an element on it, which is one more
+  `div` in the export than a viewport-sized block emits.
+- Rejected: `NodeWrapper` growing a `containerQuery` branch. It would be one flag in one place and it
+  would make the preview and the export disagree, which is the one thing this registry is built not to
+  do.
+
+## ADR-185 — A block that cannot finish its own story says so in the codegen descriptor
+
+**Date** 2026-08-17 · **Prompt** 38 · **Status** Accepted
+
+### Question
+Two of the twelve marketing blocks carry something that belongs in the *export* and not in the canvas.
+`newsletter-form` has a submit handler that is deliberately a no-op, and prompt 38 requires the generated
+code to say where the user plugs theirs in. `faq-accordion` has an optional `FAQPage` JSON-LD emission
+that prompt 38 requires to be generated in codegen and **not** rendered in the canvas. Neither has
+anywhere to live: `CodegenDescriptor` carries a tag, imports, dependencies and passthrough props.
+
+### Criterion
+The descriptor is the registry's only channel to the printers (EXPORT_ENGINE.md § buildIR reads it off
+the definition), and the printers arrive in prompts 42–44. So the question is whether either fact can be
+derived by a printer from what is already there. A handler being a no-op is not visible in props — the
+default is a function, and the schema has no function. A JSON-LD block is not derivable either: nothing
+in the props says "this shape is a FAQPage". Both are facts the block knows and nothing else can infer,
+which is what the descriptor is for.
+
+### Decision
+Two additive fields, each with one caller today and a printer contract stated now:
+
+- `notes?: readonly string[]` — comments the printers emit above the element, verbatim.
+- `structuredData?: { type: 'FAQPage'; enabledBy: string }` — `enabledBy` names the boolean prop that
+  turns it on, so the export follows the user's answer instead of emitting it for everybody.
+
+### Consequences
+- Accepted: two fields nothing reads until prompt 43. They are data on a definition rather than
+  behaviour, the meta-test checks them like the rest of the descriptor, and the alternative — a printer
+  in prompt 43 growing a list of block ids it knows by name — is the drift this registry exists to avoid.
+- Accepted: `structuredData.type` is a single-member union today. A second type widens it, and a printer
+  that switches on it fails to compile until it handles the new one, which is the failure mode worth
+  having.
+- Accepted: the canvas renders no JSON-LD at all, so a user cannot preview it. It is invisible markup
+  either way; the export report (EXPORT_ENGINE.md § Warnings) is where it becomes visible.

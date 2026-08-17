@@ -172,9 +172,16 @@ capabilities: { containerQuery: true }
 Which emits `@container` and `@sm:`/`@md:` classes with a `container-type: inline-size` wrapper.
 Available for: `feature-grid` cells, `bento-grid` items, `stat-grid` items, `testimonial-card`.
 
+**The block draws that wrapper, not the canvas** (ADR-184). The capability is a declaration the
+inspector and this engine read; the containment element is part of the block's own markup, because a
+containment element the canvas added would exist in the preview and not in the export, and the cell
+would read `@md:` in the studio and nothing at all after export.
+
 Not the default — container queries in a canvas that is itself scaled by a transform behave
 subtly differently from a real page, and using them everywhere would make the preview less
-trustworthy.
+trustworthy. Concretely: a `@container` reports the **untransformed** inline size, so a cell 320 px
+wide at zoom 0.5 answers the query for 320. That is what the exported page does; the preview is the
+surface that is slightly wrong, and only the blocks that need cell-relative sizing pay for it.
 
 ## Testing
 

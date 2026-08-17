@@ -90,7 +90,15 @@ does not use the HTML5 drag API, which cannot render a custom preview reliably.
 
 ### Radix UI
 Dialog, Popover, Dropdown, Tooltip, Tabs, Slider, Switch, Toggle Group, Context Menu,
-Scroll Area, Collapsible. Unstyled, correct, accessible. This is the studio chrome's skeleton.
+Scroll Area, Collapsible, Accordion. Unstyled, correct, accessible. This is the studio chrome's
+skeleton.
+
+Accordion is the one Radix primitive that a **block** takes rather than the chrome: `faq-accordion` and
+the `accordion` interactive block are exported into the user's project, so the dependency travels with
+them through the codegen descriptor's `dependencies` and is installed by the emitted `package.json`.
+`packages/blocks` depends on `@radix-ui/react-accordion` directly for that reason — a block that
+imported the primitive through `@motion-studio/ui` would export code that does not compile outside this
+repository.
 
 ### React Aria (`react-aria` / `react-stately`)
 Used where Radix does not reach: the colour picker (`useColorArea`, `useColorSlider`) and the
