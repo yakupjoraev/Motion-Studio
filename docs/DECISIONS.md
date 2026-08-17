@@ -7310,3 +7310,151 @@ Two additive fields, each with one caller today and a printer contract stated no
   having.
 - Accepted: the canvas renders no JSON-LD at all, so a user cannot preview it. It is invisible markup
   either way; the export report (EXPORT_ENGINE.md § Warnings) is where it becomes visible.
+
+## ADR-186 — The marquee blocks lay out their own track, from the preset's own stylesheet
+
+**Date** 2026-08-17 · **Prompt** 38 · **Status** Accepted
+
+### Question
+Prompt 38 requires `testimonial-marquee` and `logo-cloud` to use the `marquee` preset rather than a
+local implementation, and requires `testimonial-marquee` to run **several rows in alternating
+directions**. A motion channel animates the wrapper `NodeMotion` puts around a node, and a node has
+exactly one wrapper — so `defaultMotion: { scroll: marquee }` can move the whole block in one direction
+and nothing else. How does the block get three rows going two ways without a second implementation?
+
+### Criterion
+"One implementation" is checkable: the keyframes, the track's layout rule and the pause-on-hover rule
+must exist as **one text** in the repository. Anything that copies those three declarations into a
+second file is the drift the prompt names, no matter how it is spelled.
+
+### Decision
+`marquee.ts` in `packages/motion` exports what it already had inside its `resolve`:
+`MARQUEE_CLASS`, `MARQUEE_PAUSABLE_CLASS`, `MARQUEE_CSS` and `marqueeCssVars(params)`. `resolve` and
+`codegen` now emit those constants, and the two blocks render a track per row carrying the same class,
+the same custom properties and one `<style>` holding the same `MARQUEE_CSS` — the same thing `CssMotion`
+does for a node, in the one place where the row rather than the node is the animated element.
+
+Content narrower than the container is handled without measuring anything. `marqueeTrack(contentWidth,
+containerWidth)` — exported since prompt 32 — answers the copy count from two widths, and a block is not
+allowed to read either (COMPONENT_LIBRARY.md § Rules 1: no `window` in render). The CSS equivalent is one
+declaration: each row holds **two** copies, each `min-w-full`, so a copy is never narrower than the
+container and the −50 % translate always travels exactly one copy. `marqueeTrack` stays for a caller that
+does have the widths — the export report and the canvas both do.
+
+### Consequences
+- Accepted: two blocks ship a `<style>` element, which the export carries into the user's project
+  verbatim. That is what `blocks.css` already does for the aurora, for the reason stated there: a
+  stylesheet fragment is the one form that survives every export target unchanged.
+- Accepted: the rows animate without the motion channel, so a user cannot retune their duration from the
+  Motion panel — it is a prop of the block instead (`speed`), and the block declares no `scroll` channel
+  so the panel does not offer one it cannot honour.
+- Accepted: `blocks.css` owns two things the preset does not — the edge mask, which belongs to the row
+  and not to the animation, and the reduced-motion fallback that turns the track into a wrapping grid.
+  A `width: max-content` flex row with its animation switched off would simply overflow with half its
+  content unreachable, which is worse than no marquee.
+
+## ADR-187 — The marketing blocks load eagerly, because lazy buys nothing
+
+**Date** 2026-08-17 · **Prompt** 38 · **Status** Accepted
+
+### Question
+Twelve blocks arrived. `/studio` first-load JS is capped at 250 kB gzip and has been over it since
+ADR-179 (282.4 kB, on the owner's call). Prompt 26 moved two of nine content blocks into `lazy` and
+bought 6 kB. Which of these twelve should be dynamic?
+
+### Criterion (set before measuring)
+Measured off `app-build-manifest.json`, the method of ADR-152. A block moves to `lazy` if doing so takes
+at least **5 kB** off `/studio` — enough to be worth a Suspense skeleton and a request per node, and well
+clear of the 0.1 kB noise floor the earlier measurements showed.
+
+### Measurement
+- All twelve eager: **286.7 kB**
+- `faq-accordion` lazy — the one block with an external dependency (`@radix-ui/react-accordion`):
+  **286.7 kB**, a difference of zero
+- All twelve lazy: **286.9 kB** — 0.2 kB *worse*, which is the twelve `lazy` wrappers themselves
+
+### Decision
+All twelve stay eager. The components were never in the first chunk: the 4.3 kB these blocks added to
+`/studio` (282.4 → 286.7) is their **metadata** — schemas, defaults, control descriptors — which the store
+fixes at creation time (ADR-102), and an import boundary around a component cannot move it.
+
+### Consequences
+- Accepted: `/studio` is now **286.7 kB** against a 250 kB budget. The overage predates this prompt
+  (ADR-179) and this prompt adds 4.3 kB of it. Escalated again in the session report, with the only two
+  levers that would actually work: a registry the store loads by category on demand, or a metadata format
+  the definitions are compiled into. Both are their own prompt.
+- Accepted: a document is 12 blocks richer at no runtime cost — a marketing block a user has not placed
+  costs nothing but its metadata either way.
+- Rejected: moving blocks to `lazy` "because the content category did". The measurement is what
+  distinguishes the two cases, and the number here is zero.
+
+## ADR-188 — What the side-by-side against the reference changed
+
+**Date** 2026-08-17 · **Prompt** 38 · **Status** Accepted
+
+### Question
+Prompt 38 requires the assembled page to be compared with [impeccable.style](https://impeccable.style)
+and the verdict reported, fixing **defaults** where the comparison finds something. What did it find, and
+which of it is a defect rather than a difference in character?
+
+### Criterion
+A finding only changes code if it is checkable: a rule in `docs/`, a measurement, or a stated typographic
+fact. Anything that is only "the reference does it differently" is reported as a difference and left alone —
+ADR-144 already established that this reference is a design-vocabulary tool rather than a component gallery,
+so matching its look is not the goal; meeting its standard of finish is.
+
+### What changed, and why each one is checkable
+1. **Section headings take `text-display-2`.** DESIGN_SYSTEM.md § Typography assigns that token to "Fluid
+   section" in as many words, and the blocks were using `text-3xl md:text-4xl` — capping at 48 px where the
+   token gives `clamp(2rem, 4.5vw, 3.5rem)`. Specified, and the code contradicted it.
+2. **Body copy moved onto the right step of our scale.** § Typography puts `sm` at 12 px, `base` at 14 and
+   `md` at 16, and calls 16 "page body"; a feature cell was rendering its sentence at 12 px because
+   `text-sm` reads as 14 px in stock Tailwind and 12 px here. Eight places corrected — feature cells, plan
+   descriptions and feature lists, the matrix, the attribution rows, the form's label, note and message.
+3. **The CTA band's gradient starts at `accent`, not `accent-hover`.** In dark mode the accent ramp runs
+   *lighter* for interaction states, so hover → active is violet 300 → 200: 86 % → 92.5 % lightness at 0.068
+   and 0.036 chroma, which paints a pastel rectangle with no visible gradient. `accent` is violet 400 at
+   0.156 chroma, so the pair spans 70 % → 92.5 %. Every stop is still on the ramp
+   `packages/tokens/semantic/contrast.test.ts` proves `foreground-onAccent` against.
+4. **The secondary button on an accent band takes a 10 % tint.** Transparent beside a filled primary, it
+   read as unstyled text rather than as the second of two choices.
+5. **The "Most popular" badge is centred on the top edge** rather than inset from the right, over a card
+   whose content is centred.
+6. **The highlighted plan gets `bg-surface-2`.** Paint only — the geometry that decides its neighbours'
+   height is untouched, which the measurement below confirms.
+7. **Cards in a marquee row are the same height, with the attribution on the bottom edge.** `mt-auto` on the
+   caption and a `grid` wrapper; `flex` was tried first and collapsed the card to 50 px, because a flex item
+   sizes to its content on the main axis and the main axis here had to stay at 20rem.
+
+### Measurements taken during the pass (prod build, Chrome 1440 × 900 unless stated)
+- Pricing highlight: sibling heights **437 / 437 / 437 px** highlighted and unhighlighted — the assertion
+  prompt 38 asks for, made where layout actually exists.
+- Nested radius: media plate 16 px holding its image 8 px in → image **8 px**; toggle plate 12 px holding a
+  button 4 px in → button **8 px**. Both are `innerRadius` spent through `innerRadiusClass`.
+- Reduced motion: live animations **9 → 0**, both marquee tracks `animation-name: none`, `flex-wrap: wrap`,
+  track width equal to its row (1232 px), edge mask off, all 15 testimonials visible.
+- 360 / 768 / 1440: `scrollWidth === clientWidth` at all three. Comparison table at 360 scrolls inside
+  itself (640 → 310 px) with the first column pinned at 1 px through a 220 px scroll.
+- Container query: the same testimonial card at 320 px sets its quote at 18 px and at 900 px at **22 px**.
+- Section rhythm: 128 px of vertical padding on the eight content sections, 64 px on the logo row and the two
+  CTA bands — the two densities the `padding` prop names.
+
+### The verdict, stated
+Against the reference the blocks hold on finish: surface values, hairline borders, concentric corners,
+tabular numerals, one accent used consistently, and a reduced-motion path that leaves a composition rather
+than a gap. They differ in **character** in three ways, all of them traceable to our own documents rather
+than to an oversight:
+- the reference sets its headlines at weight 100–200; DESIGN_SYSTEM.md § Typography allows 400–700 and
+  states why ("No 300 — it fails contrast at small sizes on dark surfaces"), so the document wins;
+- the reference left-aligns almost everything, while our section header defaults to centred. `headingAlign`
+  is a prop and a per-document choice, so this is the user's to make rather than ours to fix;
+- the reference varies its section padding (113 / 112 / 120 / 158 px measured); ours has two stated
+  densities. Variation without a rule is what makes a page look assembled from parts, so this stays.
+
+### Consequences
+- Accepted: the type-scale correction touched eight files after the blocks were written and tested. The
+  underlying trap is worth stating: **`text-sm` means 12 px here and 14 px in stock Tailwind**, so a habit
+  imported from other projects renders a size smaller than intended everywhere.
+- Accepted: the dark-mode CTA band is a *light* rectangle on a dark page, because in dark mode
+  `foreground-onAccent` is near-black and accent surfaces have to be light to carry it. That is the design
+  system being consistent, not the band being wrong.

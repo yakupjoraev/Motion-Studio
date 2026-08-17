@@ -252,6 +252,14 @@ carries the measurements.
 `testimonial-marquee` · `logo-cloud` · `cta-banner` · `cta-split` · `faq-accordion` ·
 `comparison-table` · `newsletter-form`
 
+All twelve share one section frame — the band's vertical rhythm, the measure inside it, and the
+eyebrow/heading/description header with its `headingLevel` prop — rendered by
+`marketing/marketing-section.tsx`, for the reason ADR-118 gives about the hero copy stack. They also share
+one card surface (`marketing/card.styles.ts`), one CTA button, and `innerRadiusClass`, which is how the
+nested-radius rule reaches a Tailwind class. Two of them lay out their own `marquee` track from the preset's
+own stylesheet rather than from a second implementation (ADR-186); `faq-accordion` is the one block in the
+category that takes an external dependency, and it travels through the codegen descriptor.
+
 ### Navigation (6)
 `navbar` · `navbar-floating` · `sidebar-nav` · `footer` · `breadcrumbs` · `dock`
 

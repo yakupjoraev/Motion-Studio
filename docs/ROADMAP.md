@@ -136,7 +136,8 @@ Deliverables:
 - Breakpoint switcher, artboard resize animation, override indicators, reset affordances
 - The editing-scope guardrail hint
 - Theme builder panel wired to the document
-- Container-query opt-in for the blocks that need it
+- Container-query opt-in for the blocks that need it — deferred to M8 by ADR-167 and delivered with
+  the marketing blocks that declare it (ADR-184)
 
 **Done when:** the cascade tests pass (including the "does not leak downward" case), overrides are
 visible and resettable, resetting removes the key rather than writing the base value, and the
