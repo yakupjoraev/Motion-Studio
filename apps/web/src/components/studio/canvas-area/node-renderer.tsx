@@ -3,7 +3,7 @@
 import { EffectStack, blockRegistry, renderRegistry } from '@motion-studio/blocks'
 import { NodeWrapper } from '@motion-studio/canvas'
 import { selectors } from '@motion-studio/editor'
-import type { NodeId } from '@motion-studio/schema'
+import type { BreakpointId, NodeId } from '@motion-studio/schema'
 import { type ComponentType, type ReactNode, Suspense, memo, useCallback, useMemo } from 'react'
 
 import { useStudioStore } from '../../../store/editor-store'
@@ -16,8 +16,14 @@ import { NodeMotion } from './node-motion'
  * editing node 7 re-renders node 7; `memo` on `id` keeps a parent's re-render from cascading into
  * children that did not change.
  */
-export const NodeRenderer = memo(function NodeRenderer({ id }: { readonly id: NodeId }) {
-  const select = useMemo(() => selectors.selectResolvedNode(id), [id])
+export interface NodeRendererProps {
+  readonly id: NodeId
+  /** ADR-163. Absent means the breakpoint being edited; a comparison frame passes its own. */
+  readonly breakpoint?: BreakpointId | undefined
+}
+
+export const NodeRenderer = memo(function NodeRenderer({ id, breakpoint }: NodeRendererProps) {
+  const select = useMemo(() => selectors.selectResolvedNode(id, breakpoint), [breakpoint, id])
   const node = useStudioStore(useCallback((state) => select(state), [select]))
 
   if (node === undefined || node.hidden) {
@@ -41,7 +47,9 @@ export const NodeRenderer = memo(function NodeRenderer({ id }: { readonly id: No
   // inspector and the exporter all resolve a prop the same way.
   const parsed = definition.propsSchema.safeParse(node.props)
 
-  const children: ReactNode = node.children.map((child) => <NodeRenderer id={child} key={child} />)
+  const children: ReactNode = node.children.map((child) => (
+    <NodeRenderer breakpoint={breakpoint} id={child} key={child} />
+  ))
 
   return (
     <NodeWrapper id={id}>

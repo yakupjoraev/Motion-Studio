@@ -3,6 +3,7 @@ import { type ReactElement, type ReactNode, useState } from 'react'
 
 import { ScrubField } from '../scrub-field/index'
 import { ControlRow } from './control-row'
+import { controlRowDotStyles } from './control-row.styles'
 
 const meta = {
   title: 'Controls/ControlRow',
@@ -51,7 +52,13 @@ export const States: Story = {
       <ControlRow label="Padding" modified onReset={() => undefined}>
         {() => <NumberField label="Padding" />}
       </ControlRow>
-      <ControlRow label="Gap" overriddenAt="Tablet" onReset={() => undefined}>
+      <ControlRow
+        description="Overridden at Medium"
+        indicator={<span className={controlRowDotStyles()} title="Overridden at Medium" />}
+        label="Gap"
+        modified
+        onReset={() => undefined}
+      >
         {() => <NumberField label="Gap" />}
       </ControlRow>
       <ControlRow label="Blur" mixed>

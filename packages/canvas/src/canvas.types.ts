@@ -1,5 +1,7 @@
 import type { NodeId } from '@motion-studio/schema'
 
+import type { CanvasRect, ViewportRect, ViewportTransform } from './coords/index'
+
 /**
  * What geometry needs off a node, and nothing else. The shape is `schema`'s `Node`, narrowed: the
  * canvas has no use for props, motion, or effects, and a narrower port is a smaller fake in a test.
@@ -108,4 +110,23 @@ export interface CanvasSelectionPort {
   hover(id: NodeId | null): void
   /** ADR-080: the canvas resolves the step and has no coordinates to apply it to. */
   nudge(dx: number, dy: number): void
+}
+
+/**
+ * The measured half of the canvas, handed out on mount — the one thing a host cannot compute for
+ * itself, because the transform lives in a ref inside the canvas and the artboard's height is
+ * whatever the content came to.
+ *
+ * Deliberately four readers and one command: everything else a host wants to do to the viewport it
+ * does by rendering a different `artboardWidth`.
+ */
+export interface CanvasHandle {
+  /** Canvas units — the artboard's own box, which is what a document fit measures. */
+  documentRect(): CanvasRect
+  /** Screen pixels — the canvas element's box. */
+  viewportRect(): ViewportRect
+  /** The live transform. Read it in a handler, never during render. */
+  transform(): ViewportTransform
+  /** `fitToRect` on the artboard, capped at 1:1 — CANVAS.md § Zoom. */
+  fitDocument(): void
 }

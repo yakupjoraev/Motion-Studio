@@ -131,6 +131,20 @@ describe('selectResolvedNode', () => {
     expect(select(editor.getState())?.props).toEqual({ gap: 24, align: 'start' })
   })
 
+  it('resolves against the breakpoint it was given, whatever the store is showing', () => {
+    const editor = createTestStore({ document: responsive() })
+    const atLarge = selectResolvedNode(id('root'), 'lg')
+    const atBase = selectResolvedNode(id('root'), 'base')
+
+    // ADR-163: this is what makes a comparison frame a comparison rather than a second copy.
+    expect(atLarge(editor.getState())?.props).toEqual({ gap: 24, align: 'start' })
+    expect(atBase(editor.getState())?.props).toEqual({ gap: 8, align: 'start' })
+
+    editor.getState().setBreakpoint('lg')
+
+    expect(atBase(editor.getState())?.props).toEqual({ gap: 8, align: 'start' })
+  })
+
   it('keeps its reference when a different node changed', () => {
     const editor = createTestStore({
       document: doc(tree({ root: ['a'], a: [] }), { rootId: id('root') }),

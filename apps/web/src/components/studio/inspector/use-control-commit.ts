@@ -10,6 +10,8 @@ import { useCallback, useEffect, useMemo, useRef } from 'react'
 
 import { useStudioStore } from '../../../store/editor-store'
 
+import { editCoalesceKey, propCommand, recordResponsiveEdit } from './use-responsive-edit'
+
 const valueAt = (source: unknown, path: string): unknown =>
   path.split('.').reduce<unknown>((held, key) => {
     if (typeof held !== 'object' || held === null) {
@@ -61,19 +63,19 @@ export function useControlCommit(
   const commit = useCallback((value: unknown) => {
     const { descriptor: control, nodeIds: ids, breakpoint: active } = held.current
     const state = useStudioStore.getState()
-    const key = `inspector:${control.path}:${active}`
+    const key = editCoalesceKey(active, control.path)
 
-    const list = ids.map((nodeId) =>
-      active === 'base'
-        ? commands.setProp({ nodeId, path: control.path, value })
-        : commands.setResponsiveProp({ nodeId, breakpoint: active, path: control.path, value }),
-    )
+    const list = ids.map((nodeId) => propCommand(active, nodeId, control.path, value))
 
     if (list.length === 0) {
       return
     }
 
     state.dispatchBatch(list, `Set ${control.label.toLowerCase()}`, key)
+
+    if (active !== 'base') {
+      recordResponsiveEdit(key)
+    }
   }, [])
 
   return useMemo<ControlCommit>(() => {

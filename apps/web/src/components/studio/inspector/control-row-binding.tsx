@@ -1,10 +1,10 @@
 'use client'
 
 import type { ControlDescriptor, NodeId } from '@motion-studio/schema'
-import { BREAKPOINTS } from '@motion-studio/schema'
 import { ControlRenderer, ControlRow } from '@motion-studio/ui'
 import { memo } from 'react'
 
+import { OverrideIndicator, describeOverride } from './override-indicator'
 import { useControlCommit } from './use-control-commit'
 import { useControlValue } from './use-control-value'
 
@@ -18,16 +18,18 @@ export interface ControlRowBindingProps {
  * that connect them to the store. Nothing here knows which block it is editing.
  */
 function ControlRowBindingImpl({ descriptor, nodeIds }: ControlRowBindingProps) {
-  const { value, mixed, overriddenAt, modified } = useControlValue(descriptor.path, nodeIds)
+  const { value, mixed, override, modified } = useControlValue(descriptor.path, nodeIds)
   const { onChange, onCommit, onReset } = useControlCommit(descriptor, nodeIds)
+  const description = describeOverride(override)
 
   return (
     <ControlRow
+      indicator={<OverrideIndicator state={override} />}
       label={descriptor.label}
       mixed={mixed}
       modified={modified}
       onReset={onReset}
-      {...(overriddenAt === undefined ? {} : { overriddenAt: BREAKPOINTS[overriddenAt].label })}
+      {...(description === undefined ? {} : { description })}
     >
       {(slot) => (
         <ControlRenderer

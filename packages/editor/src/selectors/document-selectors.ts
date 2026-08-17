@@ -1,5 +1,6 @@
 import {
   type BlockId,
+  type BreakpointId,
   type MotionDocument,
   type Node,
   type NodeId,
@@ -84,9 +85,17 @@ export const selectFlatLayers = createVersionedSelector<EditorState, readonly La
  * identity across an edit somewhere else — and keying on the document instead would allocate a new
  * object for all 200 nodes on every keystroke, which is a re-render each.
  */
-export const selectResolvedNode = (id: NodeId): ((state: EditorState) => Node | undefined) =>
+export const selectResolvedNode = (
+  id: NodeId,
+  /**
+   * ADR-163. Absent means the breakpoint being edited, which is every call site but one: a
+   * comparison frame draws a breakpoint that is not the active one and must resolve against its own,
+   * or the three frames differ in width and agree on everything else.
+   */
+  breakpoint?: BreakpointId,
+): ((state: EditorState) => Node | undefined) =>
   createVersionedSelector<EditorState, Node | undefined>(
-    (state) => [state.document.nodes[id], state.viewport.breakpoint],
+    (state) => [state.document.nodes[id], breakpoint ?? state.viewport.breakpoint],
     (state) => {
       const node = state.document.nodes[id]
 
@@ -94,6 +103,9 @@ export const selectResolvedNode = (id: NodeId): ((state: EditorState) => Node | 
         return undefined
       }
 
-      return { ...node, props: resolveResponsiveProps(node, state.viewport.breakpoint) }
+      return {
+        ...node,
+        props: resolveResponsiveProps(node, breakpoint ?? state.viewport.breakpoint),
+      }
     },
   )

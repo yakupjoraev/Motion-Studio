@@ -106,6 +106,31 @@ describe('Canvas', () => {
     expect(() => renderHook(() => useViewportContext())).toThrow(/inside the Canvas/)
   })
 
+  it('hands out a handle on mount and takes it back on unmount', () => {
+    const onReady = vi.fn()
+    const { unmount } = renderCanvas({ onReady, artboardWidth: 768 })
+
+    const handle = onReady.mock.calls[0]?.[0]
+
+    expect(handle).not.toBeNull()
+    expect(handle.documentRect().width).toBe(768)
+    expect(handle.transform().zoom).toBe(1)
+
+    handle.fitDocument()
+
+    act(() => {
+      vi.advanceTimersToNextFrame()
+    })
+
+    // jsdom measures a zero-sized viewport, so the fit floors at the minimum zoom — what is under
+    // test is that the call reaches the viewport at all.
+    expect(handle.transform().zoom).toBeLessThan(1)
+
+    unmount()
+
+    expect(onReady).toHaveBeenLastCalledWith(null)
+  })
+
   it('is one tab stop that names itself, with an overlay layer and a live region', () => {
     renderCanvas()
 

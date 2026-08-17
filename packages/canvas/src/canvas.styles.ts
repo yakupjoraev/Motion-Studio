@@ -12,7 +12,14 @@ export const CANVAS_ROOT_CLASS =
 
 export const SCENE_CLASS = 'absolute top-0 left-0 origin-top-left'
 
-export const ARTBOARD_CLASS = 'relative min-h-[600px] bg-surface-0'
+/**
+ * ADR-164: the width transition is a CSS declaration on the element that owns the width, so
+ * switching breakpoints costs the canvas one render rather than one per frame. The token carries
+ * `--ms-reduced-motion`, so the transition is 0 s under a reduced-motion preference and under the
+ * studio's own reduced preview without a branch here — ADR-021.
+ */
+export const ARTBOARD_CLASS =
+  'relative min-h-[600px] bg-surface-0 [transition:width_var(--ms-duration-quick)_var(--ms-ease-standard)]'
 
 /**
  * Two radial gradients on one element: the dots and every tenth one stronger. Sized in canvas units,

@@ -22,6 +22,7 @@ export const INITIAL_VIEWPORT: ViewportState = {
   rulers: true,
   motionPaused: false,
   previewReducedMotion: false,
+  multiFrame: false,
 }
 
 const quantise = (zoom: number): number => round(clamp(zoom, ZOOM_MIN, ZOOM_MAX), ZOOM_PRECISION)
@@ -96,6 +97,13 @@ export const createViewportSlice: () => SliceCreator<ViewportSlice> = () => (set
     const current = get().viewport
 
     set({ viewport: { ...current, rulers: !current.rulers } }, false, 'toggleRulers')
+  },
+
+  /** ADR-162. Off by default: three live frames is three times the render cost of one. */
+  toggleMultiFrame() {
+    const current = get().viewport
+
+    set({ viewport: { ...current, multiFrame: !current.multiFrame } }, false, 'toggleMultiFrame')
   },
 
   toggleMotionPaused() {

@@ -50,25 +50,34 @@ describe('ControlRow', () => {
     expect(screen.getByTestId('composite')).toHaveFocus()
   })
 
-  it('draws the accent dot and names the breakpoint when overridden', () => {
-    const { container } = render(
-      <ControlRow label="Radius" overriddenAt="Tablet" onReset={() => undefined}>
+  it('puts the marker in the gutter and its words on the control', () => {
+    render(
+      <ControlRow
+        description="Overridden at Medium"
+        indicator={<span data-testid="marker" />}
+        label="Radius"
+        modified
+        onReset={() => undefined}
+      >
         {Composite}
       </ControlRow>,
     )
 
-    expect(container.querySelector('[title="Overridden at Tablet"]')).not.toBeNull()
-    expect(screen.getByTestId('composite')).toHaveAccessibleDescription('Overridden at Tablet')
+    // ADR-161: the visible marker and the description a screen reader hears are one call, so they
+    // cannot disagree.
+    expect(screen.getByTestId('marker')).toBeInTheDocument()
+    expect(screen.getByTestId('composite')).toHaveAccessibleDescription('Overridden at Medium')
   })
 
-  it('offers the reset affordance without a dot when the value merely differs', () => {
-    const { container } = render(
+  it('offers the reset affordance without a marker when the value merely differs', () => {
+    render(
       <ControlRow label="Radius" modified onReset={() => undefined}>
         {Composite}
       </ControlRow>,
     )
 
-    expect(container.querySelector('[title^="Overridden at"]')).toBeNull()
+    expect(screen.queryByTestId('marker')).toBeNull()
+    expect(screen.getByTestId('composite')).not.toHaveAccessibleDescription()
     expect(reset()).toBeEnabled()
   })
 
@@ -120,7 +129,13 @@ describe('ControlRow', () => {
   it('has no axe violations in any of the three states', async () => {
     const { container } = render(
       <>
-        <ControlRow label="Radius" overriddenAt="Tablet" onReset={() => undefined}>
+        <ControlRow
+          description="Overridden at Medium"
+          indicator={<span />}
+          label="Radius"
+          modified
+          onReset={() => undefined}
+        >
           {(slot) => <Composite {...slot} />}
         </ControlRow>
         <ControlRow label="Padding" modified onReset={() => undefined}>

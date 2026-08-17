@@ -7,7 +7,6 @@ import { Label } from '../../label/index'
 import {
   controlRowControlStyles,
   controlRowDotSlotStyles,
-  controlRowDotStyles,
   controlRowLabelStyles,
   controlRowResetStyles,
   controlRowStyles,
@@ -26,7 +25,8 @@ import type { ControlRowProps } from './control-row.types'
 export function ControlRow({
   label,
   children,
-  overriddenAt,
+  indicator,
+  description,
   modified = false,
   mixed = false,
   onReset,
@@ -36,8 +36,8 @@ export function ControlRow({
   const generated = useId()
   const controlId = id ?? generated
   const labelId = `${controlId}-label`
-  const descriptionId = overriddenAt === undefined ? undefined : `${controlId}-override`
-  const canReset = onReset !== undefined && (overriddenAt !== undefined || modified)
+  const descriptionId = description === undefined ? undefined : `${controlId}-override`
+  const canReset = onReset !== undefined && modified
 
   // `htmlFor` reaches a native control only. A composite is a `div`, and § Control rows still wants the
   // label to be part of its click target.
@@ -47,13 +47,8 @@ export function ControlRow({
 
   return (
     <div className={cn(controlRowStyles(), className)}>
-      <span className={controlRowDotSlotStyles()}>
-        {overriddenAt === undefined ? null : (
-          // `title` because ACCESSIBILITY.md § Inspector forbids a colour-only indicator; the same text
-          // reaches assistive technology through the control's `aria-describedby`.
-          <span className={controlRowDotStyles()} title={`Overridden at ${overriddenAt}`} />
-        )}
-      </span>
+      {/* The gutter is reserved whether or not a marker is in it, so labels line up down the panel. */}
+      <span className={controlRowDotSlotStyles()}>{indicator}</span>
 
       <Label
         id={labelId}
@@ -70,7 +65,7 @@ export function ControlRow({
 
       {descriptionId === undefined ? null : (
         <span id={descriptionId} className="sr-only">
-          Overridden at {overriddenAt}
+          {description}
         </span>
       )}
 

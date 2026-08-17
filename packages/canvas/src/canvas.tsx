@@ -2,10 +2,11 @@
 
 import type { NodeId } from '@motion-studio/schema'
 import { cn } from '@motion-studio/utils'
-import { type ReactNode, useCallback, useRef } from 'react'
+import { type ReactNode, useCallback, useEffect, useMemo, useRef } from 'react'
 
 import { CANVAS_ROOT_CLASS, MARQUEE_CLASS } from './canvas.styles'
 import type {
+  CanvasHandle,
   CanvasMenuPort,
   CanvasMotionPort,
   CanvasResizePort,
@@ -73,6 +74,12 @@ export interface CanvasProps {
   readonly resize?: CanvasResizePort | undefined
   /** ADR-100. `Mod+P` and `Mod+Shift+P` do nothing without it. */
   readonly motion?: CanvasMotionPort | undefined
+  /**
+   * Called with the handle on mount and with `null` on unmount. It is how a host answers questions
+   * that need measured geometry — "does the new frame still fit?" — without holding a ref into the
+   * canvas's internals.
+   */
+  readonly onReady?: ((handle: CanvasHandle | null) => void) | undefined
 }
 
 /**
@@ -104,6 +111,7 @@ export function Canvas({
   menu,
   resize,
   motion,
+  onReady,
 }: CanvasProps) {
   const artboardRef = useRef<HTMLDivElement | null>(null)
   const viewport: ViewportHandle = useViewport({
@@ -126,6 +134,22 @@ export function Canvas({
 
   usePan(viewport)
   useZoom(viewport, { documentRect })
+
+  const handle = useMemo<CanvasHandle>(
+    () => ({
+      documentRect,
+      viewportRect: viewport.viewportRect,
+      transform: viewport.current,
+      fitDocument: () => viewport.fitTo(documentRect()),
+    }),
+    [documentRect, viewport],
+  )
+
+  useEffect(() => {
+    onReady?.(handle)
+
+    return () => onReady?.(null)
+  }, [handle, onReady])
 
   const cache = useRectCache({ rootRef: viewport.rootRef, scene })
   const announcer = useAnnouncer()

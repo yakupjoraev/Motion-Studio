@@ -224,10 +224,27 @@ function stressGlass(): MotionDocument {
   return document('Stress — glass', 'stressglass', builder.nodes)
 }
 
+/**
+ * `responsive-grid`: one grid with two cards in it, and nothing else. The responsive spec edits its
+ * `columns` at one breakpoint and reads it back at another, so the document has to be small enough
+ * that a failure is about the cascade rather than about which of two hundred nodes was selected.
+ */
+function responsiveGrid(): MotionDocument {
+  const builder: Builder = { nodes: [], next: 0 }
+  const root = push(builder, 'container', null, 'root')
+  const grid = push(builder, 'grid', root, 'children')
+
+  push(builder, 'heading', grid, 'children')
+  push(builder, 'text', grid, 'children')
+
+  return document('Responsive — grid', 'responsivegrid', builder.nodes)
+}
+
 const FIXTURES: Readonly<Record<string, () => MotionDocument>> = {
   'stress-200-nodes': stress200,
   'stress-motion-heavy': stressMotionHeavy,
   'stress-glass': stressGlass,
+  'responsive-grid': responsiveGrid,
 }
 
 mkdirSync(OUT_DIR, { recursive: true })

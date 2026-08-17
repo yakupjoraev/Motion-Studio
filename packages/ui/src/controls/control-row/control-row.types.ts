@@ -42,9 +42,17 @@ export interface ControlRowProps {
   /** Sentence case, no colon — § Control rows. */
   readonly label: string
   readonly children: (slot: ControlSlotProps) => ReactNode
-  /** The breakpoint this value was overridden at. Draws the accent dot and names the source. */
-  readonly overriddenAt?: string
-  /** Differs from the block's default. Shows the reset affordance without the dot. */
+  /**
+   * ADR-161. What goes in the 4 px gutter left of the label — the breakpoint marker, whose states
+   * and wording belong to the responsive engine and not to this package.
+   */
+  readonly indicator?: ReactNode
+  /**
+   * The marker in words. It becomes an `sr-only` span and the control's `aria-describedby`, so the
+   * indicator is never colour-only — `ACCESSIBILITY.md` § Inspector.
+   */
+  readonly description?: string
+  /** There is something to reset: a value away from the block's default, or an override here. */
   readonly modified?: boolean
   readonly mixed?: boolean
   /** Absent means the value cannot be reset, and no reset affordance is drawn. */

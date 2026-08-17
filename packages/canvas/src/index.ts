@@ -32,6 +32,7 @@ export {
 export { Canvas, type CanvasProps } from './canvas'
 export type {
   CanvasEdges,
+  CanvasHandle,
   CanvasMenuAction,
   CanvasMenuPort,
   CanvasMotionPort,

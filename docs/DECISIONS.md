@@ -6706,3 +6706,62 @@ caveat comment about container queries inside a transform-scaled canvas.
   session report rather than silently ticked.
 - Avoided: a capability field, a render wrapper and a test whose only subject is a fixture — the
   "abstraction with one speculative caller" the global rules forbid.
+
+## ADR-168 — The comparison frames stop shrinking at two thirds and scroll instead
+
+**Date** 2026-08-17 · **Prompt** 35 · **Status** Accepted
+
+### Question
+Multi-frame draws `base` (375), `md` (768) and `xl` (1280) side by side — 2 423 canvas units plus
+gaps, against a canvas that is about 600 px wide with both panels open. One scale is applied to all
+three (three magnifications would make the comparison meaningless). How small is it allowed to get?
+
+### Criterion (set before measuring)
+The view exists to compare layouts, and a layout whose text has stopped being text is not a layout.
+The smallest type a block can render is `text-sm` — 12 px, `packages/tokens/src/primitives/type.ts`.
+Take 8 px as the floor at which glyph shapes are still distinguishable on screen. The scale may go no
+lower than the ratio between them; below it the row scrolls rather than shrinks.
+
+### Measurement (Chrome, production build, `responsive-grid`, both panels open)
+Scaling to fit gave `--ms-frame-scale: 0.241`. At that scale 12 px type renders at **2.9 px**, and
+the screenshot confirms it: the heading and the paragraph are grey bars. The floor the criterion
+gives is 8 / 12 = **0.667**.
+
+### Decision
+`MIN_FRAME_SCALE = 2 / 3`. The scale is `clamp(2/3, available / 2423, 1)`, and the row is already an
+`overflow-auto` container, so a canvas too narrow to hold three frames at that scale scrolls.
+
+### Consequences
+- Accepted: with both panels open the three frames no longer fit at once and the user scrolls or
+  collapses a panel. That is the honest trade — the alternative was three unreadable frames that fit.
+- Accepted: the floor is a fixed ratio rather than a measurement of the document's own type. A
+  document whose smallest text is larger could be scaled further down; reading the rendered type off
+  the DOM to decide would make the scale depend on what is on the canvas, which is a worse surprise
+  than a fixed floor.
+
+## ADR-169 — The responsive spec runs on Chrome only, for now
+
+**Date** 2026-08-17 · **Prompt** 35 · **Status** Accepted (owner)
+
+### Question
+Prompt 35's last Done-when box asks for the responsive E2E spec to pass on three browsers. The
+Playwright project list has one entry — the installed Chrome (`channel: 'chrome'`), because prompt 34
+deliberately did not download Playwright's own browsers. Firefox and WebKit are roughly 200 MB of
+download into the machine's Playwright cache.
+
+### Options put to the owner
+1. **Install both** and add two projects: the spec then runs on Chromium, Firefox and WebKit, and
+   every future E2E spec runs three times.
+2. **Stay on Chrome**: the spec is cross-browser in what it asserts, but only one browser proves it
+   here.
+
+### Decision
+Option 2, decided by the owner on 2026-08-17. The box stays open, and the cross-browser matrix
+belongs to prompt 56, which builds the test harness.
+
+### Consequences
+- Accepted: a Firefox- or WebKit-only failure in the breakpoint editing surface would not be caught
+  until prompt 56. The spec uses no Chrome-specific API, so the risk is a rendering difference rather
+  than a missing feature.
+- Accepted: the performance specs would not have moved to three browsers anyway — their numbers are
+  Chrome's, per ADR-160.

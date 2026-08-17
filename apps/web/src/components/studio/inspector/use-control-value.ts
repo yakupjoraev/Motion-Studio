@@ -5,14 +5,16 @@ import { useMemo } from 'react'
 
 import { useStudioStore } from '../../../store/editor-store'
 
+import { BASE_STATE, type OverrideState } from './override-indicator'
+
 export interface ControlValue {
   /** The resolved value, or the first one when the selection disagrees. */
   readonly value: unknown
   /** UI_GUIDELINES.md § Multi-selection: the selection holds more than one value for this path. */
   readonly mixed: boolean
-  /** The breakpoint the value came from, when it came from an override. */
-  readonly overriddenAt: BreakpointId | undefined
-  /** Differs from the block's own default, so the row offers a reset. */
+  /** Which of the three states the row is in — RESPONSIVE_ENGINE.md § Editing semantics. */
+  readonly override: OverrideState
+  /** There is something a reset would remove at the active breakpoint, so the row offers one. */
   readonly modified: boolean
 }
 
@@ -41,7 +43,7 @@ export function useControlValue(path: string, nodeIds: readonly NodeId[]): Contr
   return useMemo<ControlValue>(() => {
     const state = useStudioStore.getState()
     const values: unknown[] = []
-    let overriddenAt: BreakpointId | undefined
+    let source: BreakpointId | undefined
     let modified = false
 
     for (const id of nodeIds) {
@@ -51,22 +53,36 @@ export function useControlValue(path: string, nodeIds: readonly NodeId[]): Contr
         continue
       }
 
-      const source = sourceBreakpoint(node.responsive, path, breakpoint)
+      const from = sourceBreakpoint(node.responsive, path, breakpoint)
       const value =
-        source === undefined ? at(node.props, path) : at(node.responsive[source] ?? {}, path)
+        from === undefined ? at(node.props, path) : at(node.responsive[from] ?? {}, path)
 
       values.push(value)
-      overriddenAt = overriddenAt ?? source
-      modified = modified || at(node.props, path) !== undefined
+      source = source ?? from
+      // What a reset removes: the override at this breakpoint, or — at base — the prop itself.
+      modified =
+        modified ||
+        (breakpoint === 'base' ? at(node.props, path) !== undefined : from === breakpoint)
     }
 
     return {
       value: values[0],
       mixed: values.some((one) => !same(one, values[0])),
-      overriddenAt,
+      override: overrideState(source, breakpoint),
       modified,
     }
   }, [breakpoint, nodeIds, path, version])
+}
+
+/** Where the value came from, as the row draws it: overridden here, inherited, or the base value. */
+function overrideState(source: BreakpointId | undefined, breakpoint: BreakpointId): OverrideState {
+  if (source === undefined) {
+    return BASE_STATE
+  }
+
+  return source === breakpoint
+    ? { kind: 'overridden', at: source }
+    : { kind: 'inherited', from: source }
 }
 
 /** The last breakpoint at or below the active one that overrides this path — the cascade, walked back. */

@@ -5,6 +5,7 @@ import { useRef } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { PANEL_BOUNDS, PANEL_LAYOUT_KEY, PANEL_VARIABLE } from '../../hooks/panel-layout'
+import { useStudioStore } from '../../store/editor-store'
 
 import { StudioShell } from './studio-shell'
 
@@ -15,6 +16,7 @@ const renderShell = () => render(<StudioShell canvas={<div data-testid="canvas-i
 beforeEach(() => {
   window.localStorage.clear()
   document.documentElement.removeAttribute('style')
+  act(() => useStudioStore.getState().setBreakpoint('base'))
 })
 
 afterEach(() => {
@@ -66,14 +68,20 @@ describe('StudioShell', () => {
     },
   )
 
-  it('disables every breakpoint, not just the group that holds them', () => {
+  it('offers the six breakpoints, with the active one checked', async () => {
+    const user = userEvent.setup()
+
     renderShell()
 
     const group = screen.getByRole('radiogroup', { name: 'Breakpoint' })
+    const options = within(group).getAllByRole('radio')
 
-    for (const option of within(group).getAllByRole('radio')) {
-      expect(option).toBeDisabled()
-    }
+    expect(options).toHaveLength(6)
+    expect(within(group).getByRole('radio', { name: /^Base/ })).toBeChecked()
+
+    await user.click(within(group).getByRole('radio', { name: /^Medium/ }))
+
+    expect(useStudioStore.getState().viewport.breakpoint).toBe('md')
   })
 
   describe('F2 focus cycling', () => {

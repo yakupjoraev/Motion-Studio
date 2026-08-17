@@ -10,6 +10,8 @@ import { usePersistedSections } from '../../../hooks/use-persisted-sections'
 import { useStudioStore } from '../../../store/editor-store'
 
 import { InspectorEmpty } from './inspector-empty'
+import { ResponsiveHeader } from './responsive-header'
+import { useResponsiveHintVisible } from './use-responsive-edit'
 
 /**
  * The panel's shell and its no-selection state are first-load; everything that edits a block is not.
@@ -26,6 +28,15 @@ const InspectorMulti = dynamic(
   { loading: () => <InspectorSkeleton /> },
 )
 
+/**
+ * The guardrail is a chunk of its own, and it is mounted only once it has something to say: the hint
+ * carries an icon pair and a button, and a studio that never triggers it never downloads them.
+ */
+const ResponsiveHint = dynamic(
+  () => import('./responsive-hint').then((module) => module.ResponsiveHint),
+  { ssr: false },
+)
+
 const InspectorSkeleton = () => (
   <div className="flex flex-col gap-2 p-3" data-testid="inspector-loading">
     <span className="h-7 w-full animate-pulse rounded-xs bg-surface-2" />
@@ -40,6 +51,8 @@ const InspectorSkeleton = () => (
  */
 export function Inspector() {
   usePersistedSections()
+
+  const hintVisible = useResponsiveHintVisible()
 
   const selectionKey = useStudioStore((state) => state.selection.ids.join(' '))
   const nodeIds = useMemo(
@@ -62,6 +75,8 @@ export function Inspector() {
   return (
     <div className="flex h-full flex-col">
       <PanelHeader title={nodeIds.length === 1 ? (name ?? 'Inspector') : 'Inspector'} />
+      {hintVisible ? <ResponsiveHint /> : null}
+      <ResponsiveHeader />
       <ScrollArea className="flex-1">
         {nodeIds.length === 0 && <InspectorEmpty />}
         {nodeIds.length === 1 && definition !== undefined && (

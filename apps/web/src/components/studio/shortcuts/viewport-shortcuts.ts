@@ -140,8 +140,9 @@ export const VIEWPORT_SHORTCUTS: readonly StudioShortcut[] = [
     label: 'Toggle multi-frame comparison',
     group: 'Breakpoints',
     scope: 'global',
-    // Multi-frame comparison is the responsive engine's, prompt 35.
-    when: () => false,
-    run: () => undefined,
+    keywords: ['responsive', 'compare'],
+    run: ({ store }) => {
+      store.getState().toggleMultiFrame()
+    },
   },
 ]

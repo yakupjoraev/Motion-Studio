@@ -89,6 +89,8 @@ export interface ViewportState {
   readonly rulers: boolean
   readonly motionPaused: boolean
   readonly previewReducedMotion: boolean
+  /** ADR-162. `base`, `md` and `xl` side by side, read-only — RESPONSIVE_ENGINE.md § Canvas preview. */
+  readonly multiFrame: boolean
 }
 
 export interface ViewportSlice {
@@ -102,6 +104,7 @@ export interface ViewportSlice {
   toggleRulers(): void
   toggleMotionPaused(): void
   setPreviewReducedMotion(preview: boolean): void
+  toggleMultiFrame(): void
 }
 
 export type { HistoryEntry, IncomingEntry, OpenTransaction } from '../history/history.types'

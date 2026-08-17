@@ -90,6 +90,21 @@ describe('committed setters', () => {
     expect(viewport.previewReducedMotion).toBe(true)
   })
 
+  it('toggles multi-frame comparison, which starts off', () => {
+    const store = createTestStore()
+
+    expect(store.getState().viewport.multiFrame).toBe(false)
+
+    store.getState().toggleMultiFrame()
+
+    expect(store.getState().viewport.multiFrame).toBe(true)
+    expect(store.getState().viewport.breakpoint).toBe('base')
+
+    store.getState().toggleMultiFrame()
+
+    expect(store.getState().viewport.multiFrame).toBe(false)
+  })
+
   it('is not undoable and does not touch the document', () => {
     const store = createTestStore()
 
