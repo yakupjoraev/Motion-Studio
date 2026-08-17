@@ -6765,3 +6765,195 @@ belongs to prompt 56, which builds the test harness.
   than a missing feature.
 - Accepted: the performance specs would not have moved to three browsers anyway — their numbers are
   Chrome's, per ADR-160.
+
+## ADR-170 — "Keep mine" is a field of the theme config, not builder state
+
+**Date** 2026-08-17 · **Prompt** 36 · **Status** Accepted
+
+### Question
+Prompt 36 requires a "keep mine" escape from contrast repair that is "recorded in the config, so
+export can emit a comment noting the ratio". `ThemeConfig` as `THEME_ENGINE.md` § ThemeConfig
+defined it has nowhere to record it. Where does the choice live?
+
+### Criterion (stated before the change)
+The choice has to survive everything the accent itself survives, because it is a property of that
+accent: a reload, a `.motion` round-trip, and every export target. Anything that outlives the panel
+but not the document fails the first test; anything the export engine cannot read fails the third.
+
+### Decision
+A required field, `palette.repairContrast: boolean`, added to `ThemeConfig` in
+`THEME_ENGINE.md` § ThemeConfig, defaulting to `true` in the schema. The panel's "keep mine" writes
+`false` through the ordinary `setThemeToken` command, so it undoes like every other theme edit.
+
+Required rather than optional, because `setThemeToken` rejects a path that reads as `undefined`
+(ADR-053's guard against silent typos) — an optional field would need either a second command or a
+hole in that guard. `z.boolean().default(true)` on the input keeps hand-written and older configs
+valid, so the schema version does not move.
+
+With repair declined the engine still runs the check: the failing pair comes back in
+`ThemeResolution.overrides` instead of `.repairs`. Both halves of `THEME_ENGINE.md` § Contrast
+repair then hold — the failing pair is never silent, and the user is never silently overridden.
+
+### Consequences
+- Accepted: `ThemeConfig` grows a field, so all ten presets, the schema and the type change with it.
+  They are one commit and the schema default keeps old input readable.
+- Accepted: `overrides` is a second list the theme builder and the export engine both have to
+  render. It is the same `ContrastRepair` shape, so the report renders one list with two tones.
+- Rejected: keeping the choice in `localStorage` beside the custom presets. It would not travel with
+  the document, so exporting on another machine would silently re-repair the accent — the export
+  comment would then describe a colour the file does not contain.
+
+## ADR-171 — The four token-export formats are generated in `packages/theme`
+
+**Date** 2026-08-17 · **Prompt** 36 · **Status** Accepted
+
+### Question
+Prompt 36's deliverable list puts `export-tokens-dialog.tsx` in `apps/web`. Do the four format
+generators — CSS variables, Tailwind config, JSON, Figma Tokens — live in that dialog, or in
+`packages/theme`?
+
+### Criterion (stated before the change)
+`ENGINEERING_CONTRACT.md` § 2: nothing depends on `apps/*`. `THEME_ENGINE.md` § Theme in export
+requires every export target to emit the resolved theme. So the question is answered by asking
+whether a future consumer outside `apps/web` needs the same strings: if it does, generators in the
+app are a guaranteed duplication rather than a possible one.
+
+### Decision
+`packages/theme/src/export/`, four pure functions over a `ThemeResolution`. `packages/codegen`
+(prompts 42–44) has to emit `theme.css`, the `:root` block for HTML and the config for JSON — that
+is three of these four formats — and cannot import from `apps/web`. The dialog keeps what is
+genuinely the app's: the tabs, the copy button, the download, and the clipboard.
+
+### Consequences
+- Accepted: `packages/theme` grows an export surface before the export engine exists to use it. It
+  is four functions with tests, and the alternative is writing them twice.
+- Accepted: the download and the clipboard stay untested by unit tests — they are DOM APIs the
+  dialog calls. The E2E spec covers the dialog end to end instead.
+
+## ADR-172 — The document's theme is applied by a subscription outside React
+
+**Date** 2026-08-17 · **Prompt** 36 · **Status** Accepted
+
+### Question
+Until this prompt nothing in `apps/web` applied `document.theme`: `ThemeBoot` wrote `studio-dark`
+once at startup, and `applyThemePreset` changed the document without changing a single variable on
+screen. What applies the document's theme, and to which element?
+
+### Criterion (stated before the change)
+`PRODUCT.md` § 2, Theme: "Changes are live and global" — so the root element, not a canvas wrapper.
+`THEME_ENGINE.md` § Rules, 5: a theme change must not trigger a React render, tested with a render
+counter on the canvas root.
+
+### Decision
+A `ThemeHost` component in the studio that renders nothing and holds one `store.subscribe` on
+`state.document.theme`, calling `applyTheme` on the document element when it changes. A Zustand
+subscription outside the React tree is the only way to satisfy the second criterion: `useStore` with
+a selector would render the subscribing component on every theme edit, and a hue drag would render
+it thirty times a second.
+
+`ThemeBoot` keeps the first paint's default and hands over on mount, so the studio never shows the
+document's theme one frame late.
+
+### Consequences
+- Accepted: the studio chrome is themed by the document's theme, so radius 0 squares the panels as
+  well as the blocks. That is what "live and global" says, and it is what makes the demo convincing.
+- Accepted: a component that renders `null` and does work in an effect is unusual. It is the same
+  shape `ThemeBoot` already had, for the same reason.
+
+## ADR-173 — Applying a saved custom preset is its own command
+
+**Date** 2026-08-17 · **Prompt** 36 · **Status** Accepted
+
+### Question
+`applyThemePreset` takes a `PresetId`, which is `keyof typeof PRESETS` — a total lookup over the ten
+shipped presets. A custom preset saved to `localStorage` is a `ThemeConfig` with an id that is not
+in that union. What applies it?
+
+### Criterion (stated before the change)
+Prompt 36 requires that applying a preset is one undo step regardless of how many tokens change.
+Both kinds of preset therefore need a single command; the question is whether it is one command or
+two.
+
+### Decision
+Two commands. `applyThemePreset({ id })` stays exactly as it is — its totality is what makes it free
+of an unreachable guard — and `setTheme({ theme })` replaces the config wholesale, validating it
+against `themeConfigSchema` because a config read out of `localStorage` is untrusted input. The
+custom-preset path uses `setTheme`; the shipped picker uses `applyThemePreset`.
+
+### Consequences
+- Accepted: two commands where a widened payload would have been one. The widened payload would have
+  made `applyThemePreset`'s label and validation conditional on which half of the union arrived,
+  which is the branch this avoids.
+- Accepted: `setTheme` can put any valid config into the document, including one whose `id` names no
+  preset. That is what a custom preset is.
+
+## ADR-174 — The theme resolution cache is bounded at 128 entries
+
+**Date** 2026-08-17 · **Prompt** 36 · **Status** Accepted
+
+### Question
+`resolveTheme` memoises on a hash of the config in an unbounded `Map`. Before the theme builder the
+keys were effectively a closed set — ten presets in two modes. A hue slider makes them unbounded: one
+new config per frame, each with a hue nobody will ever ask for again. What bounds the cache, and at
+what size?
+
+### Criterion (set before measuring)
+Two thresholds, because a cache trades memory against work:
+
+1. **Memory.** The cache may hold at most a tenth of the studio's measured heap — 11.3 MB in prompt
+   34's five-minute scroll, so 1.1 MB.
+2. **Work.** Evicting an entry may not cost a frame: a miss has to resolve in well under the 16.7 ms
+   frame budget, or eviction would turn a drag into jank.
+
+### Measurement
+On `studio-dark`, `packages/theme` on Node 22:
+
+- A resolution is 141 variables and **6 538 bytes** serialised.
+- **300 fresh resolutions in 64 ms** — 0.21 ms each, which is 1.3 % of a frame.
+
+128 entries is 0.83 MB, inside the first threshold with room to spare, and a miss costs 0.21 ms,
+inside the second by a factor of eighty. A drag past 128 frames re-resolves its oldest steps at that
+price; the ten presets in both modes are 20 entries, so switching presets stays a hit.
+
+### Decision
+`CACHE_LIMIT = 128`, oldest-first eviction on insert.
+
+### Consequences
+- Accepted: dragging a slider back and forth across more than 128 distinct values re-resolves rather
+  than replaying. At 0.21 ms that is invisible, and the alternative is a map that grows all session.
+- Accepted: eviction is insertion-ordered, not least-recently-used. LRU would need a touch on every
+  read, and the measurement says the miss is cheap enough that the difference does not pay for itself.
+
+## ADR-175 — A theme slider holds a draft while it is dragged
+
+**Date** 2026-08-17 · **Prompt** 36 · **Status** Accepted
+
+### Question
+The two-write pattern says a drag writes CSS variables and nothing else until release. The sliders are
+Radix sliders controlled by the document's value. Those two statements are in direct conflict: if the
+document does not move during the drag, what moves the thumb?
+
+### Criterion (stated before the change)
+The control has to end a drag holding the value the pointer left it at, and the canvas has to render
+zero times while that happens. Both are measurable, and a design that trades one for the other fails.
+
+### Measurement
+Measured in Chrome on the production build, `stress-200-nodes`, a five-second pointer drag of the hue
+slider:
+
+- **Without a draft**: the thumb never moved and the commit wrote `0` — the drag was silently lost.
+- **With a draft**: the thumb follows the pointer, the release commits the value under it, and a
+  separate `next dev` run of the same drag — 141 pointer moves — recorded **0 canvas renders**
+  (counter unchanged at 6 before, during and after). Frame timings on the production build: 302
+  frames, median 16.7 ms, p95 16.8 ms, worst 16.8 ms, 0 long tasks.
+
+### Decision
+`ThemeSliderRow` keeps a `useState` draft: `value={draft ?? props.value}`, set on change, cleared on
+commit. The colour picker already worked this way for the same reason.
+
+### Consequences
+- Accepted: the row re-renders per frame during its own drag. It is one row of controls with no
+  children; the canvas, the blocks and the rest of the panel do not move, which is what the budget in
+  `THEME_ENGINE.md` § Rules, 5 measures.
+- Accepted: if a command changed the same token from elsewhere mid-drag, the draft would win until
+  release. Nothing else can move a theme token while a pointer is down on its slider.

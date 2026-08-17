@@ -33,6 +33,7 @@ export interface ThemeConfig {
     neutral: NeutralHue       // 'slate' | 'zinc' | 'stone' | 'gray' | 'warm' | 'cool'
     accentHueShift: number    // -30..30, shifts generated ramp hue
     saturation: number        // 0.5..1.5, chroma multiplier
+    repairContrast: boolean   // false = the user kept a failing accent; see § Contrast repair
   }
 
   radiusScale: 0 | 0.5 | 1 | 1.5 | 2
@@ -90,7 +91,8 @@ the next step that passes, and records the substitution:
 ```ts
 export interface ThemeResolution {
   variables: Record<string, string>
-  repairs: ContrastRepair[]        // shown in the theme builder as warnings
+  repairs: ContrastRepair[]        // applied, and shown in the theme builder as warnings
+  overrides: ContrastRepair[]      // declined by the user, and shown the same way
   warnings: string[]
 }
 ```
@@ -98,6 +100,13 @@ export interface ThemeResolution {
 The theme builder shows repairs inline: "Accent on surface-1 was 3.2:1 — using violet-700
 instead." The user can override, and the export includes a comment noting the ratio. We never
 silently ship failing contrast, and we never silently override the user either.
+
+**"Keep mine" is `palette.repairContrast: false`.** The choice belongs in the config because it
+travels with the document: the same accent has to come back unrepaired after a reload, on another
+machine, and in every export target. With it off, the engine still runs the check and still reports
+the failing pair — as `overrides` rather than `repairs` — so the warning stays on screen and the
+export can emit the measured ratio as a comment. The field defaults to `true`, so a config that
+predates it, or one written by hand, is repaired.
 
 ## Application
 
@@ -252,6 +261,15 @@ Borders       [ hairline ][ solid ][ none ]
 Every control writes variables immediately and dispatches a coalesced command, so the whole
 theming session is one undo step per control.
 
+The three buttons on the last row:
+
+- **Reset** applies the preset the current theme is based on — `config.id` names it, and editing a
+  token never changes the id. A theme based on a saved custom preset resets to that preset.
+- **Save as preset** stores the current config in `localStorage` under a new id and adds it to the
+  picker. Saved presets can be renamed and deleted. They are user-level convenience, not document
+  content, which is why they are not in the `.motion` file.
+- **Export tokens** opens the four-format dialog below.
+
 ## Theme in export
 
 The theme travels with the document and is emitted by every export target:
@@ -265,6 +283,11 @@ The theme travels with the document and is emitted by every export target:
 
 `Export tokens` additionally offers: CSS variables, Tailwind config, JSON, and Figma Tokens
 format.
+
+The four generators live in `packages/theme/src/export/` and take a `ThemeResolution`, so the
+formats cannot disagree with each other or with what the export engine emits — `packages/codegen`
+reads the same functions rather than restating them. Each is a pure string function: no DOM, no
+clipboard, no download. The dialog owns those.
 
 ## Scoped themes
 
