@@ -7131,6 +7131,76 @@ a `DragRectSource`, because by then the host has already chosen the surface.
   were an absolutely-positioned overlay per node — which needs a positioned ancestor the wrapper does
   not have — or an extra wrapper element around every block on the canvas.
 
+## ADR-182 — The hover clip is reconstructed, not recorded, and is byte-identical
+
+**Date** 2026-08-17 · **Prompt** 37 · **Status** Accepted, on the owner's call · Closes the M4 carry-over of ADR-125
+
+### Question
+ADR-125 shipped the still thumbnails and left the animated hover clip out: a recorded WebM carries
+timestamps a real-time encoder produces, so it cannot be byte-identical between runs, and the output is
+committed. Prompt 37 needs the clip. The owner chose the ffmpeg route over generating clips at release
+time. What makes a clip deterministic, and what is a clip of?
+
+### Criterion (set before measuring)
+Two properties, both checkable:
+1. **Byte-identical across two runs** — the same requirement `--verify` already enforces on the stills,
+   and the reason a recording was rejected in the first place.
+2. **The frames inside one run differ** — a clip whose forty frames are the same image is a still with
+   a video container around it, and would be worse than no clip.
+
+### Measurement
+Frames first, on `hero-aurora` (three running animations), six frames, two runs:
+
+| Approach | Frames alive in a run | Identical across runs |
+| --- | --- | --- |
+| `Emulation.setVirtualTimePolicy`, advancing a budget per frame | 6 of 6 | **no** |
+| Same, with the clock paused before navigation | 6 of 6 | **no** |
+| Animations paused, `currentTime` set per frame | 6 of 6 | **no** — 5 of 6 frames matched |
+| Same, plus `animation.ready` and two `requestAnimationFrame`s before the capture | 6 of 6 | **yes** |
+
+Virtual time fails because a CSS animation's phase is measured from the moment it started, and that
+moment depends on how much of the budget the load consumed. `currentTime` pins the phase itself; the two
+frames of wait are what stops a capture from landing on the phase before it.
+
+Then the container, with the frames now fixed. libvpx-vp9, one thread, no row threading, muxed
+`-fflags +bitexact -flags:v +bitexact`: two runs produced files of **identical length differing in
+exactly 16 bytes** — `TrackUID` (`0x73C5`) in the track entry and `TagTrackUID` (`0x63C5`) in the tags,
+8 bytes each, filled by ffmpeg with random data. Overwriting both with the first 8 bytes of
+`sha256(blockId-mode)` makes two runs identical: `hero-aurora-dark.webm`, hash `395B07A7B0C3`, twice.
+
+What a clip is of, measured rather than listed: the generator asks the page
+`document.getAnimations().filter(a => a.playState === 'running').length` and skips the block when it is
+zero. **Nine blocks of thirty-five animate** — `hero-aurora`, `hero-terminal`, `aurora-background`,
+`mesh-gradient`, `grain-overlay`, `beams`, `border-beam`, `shine`, `particles`. Two seconds at 20 fps,
+320 × 200, `crf 36`: about 6.4 kB per clip.
+
+### Decision
+The clip is **reconstructed frame by frame**, not recorded: animations paused and stepped by
+`currentTime`, one PNG per phase, encoded with libvpx-vp9 through `ffmpeg-static`, and the container's
+random ids replaced with a digest. `--verify` covers the clips exactly as it covers the stills, and
+`check:registry` requires that a block with a clip has one in both modes and that both are on disk.
+
+`ffmpeg-static` is a root devDependency and a new entry in `onlyBuiltDependencies` — without the latter
+pnpm skips its postinstall and the module resolves to a path with no binary at it.
+
+### Consequences
+- Accepted: an 82.8 MB binary in `node_modules` for a script CI never runs. It is a cost the author
+  pays, like the Chrome the generator already needs.
+- Accepted: the clip shows a *reconstruction*. A block animating on a timeline the Web Animations API
+  does not own — a `rAF` loop, a canvas — would come out still. Nothing in the catalogue does today, and
+  the generator reports which blocks it wrote a clip for, so a silent still would be visible.
+- Accepted: the palette mounts the clip on hover and unmounts it on leave, so browsing costs one request
+  per card hovered and nothing at all under a reduced-motion preference.
+- Accepted: `particles` has forty running animations and its clip is the most expensive to generate. It
+  is still six kilobytes on disk.
+- Accepted: eighteen clips are 115 kB of committed binary, and the manifest grows by one entry per
+  animated block. `/studio` first load ends the prompt at **282.4 kB** — the clips are files the
+  palette's lazy chunk names, not bytes it ships.
+- Accepted: regenerating rewrote twelve stills of the animated blocks by a handful of bytes each. The
+  pictures are the same (compared side by side); the encoder landed differently now that each block is
+  visited twice per mode. `--verify` passes on the new set, which is the property that matters: 89 files
+  identical across two full runs.
+
 ## ADR-183 — Cached rects are converted to the current transform, and re-read at drag start
 
 **Date** 2026-08-17 · **Prompt** 37 · **Status** Accepted

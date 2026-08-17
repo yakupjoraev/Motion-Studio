@@ -340,9 +340,15 @@ dimensions are the documented ones, and no thumbnail outlives the block it was m
 presence-and-consistency check — proving a thumbnail still matches what its block renders would mean
 rendering it, which needs a browser, and that stays in the generator.
 
-**The animated hover clip is not shipped yet.** A recorded WebM carries encoder timestamps and cannot
-be made byte-identical between runs, which is the one property the rest of this pipeline is built
-around. ADR-125 records what it would take; `ROADMAP.md` carries it.
+**The animated hover clip ships for every block that animates** — nine of the catalogue today, checked
+by asking the page rather than by a list: a block with no running animation gets no clip, because forty
+identical frames say nothing. It is a two-second WebM (VP9) at 20 fps per colour mode, and it is
+byte-identical across runs like the stills are. ADR-182 has the measurements; the short version is that
+a recording is not deterministic and a **reconstruction** is: every animation is paused and stepped by
+hand, each frame is captured after the phase has been painted, and the container's random track id is
+overwritten with a digest of the block and mode. Generating them needs `ffmpeg-static`, which is a
+devDependency of the root and a cost only the author pays — CI runs `check:registry`, which needs
+nothing.
 
 ## Testing
 
