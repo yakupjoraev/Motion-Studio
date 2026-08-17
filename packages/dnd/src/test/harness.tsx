@@ -3,7 +3,7 @@ import type { Rect } from '@motion-studio/utils'
 import { type RenderResult, render } from '@testing-library/react'
 import { vi } from 'vitest'
 
-import type { DropTarget, DropTargetResolver, DropZone } from '../dnd.types'
+import type { DropTarget, DropTargetResolver, DropZone, ZoneRectSource } from '../dnd.types'
 import { DndProvider } from '../provider'
 import { useDraggableBlock } from '../use-draggable-block'
 import { useDraggableNode } from '../use-draggable-node'
@@ -20,10 +20,10 @@ export const rect = (x: number, y: number, width: number, height: number): Rect 
   height,
 })
 
-/** The rect cache, as the collision detector sees it: one question, answered from a map. */
-export function fakeRects(entries: Readonly<Record<string, Rect>>) {
+/** Live geometry per zone, as the collision detector asks for it — one question, answered from a map. */
+export function fakeRects(entries: Readonly<Record<string, Rect>>): ZoneRectSource {
   return {
-    get: (id: NodeId): Rect | undefined => entries[id],
+    get: (zone: DropZone): Rect | undefined => entries[zone.parentId],
   }
 }
 
@@ -33,6 +33,7 @@ export const zone = (overrides: Partial<DropZone> = {}): DropZone => ({
   orientation: 'vertical',
   label: 'Section',
   childIds: [HERO],
+  surface: 'canvas',
   ...overrides,
 })
 

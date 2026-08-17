@@ -1,6 +1,6 @@
 import type { CollisionDescriptor, CollisionDetection } from '@dnd-kit/core'
 
-import type { DragRectSource } from '../dnd.types'
+import type { ZoneRectSource } from '../dnd.types'
 import { type EdgeRect, contains, dragPoint, edgeRect } from '../drag-point'
 import { dropZone } from '../payload'
 
@@ -13,7 +13,7 @@ import { dropZone } from '../payload'
  * The deepest container under the point wins, and "deepest" is "smallest": a child container is
  * inside its parent, so it is the one with the smaller area.
  */
-export function rectCacheCollision(rects: DragRectSource): CollisionDetection {
+export function rectCacheCollision(rects: ZoneRectSource): CollisionDetection {
   return ({ collisionRect, droppableContainers, droppableRects, pointerCoordinates }) => {
     const point = dragPoint(pointerCoordinates, collisionRect)
     const hits: CollisionDescriptor[] = []
@@ -36,18 +36,18 @@ export function rectCacheCollision(rects: DragRectSource): CollisionDetection {
 }
 
 /**
- * A canvas container is in the cache under its node id. A drop zone that is not a canvas node — a
- * layers tree row — is not, and dnd-kit's own map holds it; that map is measured once at drag start,
- * so reading it costs no layout either.
+ * The host answers per zone, because a node id alone does not say which surface is being pointed at
+ * (ADR-181). A zone the host has no live rect for falls back to dnd-kit's own map, which is measured
+ * once at drag start and so costs no layout either.
  */
 function zoneBox(
-  rects: DragRectSource,
+  rects: ZoneRectSource,
   id: string | number,
   data: unknown,
   measured: ReadonlyMap<string | number, EdgeRect>,
 ): EdgeRect | null {
   const zone = dropZone(data)
-  const cached = zone === null ? undefined : rects.get(zone.parentId)
+  const cached = zone === null ? undefined : rects.get(zone)
 
   if (cached !== undefined) {
     return edgeRect(cached)

@@ -72,6 +72,7 @@ export function LayerRowDrag({ row, span, onDragChange, ...rest }: LayerRowDragP
     orientation: 'vertical',
     label: row.name,
     childIds: children,
+    surface: 'tree',
     disabled: slot === undefined,
   })
 

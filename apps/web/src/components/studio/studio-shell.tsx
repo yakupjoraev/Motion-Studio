@@ -1,5 +1,6 @@
 'use client'
 
+import { ToastProvider } from '@motion-studio/ui'
 import { cn } from '@motion-studio/utils'
 import dynamic from 'next/dynamic'
 import { type ReactNode, useEffect, useState } from 'react'
@@ -8,6 +9,7 @@ import { type PanelSide, isCollapsed } from '../../hooks/panel-layout'
 import { usePanelLayout } from '../../hooks/use-panel-layout'
 import { useViewportGuard } from '../../hooks/use-viewport-guard'
 
+import { DndHost } from './dnd-host'
 import { Inspector } from './inspector/inspector'
 import { LeftPanel } from './left-panel/left-panel'
 import { ThemeHost } from './left-panel/theme/theme-host'
@@ -109,66 +111,73 @@ export function StudioShell({ canvas }: StudioShellProps) {
   const panels = { toggle: togglePanel, isOpen }
 
   return (
-    <>
-      {/* Below 1024 px the chrome is present but unusable, so it is also unreachable — ADR-050. */}
-      <div className="ms-studio" inert={mode === 'narrow'}>
-        <TopBar leftOpen={isOpen('left')} onTogglePanel={togglePanel} rightOpen={isOpen('right')} />
+    <ToastProvider>
+      {/* ADR-179: one drag context over the palette, the canvas and the layers tree. */}
+      <DndHost>
+        {/* Below 1024 px the chrome is present but unusable, so it is also unreachable — ADR-050. */}
+        <div className="ms-studio" inert={mode === 'narrow'}>
+          <TopBar
+            leftOpen={isOpen('left')}
+            onTogglePanel={togglePanel}
+            rightOpen={isOpen('right')}
+          />
 
-        <aside
-          aria-label="Left panel"
-          className={cn(REGION_CLASS, PANEL_CLASS, 'border-border border-r')}
-          data-open={String(isOpen('left'))}
-          data-shortcut-scope="left"
-          data-side="left"
-          inert={!isOpen('left')}
-          tabIndex={-1}
-        >
-          <div className="h-full overflow-hidden">
-            <LeftPanel />
-          </div>
-          {isOpen('left') ? (
-            <PanelResizer
-              aria-label="Left panel width"
-              onWidthChange={(width) => setWidth('left', width)}
-              side="left"
-              width={layout.left}
-            />
-          ) : null}
-        </aside>
+          <aside
+            aria-label="Left panel"
+            className={cn(REGION_CLASS, PANEL_CLASS, 'border-border border-r')}
+            data-open={String(isOpen('left'))}
+            data-shortcut-scope="left"
+            data-side="left"
+            inert={!isOpen('left')}
+            tabIndex={-1}
+          >
+            <div className="h-full overflow-hidden">
+              <LeftPanel />
+            </div>
+            {isOpen('left') ? (
+              <PanelResizer
+                aria-label="Left panel width"
+                onWidthChange={(width) => setWidth('left', width)}
+                side="left"
+                width={layout.left}
+              />
+            ) : null}
+          </aside>
 
-        <main
-          aria-label="Canvas"
-          className={cn(REGION_CLASS, 'overflow-hidden')}
-          data-shortcut-scope="canvas"
-          tabIndex={-1}
-        >
-          {canvas}
-        </main>
+          <main
+            aria-label="Canvas"
+            className={cn(REGION_CLASS, 'overflow-hidden')}
+            data-shortcut-scope="canvas"
+            tabIndex={-1}
+          >
+            {canvas}
+          </main>
 
-        <aside
-          aria-label="Inspector"
-          className={cn(REGION_CLASS, PANEL_CLASS, 'border-border border-l')}
-          data-open={String(isOpen('right'))}
-          data-shortcut-scope="inspector"
-          data-side="right"
-          inert={!isOpen('right')}
-          tabIndex={-1}
-        >
-          <div className="h-full overflow-hidden">
-            <Inspector />
-          </div>
-          {isOpen('right') ? (
-            <PanelResizer
-              aria-label="Inspector width"
-              onWidthChange={(width) => setWidth('right', width)}
-              side="right"
-              width={layout.right}
-            />
-          ) : null}
-        </aside>
+          <aside
+            aria-label="Inspector"
+            className={cn(REGION_CLASS, PANEL_CLASS, 'border-border border-l')}
+            data-open={String(isOpen('right'))}
+            data-shortcut-scope="inspector"
+            data-side="right"
+            inert={!isOpen('right')}
+            tabIndex={-1}
+          >
+            <div className="h-full overflow-hidden">
+              <Inspector />
+            </div>
+            {isOpen('right') ? (
+              <PanelResizer
+                aria-label="Inspector width"
+                onWidthChange={(width) => setWidth('right', width)}
+                side="right"
+                width={layout.right}
+              />
+            ) : null}
+          </aside>
 
-        <StatusBar />
-      </div>
+          <StatusBar />
+        </div>
+      </DndHost>
 
       <ShortcutHost panels={panels} />
 
@@ -181,6 +190,6 @@ export function StudioShell({ canvas }: StudioShellProps) {
           Browse the block gallery instead →
         </a>
       </div>
-    </>
+    </ToastProvider>
   )
 }

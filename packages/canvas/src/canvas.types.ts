@@ -1,4 +1,5 @@
 import type { NodeId } from '@motion-studio/schema'
+import type { Rect } from '@motion-studio/utils'
 
 import type { CanvasRect, ViewportRect, ViewportTransform } from './coords/index'
 
@@ -117,7 +118,7 @@ export interface CanvasSelectionPort {
  * itself, because the transform lives in a ref inside the canvas and the artboard's height is
  * whatever the content came to.
  *
- * Deliberately four readers and one command: everything else a host wants to do to the viewport it
+ * Deliberately four readers and two commands: everything else a host wants to do to the viewport it
  * does by rendering a different `artboardWidth`.
  */
 export interface CanvasHandle {
@@ -125,8 +126,32 @@ export interface CanvasHandle {
   documentRect(): CanvasRect
   /** Screen pixels — the canvas element's box. */
   viewportRect(): ViewportRect
+  /**
+   * Screen pixels — one node's measured box, or `undefined` for a node the cache has not seen. It is
+   * the rect cache narrowed to one question, which is what a host needs to register the node as a
+   * drop zone without holding the cache itself (ADR-181).
+   */
+  nodeRect(id: NodeId): Rect | undefined
   /** The live transform. Read it in a handler, never during render. */
   transform(): ViewportTransform
   /** `fitToRect` on the artboard, capped at 1:1 — CANVAS.md § Zoom. */
   fitDocument(): void
+  /** Screen pixels. What auto-pan during a drag moves the scene by — DRAG_AND_DROP.md § Auto-behaviours. */
+  panBy(dx: number, dy: number): void
+  /**
+   * Drops the cached geometry and reads it again — ADR-183. The cache re-measures when the document
+   * changes or a node resizes, and a node that *moved* does neither: an entrance animation leaves its
+   * rect where the first frame was. A host asks for this before it starts trusting the rects, which in
+   * practice means at the start of a drag.
+   */
+  remeasure(): void
+  /**
+   * Pans the least amount that brings a node into view, leaving the zoom alone — CANVAS.md § Pan.
+   * A node already in view moves nothing.
+   *
+   * Returns whether the node was measured at all: a node inserted this tick has not been through a
+   * rect pass yet, and a caller that inserted it needs to know the difference between "already
+   * visible" and "not there yet".
+   */
+  reveal(id: NodeId): boolean
 }

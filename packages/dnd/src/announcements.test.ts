@@ -16,6 +16,7 @@ const zone: DropZone = {
   orientation: 'vertical',
   label: 'Section',
   childIds: [nodeId('node_a'), nodeId('node_b')],
+  surface: 'canvas',
 }
 
 const line: DropIndicator = { kind: 'line', rect: { x: 0, y: 0, width: 10, height: 1 }, axis: 'y' }

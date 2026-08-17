@@ -18,6 +18,13 @@ export type DragPayload =
 export type DropOrientation = 'vertical' | 'horizontal' | 'grid'
 
 /**
+ * Which surface drew the zone — ADR-181. The canvas and the layers tree both register a zone per
+ * node, under the same node id and with different geometry, so the surface is what tells the two
+ * apart: the tree's rect is the strip of ADR-133, the canvas's is the node's own box.
+ */
+export type DropSurface = 'canvas' | 'tree'
+
+/**
  * What a container tells the drag layer about itself. `childIds` is what an insertion index is
  * counted against, and it comes from the document rather than from the DOM.
  */
@@ -27,6 +34,7 @@ export type DropZone = {
   readonly orientation: DropOrientation
   readonly label: string
   readonly childIds: readonly NodeId[]
+  readonly surface: DropSurface
 }
 
 export type DropIndicator =
@@ -50,6 +58,15 @@ export interface DropTarget {
  */
 export interface DragRectSource {
   get(id: NodeId): Rect | undefined
+}
+
+/**
+ * The same question, asked about a zone rather than a node — ADR-181. The collision cannot use
+ * `DragRectSource` directly any more: two surfaces hold a rect for one node id, and only the zone
+ * says which of them is being pointed at.
+ */
+export interface ZoneRectSource {
+  get(zone: DropZone): Rect | undefined
 }
 
 /** Screen coordinates, because that is the space both the pointer and the rect cache are in. */

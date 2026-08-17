@@ -10,8 +10,13 @@ export interface DropZoneOptions extends DropZone {
   readonly disabled?: boolean
 }
 
-/** A node can own more than one slot, so the slot is part of the identity. */
-export const dropZoneId = (parentId: string, slot: string): string => `${parentId}/${slot}`
+/**
+ * A node can own more than one slot, and both surfaces register a zone for the same node — so the
+ * identity is the surface, the node and the slot (ADR-181). Without the surface the canvas and the
+ * tree would register one droppable under one id and dnd-kit would keep whichever mounted last.
+ */
+export const dropZoneId = (surface: string, parentId: string, slot: string): string =>
+  `${surface}:${parentId}/${slot}`
 
 export function useDropZone({ disabled = false, ...zone }: DropZoneOptions) {
   const data = useMemo<DropZone>(
@@ -21,12 +26,13 @@ export function useDropZone({ disabled = false, ...zone }: DropZoneOptions) {
       orientation: zone.orientation,
       label: zone.label,
       childIds: zone.childIds,
+      surface: zone.surface,
     }),
-    [zone.parentId, zone.slot, zone.orientation, zone.label, zone.childIds],
+    [zone.parentId, zone.slot, zone.orientation, zone.label, zone.childIds, zone.surface],
   )
 
   const { isOver, setNodeRef } = useDroppable({
-    id: dropZoneId(zone.parentId, zone.slot),
+    id: dropZoneId(zone.surface, zone.parentId, zone.slot),
     data,
     disabled,
   })

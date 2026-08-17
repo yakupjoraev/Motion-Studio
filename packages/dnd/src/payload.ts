@@ -1,6 +1,6 @@
 import { type BlockId, type NodeId, blockIdSchema, nodeIdSchema } from '@motion-studio/schema'
 
-import type { DragPayload, DropOrientation, DropZone } from './dnd.types'
+import type { DragPayload, DropOrientation, DropSurface, DropZone } from './dnd.types'
 
 /**
  * dnd-kit types draggable and droppable data as `Record<string, unknown>`, so everything this package
@@ -47,18 +47,20 @@ export function dropZone(data: unknown): DropZone | null {
   const label = text(data, 'label')
   const childIds = brandNodes(strings(data, 'childIds'))
   const orientation = orientationOf(data['orientation'])
+  const surface = surfaceOf(data['surface'])
 
   if (
     parentId === null ||
     slot === null ||
     label === null ||
     childIds === null ||
-    orientation === null
+    orientation === null ||
+    surface === null
   ) {
     return null
   }
 
-  return { parentId, slot, orientation, label, childIds }
+  return { parentId, slot, orientation, label, childIds, surface }
 }
 
 /** One label for the ghost badge and for the announcements, so the two can never disagree. */
@@ -96,6 +98,10 @@ function strings(record: Record<string, unknown>, key: string): readonly string[
 
 function orientationOf(value: unknown): DropOrientation | null {
   return value === 'vertical' || value === 'horizontal' || value === 'grid' ? value : null
+}
+
+function surfaceOf(value: unknown): DropSurface | null {
+  return value === 'canvas' || value === 'tree' ? value : null
 }
 
 function brandBlock(value: string | null): BlockId | null {

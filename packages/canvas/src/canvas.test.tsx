@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { Canvas } from './canvas'
 import { SCENE_TRANSFORM } from './canvas.styles'
+import { NodeWrapper } from './node-wrapper'
 import { stubGestureEnvironment } from './test/pointer'
 import { fakeScene } from './test/scene'
 import { VIEWPORT_VARS } from './viewport/use-viewport'
@@ -129,6 +130,66 @@ describe('Canvas', () => {
     unmount()
 
     expect(onReady).toHaveBeenLastCalledWith(null)
+  })
+
+  it('reports a node’s box under the current transform, not the one it was measured under', () => {
+    const onReady = vi.fn()
+
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue({
+      x: 100,
+      y: 200,
+      top: 200,
+      left: 100,
+      right: 300,
+      bottom: 260,
+      width: 200,
+      height: 60,
+      toJSON: () => ({}),
+    })
+
+    // The rect cache holds what a `NodeWrapper` registered, which is what the application renders.
+    renderCanvas({ onReady, renderNode: (id) => <NodeWrapper id={id}>{id}</NodeWrapper> })
+
+    const handle = onReady.mock.calls[0]?.[0]
+
+    act(() => {
+      vi.advanceTimersToNextFrame()
+    })
+
+    const measured = handle.nodeRect(ROOT)
+
+    expect(measured).toEqual({ x: 100, y: 200, width: 200, height: 60 })
+
+    // Pan the scene 40 px right and 10 px down: the same cached rect has to come back moved by that
+    // much, because that is where the node now is on screen — ADR-183.
+    act(() => {
+      handle.panBy(40, 10)
+      vi.advanceTimersToNextFrame()
+    })
+
+    expect(handle.nodeRect(ROOT)).toEqual({ x: 140, y: 210, width: 200, height: 60 })
+  })
+
+  it('re-reads its geometry when asked, for a host about to trust it', () => {
+    const onReady = vi.fn()
+
+    renderCanvas({ onReady, renderNode: (id) => <NodeWrapper id={id}>{id}</NodeWrapper> })
+
+    const handle = onReady.mock.calls[0]?.[0]
+
+    act(() => {
+      vi.advanceTimersToNextFrame()
+    })
+
+    const rect = vi.spyOn(Element.prototype, 'getBoundingClientRect')
+    const before = rect.mock.calls.length
+
+    act(() => {
+      handle.remeasure()
+      vi.advanceTimersToNextFrame()
+    })
+
+    expect(rect.mock.calls.length).toBeGreaterThan(before)
   })
 
   it('is one tab stop that names itself, with an overlay layer and a live region', () => {

@@ -2,7 +2,7 @@
 
 import type { NodeId } from '@motion-studio/schema'
 import { cn } from '@motion-studio/utils'
-import { type ReactNode, useEffect, useRef } from 'react'
+import { type ReactNode, useCallback, useEffect, useRef } from 'react'
 
 import { NODE_WRAPPER_CLASS } from './canvas.styles'
 import { useRectCacheContext } from './rects/use-rect-cache'
@@ -11,6 +11,12 @@ export interface NodeWrapperProps {
   readonly id: NodeId
   readonly children: ReactNode
   readonly className?: string | undefined
+  /**
+   * A second ref onto the same element, for a host that registers this node as a drop zone — ADR-181.
+   * The zone's geometry is the node's own box, and this is how it gets it without `packages/canvas`
+   * importing the drag layer or the host wrapping every node in an extra element.
+   */
+  readonly dropRef?: ((element: HTMLElement | null) => void) | undefined
 }
 
 /**
@@ -21,7 +27,7 @@ export interface NodeWrapperProps {
  * It is the only writer of `data-node-id`, which is what makes reading that attribute back as a
  * `NodeId` sound in `hit-test.ts`.
  */
-export function NodeWrapper({ id, children, className }: NodeWrapperProps) {
+export function NodeWrapper({ id, children, className, dropRef }: NodeWrapperProps) {
   const cache = useRectCacheContext()
   const ref = useRef<HTMLDivElement | null>(null)
 
@@ -35,8 +41,16 @@ export function NodeWrapper({ id, children, className }: NodeWrapperProps) {
     return cache.observe(id, element)
   }, [cache, id])
 
+  const attach = useCallback(
+    (element: HTMLDivElement | null) => {
+      ref.current = element
+      dropRef?.(element)
+    },
+    [dropRef],
+  )
+
   return (
-    <div className={cn(NODE_WRAPPER_CLASS, className)} data-node-id={id} ref={ref}>
+    <div className={cn(NODE_WRAPPER_CLASS, className)} data-node-id={id} ref={attach}>
       {children}
     </div>
   )

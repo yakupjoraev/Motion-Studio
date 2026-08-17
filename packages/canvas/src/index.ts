@@ -122,6 +122,7 @@ export {
   prefersReducedMotion,
   usePan,
 } from './viewport/use-pan'
+export { revealPan, type RevealPan } from './viewport/reveal'
 export { WHEEL_ZOOM_CLAMP, nextZoomStep, useZoom, wheelZoomFactor } from './viewport/use-zoom'
 export { ViewportProvider, useViewportContext } from './viewport/viewport-context'
 export {

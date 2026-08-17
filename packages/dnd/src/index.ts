@@ -14,9 +14,11 @@ export type {
   DropAttempt,
   DropIndicator,
   DropOrientation,
+  DropSurface,
   DropTarget,
   DropTargetResolver,
   DropZone,
+  ZoneRectSource,
 } from './dnd.types'
 export { centre, contains, dragPoint, edgeRect, type EdgeRect } from './drag-point'
 export { snapToCursorOffset } from './modifiers/snap-to-cursor-offset'
@@ -37,6 +39,7 @@ export {
   draggableBlockId,
   type DraggableBlockOptions,
 } from './use-draggable-block'
+export { useDragActive } from './use-drag-active'
 export { useDraggableNode, type DraggableNodeOptions } from './use-draggable-node'
 export { dropZoneId, useDropZone, type DropZoneOptions } from './use-drop-zone'
 export {

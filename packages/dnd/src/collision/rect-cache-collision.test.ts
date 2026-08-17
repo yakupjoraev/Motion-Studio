@@ -32,6 +32,7 @@ const zone = (parentId: NodeId): DropZone => ({
   orientation: 'vertical',
   label: parentId,
   childIds: [],
+  surface: 'canvas',
 })
 
 const container = (id: string, data: Record<string, unknown>): DroppableContainer => ({
@@ -57,7 +58,7 @@ interface Scenario {
 }
 
 function detect({ cache = {}, containers, point = null, measured = [] }: Scenario) {
-  const get = vi.fn((id: NodeId) => cache[id])
+  const get = vi.fn((zone: DropZone) => cache[zone.parentId])
   const collisions = rectCacheCollision({ get })({
     active,
     collisionRect: clientRect(rect(0, 0, 20, 20)),
@@ -103,11 +104,11 @@ describe('rectCacheCollision', () => {
       point: { x: 10, y: 10 },
     })
 
-    expect(get).toHaveBeenCalledWith(OUTER)
+    expect(get).toHaveBeenCalledWith(zone(OUTER))
     expect(ids).toEqual([`${OUTER}/children`])
   })
 
-  it('falls back to dnd-kit’s measured rect for a zone that is not a canvas node', () => {
+  it('falls back to dnd-kit’s measured rect for a zone the host holds no live rect for', () => {
     const { ids } = detect({
       containers: [container('tree-row', zone(OUTER))],
       point: { x: 10, y: 10 },

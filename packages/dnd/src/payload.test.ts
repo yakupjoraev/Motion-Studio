@@ -46,6 +46,7 @@ describe('dropZone', () => {
     orientation: 'grid',
     label: 'Grid',
     childIds: ['node_a'],
+    surface: 'canvas',
   }
 
   it('reads a zone back', () => {
@@ -58,6 +59,7 @@ describe('dropZone', () => {
     ['a malformed parent id', { ...valid, parentId: 'root' }],
     ['an unknown orientation', { ...valid, orientation: 'diagonal' }],
     ['children that are not ids', { ...valid, childIds: [7] }],
+    ['an unknown surface', { ...valid, surface: 'inspector' }],
   ])('rejects a zone with %s', (_, data) => {
     expect(dropZone(data)).toBeNull()
   })

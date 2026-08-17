@@ -8,6 +8,8 @@ import { useCallback, useMemo, useRef } from 'react'
 import { useStudioStore } from '../../../store/editor-store'
 
 import { useArtboardResize } from './artboard-resize'
+import { useCanvasAutoPan } from './canvas-auto-pan'
+import { setCanvasHandle } from './canvas-handle'
 import { MotionSettingsProvider } from './motion-settings'
 import { MultiFrameView } from './multi-frame-view'
 import { NodeRenderer } from './node-renderer'
@@ -43,9 +45,14 @@ export function CanvasHost() {
   const multiFrame = useStudioStore((state) => state.viewport.multiFrame)
   const handle = useRef<CanvasHandle | null>(null)
   const artboard = useArtboardResize(handle)
+  const island = useRef<HTMLDivElement>(null)
+
+  useCanvasAutoPan(island)
 
   const onReady = useCallback((ready: CanvasHandle | null) => {
     handle.current = ready
+    // The palette inserts into a canvas it is not rendered inside — it reveals the new node through here.
+    setCanvasHandle(ready)
   }, [])
 
   // ADR-112: nothing here subscribes to the document. The rect cache hears about a change through
@@ -79,7 +86,7 @@ export function CanvasHost() {
           <MultiFrameView />
         ) : (
           // The wrapper is what hears the artboard's own width transition finish — ADR-164.
-          <div className="h-full w-full" onTransitionEnd={artboard.onTransitionEnd}>
+          <div className="h-full w-full" onTransitionEnd={artboard.onTransitionEnd} ref={island}>
             <Canvas
               artboardWidth={artboard.width}
               breakpointName={breakpoint}

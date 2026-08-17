@@ -3,13 +3,19 @@
 import { EffectStack, blockRegistry, renderRegistry } from '@motion-studio/blocks'
 import { NodeWrapper } from '@motion-studio/canvas'
 import { selectors } from '@motion-studio/editor'
-import type { BreakpointId, NodeId } from '@motion-studio/schema'
+import { type BreakpointId, type NodeId, type UnknownProps, blockId } from '@motion-studio/schema'
 import { type ComponentType, type ReactNode, Suspense, memo, useCallback, useMemo } from 'react'
 
 import { useStudioStore } from '../../../store/editor-store'
 
+import { useNodeDropZone } from './node-drop-zone'
 import { NodeErrorBoundary } from './node-error-boundary'
 import { NodeMotion } from './node-motion'
+
+/** A node that is not in the document still has to call the same hooks; nothing is registered for it. */
+const EMPTY_BLOCK = blockId('container')
+const EMPTY_PROPS: UnknownProps = {}
+const EMPTY_CHILDREN: readonly NodeId[] = []
 
 /**
  * CANVAS.md § Node rendering, as written. Each renderer subscribes to **its own node only**, so
@@ -26,6 +32,20 @@ export const NodeRenderer = memo(function NodeRenderer({ id, breakpoint }: NodeR
   const select = useMemo(() => selectors.selectResolvedNode(id, breakpoint), [breakpoint, id])
   const node = useStudioStore(useCallback((state) => select(state), [select]))
 
+  /*
+   * The drop zone is registered for the edited canvas only. A comparison frame renders the same node
+   * ids at another breakpoint (ADR-163), and two zones under one id would leave dnd-kit holding
+   * whichever mounted last — a drop aimed at the canvas landing against a frame beside it.
+   */
+  const zone = useNodeDropZone({
+    id,
+    blockId: node?.blockId ?? EMPTY_BLOCK,
+    props: node?.props ?? EMPTY_PROPS,
+    childIds: node?.children ?? EMPTY_CHILDREN,
+    locked: node?.locked ?? true,
+    disabled: breakpoint !== undefined,
+  })
+
   if (node === undefined || node.hidden) {
     return null
   }
@@ -37,7 +57,7 @@ export const NodeRenderer = memo(function NodeRenderer({ id, breakpoint }: NodeR
 
   if (definition === undefined || Component === undefined) {
     return (
-      <NodeWrapper id={id}>
+      <NodeWrapper dropRef={zone.ref} id={id}>
         <UnknownBlock blockId={node.blockId} name={node.name} />
       </NodeWrapper>
     )
@@ -52,7 +72,7 @@ export const NodeRenderer = memo(function NodeRenderer({ id, breakpoint }: NodeR
   ))
 
   return (
-    <NodeWrapper id={id}>
+    <NodeWrapper dropRef={zone.ref} id={id}>
       {/* The node's effects are siblings of its markup, never a wrapper around it: a block must not
           learn that it has any, which is what keeps its export honest. */}
       <EffectStack effects={node.effects} registry={blockRegistry} />

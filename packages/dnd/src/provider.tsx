@@ -24,7 +24,7 @@ import {
 } from './announcements'
 import { useAnnouncerContainer } from './announcer-container'
 import { rectCacheCollision } from './collision/rect-cache-collision'
-import type { DragPayload, DragRectSource, DropTarget, DropTargetResolver } from './dnd.types'
+import type { DragPayload, DropTarget, DropTargetResolver, ZoneRectSource } from './dnd.types'
 import { dragPoint } from './drag-point'
 import { DropIndicatorLayer } from './indicators/drop-indicator-layer'
 import { createIndicatorHandle } from './indicators/indicator-handle'
@@ -36,8 +36,8 @@ import { canvasAwareCoordinateGetter } from './sensors/keyboard-sensor'
 import { POINTER_SENSOR_OPTIONS } from './sensors/pointer-sensor'
 
 export interface DndProviderProps {
-  /** The canvas rect cache. A prop, because `dnd` must not import `canvas`. */
-  readonly rects: DragRectSource
+  /** Live geometry per zone, from whichever surface drew it. A prop, because `dnd` must not import `canvas`. */
+  readonly rects: ZoneRectSource
   readonly zoom: () => number
   readonly gridSize: () => number
   /** Prompt 28's `resolveDropTarget`, bound to the document and registry the host owns. */
