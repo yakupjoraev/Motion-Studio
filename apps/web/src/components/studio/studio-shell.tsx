@@ -10,6 +10,7 @@ import { useViewportGuard } from '../../hooks/use-viewport-guard'
 
 import { Inspector } from './inspector/inspector'
 import { LeftPanel } from './left-panel/left-panel'
+import { ThemeHost } from './left-panel/theme/theme-host'
 import { PanelResizer } from './panel-resizer'
 
 import { StatusBar } from './status-bar/status-bar'
@@ -170,6 +171,9 @@ export function StudioShell({ canvas }: StudioShellProps) {
       </div>
 
       <ShortcutHost panels={panels} />
+
+      {/* Renders nothing: it holds the subscription that puts `document.theme` on the root — ADR-172. */}
+      <ThemeHost />
 
       <div className="ms-studio-notice h-dvh place-content-center gap-3 px-6 text-center">
         <p className="text-sm">Motion Studio needs a wider screen.</p>

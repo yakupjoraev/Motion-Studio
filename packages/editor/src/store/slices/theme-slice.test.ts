@@ -69,6 +69,35 @@ describe('theme setters', () => {
     )
   })
 
+  it('applies a config no preset id names, in one step', () => {
+    const store = createTestStore()
+    const saved = { ...PRESETS.candy, id: 'custom-1', name: 'Mine' }
+
+    store.getState().setTheme(saved)
+
+    expect(store.getState().document.theme.id).toBe('custom-1')
+    expect(store.getState().document.theme.radiusScale).toBe(PRESETS.candy.radiusScale)
+    expect(store.getState().version).toBe(1)
+  })
+
+  it('fills in a field a stored config predates, rather than rejecting it', () => {
+    const store = createTestStore()
+    const { repairContrast: _dropped, ...palette } = PRESETS.candy.palette
+    const stored = { ...PRESETS.candy, id: 'custom-2', palette } as typeof PRESETS.candy
+
+    store.getState().setTheme(stored)
+
+    expect(store.getState().document.theme.palette.repairContrast).toBe(true)
+  })
+
+  it('rejects a stored config that is not a theme at all', () => {
+    const store = createTestStore()
+    const broken = { ...PRESETS.candy, radiusScale: 7 } as unknown as typeof PRESETS.candy
+
+    expect(() => store.getState().setTheme(broken)).toThrow('Not a valid theme')
+    expect(store.getState().version).toBe(0)
+  })
+
   it('does nothing when the token already holds that value', () => {
     const store = createTestStore()
     const value = store.getState().document.theme.radiusScale

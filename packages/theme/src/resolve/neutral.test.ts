@@ -91,6 +91,7 @@ describe('every family passes the contrast gate', () => {
         neutral: family,
         accentHueShift: 0,
         saturation: 1,
+        repairContrast: true,
       })
       const colors = buildSemanticColors(mode, ramps, mode === 'light' ? 600 : 400)
 

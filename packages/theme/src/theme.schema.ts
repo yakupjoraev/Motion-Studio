@@ -27,6 +27,9 @@ export const themePaletteSchema = z.object({
   neutral: neutralHueSchema,
   accentHueShift: z.number().min(-30).max(30),
   saturation: z.number().min(0.5).max(1.5),
+  // Defaulted rather than required on the input: a config written before ADR-170, or by hand, is
+  // repaired, which is the safe half of the pair. Only the theme builder ever writes `false`.
+  repairContrast: z.boolean().default(true),
 })
 
 export const themeTypographySchema = z.object({

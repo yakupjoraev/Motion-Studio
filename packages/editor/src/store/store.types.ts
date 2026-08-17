@@ -1,5 +1,5 @@
 import type { BlockRegistry, BreakpointId, MotionDocument, NodeId } from '@motion-studio/schema'
-import type { ColorModePreference, PresetId } from '@motion-studio/theme'
+import type { ColorModePreference, PresetId, ThemeConfig } from '@motion-studio/theme'
 import type { MotionStudioError, Point, Result } from '@motion-studio/utils'
 import type { Mutate, StoreApi, UseBoundStore } from 'zustand'
 
@@ -190,4 +190,6 @@ export interface ThemeSlice {
   setThemeToken(path: string, value: unknown): void
   setColorMode(mode: ColorModePreference): void
   applyThemePreset(id: PresetId): void
+  /** A config no `PresetId` names: a saved custom preset, or an imported one — ADR-173. */
+  setTheme(theme: ThemeConfig): void
 }

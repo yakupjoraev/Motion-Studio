@@ -111,6 +111,9 @@ function buildVariables(
 
 const cache = new Map<string, ThemeResolution>()
 
+/** ADR-174: 6.5 kB a resolution, so 128 of them is 0.83 MB — under a tenth of the studio's heap. */
+export const CACHE_LIMIT = 128
+
 /** Canonical, so two configs that differ only in key order hash the same. */
 function hashConfig(config: ThemeConfig, mode: ColorMode): string {
   return JSON.stringify([
@@ -121,6 +124,7 @@ function hashConfig(config: ThemeConfig, mode: ColorMode): string {
     config.palette.neutral,
     config.palette.accentHueShift,
     config.palette.saturation,
+    config.palette.repairContrast,
     config.radiusScale,
     config.spacingScale,
     config.motionScale,
@@ -151,17 +155,38 @@ export function resolveTheme(config: ThemeConfig, options: ResolveOptions = {}):
 
   const ramps = buildRamps(config.palette)
   const repair = repairContrast(mode, ramps)
+  // "Keep mine" — ADR-170. The check still runs and the failing pair is still reported; what changes
+  // is which step the variables are built from, and which of the two lists the report goes into.
+  const declined = !config.palette.repairContrast
   const resolution: ThemeResolution = {
     config,
     mode,
-    variables: buildVariables(config, mode, ramps, repair.accentStep),
-    repairs: repair.repairs,
+    variables: buildVariables(config, mode, ramps, declined ? ramps.accentStep : repair.accentStep),
+    repairs: declined ? [] : repair.repairs,
+    overrides: declined ? repair.repairs : [],
     warnings: repair.warnings,
   }
 
-  cache.set(key, resolution)
+  remember(key, resolution)
 
   return resolution
+}
+
+/**
+ * The cache is bounded because the theme builder makes its keys unbounded: a hue drag produces a new
+ * config per frame, so an unbounded `Map` would grow for as long as the session lasts. Oldest-first
+ * eviction, and the size is measured rather than picked — ADR-174.
+ */
+function remember(key: string, resolution: ThemeResolution): void {
+  if (cache.size >= CACHE_LIMIT) {
+    const oldest = cache.keys().next()
+
+    if (!oldest.done) {
+      cache.delete(oldest.value)
+    }
+  }
+
+  cache.set(key, resolution)
 }
 
 /** Test seam: the cache is process-wide, and a memoisation test has to be able to start from empty. */

@@ -30,6 +30,11 @@ export interface ThemePalette {
   readonly accentHueShift: number
   /** 0.5..1.5, chroma multiplier. */
   readonly saturation: number
+  /**
+   * `false` is the theme builder's "keep mine": the accent stays where the seed put it and the
+   * failing pair is reported as an override instead of being repaired — ADR-170.
+   */
+  readonly repairContrast: boolean
 }
 
 export interface ThemeTypography {
@@ -81,6 +86,12 @@ export interface ThemeResolution {
   /** The mode actually in force: `system` has already been resolved against the environment. */
   readonly mode: ColorMode
   readonly variables: Readonly<Record<string, string>>
+  /** Substitutions the engine made. */
   readonly repairs: readonly ContrastRepair[]
+  /**
+   * Substitutions the engine found and did not make, because `palette.repairContrast` is `false`.
+   * The variables carry the user's accent; this carries what it measured — ADR-170.
+   */
+  readonly overrides: readonly ContrastRepair[]
   readonly warnings: readonly string[]
 }

@@ -7,6 +7,20 @@ export {
 } from './apply/apply-theme'
 export { ThemeScope, type ThemeScopeProps } from './apply/theme-scope'
 export {
+  TOKEN_FORMATS,
+  exportedAccent,
+  overrideNotes,
+  resolveForExport,
+  toCssVariables,
+  toFigmaTokens,
+  toTailwindConfig,
+  toTokensJson,
+  warningNotes,
+  type ThemeExport,
+  type TokenFormat,
+  type TokenFormatId,
+} from './export/index'
+export {
   colorModeSubscriberCount,
   resetColorModeSubscription,
   useColorMode,
@@ -33,7 +47,12 @@ export {
 } from './resolve/generate-ramp'
 export { NEUTRAL_FAMILY, NEUTRAL_HUES, type NeutralFamily } from './resolve/neutral'
 export { repairContrast, type RepairResult } from './resolve/repair-contrast'
-export { clearThemeCache, resolveTheme, type ResolveOptions } from './resolve/resolve-theme'
+export {
+  CACHE_LIMIT,
+  clearThemeCache,
+  resolveTheme,
+  type ResolveOptions,
+} from './resolve/resolve-theme'
 export { FONT_PAIRING, scaleTypeScale, type ScaledType } from './resolve/typography'
 export {
   COLOR_MODE_SCRIPT,

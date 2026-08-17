@@ -1,4 +1,5 @@
 import { applyThemePreset } from '../../commands/apply-theme-preset'
+import { setTheme } from '../../commands/set-theme'
 import { setThemeToken } from '../../commands/set-theme-token'
 import type { ThemeSlice } from '../store.types'
 
@@ -25,5 +26,10 @@ export const createThemeSlice: () => SliceCreator<ThemeSlice> = () => (_set, get
 
   applyThemePreset(id) {
     get().dispatch(applyThemePreset({ id }))
+  },
+
+  /** A saved or imported config, which `PresetId` cannot name — ADR-173. */
+  setTheme(theme) {
+    get().dispatch(setTheme({ theme }))
   },
 })

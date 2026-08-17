@@ -2,7 +2,7 @@ import { BLUR, DURATION, EASING, LIGHT, RADIUS, SPACE, TYPE_SCALE } from '@motio
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { studioDark, studioLight } from '../presets/index'
-import { clearThemeCache, resolveTheme } from './resolve-theme'
+import { CACHE_LIMIT, clearThemeCache, resolveTheme } from './resolve-theme'
 
 import type { ThemeConfig } from '../theme.types'
 
@@ -214,5 +214,67 @@ describe('memoisation', () => {
     expect(resolveTheme(system, { environmentMode: 'dark' })).not.toBe(
       resolveTheme(system, { environmentMode: 'light' }),
     )
+  })
+})
+
+describe('the cache is bounded', () => {
+  it('evicts the oldest entry rather than growing with a drag — ADR-174', () => {
+    clearThemeCache()
+
+    const first: ThemeConfig = {
+      ...studioDark,
+      palette: { ...studioDark.palette, saturation: 0.5 },
+    }
+    const held = resolveTheme(first)
+
+    // One frame per hue step, which is what a drag produces: enough of them to fill the cache twice.
+    for (let step = 0; step < CACHE_LIMIT + 10; step += 1) {
+      resolveTheme({
+        ...studioDark,
+        palette: { ...studioDark.palette, accentHueShift: -30 + step * (60 / (CACHE_LIMIT + 10)) },
+      })
+    }
+
+    expect(resolveTheme(first)).not.toBe(held)
+  })
+})
+
+describe('keeping a failing accent — ADR-170', () => {
+  /** Pale and barely chromatic: too low-contrast against a light surface to pass unrepaired. */
+  const seed = 'oklch(88% 0.05 95)'
+
+  const repaired: ThemeConfig = {
+    ...studioLight,
+    id: 'repaired',
+    palette: { ...studioLight.palette, accent: seed, repairContrast: true },
+  }
+
+  const kept: ThemeConfig = { ...repaired, id: 'kept' }
+  const keptConfig: ThemeConfig = {
+    ...kept,
+    palette: { ...kept.palette, repairContrast: false },
+  }
+
+  it('repairs by default, and reports the substitution', () => {
+    const resolution = resolveTheme(repaired)
+
+    expect(resolution.repairs.length).toBeGreaterThan(0)
+    expect(resolution.overrides).toHaveLength(0)
+  })
+
+  it('keeps the user’s accent when the repair is declined', () => {
+    const declined = resolveTheme(keptConfig)
+
+    expect(declined.repairs).toHaveLength(0)
+    expect(declined.overrides.length).toBeGreaterThan(0)
+    expect(declined.variables['--ms-color-accent']).not.toBe(
+      resolveTheme(repaired).variables['--ms-color-accent'],
+    )
+  })
+
+  it('still names the ratio it measured, so nothing ships silently', () => {
+    const [override] = resolveTheme(keptConfig).overrides
+
+    expect(override?.measured).toBeLessThan(override?.required ?? 0)
   })
 })
