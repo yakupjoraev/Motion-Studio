@@ -79,13 +79,16 @@ The two codegen fields that exist for a block that cannot finish its own story:
 
 ```ts
 readonly notes?: readonly string[]        // comments the printers emit above the element
-readonly structuredData?: { readonly type: 'FAQPage'; readonly enabledBy: string }
+readonly structuredData?: {
+  readonly type: 'FAQPage' | 'BreadcrumbList'
+  readonly enabledBy: string
+}
 ```
 
 `notes` is where `newsletter-form` says its submit handler is a no-op the reader has to replace.
 `structuredData` is where `faq-accordion` says the export emits `FAQPage` JSON-LD when the user asked
-for it — beside the element, never inside the canvas, because a `<script>` in an artboard is markup the
-user can neither see nor select.
+for it, and where `breadcrumbs` says the same about `BreadcrumbList` — beside the element, never inside
+the canvas, because a `<script>` in an artboard is markup the user can neither see nor select.
 
 ## Controls drive the inspector
 
@@ -262,6 +265,22 @@ category that takes an external dependency, and it travels through the codegen d
 
 ### Navigation (6)
 `navbar` · `navbar-floating` · `sidebar-nav` · `footer` · `breadcrumbs` · `dock`
+
+The category with the strictest requirements, because a broken mobile menu or an unlabelled landmark
+makes a whole page unusable rather than one section of it. Every one of the six is a real landmark with
+a label, every interactive element is reachable by keyboard in visual order, every icon-only control has
+an accessible name that says what it does, and nothing is disclosed by hover alone.
+
+Four of them share one link vocabulary (`navigation/navigation.schema.ts`): a link is a label, an href
+and an optional single level of children, and the icon-only ones carry a required accessible name beside
+the glyph. `navigation/nav-link.tsx` renders it, so `aria-current="page"` is decided in one place rather
+than in six — colour never carries the active state on its own.
+
+Two of them read the shared scroll bus rather than React state: `navbar` gains its glass past the top of
+the page and `navbar-floating` shrinks past 80 px, both by writing a data attribute and letting CSS do
+the rest (ADR-191). `dock` reads the pointer bus and writes one CSS variable per item, so its
+magnification costs zero renders (ADR-195). `navbar` is the page's first landmark, so it renders the
+skip link that jumps past itself (ADR-192).
 
 ### Interactive (9)
 `button` · `button-group` · `tabs` · `accordion` · `carousel` · `modal-trigger` · `tooltip-target` ·

@@ -7458,3 +7458,516 @@ than to an oversight:
 - Accepted: the dark-mode CTA band is a *light* rectangle on a dark page, because in dark mode
   `foreground-onAccent` is near-black and accent surfaces have to be light to carry it. That is the design
   system being consistent, not the band being wrong.
+
+## ADR-189 — Four more Radix primitives are the blocks package's own dependency
+
+**Date** 2026-08-18 · **Prompt** 39 · **Status** Accepted
+
+### Question
+`navbar` needs a dropdown and a mobile drawer, `sidebar-nav` a group disclosure, `breadcrumbs` an
+overflow menu. Should those be hand-rolled, imported through `@motion-studio/ui`, or declared as
+`packages/blocks` dependencies the way `@radix-ui/react-accordion` already is?
+
+### Criterion (set before deciding)
+TECH_STACK.md § Radix UI already answered the shape of this question for Accordion: a primitive a
+**block** uses travels into the user's project through the codegen descriptor, so it has to be the
+block package's dependency — a block importing it through `@motion-studio/ui` would export code that
+does not compile outside this repository. The remaining question is per primitive: does the block
+need behaviour that a hand-rolled version would get wrong, where "wrong" means a keyboard or focus
+requirement in ACCESSIBILITY.md § Dialogs / § Non-negotiables rather than an amount of code?
+
+### Measurement
+What each one supplies that the requirement names, checked against the requirement:
+
+| Primitive | Requirement it satisfies | Hand-rolled failure it prevents |
+| --- | --- | --- |
+| Navigation Menu | `aria-expanded`, arrow keys along the bar, `Esc`, outside click | Every one of the four, individually |
+| Dialog | Focus trapped, `Esc` closes, focus restored to the trigger | Focus restore, which needs the trigger held across an unmount |
+| Collapsible | `aria-expanded` and the closed panel out of the tab order | A panel hidden by a class stays tabbable |
+| Dropdown Menu | Named trigger, arrow keys, `Esc`, focus restore | The same list as Dialog, plus item roving focus |
+
+Installed weight, from `pnpm why` on the resolved tree: all four were already in the lockfile through
+`@motion-studio/ui` except `@radix-ui/react-navigation-menu`, so the lockfile grew by one package and
+`node_modules` by one symlink into an existing store entry.
+
+### Decision
+All four are declared in `packages/blocks/package.json` and carried in each block's
+`codegen.dependencies`, so the emitted `package.json` installs them. TECH_STACK.md § Radix UI now
+carries the table above rather than the sentence claiming Accordion is the only one.
+
+### Consequences
+- Accepted: four packages a `blocks` consumer installs whether or not they place a navigation block.
+  Tree-shaking removes the code, not the install.
+- Accepted: `navbar` alone declares two of them, which makes it the most expensive export in the
+  registry to `npm install`. The alternative is a navbar whose menu does not work with a keyboard.
+- Avoided: four hand-rolled keyboard models, and the version of this session that debugs focus restore.
+
+### Alternatives rejected
+- Hand-rolling: the failures column above is the reason, and prompt 39 names the primitives outright.
+- Importing through `@motion-studio/ui`: produces an export that does not compile — the same reason
+  ADR-107 and TECH_STACK.md § Radix UI already give for Accordion.
+
+## ADR-190 — A glyph-only control labels itself in CSS, not with Radix Tooltip
+
+**Date** 2026-08-18 · **Prompt** 39 · **Status** Accepted
+
+### Question
+`sidebar-nav`'s collapsed rail and `dock`'s items are glyphs. Both need a visible label beside the
+glyph. Radix Tooltip is the primitive the studio chrome uses for this. Should the blocks use it?
+
+### Criterion (set before deciding)
+Two conditions, both stated before looking at either option. The label must appear on **focus** as
+well as on hover — ACCESSIBILITY.md § Non-negotiables 10 — and the block must work in the export
+without the user adding anything to their application root, because COMPONENT_LIBRARY.md § Rules 1
+says a block is a pure function of its props and cannot install a provider.
+
+### Measurement
+Radix Tooltip fails the second condition outright: `Tooltip.Root` throws without a `Tooltip.Provider`
+above it, and the provider belongs to an application root a block does not own. It would satisfy the
+first.
+
+A `<span>` inside the control, hidden by default and shown by `group-hover/nav` and
+`group-focus-visible/nav`, satisfies both. The accessible name is a separate `sr-only` label on the
+same control, so the visible tag is `aria-hidden` and nothing is disclosed by hover — the name is
+present whether or not the tag is.
+
+### Decision
+`NAV_TOOLTIP` in `navigation.styles.ts`: the mechanism once, the placement at each call site — to the
+right of a rail item, above a dock item. No Radix Tooltip in `packages/blocks`. TECH_STACK.md § Radix
+UI says so explicitly, so the next block does not have to rediscover it.
+
+### Consequences
+- Accepted: no collision detection. A rail against the right edge of the viewport would push its label
+  off screen; the rail is a left-hand column, so the case does not arise today, and a dock's label is
+  centred above an item that is never at the top of the viewport.
+- Accepted: no delay. Radix's `delayDuration` prevents a label flashing as the pointer crosses a row;
+  a CSS tooltip appears at once. On a 40 px target that reads as responsive rather than as noise.
+- Avoided: a provider requirement in the exported code, which the user would meet by reading an error.
+
+### Alternatives rejected
+- `title` attribute: does not appear on focus, cannot be styled, and its timing belongs to the browser.
+- Radix Tooltip with a provider rendered by the block: two blocks on one page would render two
+  providers, and a block that mounts application-level context is not a pure function of its props.
+
+## ADR-191 — The scrolled state is a data attribute written from the shared scroll bus
+
+**Date** 2026-08-18 · **Prompt** 39 · **Status** Accepted
+
+### Question
+`navbar` gains its glass once the page has scrolled and `navbar-floating` shrinks past 80 px. Prompt 39
+says to drive both from the shared scroll bus by writing CSS variables. Variables, or something else?
+
+### Criterion (set before deciding)
+COMPONENT_LIBRARY.md § Rules 3: Tailwind classes only, and inline styles are for "genuinely dynamic
+values, which go through CSS variables". So the test is whether the value is genuinely dynamic. If the
+state has a fixed, small number of values, § Rules 3 says it is a class; if it is a continuum, it is a
+variable. Whichever it is, § Rules 1 and the state rule in the contract's § 5 both hold: no React state.
+
+### Measurement
+The scrolled state has exactly two values. Written as variables it would take three of them —
+padding, background and shadow — each an arbitrary-value class reading a variable, and the transition
+would have to be declared on the properties rather than taken from `NAV_TRANSITION`. Written as
+`data-scrolled` it is one attribute and four existing Tailwind variants
+(`data-[scrolled=true]:border-border`, `:bg-surface-0/80`, `:shadow-sm`, `:backdrop-blur-xl`), with
+the transition already tokenised.
+
+Renders per scroll frame, measured the way the dock's are (ADR-195): zero either way — the hook writes
+the DOM directly and never touches state.
+
+### Decision
+`useScrolled(ref, threshold)` writes `data-scrolled` from `scheduler.onScroll`, and the classes react
+to it. The one thing a class genuinely cannot express — the floating pill's scrolled background, which
+has to compose with the theme's own glass recipe rather than replace it — is a single rule in
+`blocks.css` (`.ms-nav-glass[data-scrolled='true']`).
+
+With no scheduler above the block, nothing subscribes and the bar keeps its unscrolled treatment. That
+is the spotlight effect's answer to the same question, and it is a finished composition rather than a
+broken one: a bar over the top of a hero is *supposed* to be transparent.
+
+### Consequences
+- Accepted: a page reloaded mid-scroll shows the unscrolled bar until the first scroll event. The bus
+  reports on change, not on subscribe, and reading `window.scrollY` instead would be wrong in the
+  studio, where the scrolling context is the canvas viewport rather than the window.
+- Accepted: this deviates from prompt 39's wording. The deviation is recorded here rather than made
+  silently, and § Rules 3 is the criterion it was decided by.
+- Accepted: a story or an export with no `MotionSchedulerProvider` never reaches the scrolled state.
+  The stories mount one, which is also how `spotlight.stories.tsx` handles it.
+
+### Alternatives rejected
+- CSS variables for the three properties: three arbitrary-value classes and a hand-written transition
+  list, for a state with two values.
+- React state on a throttled scroll listener: a render per frame on a component that wraps the page's
+  navigation, and the contract's § 5 forbids it in as many words.
+
+## ADR-192 — The navbar renders the page's skip link
+
+**Date** 2026-08-18 · **Prompt** 39 · **Status** Accepted
+
+### Question
+Prompt 39 says the navbar "declares itself the first landmark, so the exported page's skip link jumps
+past it". Where does that skip link come from? Nothing else in the registry is the page.
+
+### Criterion (set before deciding)
+ACCESSIBILITY.md § Landing, gallery, docs requires a skip link on a content page. A skip link only
+works if it precedes every other focusable element. So the block that renders it must be the first
+block on the page, and the only block that can promise that is the one whose whole purpose is to be
+first.
+
+### Decision
+`navbar` renders it as its own first child: an `<a>` to `skipLinkTarget` (default `#main`), `sr-only`
+until focused. Two props control it — `skipLink` to turn it off for a page that already has one, and
+`skipLinkTarget` for a page whose main content has another id. The codegen note says the target has to
+exist, because a skip link that lands nowhere is worse than none.
+
+The link is *inside* the `<nav>` rather than before it, and that is forced: the block's root element is
+the landmark the export prints, and prompt 39's own test asks for exactly one landmark per block. A
+`<header>` wrapper would make it two.
+
+### Consequences
+- Accepted: a screen-reader user navigating by landmark finds "Skip to content" inside the navigation
+  landmark. It is the first thing in it, so it is found before the links it skips.
+- Accepted: a page with two navbars would render two skip links. The second is a duplicate id target
+  rather than a broken link, and `skipLink` is the switch that turns it off.
+- Accepted: `navbar-floating` does not render one. It can be a page's first block, and a page built
+  from it needs the link from somewhere else. Recorded rather than solved, because a skip link on a
+  detached pill would have to place itself against a viewport the block does not own.
+
+### Alternatives rejected
+- A `<header>` root holding the skip link and a `<nav>`: two landmarks, which contradicts the
+  category's own test and would make the export print a `banner` the user did not ask for.
+- Leaving it to the export's page template: prompt 43's printers do not exist yet, and a requirement
+  deferred to an unwritten file is the banned fourth way wearing a schedule.
+
+## ADR-193 — The footer's social links carry our own glyphs and a derived name
+
+**Date** 2026-08-18 · **Prompt** 39 · **Status** Accepted
+
+### Question
+`footer` ships a row of social links. Prompt 39 requires icon links with real accessible names —
+"Motion Studio on GitHub", not "GitHub". A brand mark is the obvious glyph. Do we add brand marks to
+`packages/icons`?
+
+### Criterion (set before deciding)
+Two rules already written down. DESIGN_SYSTEM.md § Iconography defines the icon contract: a 20 × 20
+grid, 1.5 px stroke, `currentColor`, round caps, **no fill**. And ACCESSIBILITY.md § Non-negotiables 2
+is what the requirement actually is about: every interactive element has an accessible name.
+
+### Measurement
+Every recognisable brand mark — the GitHub silhouette, the X monogram, the YouTube tile — is a filled
+shape. Redrawing one as a 1.5 px open stroke does not produce a quieter version of the mark; it
+produces a different glyph that no longer identifies the brand, which is the whole reason a brand mark
+would have been used. So the icon contract and a brand mark are mutually exclusive, not a trade-off.
+
+The accessible-name requirement, meanwhile, is satisfied entirely by the name: `socialAccessibleName`
+builds `"${brand} on ${network}"` from the brand label and the network, and the glyph is `aria-hidden`.
+
+### Decision
+No brand marks. `socialSchema` carries `network`, `href` and an `icon` name from our own set (default
+`external-link`), and the accessible name is **derived** rather than authored — there is no `name`
+field, so no document can ship the short version the prompt forbids. `footer.test.tsx` iterates every
+social link and asserts the derived name, that it is not the bare network name, and that it contains
+the brand.
+
+### Consequences
+- Accepted: the default footer's social row is three of our own glyphs rather than three recognised
+  marks. It reads as a set of links rather than as a set of logos, and a user who wants the logos can
+  place their own image — the icon control lists what we have.
+- Accepted: a user cannot phrase the name themselves ("Follow us on X"). The name they would have
+  written badly is the one the prompt calls out as the commonest footer defect, so the schema does not
+  offer the field.
+- Avoided: reproducing third-party marks from memory into a repository read as a portfolio artifact,
+  and the licence question DESIGN_REFERENCES.md § The licence check would have opened.
+
+### Alternatives rejected
+- Adding filled brand glyphs: contradicts DESIGN_SYSTEM.md § Iconography, which would have had to be
+  changed first, and the change would have been "except for brand marks" — an exception with no rule
+  behind it.
+- Text links instead of icon links: satisfies accessibility and ignores the prompt's actual ask.
+
+## ADR-194 — `structuredData.type` becomes a union
+
+**Date** 2026-08-18 · **Prompt** 39 · **Status** Accepted
+
+### Question
+`breadcrumbs` emits `BreadcrumbList` JSON-LD in the export. `CodegenDescriptor.structuredData.type`
+was the literal `'FAQPage'`, written for the one block that needed it (ADR-185).
+
+### Criterion (set before deciding)
+The contract's § 9.1: the answer is in `docs/`, or the document changes first. COMPONENT_LIBRARY.md
+§ BlockDefinition documents the field as `'FAQPage'`, so the document is what has to change, in its own
+commit, before the code. The shape of the change is decided by what a printer needs: a printer writes
+one JSON-LD shape per type, so it has to know which shapes exist. A `string` would let a block ask for
+a shape no printer implements.
+
+### Decision
+`STRUCTURED_DATA_TYPES = ['FAQPage', 'BreadcrumbList']` and
+`StructuredDataType = (typeof STRUCTURED_DATA_TYPES)[number]` in
+`packages/schema/src/registry/registry.types.ts`, exported from the barrel. COMPONENT_LIBRARY.md
+§ BlockDefinition carries the union and names both blocks. `breadcrumbs` declares
+`{ type: 'BreadcrumbList', enabledBy: 'jsonLd' }` and renders no `<script>` in the canvas, which its
+test asserts — the same rule ADR-185 set for the FAQ.
+
+### Consequences
+- Accepted: every new structured-data type is a change in two places, `packages/schema` and the printer
+  that writes it. That is the point: an unimplemented type fails to compile rather than emitting nothing.
+- Accepted: prompts 43 and 44 inherit two shapes to print instead of one.
+- Avoided: `type: string`, under which a typo produces an export that silently omits the markup.
+
+### Alternatives rejected
+- A second optional field (`breadcrumbList?: boolean`): two fields for one concept, and the third type
+  would need a third field.
+- Leaving the type as `'FAQPage'` and having `breadcrumbs` emit through `notes`: a comment where a
+  contract belongs.
+
+## ADR-195 — The dock's magnification is one custom property per item, measured once
+
+**Date** 2026-08-18 · **Prompt** 39 · **Status** Accepted
+
+### Question
+`dock` scales each item by its distance from the cursor. Prompt 39 requires zero React renders on
+cursor move, and asks for it to be tested. How is the geometry read, and how does the keyboard get the
+same affordance?
+
+### Criterion (set before measuring)
+Two thresholds, both set before any of it was written. **Renders on pointer move: zero** — measured
+with a React `Profiler` around the block, comparing commit count before and after a sweep across the
+row. **Layout reads per frame: one** — a dock of eight items reading its own rect eight times a frame
+is the shape that turns a cheap effect into a forced-reflow loop.
+
+### Measurement
+`dock.test.tsx`, jsdom with the row's real geometry installed on the prototype (12 px tray padding,
+44 px items, 8 px gaps):
+
+- a sweep of six pointer moves across the row, one per item: commit count **unchanged** (the mount's
+  commits, then none) while `--ms-dock-pointer` on the last item reached the configured peak of 1.55;
+- layout reads per frame: **one** — the tray's own rect. The item centres are measured once, on
+  subscribe;
+- the swell is exactly 1 beyond `reach` rather than nearly 1, and `smoothstep` rather than linear:
+  at half the reach the scale is halfway up the peak, and at a quarter it is past three quarters —
+  which is the difference between a wave and a triangle with an apex.
+
+The centres survive the swell because `blocks.css` scales each item about `bottom center`, and a scale
+about the horizontal centre does not move the horizontal centre. That is what makes a one-time
+measurement correct rather than merely cheap.
+
+### Decision
+`useDockMagnify` subscribes to `scheduler.onPointerMove`, measures the item centres once as offsets
+inside the tray, and writes `--ms-dock-pointer` per item per frame. `blocks.css` computes
+
+```css
+scale: calc(1 + (var(--ms-dock-pointer) * var(--ms-dock-key) - 1) * var(--ms-reduced-motion, 1));
+```
+
+so three things follow from one declaration: the keyboard's swell is `--ms-dock-key`, set by
+`:focus-visible` to the same `--ms-dock-magnification` the pointer peaks at; the two compose instead of
+fighting over one variable; and reduced motion switches **both** off through `--ms-reduced-motion`,
+which is 0 from the media query *and* from the studio's own preview override (ADR-075). A check inside
+the hook would have covered only the media query.
+
+The magnification is deliberately not a motion channel: a channel animates the node's wrapper, and the
+wrapper is the tray, so a hover preset would swell all six glyphs together.
+
+### Consequences
+- Accepted: an item whose width changes without a re-render — a font swap inside the tray — leaves the
+  centres stale until the effect re-runs. The effect's deps include the item count, so adding or
+  removing an item re-measures; a font swap does not.
+- Accepted: the swell is invisible without a `MotionSchedulerProvider`, and the tray is then a still row
+  of glyphs. Hover and focus still change the surface and the ring, so the row is not inert.
+- Accepted: `pointer-bus` schedules its flush with `requestAnimationFrame`, and a *synchronous*
+  scheduler injected in its place would leave a stale frame handle and drop every move after the first.
+  The dock's test therefore delivers frames asynchronously, the way a browser does. Reported rather than
+  changed — it is `packages/motion`'s to decide, and with a real `requestAnimationFrame` it cannot occur.
+
+### Alternatives rejected
+- A rect per item per frame: eight forced layout reads a frame, against a stated threshold of one.
+- React state holding the scale per item: a render per frame on a component with six children, and the
+  contract's § 5 forbids it outright.
+- A `hover` motion channel: swells the tray, not the item under the cursor.
+
+## ADR-196 — The navigation blocks load eagerly, and the 6.1 kB is metadata
+
+**Date** 2026-08-18 · **Prompt** 39 · **Status** Accepted
+
+### Question
+Six blocks arrived, two of them carrying Radix primitives (`navbar` carries two). `/studio` first-load
+JS is capped at 250 kB gzip (ENGINEERING_CONTRACT.md § 6) and has been over it since ADR-179, at
+286.7 kB after prompt 38. Which of the six should be dynamic?
+
+### Criterion (set before measuring)
+ADR-187's criterion, unchanged so the two categories are comparable: measured off
+`app-build-manifest.json` (the method of ADR-152), a block moves to `lazy` if doing so takes at least
+**5 kB** off `/studio` — enough to be worth a Suspense skeleton and a request per node, and clear of the
+0.1 kB noise floor the earlier measurements showed.
+
+### Measurement
+Baseline, before this prompt: **286.7 kB** (ADR-187).
+
+- All six eager: **292.8 kB**
+- `navbar` lazy — the one block that pulls two Radix primitives into its module graph: **292.8 kB**, a
+  difference of zero
+- All six lazy: **292.9 kB** — 0.1 kB *worse*, which is the six `lazy` wrappers themselves
+
+The first-load set stays at eight files in all three, which is the same finding stated a different way:
+none of these components was in it.
+
+### Decision
+All six stay eager. The 6.1 kB this prompt adds (286.7 → 292.8) is their **metadata** — schemas,
+defaults, control descriptors and a11y notes, which the store fixes at creation time (ADR-102) — and no
+import boundary around a component can move it. Two of these blocks have the largest control trees in
+the registry so far (`footer` nests a list inside a list; `navbar` nests one inside another), which is
+where most of the 6.1 kB is.
+
+### Consequences
+- Accepted: `/studio` is now **292.8 kB** against a 250 kB budget, 42.8 kB over. The overage predates
+  this prompt (ADR-179, on the owner's call) and this prompt adds 6.1 kB of it. Escalated again in the
+  session report, with the same two levers that would actually work — a registry the store loads by
+  category on demand, or a metadata format the definitions compile into. Both are their own prompt, and
+  the trend is now three prompts long, so it is worth scheduling rather than noting.
+- Accepted: the four Radix primitives are in a shared chunk whether or not a document uses a navigation
+  block. They are small; the measurement above is what says so rather than an assumption.
+- Rejected: moving blocks to `lazy` "because the numbers are close to the budget". They are, and doing
+  it would not help — that is what the zero is.
+
+## ADR-197 — The blur placeholder is downscaled from the still, not screenshotted a second time
+
+**Date** 2026-08-18 · **Prompt** 39 · **Status** Accepted
+
+### Question
+`dock` is the first block whose glass tray is small and centred, and it broke
+`pnpm generate:thumbnails --verify`: two full runs produced different bytes in `thumbnails.json`. The
+320 px stills were byte-identical in both runs; only the dock's **dark blur placeholder** differed.
+Fix the block, or fix the generator?
+
+### Criterion (set before measuring)
+ADR-125 makes byte-identity across runs a property of this generator, not a nicety — the output is
+committed, so a generator that churned would be worse than none. So the question is which change makes
+`--verify` pass **for any block**, rather than for this one. A block-level workaround is only correct if
+the block is doing something a block should not do.
+
+### Measurement
+Four full runs, dock's dark placeholder, base64 length: **751 → 747 → 747 → 751**. Random, not a
+warm-up. Generated alone, the same block was stable at 747 across three runs — so the churn needed a
+full run to appear, which is what an alternating rasterisation looks like.
+
+The cause, isolated by experiment rather than by reading:
+
+- dock's `scale` declaration removed, glass kept: **still churned**;
+- `ms-glass` replaced by an opaque `bg-surface-2`, `scale` kept: **stable at 759 across three full runs**.
+
+So it is the `backdrop-filter`. `capture()` took two screenshots of the same page — one at scale
+0.25 (320 px) and one at scale 0.00625 (8 px) — and each is an independent rasterisation. A page with a
+`backdrop-filter` on it does not rasterise identically twice at the second scale; at the first it does.
+
+After deriving the placeholder from the still instead: the manifest's SHA-1 is **identical across two
+full runs** (`974ab471…`), `--verify` reports "identical across two runs (129 files)", and
+`check:registry` passes on 53 blocks.
+
+### Decision
+`capture()` takes **one** screenshot. The placeholder is produced from it, in the page: the still is
+decoded into an `Image`, drawn into an 8 × 5 canvas with high-quality smoothing, and re-encoded as WebP
+at the same quality. A placeholder derived from the still cannot disagree with the still, which is what
+a placeholder is for.
+
+The dock keeps its glass. It is the treatment a dock has, `requiresBackdrop` says so, and the block was
+not doing anything a block should not do — it was the first one to expose a hole in the generator.
+
+### Consequences
+- Accepted: every blur placeholder in the manifest changed once, all 53 blocks, in the same commit as
+  the six new ones. They are visually equivalent — an 8 × 5 blur of the same image — and slightly
+  smaller, because a downscale of a compressed still carries less high-frequency detail than a fresh
+  rasterisation at 8 px.
+- Accepted: the placeholder now inherits the still's WebP compression before being downscaled. At
+  8 × 5 that is unmeasurable, and the placeholder's whole job is to be a colour field.
+- Gained: one screenshot per block per mode instead of two, so a full run does 106 fewer rasterisations.
+- Accepted: the next block with a `backdrop-filter` cannot reintroduce this, because there is no second
+  rasterisation left to disagree with the first.
+
+### Alternatives rejected
+- Opaque dock tray: makes `--verify` pass by removing the feature that exposed the bug, and leaves the
+  next glass block to rediscover it.
+- `--disable-gpu` on the Chrome launch: might have worked, and "might" is the problem — it would have
+  been a flag chosen by hope, and it would have changed the rasterisation of all 106 stills as well.
+- Screenshotting twice and keeping the second: two rasterisations still disagree; this would only have
+  chosen a different one of them.
+
+## ADR-198 — What the side-by-side and the keyboard pass changed in the navigation category
+
+**Date** 2026-08-18 · **Prompt** 39 · **Status** Accepted
+
+### Question
+The six blocks pass their tests. Do they hold up when looked at and driven from a keyboard, and against
+the finish DESIGN_REFERENCES.md sets?
+
+### Method
+Chrome over CDP against the Storybook build: every block at 360 / 768 / 1440 in both colour modes, every
+keyboard path driven with real key events rather than programmatic focus, and the accessibility tree read
+back with `Accessibility.getFullAXTree` — which is the name a screen reader is handed, though not a screen
+reader itself. That distinction is stated rather than glossed: no NVDA or VoiceOver pass was run.
+
+### What changed, and why each one is checkable
+1. **Group headings take `foreground-muted`, not `foreground-subtle`.** The contrast contract asserts
+   `subtle` at 3:1 as a **UI** pair. Measured against `surface-0`: **4.82:1 dark, 4.10:1 light** — under
+   the 4.5:1 ACCESSIBILITY.md § Non-negotiables 9 requires of text, and a 12 px uppercase heading is text.
+   `muted` measures **7.73 / 6.68**. The footer's copyright line moved for the same reason.
+2. **A plain sidebar group's heading gets the 12 px inset the disclosure's trigger already gave its own.**
+   Measured at 1440 before the change: plain heading text at x = 12, collapsible heading text at x = 24,
+   item glyphs at x = 24 — the plain heading was the only thing out of line, and the screenshot hid it
+   because the heading *box* starts at 12 in both cases.
+
+### Measurements taken during the pass (Chrome, dark mode unless stated)
+- **360 / 768 / 1440, both modes, all six blocks:** `scrollWidth === clientWidth` at every width. No
+  block overflows at 360.
+- **navbar sticky:** at the top of the page the bar is fully transparent — background `rgba(0,0,0,0)`,
+  `backdrop-filter: none`, border transparent, no shadow. Scrolled: `oklab(0.095 … / 0.8)`,
+  `blur(24px)`, border `oklch(0.27 0.012 265)`, shadow present. The "glass over the top of a hero" case
+  the prompt names does not arise.
+- **navbar-floating:** padding **8 px → 4 px** and background alpha **0.04 → 0.472** between unscrolled
+  and scrolled, blur unchanged at `blur(8px) saturate(1.4)` — the theme's own recipe either way.
+- **navbar drawer at 390 px, keyboard only:** tab order Skip to content → brand → "Open menu". `Enter`
+  opens it, focus lands on "Close menu" **inside** the sheet, focus stayed inside across 15 further tabs,
+  `Escape` closed it and returned focus to the trigger with `aria-expanded` back to `false`.
+- **navbar dropdown at 1440, keyboard only:** `Enter` sets `aria-expanded="true"` and opens the panel,
+  `ArrowDown` moves into its first link, `Escape` closes it and returns focus to the trigger.
+- **sidebar group, keyboard only:** `Space` toggles `aria-expanded` true → false and the focusable link
+  count drops **10 → 6** — the closed panel leaves the tab order rather than merely hiding.
+- **breadcrumbs overflow, keyboard only:** the trigger announces "Show 3 hidden levels", `Enter` opens
+  three items, `ArrowDown` moves between them, `Escape` closes and returns focus.
+- **dock, keyboard only:** after a real `ArrowRight`, the focused item settles at `scale: 1.55` — the same
+  peak the pointer produces — and the item it left returns to `1`. Programmatic `.focus()` does not
+  qualify as `:focus-visible` in a headless page, which is why the measurement used a key event.
+- **Reduced motion, all six:** **0** running animations. The only non-zero transition duration left on
+  any page is `0.2s` on Storybook's own `.sb-loader`; every duration inside the blocks collapses, because
+  each is a token and the tokens are `calc(… * var(--ms-reduced-motion))`. The dock's focused item is
+  `scale: 1` under reduced motion while its background still moves to `surface-3` and the focus ring is
+  still drawn — a state change without a movement.
+- **Footer, tab order and announced names:** brand → "Motion Studio on GitHub" → "Motion Studio on X" →
+  "Motion Studio on YouTube" → the four Product links → the three Docs links → the two Company links →
+  Privacy, Terms. Every social link is named after where it goes.
+- **Rail, as the accessibility tree reads it:** `navigation "Documentation"`, then
+  `group "Getting started"`, `group "Blocks"`, `group "Export"`, each with a heading of the same name, and
+  every link named ("Overview", "Install", "First document", …). The labels survive the rail; the visible
+  tag beside the glyph is `aria-hidden`.
+
+### The verdict, stated
+The category holds on finish: one accent used consistently, hairlines rather than heavy borders, the
+theme's own glass recipe rather than a blur each block picked, an active state carried by weight and a
+mark rather than by colour, and a reduced-motion path that leaves a composition rather than a gap.
+
+Two differences from the reference are deliberate and traceable to our own documents:
+- the footer's social row is our own glyphs rather than brand marks, because DESIGN_SYSTEM.md
+  § Iconography forbids the filled shape a brand mark is — ADR-193, and it is the one place the category
+  reads plainer than the reference;
+- the dock's peak magnification is 1.55 where the reference dock goes further. Past 2 the row stops
+  swelling and starts jumping, and 1.55 is the value the schema defaults to rather than caps at.
+
+### Consequences
+- Accepted: **`foreground-subtle` is used as a text colour in two dozen places across the catalogue**
+  (captions, quote roles, code line numbers, the hero trust row, the comparison hint) and the contrast
+  contract only proves it at 3:1. Measured at 4.10:1 in light mode, those are all under AA for text.
+  This prompt corrected its own two and left the rest: the real fix is either moving the token into
+  `TEXT_PAIRS` and lightening it, or changing two dozen call sites, and both are a decision for the owner
+  rather than a side effect of a navigation prompt. Escalated in the session report.
+- Accepted: `hero-video`'s light thumbnail churned once during a `--verify` run after ADR-197 landed and
+  did not reproduce in the run before it. It is a `<video>` poster race in a block from prompt 25, not
+  something this category touches, and the committed bytes were left as they were. Reported rather than
+  chased.

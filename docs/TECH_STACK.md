@@ -90,15 +90,25 @@ does not use the HTML5 drag API, which cannot render a custom preview reliably.
 
 ### Radix UI
 Dialog, Popover, Dropdown, Tooltip, Tabs, Slider, Switch, Toggle Group, Context Menu,
-Scroll Area, Collapsible, Accordion. Unstyled, correct, accessible. This is the studio chrome's
-skeleton.
+Scroll Area, Collapsible, Accordion, Navigation Menu. Unstyled, correct, accessible. This is the
+studio chrome's skeleton.
 
-Accordion is the one Radix primitive that a **block** takes rather than the chrome: `faq-accordion` and
-the `accordion` interactive block are exported into the user's project, so the dependency travels with
-them through the codegen descriptor's `dependencies` and is installed by the emitted `package.json`.
-`packages/blocks` depends on `@radix-ui/react-accordion` directly for that reason — a block that
-imported the primitive through `@motion-studio/ui` would export code that does not compile outside this
-repository.
+Some of them are a **block's** dependency rather than the chrome's, and that changes where the package
+is declared. A block is exported into the user's project, so the primitive it uses travels with it
+through the codegen descriptor's `dependencies` and is installed by the emitted `package.json`.
+`packages/blocks` therefore depends on those primitives directly — a block that imported one through
+`@motion-studio/ui` would export code that does not compile outside this repository. Five do so far:
+
+| Primitive | Blocks | Why that primitive |
+| --- | --- | --- |
+| Accordion | `faq-accordion`, `accordion` | Toggle keyboard, `aria-expanded` and `aria-controls` both ways |
+| Navigation Menu | `navbar` | A menu bar's focus movement, `Esc` and outside-click, which a hand-rolled dropdown gets wrong |
+| Dialog | `navbar` | The mobile drawer's focus trap and focus restore |
+| Collapsible | `sidebar-nav` | Group disclosure with the `hidden` attribute managed |
+| Dropdown Menu | `breadcrumbs` | The collapsed-middle overflow menu, keyboard-operable |
+
+Radix Tooltip is deliberately **not** on that list. It needs a `Tooltip.Provider` above it, and a block
+cannot supply an application root — ADR-190.
 
 ### React Aria (`react-aria` / `react-stately`)
 Used where Radix does not reach: the colour picker (`useColorArea`, `useColorSlider`) and the
