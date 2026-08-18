@@ -50,6 +50,8 @@ import { LockIcon } from './lock'
 import { MarginIcon } from './margin'
 import { MenuIcon } from './menu'
 import { MinusIcon } from './minus'
+import { MonitorIcon } from './monitor'
+import { MoonIcon } from './moon'
 import { MoreHorizontalIcon } from './more-horizontal'
 import { MoreVerticalIcon } from './more-vertical'
 import { MoveIcon } from './move'
@@ -76,6 +78,7 @@ import { ShadowIcon } from './shadow'
 import { SparklesIcon } from './sparkles'
 import { SpringIcon } from './spring'
 import { SuccessIcon } from './success'
+import { SunIcon } from './sun'
 import { TableIcon } from './table'
 import { TimelineIcon } from './timeline'
 import { TypeIcon } from './type'
@@ -194,4 +197,7 @@ export const ICON_REGISTRY = {
   error: ErrorIcon,
   success: SuccessIcon,
   loading: LoadingIcon,
+  sun: SunIcon,
+  moon: MoonIcon,
+  monitor: MonitorIcon,
 } as const satisfies Record<string, IconComponent>

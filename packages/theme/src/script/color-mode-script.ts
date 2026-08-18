@@ -32,3 +32,16 @@ export function storeColorMode(mode: 'light' | 'dark'): void {
     // A blocked storage context is not an error worth surfacing: the preference simply does not persist.
   }
 }
+
+/**
+ * Forgets the stored preference, which is what `system` means: with no key the script above sets no
+ * attribute, and the generated stylesheet's `prefers-color-scheme` block decides — ADR-026. Writing
+ * `'system'` into storage instead would leave the script with a value it does not recognise.
+ */
+export function clearColorMode(): void {
+  try {
+    localStorage.removeItem(COLOR_MODE_STORAGE_KEY)
+  } catch {
+    // Same as above: nothing to persist, nothing to report.
+  }
+}

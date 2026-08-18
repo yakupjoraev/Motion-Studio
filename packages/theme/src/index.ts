@@ -20,6 +20,7 @@ export {
   type TokenFormat,
   type TokenFormatId,
 } from './export/index'
+export { setColorMode, type SetColorModeOptions } from './apply/set-color-mode'
 export {
   colorModeSubscriberCount,
   resetColorModeSubscription,
@@ -57,6 +58,7 @@ export { FONT_PAIRING, scaleTypeScale, type ScaledType } from './resolve/typogra
 export {
   COLOR_MODE_SCRIPT,
   COLOR_MODE_STORAGE_KEY,
+  clearColorMode,
   storeColorMode,
   storedColorMode,
 } from './script/color-mode-script'

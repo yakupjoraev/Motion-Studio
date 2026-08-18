@@ -265,6 +265,67 @@ export * from './navigation/breadcrumbs/index'
 export * from './navigation/dock/index'
 
 /*
+ * The interactive category, through each block's own index for the reason the three before it give — a category
+ * barrel exports a `definitions` and a `components`, and four of those would collide here. The shared vocabulary
+ * goes with it: the control geometry every block in the category is drawn from, the panel fallback that keeps a
+ * slotted block complete without children (ADR-206), and the glyph-by-name renderer six of them use.
+ */
+export {
+  ARIA_LABEL_MAX_LENGTH as INTERACTIVE_ARIA_LABEL_MAX_LENGTH,
+  BODY_MAX_LENGTH as PANEL_BODY_MAX_LENGTH,
+  CONTROL_SIZES,
+  CONTROL_VARIANTS,
+  ICON_NAME_MAX_LENGTH as CONTROL_ICON_NAME_MAX_LENGTH,
+  LABEL_MAX_LENGTH as CONTROL_LABEL_MAX_LENGTH,
+  controlSize,
+  controlVariant,
+  iconNameField,
+  interactiveFrameFields,
+  labelledFrameFields,
+  panelItemSchema,
+  type ControlSize,
+  type ControlVariant,
+  type InteractiveFrameShape,
+  type LabelledFrameShape,
+  type PanelItem,
+} from './interactive/interactive.schema'
+export {
+  INTERACTIVE_FRAME_CONTROLS,
+  LABELLED_FRAME_CONTROLS,
+  PANEL_ITEM_CONTROLS,
+  SIZE_CONTROL,
+  VARIANT_CONTROL,
+  panelItemTemplate,
+} from './interactive/interactive.controls'
+export {
+  ICON_CONTROL,
+  ICON_SIZE,
+  INTERACTIVE_BODY,
+  INTERACTIVE_FOCUS,
+  INTERACTIVE_HEADING,
+  INTERACTIVE_PANEL,
+  INTERACTIVE_TRANSITION,
+  controlStyles,
+} from './interactive/interactive.styles'
+export {
+  controlHover,
+  controlMotion,
+  interactiveEntrance,
+  interactiveMotion,
+} from './interactive/interactive.motion'
+export { ControlIcon, type ControlIconProps } from './interactive/control-icon'
+export { PanelContent, panelChildren, type PanelContentProps } from './interactive/panel-content'
+export * from './interactive/button/index'
+export * from './interactive/button-group/index'
+export * from './interactive/tabs/index'
+export * from './interactive/accordion/index'
+export * from './interactive/carousel/index'
+export * from './interactive/modal-trigger/index'
+export * from './interactive/tooltip-target/index'
+export * from './interactive/command-menu-preview/index'
+export * from './interactive/theme-toggle/index'
+
+/*
  * The effects category, through its own barrel: thirteen blocks plus the stack that mounts them on a
  * node, and the shared vocabulary every one of them is built from.
  */

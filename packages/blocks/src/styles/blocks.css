@@ -308,6 +308,25 @@
 }
 
 /*
+ * The busy spinner on `interactive/button`. One rotation, linear, and the period is a token multiple so the
+ * studio's `--ms-reduced-motion: 0` preview and a `motionScale` of 0 both collapse it (ADR-021); the media
+ * query below switches it off outright, because an infinite animation with a zeroed duration is a
+ * degenerate case rather than a stopped one.
+ *
+ * With the animation off the arc stays drawn, which is what leaves a still button looking busy beside the
+ * `aria-busy` attribute that says so.
+ */
+@keyframes ms-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ms-spin {
+  animation: ms-spin calc(var(--ms-duration-slowest) * 1.25) linear infinite;
+}
+
+/*
  * The dock's magnification.
  *
  * Two contributions multiply: `--ms-dock-pointer`, written per item from the shared pointer bus, and
@@ -336,7 +355,8 @@
 @media (prefers-reduced-motion: reduce) {
   .ms-aurora-layer,
   .ms-terminal-caret,
-  .ms-price-swap {
+  .ms-price-swap,
+  .ms-spin {
     animation: none;
   }
 

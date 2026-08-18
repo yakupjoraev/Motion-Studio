@@ -210,6 +210,35 @@ describe('the registry as a whole', () => {
     }
   })
 
+  it('groups the interactive category in catalogue order too', () => {
+    expect(blockRegistry.byCategory('interactive').map((one) => one.id)).toEqual(
+      [
+        'button',
+        'button-group',
+        'tabs',
+        'accordion',
+        'carousel',
+        'modal-trigger',
+        'tooltip-target',
+        'command-menu-preview',
+        'theme-toggle',
+      ].map(blockId),
+    )
+  })
+
+  /*
+   * ADR-199. The declaration arrives with the interactive category and the rest of the registry has not been
+   * audited for it, so this asserts what is true today rather than a rule nobody has met: the nine declare it,
+   * and the printer's answer for a block that does not is to fail rather than to guess.
+   */
+  it('declares a client boundary for every interactive block and for no others yet', () => {
+    const declared = DEFINITIONS.filter((one) => one.codegen.client !== undefined).map(
+      (one) => one.id,
+    )
+
+    expect(declared).toEqual(blockRegistry.byCategory('interactive').map((one) => one.id))
+  })
+
   it('opts four blocks into container queries and no others (ADR-184)', () => {
     const opted = DEFINITIONS.filter((one) => one.capabilities.containerQuery === true).map(
       (one) => one.id,

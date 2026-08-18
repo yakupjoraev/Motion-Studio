@@ -5,6 +5,7 @@ import type { ComponentType } from 'react'
 import { components as content } from './content/components'
 import { components as effects } from './effects/components'
 import { components as hero } from './hero/components'
+import { components as interactive } from './interactive/components'
 import { components as layout } from './layout/components'
 import { components as marketing } from './marketing/components'
 import { components as navigation } from './navigation/components'
@@ -25,6 +26,7 @@ export const renderRegistry: Readonly<Record<string, BlockComponent>> = {
   ...content,
   ...marketing,
   ...navigation,
+  ...interactive,
   ...effects,
 }
 

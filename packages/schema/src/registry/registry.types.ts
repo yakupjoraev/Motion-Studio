@@ -141,6 +141,38 @@ export const STRUCTURED_DATA_TYPES = ['FAQPage', 'BreadcrumbList'] as const
 
 export type StructuredDataType = (typeof STRUCTURED_DATA_TYPES)[number]
 
+/**
+ * Whether the React printer writes `'use client'` above this block's component — the one question
+ * EXPORT_ENGINE.md § React cannot answer from the markup, because markup does not say whether the
+ * component it came from holds state.
+ *
+ * `whenAnyProp` is for a block that is interactive only at some prop sets: `carousel` with no arrows, no
+ * dots and no autoplay prints as a scroll-snap strip with no handler in it. The condition is prop *names*
+ * rather than a predicate so a meta-test can check them against the schema, the way `enabledBy` is
+ * checked — a closure would be expressive and unverifiable (ADR-199).
+ *
+ * `reason` is not decoration: the printer may emit it as a comment, and it is what a reader compares the
+ * directive against.
+ */
+export type ClientBoundary =
+  | { readonly kind: 'always'; readonly reason: string }
+  | { readonly kind: 'never'; readonly reason: string }
+  | { readonly kind: 'whenAnyProp'; readonly props: readonly string[]; readonly reason: string }
+
+/**
+ * A module the export writes beside the component, for the block whose export cannot import what it
+ * needs. `theme-toggle` calls the theme engine's `setColorMode` and the user's project has no theme
+ * engine in it, so the twelve statements travel here and the component imports them from `path`.
+ *
+ * Two blocks naming the same `path` emit it once — ADR-201.
+ */
+export interface RuntimeModule {
+  /** Relative to the emitted project root, e.g. `lib/color-mode.ts`. */
+  readonly path: string
+  readonly named: readonly string[]
+  readonly source: string
+}
+
 export interface CodegenDescriptor {
   /** `'section'`, `'div'`, or a component name the import below provides. */
   readonly tag: string
@@ -167,6 +199,13 @@ export interface CodegenDescriptor {
     readonly type: StructuredDataType
     readonly enabledBy: string
   }
+  /**
+   * **Absent is not `never`.** A printer that met an undeclared block would have to guess, and both
+   * guesses are wrong in one direction: `never` ships a page that throws in the browser, `always` costs
+   * the reader every Server Component in the tree. So the export fails and says which block — ADR-199.
+   */
+  readonly client?: ClientBoundary
+  readonly runtimeModule?: RuntimeModule
 }
 
 export interface A11yNotes {

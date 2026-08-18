@@ -11,7 +11,8 @@ import { ICON_REGISTRY } from './registry'
 /**
  * The groups `prompts/07-icons.md` § The set enumerates, so a missing group fails rather than goes unnoticed.
  * `menu` joined the navigation group with prompt 39: a mobile drawer needs a trigger, and the set had no
- * three-line glyph — the count below moved from 89 to 90 for that one addition.
+ * three-line glyph — the count below moved from 89 to 90 for that one addition, and to 93 with the three
+ * colour-mode glyphs prompt 40 added for `theme-toggle`.
  */
 const GROUPS: Readonly<Record<string, readonly IconName[]>> = {
   editor: [
@@ -106,6 +107,12 @@ const GROUPS: Readonly<Record<string, readonly IconName[]>> = {
   ],
   files: ['file', 'folder', 'download', 'upload', 'save', 'export', 'history'],
   status: ['info', 'warning', 'error', 'success', 'loading'],
+  /*
+   * The three the `theme-toggle` block needs (prompt 40). A colour-mode switch has three states and a
+   * segmented control shows all three at once, so it needs three glyphs rather than one that cycles —
+   * and `monitor` is what "whatever the system says" looks like when the other two are weather.
+   */
+  theme: ['sun', 'moon', 'monitor'],
 }
 
 const SOURCE_DIR = dirname(fileURLToPath(import.meta.url))
@@ -129,8 +136,8 @@ describe('ICON_REGISTRY', () => {
     expect([...iconModules()].sort()).toEqual([...ICON_NAMES].sort())
   })
 
-  it('carries the 90 icons the set is now made of', () => {
-    expect(ICON_NAMES).toHaveLength(90)
+  it('carries the 93 icons the set is now made of', () => {
+    expect(ICON_NAMES).toHaveLength(93)
   })
 
   it.each(Object.entries(GROUPS))('covers every %s icon', (_group, names) => {

@@ -2,6 +2,7 @@ import { RectCacheContext, createRectCache } from '@motion-studio/canvas'
 import { commands } from '@motion-studio/editor'
 import { type NodeId, blockId, createEmptyDocument, nodeId } from '@motion-studio/schema'
 import { act, render, screen } from '@testing-library/react'
+import { userEvent } from '@testing-library/user-event'
 import type { ComponentType } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -106,6 +107,35 @@ describe('NodeRenderer', () => {
 
     expect(rendered?.className).toContain('flex-col')
     expect(rendered?.className).toContain('gap-4')
+  })
+
+  /*
+   * Prompt 40's central requirement, at the level it actually matters: an interactive block holds local UI
+   * state, and the editor must not throw it away when an unrelated prop changes. The renderer is keyed by node
+   * id and nothing else, which is what makes this hold — a `key` derived from props would reset the block on
+   * every keystroke and make the whole category unusable.
+   */
+  it('keeps an interactive block’s own state across an unrelated prop edit', async () => {
+    const tabs = insert(root(), 'tabs')
+
+    mount()
+
+    const third = screen.getAllByRole('tab')[2]
+
+    expect(third).toBeDefined()
+
+    await userEvent.click(third as HTMLElement)
+
+    expect(third).toHaveAttribute('aria-selected', 'true')
+
+    act(() => {
+      useStudioStore
+        .getState()
+        .dispatch(commands.setProp({ nodeId: tabs, path: 'ariaLabel', value: 'Chapters' }))
+    })
+
+    expect(screen.getByRole('tablist')).toHaveAccessibleName('Chapters')
+    expect(screen.getAllByRole('tab')[2]).toHaveAttribute('aria-selected', 'true')
   })
 
   it('re-renders only the node that changed', () => {

@@ -3,6 +3,7 @@ import { type BlockDefinition, type BlockRegistry, createRegistry } from '@motio
 import { definitions as content } from './content/definitions'
 import { definitions as effects } from './effects/definitions'
 import { definitions as hero } from './hero/definitions'
+import { definitions as interactive } from './interactive/definitions'
 import { definitions as layout } from './layout/definitions'
 import { definitions as marketing } from './marketing/definitions'
 import { definitions as navigation } from './navigation/definitions'
@@ -21,6 +22,7 @@ export const DEFINITIONS: readonly BlockDefinition[] = [
   ...Object.values(content),
   ...Object.values(marketing),
   ...Object.values(navigation),
+  ...Object.values(interactive),
   ...Object.values(effects),
 ]
 
