@@ -7971,3 +7971,374 @@ Two differences from the reference are deliberate and traceable to our own docum
   did not reproduce in the run before it. It is a `<video>` poster race in a block from prompt 25, not
   something this category touches, and the committed bytes were left as they were. Reported rather than
   chased.
+
+## ADR-199 — The `'use client'` condition is data on the descriptor, and an absent one is an error
+
+**Date** 2026-08-18 · **Prompt** 40 · **Status** Accepted
+
+### Question
+Prompt 40 requires every interactive block to declare when its React export needs `'use client'`, for
+prompt 42's printer to consume. `CodegenDescriptor` has no such field. What shape does the declaration
+take, and what does the printer do for a block that does not carry one?
+
+### Criterion (set before deciding)
+Three conditions, all from documents that already exist:
+
+1. The printer must decide from the descriptor and the node's props alone. EXPORT_ENGINE.md § buildIR
+   runs under `node` and never renders a component, so nothing may require executing the block.
+2. The declaration must be checkable by the registry meta-tests the way `structuredData.enabledBy`
+   already is — a condition naming a prop the schema does not have has to fail the build.
+3. It must be able to say **never** without lying. EXPORT_ENGINE.md § React lists "`'use client'` only
+   when hooks or interactivity require it", so a block that declared `always` to be safe would cost the
+   reader a Server Component for nothing.
+
+### Measurement
+The nine interactive blocks, against the rule in EXPORT_ENGINE.md § React:
+
+| Blocks | Directive | Why |
+| --- | --- | --- |
+| `button-group`, `tabs`, `accordion`, `modal-trigger`, `tooltip-target`, `theme-toggle` | always | Each holds state or reads the DOM at every prop set |
+| `button`, `command-menu-preview` | never | No hook at any prop set; both print as markup and CSS |
+| `carousel` | conditional | With `arrows`, `dots` and `autoplay` all off it is a scroll-snap strip: no handler, no hook |
+
+So three cases are needed and the third is a set of boolean prop names — the shape `enabledBy` already
+uses. A predicate function would satisfy condition 1 and fail condition 2: a test cannot ask a closure
+which props it read, and a wrong closure would pass every gate in the repository.
+
+### Decision
+`CodegenDescriptor.client?: ClientBoundary`, a union of `{ kind: 'always' }`, `{ kind: 'never' }` and
+`{ kind: 'whenAnyProp', props }`, each carrying a `reason` the printer may emit as a comment. The nine
+interactive blocks declare it and `interactive.codegen.test.ts` asserts every prop named by a
+`whenAnyProp` exists in that block's schema.
+
+**Absent is not `never`.** The field is optional because the other 53 descriptors have not been audited
+for it, and auditing them means reading 53 components — prompt 40 does not own them. The printer's rule
+for an undeclared block is therefore to **fail**, not to assume: an export that quietly omitted a needed
+directive would produce a page that throws in the browser rather than a diagnosable error at export time.
+EXPORT_ENGINE.md § React says so, so prompt 42 does not have to invent it.
+
+### Consequences
+- Accepted: prompt 42 starts against a registry where one category in seven declares the field, so its
+  first task is either to declare the rest or to emit the error. Named in the session report rather than
+  left for it to discover.
+- Accepted: `whenAnyProp` reads truthiness, so a prop whose *false* value is the interactive one cannot
+  be expressed. No block in the catalogue has one; the union can gain a case when one does.
+- Avoided: a silent default. The two defaults available were both wrong in one direction — `never` breaks
+  the user's page, `always` breaks their Server Components.
+
+### Alternatives rejected
+- A predicate `(props) => boolean` on the descriptor: expressive, unverifiable, fails criterion 2.
+- Deriving it from `imports` — "a Radix import means client": `@radix-ui/react-slot` does not, and the
+  derivation would be a second rule to keep in sync with the first.
+- Making the field required and inserting a value into all 53 existing descriptors: mechanical to write
+  and impossible to make honest in this session, because a correct value for `hero-video` or `code-block`
+  needs its component read.
+
+## ADR-200 — `setColorMode` joins the theme engine rather than living in the block
+
+**Date** 2026-08-18 · **Prompt** 40 · **Status** Accepted
+
+### Question
+`theme-toggle` is the one block prompt 40 allows to touch application state: it "calls the theme engine's
+`setColorMode`". No such function exists. `packages/theme` exports `storedColorMode`, `storeColorMode`,
+`COLOR_MODE_SCRIPT` and `applyTheme`, and switching the mode today means writing `data-color-mode` and
+the storage key in the right order. Where does the missing function go?
+
+### Criterion (set before deciding)
+THEME_ENGINE.md § Colour mode already specifies the mechanism completely: `data-color-mode` on the root,
+a stored preference the inline script reads before first paint, and no attribute at all when the
+preference is `system` so the stylesheet's `prefers-color-scheme` block decides (ADR-026). The question is
+therefore not *what* to do but *who owns the sequence*. One rule decides it: § 2 of the contract puts the
+runtime theme engine in `packages/theme`, and a block is a pure function of its props.
+
+### Measurement
+Three writes are needed for `light` and `dark` (attribute, storage) and two clears for `system`
+(attribute removed, key removed). Written in the block, that is five statements a second caller would
+transcribe — and there is already a second caller in the repository: the studio's own mode toggle goes
+through the document's theme instead, which is why the sequence has never been written down.
+
+### Decision
+`setColorMode(preference, options?)` in `packages/theme/src/apply/set-color-mode.ts`, exported from the
+barrel, with `clearColorMode()` beside `storeColorMode` for the `system` case. It returns the
+`ColorMode` now in effect, so a caller that wants to draw the state does not repeat the `system`
+resolution. THEME_ENGINE.md § Colour mode gains the two lines that say so.
+
+### Consequences
+- Accepted: `packages/blocks` gains a dependency on `@motion-studio/theme`. The contract's § 2 allows it
+  and no cycle is possible — `theme` depends on `tokens` and `utils` only.
+- Accepted: a `theme-toggle` clicked **in the canvas** switches the studio's own colour mode, because it
+  writes the same root attribute the export writes. That is the block behaving identically in both
+  places, which is the property that makes the export honest, and the studio's own theme host re-asserts
+  its value on the next theme change.
+- Avoided: two implementations of the same five statements, one of which would have been in a block and
+  would have drifted from the inline script it has to match.
+
+### Alternatives rejected
+- The block writing the attribute itself: puts the mechanism in the one place that cannot be reused, and
+  makes the block the second author of a contract the theme package owns.
+- `applyTheme` with a mode override: resolves and writes the whole variable set to switch one attribute,
+  and needs a `ThemeConfig` the block does not have.
+
+## ADR-201 — The exported `theme-toggle` carries its own runtime module
+
+**Date** 2026-08-18 · **Prompt** 40 · **Status** Accepted
+
+### Question
+The exported `theme-toggle` has to work in the user's project, which has no `@motion-studio/theme` in it.
+Prompt 40 requires the export to emit "a self-contained implementation using `localStorage` +
+a `data-color-mode` attribute, matching what the theme engine's inline script expects". How does the
+descriptor say that, given that `imports` and `dependencies` can only name packages the user installs?
+
+### Criterion (set before deciding)
+Two conditions. The emitted code must contain no import the emitted `package.json` does not install —
+EXPORT_ENGINE.md § Next.js already emits a `lib/` directory, so a local module is a shape the target
+supports. And the claim must be **testable in this package**: a comment promising the export is
+self-contained is exactly the kind of assertion the contract's § 9 rules out.
+
+### Measurement
+The block's own component is 31 lines of markup over one call to `setColorMode`. The part that cannot
+travel is that call: twelve statements, `localStorage` and one attribute, no dependency. Written as a
+string on the descriptor it can be asserted against the real storage key — `theme-toggle.codegen.test.ts`
+imports `COLOR_MODE_STORAGE_KEY` from `@motion-studio/theme` and fails if the emitted source does not
+contain it, so the export and the inline script cannot drift.
+
+### Decision
+`CodegenDescriptor.runtimeModule?: { path, named, source }` — a module the printer writes beside the
+component, and the names the component imports from it. `theme-toggle` is its only user today: it emits
+`lib/color-mode.ts` with `setColorMode`, `storedColorMode` and `COLOR_MODE_SCRIPT`, and its `imports`
+entry points at that path rather than at a package.
+
+### Consequences
+- Accepted: a source string lives in a descriptor. It is the one place the emitted code is not derived
+  from the markup, and the test above is what keeps it true.
+- Accepted: two exported blocks that both wanted the module would emit it twice unless prompt 42
+  de-duplicates by `path`. Stated here so it is a requirement rather than a surprise.
+- Avoided: publishing a package for twelve statements, and a toggle that silently does nothing in the
+  user's project — which is what an export that dropped the call would produce.
+
+### Alternatives rejected
+- `dependencies: { '@motion-studio/theme': '…' }`: the package is `private: true` and workspace-only.
+- Inlining the twelve statements into the component: the printers would have to special-case one block's
+  body, and the same code would be duplicated per instance on a page with two toggles.
+
+## ADR-202 — `tooltip-target` owns its trigger, because the description has to be on the focused element
+
+**Date** 2026-08-18 · **Prompt** 40 · **Status** Accepted
+
+### Question
+Prompt 40 describes `tooltip-target` as "any child + tooltip content". Taken literally the child is the
+element the tooltip describes, which means the block would have to put `aria-describedby` on a node
+another block rendered. Does the block wrap a child, or render its own trigger?
+
+### Criterion (set before deciding)
+ACCESSIBILITY.md § Non-negotiables 2 requires the accessible description to reach the element that takes
+focus. `aria-describedby` is only read on the element carrying it, so the criterion is mechanical: the
+attribute must land on the focusable node, and WCAG 1.4.13 adds three more — content shown on hover or
+focus must be dismissable without moving the pointer, hoverable, and persistent.
+
+### Measurement
+A wrapper cannot satisfy the first. `<span aria-describedby>` around a child block puts the description
+on a node that never receives focus; the child's own `<button>` is what the reader lands on and it
+carries nothing. Reaching into the child is not available either: the canvas passes children as
+`NodeRenderer` elements, so `cloneElement` would add a prop to the renderer rather than to the markup two
+levels below it. Making the wrapper focusable produces two tab stops for one control.
+
+### Decision
+The block renders its own trigger — label, optional glyph, the category's button variants — and the
+tooltip is its own `<span role="tooltip">` linked by `aria-describedby`. Opening is `pointerenter` after
+`delay` and `focus` immediately; `Escape` closes without moving the pointer; the bubble has
+`pointer-events: auto` and stays open while the pointer is inside it; nothing closes on a timer.
+
+### Consequences
+- Accepted: the block does not describe an arbitrary child, which is what the prompt's wording suggests.
+  The capability it would need — writing an attribute into another block's markup — is one no block in
+  the registry has, and giving one block a private channel into another's DOM is a larger decision than
+  a tooltip.
+- Accepted: no collision detection, as ADR-190 accepted for the same reason. `side` is the author's
+  choice and the four values are all reachable from the inspector.
+- Avoided: a tooltip whose description no screen reader announces, which is the defect this block would
+  have shipped as its entire purpose.
+
+### Alternatives rejected
+- Radix Tooltip: ADR-190 already rejected it for `packages/blocks` — `Tooltip.Root` throws without a
+  provider a block cannot own. Nothing about this block changes that.
+- `title`: not shown on focus, not dismissable, timing owned by the browser.
+
+## ADR-203 — The tabs indicator is an index over equal columns, not a measured element
+
+**Date** 2026-08-18 · **Prompt** 40 · **Status** Accepted
+
+### Question
+`tabs` needs an animated indicator under the active trigger. The usual implementation measures the active
+trigger with `getBoundingClientRect` and writes width and offset. Do we measure?
+
+### Criterion (set before deciding)
+PERFORMANCE.md § The rules put layout reads on the list of things not to do per interaction, and the
+canvas adds a second condition a normal page does not have: the artboard is transform-scaled, so a
+measured pixel offset is the scaled offset and the indicator would sit under the wrong tab at any zoom
+but 1. So an implementation that needs no read at all wins if it can express the same movement.
+
+### Measurement
+It can, at one cost. A `grid-template-columns: repeat(n, 1fr)` list makes every trigger exactly `100 / n`
+per cent wide, so the indicator is `width: calc(100% / n)` translated by `activeIndex * 100%` of its own
+width — no read, no resize observer, correct at every zoom because both terms are percentages. The cost
+is that the triggers are equal width rather than sized to their labels: measured at 1440 px with the
+default four labels ("Overview", "Motion", "Export", "Tokens") the equal columns read as deliberate;
+with one long label among three short ones the row carries more air around the short ones than a hugging
+row would.
+
+### Decision
+Equal columns. `--ms-tabs-count` and `--ms-tabs-index` on the list, the indicator translated in CSS, and
+`orientation: vertical` swaps the axis with the same arithmetic. The transition duration is a token, so
+reduced motion collapses it and the indicator jumps rather than slides — the state is still carried by
+the trigger's own weight and `aria-selected`.
+
+### Consequences
+- Accepted: labels do not hug. A five-tab row of one-word labels is wider than it needs to be, and the
+  `align` prop lets the author narrow the whole list instead.
+- Accepted: the tab cap is 6. Past six the columns are too narrow for a two-word label at 360 px, which
+  is where the equal-column trade stops being neutral.
+- Avoided: a layout read per selection, a `ResizeObserver` per block, and an indicator that is wrong at
+  every canvas zoom level — the specific bug the measured version would have shipped.
+
+## ADR-204 — The button's five motion presets are the hover channel, not a prop
+
+**Date** 2026-08-18 · **Prompt** 40 · **Status** Accepted
+
+### Question
+Prompt 40 asks `button` for "motion presets: `lift`, `scale-hover`, `magnetic`, `shine`, `glow-hover` —
+selectable, not hard-coded". A prop with those five values, or the node's motion?
+
+### Criterion (set before deciding)
+COMPONENT_LIBRARY.md § Rules 7 is unambiguous: motion goes through the node's `MotionSpec`, the block
+declares `defaultMotion`, and `insertNode` writes it into the node (ADR-154). A block that animated from
+its own props "would make an entrance the user cannot remove". So the only question is whether the five
+named presets are reachable that way.
+
+### Measurement
+All five are registered on the `hover` channel in `packages/motion`: `lift`, `scale-hover`, `magnetic`,
+`glow-hover` and `shine` (`presets/hover/*`). The Motion section of the inspector lists every preset for
+a channel the block declares in `capabilities.supportsMotion`, so declaring `hover` makes all five
+selectable — and the four others on the channel besides.
+
+### Decision
+No motion prop. `capabilities.supportsMotion: ['entrance', 'hover']` and `defaultMotion.hover = lift`,
+which is the quietest of the five and the one that survives being applied to a `ghost` button. Selection
+happens in the inspector, and removal is possible, which a prop with a default of `lift` would not have
+allowed.
+
+### Consequences
+- Accepted: the five are not a closed list in the UI. A user can pick `tilt-3d` on a button, which is a
+  strange choice and not a broken one — the same freedom every other block has.
+- Accepted: the palette thumbnail shows the button still, because `previewProps` is props and the hover
+  preset is not a prop. The hover clip (ADR-182) is what shows the motion.
+
+## ADR-205 — `modal-trigger` portals into its own frame; only the export covers the viewport
+
+**Date** 2026-08-18 · **Prompt** 40 · **Status** Accepted
+
+### Question
+A modal in the canvas cannot cover the canvas — prompt 40 says it renders inline in a labelled preview
+frame, and the export emits the real dialog. A block must not know it is in an editor. How can one
+component be both?
+
+### Criterion (set before deciding)
+COMPONENT_LIBRARY.md § Rules 1: props in, JSX out, no editor knowledge. Prompt 40 adds the two
+requirements that pull against each other — the dialog must be real enough to test (focus trapped, `Esc`
+closes, focus restored) and it must not cover the editor.
+
+### Measurement
+Radix's `Dialog.Portal` takes a `container`. Given the block's own frame as the container, the overlay and
+the content render **inside the block** as absolutely-positioned children, and every behaviour the
+requirement names is Radix's and unchanged: `FocusScope` still traps, `Esc` still closes, focus still
+returns to the trigger. Nothing about the component varies by host — it renders the same tree in the
+canvas, in Storybook, in jsdom and on the user's page.
+
+### Decision
+One component, portalled into its own frame, with the frame labelled "Dialog preview" by a caption that
+is part of the block rather than an editor affordance. The descriptor's `notes` say that the export
+portals to the document body and covers the viewport, and prompt 43's React printer is what does it.
+
+### Consequences
+- Accepted: the export is not byte-identical to the canvas markup. It is the one block in the catalogue
+  where they differ, the difference is the portal target and the content's position classes, and the note
+  in the descriptor is what tells the reader.
+- Accepted: the frame occupies space in the layout whether the dialog is open or not, because a frame
+  that collapsed would move the page every time the dialog opened.
+- Accepted: **the live-region announcer is hidden while the dialog is open**, and no block can prevent it
+  — see ADR-207.
+
+## ADR-206 — A slotted interactive block still renders from its props alone
+
+**Date** 2026-08-18 · **Prompt** 40 · **Status** Accepted
+
+### Question
+`tabs`, `accordion`, `carousel` and `modal-trigger` take child blocks in slots. What do they render for a
+panel with no child in it?
+
+### Criterion (set before deciding)
+Not a preference: COMPONENT_LIBRARY.md § Thumbnails renders `previewProps` through Storybook, and a
+thumbnail render passes **no children**. A block whose panels are empty without children therefore has an
+empty thumbnail, and `pnpm check:registry` is a presence check that would not catch it. So every block in
+the category has to be complete from props alone.
+
+### Measurement
+Each of the four has one text-shaped fallback available in its own item vocabulary — a tab's `body`, an
+accordion row's `body`, a slide's `title` and `body`, the dialog's `body`. `columns` already reads a slot
+prop or a positional child, whichever the host supplies (`left ?? firstChild`), so the pattern is in the
+registry rather than new here.
+
+### Decision
+Children win where they exist, per index: panel `i` renders child `i`, and falls back to item `i`'s
+`body` text. The slot's `maxChildren` equals the item cap, so a document cannot hold a child for a panel
+that does not exist.
+
+### Consequences
+- Accepted: an author who drops one block into a three-tab set sees one panel of markup and two of text.
+  That is what they asked for, and the alternative — hiding the text as soon as any child arrives — would
+  blank the other two panels.
+- Accepted: the item cap and the slot cap are two numbers that have to agree. The category's own test
+  asserts they do for all four.
+
+## ADR-207 — Radix's modal dialog hides the announcer, and a block cannot exempt it
+
+**Date** 2026-08-18 · **Prompt** 40 · **Status** Accepted
+
+### Question
+ACCESSIBILITY.md § Dialogs requires background content to be `aria-hidden` "**except** the live-region
+announcer, which must stay reachable". Prompt 40 asks for that to be verified on `modal-trigger`. Does it
+hold?
+
+### Criterion (set before measuring)
+The announcer must not carry `aria-hidden="true"` while a dialog is open. Stated as a pass or fail on the
+DOM rather than as a judgement.
+
+### Measurement
+It fails, and not in this block. `@radix-ui/react-dialog` calls `hideOthers(content)` from
+`aria-hidden@1.2.6` with the content element as the only target. That library keeps the target and its
+ancestors and walks every other branch of the document setting `aria-hidden="true"`; it takes no
+allowlist and reads no marker on the nodes it hides. So any live region outside the dialog's own ancestor
+chain is hidden — the canvas's `SelectionAnnouncer` included, and equally for `packages/ui`'s own
+`Dialog`, which has the same one call behind it.
+
+A block has no seam here at all: the alternative Radix offers is `modal={false}`, which removes the
+`aria-hidden` pass **and** the focus trap together, and the trap is a requirement.
+
+### Decision
+`modal-trigger` keeps the modal dialog and the trap. The requirement in ACCESSIBILITY.md § Dialogs is an
+**application** obligation, not a block's, and it is currently unmet by the studio: `packages/ui`'s
+`Dialog` and the canvas announcer are the two halves that have to agree. The block's own test asserts
+what the block controls — trap, `Esc`, restore, labelling — and this entry records the finding so it is
+not rediscovered as a mystery.
+
+Recommended fix, for whoever owns the studio dialog: mark the announcer (`data-ms-announcer`) and
+re-assert `aria-hidden="false"` on it after the dialog opens. `aria-hidden@1.2.6` restores the attribute
+it recorded on close and does not re-apply while open, so one write is enough. Escalated in the session
+report rather than done here — `packages/ui` and `packages/canvas` are not prompt 40's deliverables.
+
+### Consequences
+- Accepted: with a `modal-trigger` dialog open in the canvas, canvas selection announcements go silent
+  until it closes. Nothing else in the studio changes.
+- Accepted: an exported page has no announcer, so the export is unaffected — this is a studio-only gap,
+  which is why the block is not the place to fix it.
+- Avoided: dropping `modal` to satisfy the clause, which would have traded a focus trap for it.

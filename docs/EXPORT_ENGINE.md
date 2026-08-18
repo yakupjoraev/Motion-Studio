@@ -239,6 +239,26 @@ Every detail here is a deliberate rule:
 | `text-balance` on headings | Typographic quality the user did not have to ask for |
 | No editor artifacts | No `data-node-id`, no wrappers, no dead classes |
 
+**Who decides the directive.** Not the printer, from the markup — the markup does not say whether the
+component holds state. The block does, in `codegen.client`: `always`, `never`, or `whenAnyProp` with the
+props that make it interactive (COMPONENT_LIBRARY.md § BlockDefinition). The printer emits the directive
+when the block says so, or when the node carries motion, effects, or anything else that needs a hook —
+either reason is sufficient and the two are independent.
+
+A block whose descriptor **does not declare** `client` is an error, not a `never`: the printer reports it
+and the export fails. The two available guesses are both wrong in one direction — assuming `never` ships a
+page that throws in the browser, assuming `always` costs the reader every Server Component in the tree —
+so the export refuses to make one (ADR-199).
+
+One block's export is not its canvas markup: `modal-trigger` renders its dialog inside its own frame in the
+canvas, because a modal cannot cover the editor, and the export portals to the document body and covers the
+viewport (ADR-205). The descriptor's `notes` say so above the element.
+
+**A block whose export cannot import what it needs** carries the code instead. `runtimeModule` on the
+descriptor is a local module the printer writes beside the component — `theme-toggle` emits
+`lib/color-mode.ts` and imports `setColorMode` from it, so an exported page's toggle actually works with no
+dependency added (ADR-201). Two blocks asking for the same `path` emit it once.
+
 ### Next.js
 
 ```

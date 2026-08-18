@@ -75,7 +75,7 @@ against the viewport: it draws a `container-type: inline-size` element around ea
 transform-scaled artboard answers the query with the untransformed width, which is right for the export
 and slightly wrong for the preview.
 
-The two codegen fields that exist for a block that cannot finish its own story:
+The four codegen fields that exist for a block that cannot finish its own story:
 
 ```ts
 readonly notes?: readonly string[]        // comments the printers emit above the element
@@ -83,12 +83,30 @@ readonly structuredData?: {
   readonly type: 'FAQPage' | 'BreadcrumbList'
   readonly enabledBy: string
 }
+readonly client?: ClientBoundary          // when the React export needs 'use client'
+readonly runtimeModule?: {                // a local module the export writes beside the component
+  readonly path: string
+  readonly named: readonly string[]
+  readonly source: string
+}
 ```
 
 `notes` is where `newsletter-form` says its submit handler is a no-op the reader has to replace.
 `structuredData` is where `faq-accordion` says the export emits `FAQPage` JSON-LD when the user asked
 for it, and where `breadcrumbs` says the same about `BreadcrumbList` — beside the element, never inside
 the canvas, because a `<script>` in an artboard is markup the user can neither see nor select.
+
+`client` is the block's answer to the one question EXPORT_ENGINE.md § React cannot answer from the
+markup: whether the printed component holds state. It is `{ kind: 'always' }`, `{ kind: 'never' }`, or
+`{ kind: 'whenAnyProp', props }` for a block that is interactive only at some prop sets — `carousel`
+with no arrows, no dots and no autoplay is a scroll-snap strip and needs no directive. **An absent
+declaration is not `never`**: the printer fails rather than guessing, because both available guesses
+break something (ADR-199).
+
+`runtimeModule` is for the block whose export cannot import what it needs. `theme-toggle` is the only
+one: it calls the theme engine's `setColorMode`, and the user's project has no theme engine in it, so the
+descriptor carries the twelve statements the export writes to `lib/color-mode.ts` and imports from there
+(ADR-201).
 
 ## Controls drive the inspector
 
@@ -285,6 +303,26 @@ skip link that jumps past itself (ADR-192).
 ### Interactive (9)
 `button` · `button-group` · `tabs` · `accordion` · `carousel` · `modal-trigger` · `tooltip-target` ·
 `command-menu-preview` · `theme-toggle`
+
+The category that carries **local UI state**, which § Rules 2 allows because the exported component needs
+it too — and which is also the category where the state has to survive an unrelated prop edit, or the
+block is unusable in an editor. Nothing here subscribes to the editor; the one block that touches
+application state is `theme-toggle`, and what it touches is the colour mode, through the theme engine's
+`setColorMode` (ADR-200).
+
+They share one control surface (`interactive/interactive.styles.ts`): the four button variants, three
+content sizes, one focus ring and one transition, so a `button` beside a `tabs` trigger beside a
+`theme-toggle` segment reads as one system. Radix owns every keyboard model the category needs — Tabs,
+Accordion, Toggle Group and Dialog — and `tooltip-target` is the exception for the reason ADR-190 gave and
+ADR-202 restates: a block cannot install a provider, and a description has to be on the element that takes
+focus.
+
+Four of them take children (`tabs`, `accordion`, `carousel`, `modal-trigger`) and all four still render
+from their props alone, because a thumbnail render passes no children (ADR-206). `carousel` is CSS
+`scroll-snap` rather than a carousel library, so touch, trackpad, keyboard and screen readers work without
+us, and its autoplay is off by default, absent under reduced motion, and never without a pause control.
+This is also the category the `'use client'` declaration arrives with: six blocks always need it, two never
+do, and `carousel` needs it only when it has controls (ADR-199).
 
 ### Data (5)
 `table` · `stat-grid` · `progress-ring` · `timeline` · `chart-preview`

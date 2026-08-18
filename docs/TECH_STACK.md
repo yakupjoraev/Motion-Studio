@@ -97,18 +97,23 @@ Some of them are a **block's** dependency rather than the chrome's, and that cha
 is declared. A block is exported into the user's project, so the primitive it uses travels with it
 through the codegen descriptor's `dependencies` and is installed by the emitted `package.json`.
 `packages/blocks` therefore depends on those primitives directly — a block that imported one through
-`@motion-studio/ui` would export code that does not compile outside this repository. Five do so far:
+`@motion-studio/ui` would export code that does not compile outside this repository. Seven do so far:
 
 | Primitive | Blocks | Why that primitive |
 | --- | --- | --- |
 | Accordion | `faq-accordion`, `accordion` | Toggle keyboard, `aria-expanded` and `aria-controls` both ways |
 | Navigation Menu | `navbar` | A menu bar's focus movement, `Esc` and outside-click, which a hand-rolled dropdown gets wrong |
-| Dialog | `navbar` | The mobile drawer's focus trap and focus restore |
+| Dialog | `navbar`, `modal-trigger` | The focus trap, `Esc`, and focus restored to the trigger |
 | Collapsible | `sidebar-nav` | Group disclosure with the `hidden` attribute managed |
 | Dropdown Menu | `breadcrumbs` | The collapsed-middle overflow menu, keyboard-operable |
+| Tabs | `tabs` | Roving tabindex, `aria-selected`, and panel association both ways |
+| Toggle Group | `button-group` | One roving tab stop for a segmented control, single and multiple |
 
 Radix Tooltip is deliberately **not** on that list. It needs a `Tooltip.Provider` above it, and a block
-cannot supply an application root — ADR-190.
+cannot supply an application root — ADR-190, restated for `tooltip-target` in ADR-202.
+
+`theme-toggle` takes **no** primitive: three buttons with `aria-pressed` in a labelled group is the whole
+control, and its export has to be self-contained (ADR-201).
 
 ### React Aria (`react-aria` / `react-stately`)
 Used where Radix does not reach: the colour picker (`useColorArea`, `useColorSlider`) and the

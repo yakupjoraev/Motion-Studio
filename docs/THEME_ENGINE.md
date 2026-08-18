@@ -160,6 +160,11 @@ const mode = config.colorMode === 'system'
 ```
 
 - `data-color-mode` on `<html>`; CSS selects the mode's variable block.
+- **`setColorMode(preference)`** is the one way to switch it. It writes the attribute and the stored
+  preference for `light` and `dark`, and clears both for `system` — because no attribute is what lets the
+  stylesheet's `prefers-color-scheme` block decide (ADR-026). It returns the mode now in effect, so a
+  caller drawing the state does not resolve `system` a second time. `blocks/theme-toggle` is its caller,
+  and the export emits the same twelve statements as a local module (ADR-200, ADR-201).
 - A blocking inline script in `<head>` reads the stored preference and sets the attribute before
   first paint. This is the one place a blocking script is correct — the alternative is a flash.
 - The `system` listener is a single `matchMedia` change handler that calls `applyTheme`.
