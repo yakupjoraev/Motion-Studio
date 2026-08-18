@@ -133,6 +133,14 @@ export interface ImportSpec {
  * `package.json` must install. The printers themselves live in `packages/codegen` and arrive with the
  * prompts that build it; adding a field here later is additive and breaks nothing.
  */
+/**
+ * The schema.org types a block can ask the export to emit beside it. A union rather than a string,
+ * because a printer has to know the shape it is writing — ADR-194.
+ */
+export const STRUCTURED_DATA_TYPES = ['FAQPage', 'BreadcrumbList'] as const
+
+export type StructuredDataType = (typeof STRUCTURED_DATA_TYPES)[number]
+
 export interface CodegenDescriptor {
   /** `'section'`, `'div'`, or a component name the import below provides. */
   readonly tag: string
@@ -156,7 +164,7 @@ export interface CodegenDescriptor {
    * than emitting it for everyone.
    */
   readonly structuredData?: {
-    readonly type: 'FAQPage'
+    readonly type: StructuredDataType
     readonly enabledBy: string
   }
 }

@@ -46,12 +46,41 @@ const STAGE = { width: THUMBNAIL.width * 4, height: THUMBNAIL.height * 4 }
 /**
  * 8 × 5, not the 4 × 3 the prompt suggests, and the reason is the determinism requirement rather than
  * taste: the frame is 1.6 : 1, so 4 × 3 asks Chrome to scale 1280 × 800 by 0.003125 into a box whose
- * height lands on 2.5 px. Measured, that rounding is where the only non-determinism in the whole
- * generator lived — every WebP was byte-identical across runs and the manifest was not, because the
- * blur was resolved differently. 8 × 5 divides the stage exactly, and the placeholder is still under
- * 200 bytes.
+ * height lands on 2.5 px. Measured, that rounding was one of two sources of non-determinism here —
+ * every WebP was byte-identical across runs and the manifest was not, because the blur was resolved
+ * differently. 8 × 5 divides the stage exactly. The second source, a re-rasterised `backdrop-filter`,
+ * is what ADR-197 removed by deriving the placeholder from the still.
  */
 const BLUR = { width: 8, height: 5 }
+
+/**
+ * The blur placeholder, produced from the **still** rather than from a second screenshot — ADR-197.
+ *
+ * A second `captureScreenshot` at scale 0.00625 asks Chrome to rasterise the page again, and a page
+ * with a `backdrop-filter` on it does not rasterise identically twice: the dock's dark placeholder
+ * alternated between two encodings across full runs while its 320 px still stayed byte-identical.
+ * Downscaling the still cannot disagree with the still, which is what a placeholder is for.
+ */
+const downscale = async (page, thumbnail) =>
+  await page.evaluate(`(async () => {
+    const image = new Image()
+
+    image.src = 'data:image/webp;base64,${thumbnail}'
+    await image.decode()
+
+    const canvas = document.createElement('canvas')
+
+    canvas.width = ${BLUR.width}
+    canvas.height = ${BLUR.height}
+
+    const context = canvas.getContext('2d')
+
+    context.imageSmoothingEnabled = true
+    context.imageSmoothingQuality = 'high'
+    context.drawImage(image, 0, 0, ${BLUR.width}, ${BLUR.height})
+
+    return canvas.toDataURL('image/webp', ${THUMBNAIL.quality / 100}).split(',')[1]
+  })()`)
 
 const MODES = ['dark', 'light']
 const PORT = 61_231
@@ -150,10 +179,11 @@ async function capture(page, blockId, mode) {
     return data
   }
 
-  // The height follows from the width: the clip keeps the stage's ratio, so one number decides both.
+  const thumbnail = await shot(THUMBNAIL.width)
+
   return {
-    thumbnail: Buffer.from(await shot(THUMBNAIL.width), 'base64'),
-    blur: Buffer.from(await shot(BLUR.width), 'base64'),
+    thumbnail: Buffer.from(thumbnail, 'base64'),
+    blur: Buffer.from(await downscale(page, thumbnail), 'base64'),
   }
 }
 

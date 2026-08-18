@@ -186,6 +186,30 @@ describe('the registry as a whole', () => {
     )
   })
 
+  it('groups the navigation category in catalogue order too', () => {
+    expect(blockRegistry.byCategory('navigation').map((one) => one.id)).toEqual(
+      ['navbar', 'navbar-floating', 'sidebar-nav', 'footer', 'breadcrumbs', 'dock'].map(blockId),
+    )
+  })
+
+  /*
+   * Prompt 39's universal rules, held for the whole category rather than block by block. The a11y notes
+   * are the block's own promise about its keyboard and its names, and a navigation block that made none
+   * would pass every other gate in this file.
+   */
+  it('gives every navigation block a landmark role and something to say about its keyboard', () => {
+    for (const definition of blockRegistry.byCategory('navigation')) {
+      expect(definition.a11y.role, definition.id).toBeDefined()
+      expect(definition.a11y.notes.length, definition.id).toBeGreaterThanOrEqual(4)
+      expect(
+        definition.a11y.notes.some((note) =>
+          /keyboard|arrow|Esc|Enter|Space|focus|tab/i.test(note),
+        ),
+        definition.id,
+      ).toBe(true)
+    }
+  })
+
   it('opts four blocks into container queries and no others (ADR-184)', () => {
     const opted = DEFINITIONS.filter((one) => one.capabilities.containerQuery === true).map(
       (one) => one.id,

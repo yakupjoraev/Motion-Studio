@@ -229,6 +229,20 @@
 }
 
 /*
+ * The floating navbar's scrolled state. It composes *with* the theme's glass recipe rather than replacing
+ * it — the blur is still `--ms-glass-backdrop-filter`, so a document on a preset with `glassLevel: none`
+ * gets a more opaque pill and still no blur, and the same rule cannot be written as a utility without
+ * hard-coding a blur the theme is supposed to own.
+ *
+ * 45 % of `surface-1` mixed into the glass background is what separates the pill from content moving
+ * under it. Measured against the alternative of a stronger blur: more blur on a 48 px pill makes the text
+ * behind it a smear, which reads as a rendering fault rather than as depth.
+ */
+.ms-nav-glass[data-scrolled='true'] {
+  background-color: color-mix(in oklab, var(--ms-glass-background), var(--ms-color-surface-1) 45%);
+}
+
+/*
  * The marquee's own geometry. The `marquee` preset (ANIMATION_SYSTEM.md § Scroll) owns the animation,
  * the duration and the pause-on-hover rule, and it emits `.ms-marquee` on the track — these are the two
  * declarations that belong to the *row* rather than to the animation: the mask that fades both ends, so
@@ -291,6 +305,32 @@
 
 .ms-price-swap {
   animation: ms-price-swap var(--ms-duration-quick) var(--ms-ease-standard);
+}
+
+/*
+ * The dock's magnification.
+ *
+ * Two contributions multiply: `--ms-dock-pointer`, written per item from the shared pointer bus, and
+ * `--ms-dock-key`, which `:focus-visible` sets so the keyboard gets the same affordance the cursor does.
+ * The product is then interpolated by `--ms-reduced-motion`, which is 0 both from the media query and from
+ * the studio's own preview override (ADR-075) — one mechanism covers both, where a check in the hook would
+ * only have covered the media query.
+ *
+ * `transform-origin: bottom` is what makes the row swell upward from a shared baseline rather than outward
+ * from its middle, which is the shape a dock has. The surface and the ring change on hover and focus
+ * independently of the scale, so switching the scale off leaves a real affordance rather than none.
+ */
+.ms-dock-item {
+  --ms-dock-pointer: 1;
+  --ms-dock-key: 1;
+
+  transform-origin: bottom center;
+  scale: calc(1 + (var(--ms-dock-pointer) * var(--ms-dock-key) - 1) * var(--ms-reduced-motion, 1));
+  transition: scale var(--ms-duration-fast) var(--ms-ease-standard);
+}
+
+.ms-dock-item:focus-visible {
+  --ms-dock-key: var(--ms-dock-magnification, 1.5);
 }
 
 @media (prefers-reduced-motion: reduce) {

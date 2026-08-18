@@ -190,6 +190,81 @@ export * from './marketing/comparison-table/index'
 export * from './marketing/newsletter-form/index'
 
 /*
+ * The navigation category, through each block's own index for the reason the two before it give — a
+ * category barrel exports a `definitions` and a `components`, and three of those would collide here. The
+ * shared vocabulary is exported too: the link shapes, the one place `aria-current` is decided, the drawer
+ * two of the bars open, and the hook that turns the shared scroll bus into a class.
+ *
+ * `NavLink` is a component here and a shape in the schema, so the shape is aliased. One name, two
+ * declaration spaces, and a barrel is the one place that has to choose.
+ */
+export {
+  BRAND_MAX_LENGTH,
+  CLOSE_MENU_LABEL,
+  ICON_NAME_MAX_LENGTH,
+  MAX_NAV_CHILDREN,
+  MAX_NAV_ITEMS,
+  MAX_SOCIALS,
+  NAV_DESCRIPTION_MAX_LENGTH,
+  NAV_LABEL_MAX_LENGTH,
+  OPEN_MENU_LABEL,
+  activeHrefField,
+  brandFields,
+  isActiveHref,
+  navChildSchema,
+  navFrameFields,
+  navItemSchema,
+  navLinkSchema,
+  socialAccessibleName,
+  socialSchema,
+  type ActiveShape,
+  type BrandShape,
+  type NavChild,
+  type NavItem,
+  type NavLink as NavLinkShape,
+  type NavFrameShape,
+  type Social,
+} from './navigation/navigation.schema'
+export {
+  ACTIVE_HREF_CONTROL,
+  NAV_ACTION_ITEM_CONTROLS,
+  NAV_BRAND_CONTROLS,
+  NAV_FRAME_CONTROLS,
+  NAV_ITEM_CONTROLS,
+  NAV_LINK_ITEM_CONTROLS,
+  SOCIAL_ITEM_CONTROLS,
+} from './navigation/navigation.controls'
+export {
+  NAV_BRAND,
+  NAV_FOCUS,
+  NAV_GROUP_HEADING,
+  NAV_ICON_BUTTON,
+  NAV_INNER,
+  NAV_PANEL_DESCRIPTION,
+  NAV_TOOLTIP,
+  NAV_TRANSITION,
+  SKIP_LINK,
+  navActionStyles,
+  navLinkStyles,
+} from './navigation/navigation.styles'
+export {
+  footerMotion as navFooterMotion,
+  navEntrance,
+  navMotion,
+} from './navigation/navigation.motion'
+export { NavAction } from './navigation/nav-action'
+export { NavDrawer } from './navigation/nav-drawer'
+export { NavIcon } from './navigation/nav-icon'
+export { NavLink } from './navigation/nav-link'
+export { useScrolled } from './navigation/use-scrolled'
+export * from './navigation/navbar/index'
+export * from './navigation/navbar-floating/index'
+export * from './navigation/sidebar-nav/index'
+export * from './navigation/footer/index'
+export * from './navigation/breadcrumbs/index'
+export * from './navigation/dock/index'
+
+/*
  * The effects category, through its own barrel: thirteen blocks plus the stack that mounts them on a
  * node, and the shared vocabulary every one of them is built from.
  */

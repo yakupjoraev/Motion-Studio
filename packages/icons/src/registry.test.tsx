@@ -8,7 +8,11 @@ import { describe, expect, it } from 'vitest'
 import { ICON_NAMES, type IconName } from './icon-name'
 import { ICON_REGISTRY } from './registry'
 
-/** The groups `prompts/07-icons.md` § The set enumerates, so a missing group fails rather than goes unnoticed. */
+/**
+ * The groups `prompts/07-icons.md` § The set enumerates, so a missing group fails rather than goes unnoticed.
+ * `menu` joined the navigation group with prompt 39: a mobile drawer needs a trigger, and the set had no
+ * three-line glyph — the count below moved from 89 to 90 for that one addition.
+ */
 const GROUPS: Readonly<Record<string, readonly IconName[]>> = {
   editor: [
     'cursor',
@@ -76,6 +80,7 @@ const GROUPS: Readonly<Record<string, readonly IconName[]>> = {
     'chevron-right',
     'plus',
     'minus',
+    'menu',
     'x',
     'check',
     'search',
@@ -124,8 +129,8 @@ describe('ICON_REGISTRY', () => {
     expect([...iconModules()].sort()).toEqual([...ICON_NAMES].sort())
   })
 
-  it('carries the 89 icons the prompt enumerates', () => {
-    expect(ICON_NAMES).toHaveLength(89)
+  it('carries the 90 icons the set is now made of', () => {
+    expect(ICON_NAMES).toHaveLength(90)
   })
 
   it.each(Object.entries(GROUPS))('covers every %s icon', (_group, names) => {

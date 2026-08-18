@@ -1,0 +1,6 @@
+export { NavbarFloating } from './navbar-floating'
+export { navbarFloatingDefinition } from './navbar-floating.definition'
+export { navbarFloatingMotion } from './navbar-floating.motion'
+export { FLOATING_SHRINK_PX, navbarFloatingSchema } from './navbar-floating.schema'
+export { navbarFloatingStyles } from './navbar-floating.styles'
+export type { NavbarFloatingProps } from './navbar-floating.types'

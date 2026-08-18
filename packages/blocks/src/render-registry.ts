@@ -7,6 +7,7 @@ import { components as effects } from './effects/components'
 import { components as hero } from './hero/components'
 import { components as layout } from './layout/components'
 import { components as marketing } from './marketing/components'
+import { components as navigation } from './navigation/components'
 import { DEFINITIONS } from './registry'
 
 /**
@@ -23,6 +24,7 @@ export const renderRegistry: Readonly<Record<string, BlockComponent>> = {
   ...hero,
   ...content,
   ...marketing,
+  ...navigation,
   ...effects,
 }
 

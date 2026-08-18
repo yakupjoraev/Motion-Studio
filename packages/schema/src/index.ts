@@ -106,6 +106,7 @@ export { serializeDocument, withStableKeyOrder } from './document/serialize'
 export {
   BLOCK_CATEGORIES,
   CONTROL_KINDS,
+  STRUCTURED_DATA_TYPES,
   type A11yNotes,
   type BlockCapabilities,
   type BlockCategory,
@@ -119,6 +120,7 @@ export {
   type RenderRegistry,
   type SlotDefinition,
   type SlotOrientation,
+  type StructuredDataType,
   type UnknownProps,
 } from './registry/registry.types'
 export {

@@ -48,6 +48,7 @@ import { ListIcon } from './list'
 import { LoadingIcon } from './loading'
 import { LockIcon } from './lock'
 import { MarginIcon } from './margin'
+import { MenuIcon } from './menu'
 import { MinusIcon } from './minus'
 import { MoreHorizontalIcon } from './more-horizontal'
 import { MoreVerticalIcon } from './more-vertical'
@@ -160,6 +161,7 @@ export const ICON_REGISTRY = {
   'chevron-right': ChevronRightIcon,
   plus: PlusIcon,
   minus: MinusIcon,
+  menu: MenuIcon,
   x: XIcon,
   check: CheckIcon,
   search: SearchIcon,
