@@ -97,7 +97,7 @@ Some of them are a **block's** dependency rather than the chrome's, and that cha
 is declared. A block is exported into the user's project, so the primitive it uses travels with it
 through the codegen descriptor's `dependencies` and is installed by the emitted `package.json`.
 `packages/blocks` therefore depends on those primitives directly — a block that imported one through
-`@motion-studio/ui` would export code that does not compile outside this repository. Seven do so far:
+`@motion-studio/ui` would export code that does not compile outside this repository. Eight do so far:
 
 | Primitive | Blocks | Why that primitive |
 | --- | --- | --- |
@@ -107,7 +107,8 @@ through the codegen descriptor's `dependencies` and is installed by the emitted 
 | Collapsible | `sidebar-nav` | Group disclosure with the `hidden` attribute managed |
 | Dropdown Menu | `breadcrumbs` | The collapsed-middle overflow menu, keyboard-operable |
 | Tabs | `tabs` | Roving tabindex, `aria-selected`, and panel association both ways |
-| Toggle Group | `button-group` | One roving tab stop for a segmented control, single and multiple |
+| Toggle Group | `button-group` | One roving tab stop for a segmented control, multiple selection |
+| Radio Group | `button-group` | Single selection, where the arrow keys have to *check* and not only move — ADR-208 |
 
 Radix Tooltip is deliberately **not** on that list. It needs a `Tooltip.Provider` above it, and a block
 cannot supply an application root — ADR-190, restated for `tooltip-target` in ADR-202.

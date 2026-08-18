@@ -8265,8 +8265,8 @@ portals to the document body and covers the viewport, and prompt 43's React prin
   in the descriptor is what tells the reader.
 - Accepted: the frame occupies space in the layout whether the dialog is open or not, because a frame
   that collapsed would move the page every time the dialog opened.
-- Accepted: **the live-region announcer is hidden while the dialog is open**, and no block can prevent it
-  — see ADR-207.
+- The third consequence this entry originally carried — that the live-region announcer is hidden while the
+  dialog is open — was wrong. ADR-209 has the measurement: `hideOthers` exempts every `[aria-live]` element.
 
 ## ADR-206 — A slotted interactive block still renders from its props alone
 
@@ -8302,7 +8302,7 @@ that does not exist.
 
 ## ADR-207 — Radix's modal dialog hides the announcer, and a block cannot exempt it
 
-**Date** 2026-08-18 · **Prompt** 40 · **Status** Accepted
+**Date** 2026-08-18 · **Prompt** 40 · **Status** Superseded by ADR-209
 
 ### Question
 ACCESSIBILITY.md § Dialogs requires background content to be `aria-hidden` "**except** the live-region
@@ -8342,3 +8342,216 @@ report rather than done here — `packages/ui` and `packages/canvas` are not pro
 - Accepted: an exported page has no announcer, so the export is unaffected — this is a studio-only gap,
   which is why the block is not the place to fix it.
 - Avoided: dropping `modal` to satisfy the clause, which would have traded a focus trap for it.
+
+## ADR-208 — `button-group` uses Radix Radio Group for single selection, Toggle Group for multiple
+
+**Date** 2026-08-18 · **Prompt** 40 · **Status** Accepted
+
+### Question
+Radix Toggle Group is the obvious primitive for a segmented control and TECH_STACK.md § Radix UI lists it.
+Its `single` mode renders `role="radiogroup"` with `role="radio"` items. Is that the right primitive for
+single selection?
+
+### Criterion (set before measuring)
+An element that announces a role has to behave like that role. The ARIA radio-group pattern is explicit:
+in a radio group the arrow keys **move focus and check the focused radio**. So: press `ArrowRight` in a
+single-selection group and the second choice must be checked. Stated as a test before either primitive was
+wired.
+
+### Measurement
+Toggle Group fails it. Its roving focus moves focus and leaves the selection alone — `aria-checked` stays
+`false` on the newly focused item until `Space` or `Enter`, which the first version of
+`button-group.test.tsx` recorded as a failure rather than as a surprise. The primitive has no option for
+select-on-focus; the behaviour belongs to `Toggle`, which is a pressed button and not a radio.
+
+Radix Radio Group passes it: arrows move focus and check in one step, `loop` wraps, `orientation` picks the
+axis, and the root and items carry the same roles Toggle Group *claims*. For **multiple** selection Toggle
+Group is right and unambiguous — `role="toolbar"` of `aria-pressed` buttons, where arrows must not select
+because selecting is a separate action.
+
+### Decision
+Two primitives, one per mode, which the component already needed two roots for: Radio Group for `single`,
+Toggle Group for `multiple`. The paint is one `cva` and it keys off both attributes — `data-[state=on]` is
+Toggle Group's and `data-[state=checked]` is Radio Group's — written out literally, because a class name
+built at runtime is a class name Tailwind never sees in the source.
+
+### Consequences
+- Accepted: the emitted `package.json` installs both primitives even though a given group uses one. The
+  alternative is a conditional dependency list, which is a printer feature nobody has asked for; the two
+  packages are 12 kB together, gzipped.
+- Accepted: the paint carries two attribute selectors for every selected-state class. It is verbose and it
+  is checkable, and the test asserts the selected item's class list rather than trusting the comment.
+- Avoided: a control that announces itself as a radio group and then ignores the arrow keys, which is the
+  kind of defect that passes every automated gate — axe sees a valid radiogroup — and fails a real user.
+
+## ADR-209 — The announcer does stay reachable: `hideOthers` exempts `[aria-live]`
+
+**Date** 2026-08-18 · **Prompt** 40 · **Status** Accepted · **Supersedes** ADR-207
+
+### Question
+ADR-207 concluded that a Radix modal dialog hides the live-region announcer and that no block can exempt it,
+and escalated the clause in ACCESSIBILITY.md § Dialogs as unmet. Writing `modal-trigger`'s test against that
+conclusion failed. Which is right?
+
+### Criterion (unchanged from ADR-207)
+The announcer must not carry `aria-hidden="true"` while a dialog is open. A pass or fail on the DOM.
+
+### Measurement
+It passes, and ADR-207 read one function and stopped at the wrong one. `hideOthers` in
+`aria-hidden@1.2.6` does this before it walks anything:
+
+```js
+// we should not hide aria-live elements - https://github.com/theKashey/aria-hidden/issues/10
+// and script elements, as they have no impact on accessibility.
+targets.push(...activeParentNode.querySelectorAll('[aria-live], script'))
+```
+
+Every `[aria-live]` element in the parent node is added to the **keep** set beside the dialog content, so the
+walk skips it and its ancestors. ADR-207 measured `applyAttributeToOthers`, which is the walk, and never read
+the caller that builds its target list.
+
+Asserted rather than described, in `modal-trigger.test.tsx`: with the dialog open, a plain `<div>` beside the
+block carries `aria-hidden="true"` and an `<output aria-live="polite">` beside it carries nothing. The canvas's
+own `SelectionAnnouncer` is exactly that element — an `<output>` with `aria-live="polite"` — so the studio is
+correct as it stands, and so is `packages/ui`'s `Dialog`.
+
+### Decision
+No escalation, no application change, and the clause in ACCESSIBILITY.md § Dialogs holds for every dialog in
+the repository. The requirement is now covered by a test in the one block that portals a dialog, and the
+mechanism behind it is `aria-live` — which is the attribute that makes an announcer an announcer, so nothing
+has to be marked specially for it to work.
+
+### Consequences
+- Accepted: the exemption is a dependency's behaviour rather than ours. It is documented in that dependency
+  and pinned by our test, so an upgrade that removed it would fail the suite rather than go silent.
+- Accepted: a region that announces without `aria-live` — `role="status"` alone, or a `role="alert"` element
+  written without the attribute — is **not** exempt. Ours all carry it; a future one has to.
+- Avoided: an escalation that would have asked the owner to fix something that was never broken, and a
+  workaround in `packages/ui` re-asserting an attribute nobody had set.
+
+### What this says about the earlier entry
+ADR-207's criterion and test were right and its measurement was incomplete: it read the function that hides
+and not the function that decides what to hide. Recorded rather than quietly deleted, because the failure mode
+— reading one layer of a dependency and generalising — is the useful part.
+
+## ADR-210 — The interactive category costs 16.2 kB on `/studio`, and `lazy` moves none of it
+
+**Date** 2026-08-18 · **Prompt** 40 · **Status** Accepted
+
+### Question
+Nine blocks took `/studio`'s first-load JS from 292.8 kB to 309.0 kB. ADR-196 measured the navigation category
+and concluded `lazy` was worth nothing there because the growth was metadata — but this category is different
+on its face: it imports three Radix primitives and its components hold state. Does dynamic import help here?
+
+### Criterion (set before measuring)
+Move the six state-holding components behind `lazy` and rebuild. A reduction of **5 kB or more** on `/studio`
+justifies nine Suspense boundaries and a request each; anything less does not.
+
+### Measurement
+`pnpm --filter web build`, `/studio` first-load JS:
+
+| Composition | First load |
+| --- | --- |
+| Eager (shipped) | **309 kB** |
+| Six components behind `lazy` | **309 kB** |
+
+Not a rounding difference — the same number. The reason is the package barrel: `apps/web` imports
+`@motion-studio/blocks` (`EffectStack`, `blockRegistry`, `renderRegistry`), and `src/index.ts` re-exports every
+block in the catalogue, so the components are in the module graph whatever `components.ts` does with them.
+ADR-107's split separates `registry.ts` from `render-registry.ts`; it does not separate the barrel.
+
+Where the 16.2 kB actually goes, measured by gzipping the descriptor fields themselves:
+
+| Part of the nine definitions | Raw | Gzipped |
+| --- | --- | --- |
+| `a11y.notes`, `codegen.notes`, `client.reason` | 8 997 B | 3 564 B |
+| `defaults` + `previewProps` | 7 203 B | 1 492 B |
+| `controls` | 12 229 B | 2 100 B |
+| `theme-toggle`'s emitted runtime module source | 2 176 B | 948 B |
+| Together | 30 605 B | **7 479 B** |
+
+So roughly half the growth is descriptor **text** — the accessibility notes are the largest single item, and the
+category's five-notes-per-block discipline is what makes them large. The Radix primitives cost nothing new:
+`packages/ui` already depends on Tabs, Radio Group and Toggle Group, so the studio bundle carried them before
+this prompt.
+
+### Decision
+Eager, as the navigation category is, and the comment in `components.ts` says why. The numbers above are the
+reason rather than consistency for its own sake.
+
+### Consequences
+- Accepted: `/studio` is at 309 kB against a 250 kB budget. ADR-179 is the owner's standing decision on that,
+  and this prompt adds 16.2 kB to it. Reported again rather than absorbed quietly.
+- Accepted: 948 B of the emitted `theme-toggle` runtime module ships to every studio visitor, and only the
+  export path ever reads it. The lever exists — a descriptor field the exporter loads on demand — and it belongs
+  to prompt 42, which is the first code that reads the field at all.
+- Named: the barrel is the real boundary. Making `lazy` mean anything for a block's component would take a
+  second entry point (`@motion-studio/blocks/components`), which is a change to the package's public API and
+  bigger than a block category's prompt.
+
+## ADR-211 — What the side-by-side and the keyboard pass changed in the interactive category
+
+**Date** 2026-08-18 · **Prompt** 40 · **Status** Accepted
+
+DESIGN_REFERENCES.md holds blocks at the reference's full standard, and GLOBAL_RULES § The design bar says the
+verdict gets reported. This is the pass and what it changed — recorded here rather than in a session report,
+because four of the changes are decisions a later prompt could otherwise undo by accident.
+
+### What was measured
+All nine blocks rendered through the Storybook build at 1440 × 900 in both colour modes and screenshotted, then
+walked with real `Tab` key events over CDP (a programmatic `.focus()` does not qualify as `:focus-visible` in a
+headless page), then re-rendered under an emulated `prefers-reduced-motion: reduce`.
+
+### What the first pass got wrong, and the fix
+
+1. **`tabs` drew a 340 px indicator under a 60 px label.** The columns are equal by ADR-203, and the default
+   `align: 'stretch'` made each of four tabs a quarter of 1 360 px. The default is now `start`, so the strip hugs
+   its labels and the indicator is the width of the thing it marks. `stretch` is still there for a strip that is
+   meant to fill a column.
+2. **`accordion` put a label at one end of a 1 360 px row and its chevron at the other.** `faq-accordion` had
+   already solved the same shape with `mx-auto max-w-3xl`; the generic one now uses it too.
+3. **Panel prose ran the full width of the block.** `INTERACTIVE_BODY` gained `max-w-2xl` — about 65 characters,
+   which DESIGN_SYSTEM.md § Typography calls a measure. Inside a card the class is a no-op.
+4. **`modal-trigger`'s scrim was invisible and its caption unreadable.** In dark mode `surface-0` is the darkest
+   step there is, so an overlay of `surface-0/70` over a frame painted `surface-0` dimmed nothing at all, and the
+   caption sat *under* the overlay. The frame is now `surface-2` — a plate the wash has something to act on in
+   either mode — and the caption moved above the frame, where nothing covers it.
+5. **The segmented surfaces were inverted in light mode.** `button-group` and `theme-toggle` had a `surface-1`
+   track with a `surface-0` selected item, which in light mode is white behind a *grey* selection. The pair that
+   reads as "well with one raised choice" in both modes is `surface-inset` + `surface-3`, which is the
+   relationship `packages/ui`'s segmented control already proves — the ladders run opposite ways (light elevates
+   toward white, dark toward lighter grey) and those two tokens invert with them.
+
+### The keyboard pass, in real Chrome
+Every control draws a **2 px solid** outline on a real `Tab`. The tab orders, as walked:
+
+| Block | First four stops |
+| --- | --- |
+| `button` | the button, then out |
+| `button-group` | one stop for the whole group, then out — the roving tab index |
+| `tabs` | the strip, then the open panel |
+| `accordion` | the three triggers, then out |
+| `carousel` | the four slides, then the dots and the arrow |
+| `modal-trigger` | "Close", four times — the dialog's focus trap, from the outside |
+| `tooltip-target` | the control, then out |
+| `command-menu-preview` | **nothing**: four presses, four times on `body`, which is what a picture should do |
+| `theme-toggle` | Light, Dark, System, then out |
+
+### Reduced motion
+**0** running animations in all nine. The only non-zero transition duration left anywhere on the page is `0.2s`
+on Storybook's own `.sb-loader` — the same value prompt 39 recorded — because every duration inside the blocks is
+a token and the tokens are `calc(… * var(--ms-reduced-motion))`. The carousel's autoplay does not start at all
+and renders no pause control, since there is nothing to stop.
+
+### The verdict, stated
+The category holds on finish: one accent, hairlines rather than heavy borders, states carried by surface and
+weight as well as by colour, the theme's own glass recipe on the one block that uses glass, and a reduced-motion
+path that leaves a composition rather than a gap. `command-menu-preview` is the strongest of the nine beside the
+reference — a glass palette over the hero glow, with real keycaps and one highlighted row — and `carousel` is the
+one with the most room left: its slides are content the author supplies, so what it can do for them is a card
+surface and a rhythm, and a strip of four short cards reads plainer than the reference's own galleries.
+
+One difference from the reference is deliberate and traceable: the tab indicator marks an **equal column** rather
+than hugging each label's text, because ADR-203 refused a layout read that would be wrong at every canvas zoom.
+With the strip hugging its labels the difference is a few pixels of air per tab, which is the trade that entry
+accepted, seen at 1440.
