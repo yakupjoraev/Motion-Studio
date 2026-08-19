@@ -247,7 +247,13 @@ export function PricingTable({
 
 ## Catalogue
 
-62 blocks in v1. Each row is a real registry entry with a schema, defaults, controls, and codegen.
+**72 registry entries in v1: 59 placeable blocks and 13 effect layers.** Each row is a real registry entry with a
+schema, defaults, controls, and codegen.
+
+The figure this section used to open with was 62, which is the six categories through Interactive plus the effects —
+arithmetic written before Data and Forms existed, though the list below has always named them. ADR-221 has the count
+per category and the other documents that still carry the old number; `registry.meta.test.ts` asserts all three
+figures, so they cannot drift again in silence.
 
 ### Layout (7)
 `section` · `container` · `stack` · `grid` · `columns` · `spacer` · `divider`
@@ -327,8 +333,47 @@ do, and `carousel` needs it only when it has controls (ADR-199).
 ### Data (5)
 `table` · `stat-grid` · `progress-ring` · `timeline` · `chart-preview`
 
+Five displays, and the category's whole obligation is that a reader who cannot see the picture still gets the data.
+`table` is a real `<table>` — caption, `<th scope="col">`, `aria-sort` on the header whose button *is* the sort
+control — with TanStack Table owning the sorting model and none of the markup. `chart-preview` draws its own paths
+in sixty lines of arithmetic rather than taking a chart library, is one `role="img"` named by a sentence that says
+the direction as well as the ends, and carries the real values in a visually hidden table beside it; its bars
+measure from zero where its line normalises to the series' own range, because a bar length is read as a magnitude
+and a line is read as a trend (ADR-218). `progress-ring` is the one block in the category that animates, and it does
+so from a `from`-only CSS keyframe over the element's own final value, which is what makes reduced motion show the
+answer immediately rather than more slowly (ADR-219). `timeline` is an `<ol>` with a `<time datetime>` per step, so
+its order is structure rather than styling. Only `table` needs `'use client'`; the other four print as Server
+Components.
+
+`stat-grid` is the fourth block to opt into container queries, and the shared vocabulary the category restates —
+length caps, the density scale, the plate, the arrival — is in `data/data.schema.ts` and `data/data.styles.ts`. What
+it does *not* restate is `content/stat`'s three-way delta answer or `interactive`'s glyph lookup, for the reason
+ADR-218 gives.
+
 ### Forms (5)
 `input-field` · `select-field` · `checkbox-field` · `contact-form` · `waitlist-form`
+
+The category where accessibility is most often wrong and most consequential, so the wiring is **one
+implementation** rather than five transcriptions of it: `forms/field-ids.ts` derives every id from a single
+`useId`, and `forms/field-shell.tsx` renders label, control, hint and error in that order. Four properties hold for
+every field and are asserted for all five in `forms.a11y.test.tsx`:
+
+- a real `<label>` with `htmlFor`, never a placeholder standing in for one;
+- `aria-describedby` listing the hint then the error, and **only ids that are in the document** — the error element
+  is always rendered so its live region pre-exists its text, and the hint's id appears only when there is a hint
+  (ADR-214);
+- `aria-invalid` present exactly when the field is invalid, never `false`;
+- a required field marked by a visible word that is `aria-hidden` plus `aria-required` on the control, so the
+  requirement reaches a sighted reader and a screen-reader user once each (ADR-215).
+
+The three field blocks are presentational — `error` is a prop, because a field on a canvas has an error state its
+designer needs to see (ADR-213) — and validation lives in the two blocks that own a submit. Those two use React
+Hook Form with a Zod resolver (ADR-212), move focus to the first invalid field on a failed submit, replace
+themselves with a panel that takes focus on success, and carry a honeypot that is off-screen rather than
+`display: none` (ADR-217). Neither invents a backend: `onSubmit` is a prop whose default does nothing, and the
+codegen note says so. `select-field` is the one field whose control is a `<button>`, so it is named by
+`aria-labelledby` rather than by its label alone (ADR-216). All five need `'use client'`, because all five call
+`useId`.
 
 ### Effects (13)
 Attach to a node rather than replacing it. Rendered as an absolutely-positioned layer inside the
@@ -389,16 +434,15 @@ Two exports, deliberately separate:
   **contains no React**.
 - `renderRegistry` — the components. Only the canvas and previews need it.
 
-That split is what lets `codegen` run in a `node` test and lets export work without loading 62
-components.
+That split is what lets `codegen` run in a `node` test and lets export work without loading every
+component.
 
 A build-time check asserts the two maps have identical key sets. A definition without a component
 or vice versa fails the build.
 
 ## Lazy loading
 
-Heavy blocks (`particles`, `mesh-gradient`, `chart-preview`, `hero-video`) are dynamically
-imported:
+Heavy blocks (`particles`, `mesh-gradient`, `hero-video`) are dynamically imported:
 
 ```ts
 export const components: RenderRegistry = {

@@ -8555,3 +8555,387 @@ One difference from the reference is deliberate and traceable: the tab indicator
 than hugging each label's text, because ADR-203 refused a layout read that would be wrong at every canvas zoom.
 With the strip hugging its labels the difference is a few pixels of air per tab, which is the trade that entry
 accepted, seen at 1440.
+
+## ADR-212 — The Zod resolver React Hook Form validates through
+
+**Date** 2026-08-19 · **Prompt** 41 · **Status** Accepted
+
+### Question
+TECH_STACK.md § Validation and data names React Hook Form 7 and names Zod 3 as the single source of truth for
+shape. Prompt 41 asks for "React Hook Form + a Zod resolver". It does not name the package that bridges them, and
+`@hookform/resolvers` is a dependency no document in the repository mentions — which by GLOBAL_RULES § Do not is a
+dependency that needs its justification stated before it is installed.
+
+### Criterion (set before measuring)
+Take the package if the adapter it provides is not something we could write in under fifty lines **and** it costs
+under 3 kB gzipped in the emitted project. Hand-write the resolver otherwise: a `Resolver` is a function of values
+returning `{ values, errors }`, and RHF's type contract specifies its shape exactly.
+
+### Measurement
+`node_modules/@hookform/resolvers/zod/dist/zod.mjs` — the subpath the block imports — is **2 104 B raw, 866 B
+gzipped**. Its own dependency list is empty; it imports only from `react-hook-form` and `zod`, both of which the
+block already installs. The hand-written alternative is about thirty lines, and it has to reimplement one thing
+that is not obvious: flattening a `ZodError`'s `path` array into RHF's dotted field names, including the array
+indices, which is where a hand-rolled version gets a nested field's error onto the wrong control.
+
+### Decision
+`@hookform/resolvers@^3.10.0`, imported as `@hookform/resolvers/zod`. 866 B is under the threshold, and the
+error-path flattening is the part worth not owning. TECH_STACK.md § Validation and data names it beside React Hook
+Form, in the same commit as this entry.
+
+### Consequences
+- Accepted: two blocks' exports install three packages rather than two. Both carry them in
+  `codegen.dependencies`, so the emitted `package.json` is complete.
+- Accepted: the resolver's major version is a second thing to keep in step with Zod's. `forms.codegen.test.ts`
+  asserts the range shape; it cannot assert compatibility, and no test can.
+- Avoided: a hand-written resolver whose only test would be the one for the bug it was written to have.
+
+## ADR-213 — The three field blocks are presentational, and `error` is a prop
+
+**Date** 2026-08-19 · **Prompt** 41 · **Status** Accepted
+
+### Question
+`input-field`, `select-field` and `checkbox-field` are blocks a designer places on a canvas. Prompt 41 requires
+`aria-invalid` "only when actually invalid". Who decides that a standalone field is invalid — the block, by
+validating what is typed into it, or its author, by setting an error message?
+
+### Criterion (set before deciding)
+The block that produces the state the inspector has to be able to **preview**. A field whose error state cannot be
+seen at any prop set is a field whose error state nobody can style, and the invalid state is the one a designer
+most needs to look at.
+
+### Decision
+The author. `error` is a string prop, empty means valid, and `aria-invalid` is present exactly when it is
+non-empty. Validation lives only in `contact-form` and `waitlist-form`, which own a submit and therefore own a
+moment at which validating means something.
+
+### Consequences
+- Accepted: a standalone field validates nothing, so an author who places one has to bind it themselves. The
+  codegen descriptor's note says so, and `previewProps` ships the invalid state so the palette shows it.
+- Accepted: the same field renders twice in the category — once with `error` as a prop, once with the resolver's
+  message. They share `FieldShell`, `InputControl` and `fieldIds`, so the wiring is one implementation; only where
+  the string comes from differs.
+- Avoided: a field that validated on blur, which would have invented a validation rule no author asked for and
+  shown no error at its defaults.
+
+## ADR-214 — The error element is in the DOM before it has text, and `aria-describedby` names only ids that exist
+
+**Date** 2026-08-19 · **Prompt** 41 · **Status** Accepted
+
+### Question
+Prompt 41's structure shows `aria-describedby="f1-hint f1-error"` referencing both the hint and the error. What
+happens when there is no hint, or no error? Two sub-questions, and they pull in opposite directions: a live region
+has to exist before its text arrives, and a description must not point at an element that is not there.
+
+### Criterion (set before deciding)
+Two properties, both checkable by test: (1) a message that appears announces itself without the reader going
+looking for it; (2) every id in `aria-describedby` resolves to an element in the document.
+
+### Decision
+The error paragraph is **always rendered**, empty or not, and its id is therefore always in `aria-describedby`.
+The hint element is rendered only when there is a hint, and its id is in the attribute only then. Order is hint
+first, error second — `fieldIds` builds the string and is the only place that decides it.
+
+### Measurement
+Chrome's accessibility tree for `contact-form` after a failed submit, over CDP `Accessibility.getFullAXTree`:
+
+| Node | Name | Description |
+| --- | --- | --- |
+| textbox | `Your name` | `Enter your name.` |
+| textbox | `Email address` | `We'll reply to this address. Enter a valid email address.` |
+| textbox | `What can we help with?` | `A sentence or two is plenty. Write at least a sentence…` |
+
+Each field's `alert` sibling is reported `live="assertive" atomic=true`, present before the submit and empty. The
+description is the hint followed by the error, in that order, which is what the criterion asked for.
+
+### Consequences
+- Accepted: an empty paragraph per field in the markup, with a `min-h-5` reserving its line. Both are deliberate —
+  the element has to pre-exist to announce, and a message that appeared without reserved space would push the rest
+  of the form down while the reader is tabbing through it.
+- Accepted: `role="alert"` is `aria-live="assertive"`, so a message interrupts. For a validation error that is the
+  right register; ACCESSIBILITY.md § Non-negotiables 8 asks for the announcement and does not soften it.
+
+## ADR-215 — A required field is marked twice and announced once
+
+**Date** 2026-08-19 · **Prompt** 41 · **Status** Accepted
+
+### Question
+Prompt 41 requires a required field to be marked "in the label text *and* with `aria-required` — an asterisk alone
+is not sufficient". Put the word in the label and the state on the control, and the requirement reaches a
+screen-reader user twice: once inside the field's accessible name, once as the required state.
+
+### Criterion (set before measuring)
+The requirement reaches a sighted reader and an assistive-technology user **exactly once each**. Measured as: the
+computed accessible name of the control equals the label alone, `aria-required` is exposed, and the visible label
+text contains the word.
+
+### Measurement
+`(required)` rendered inside the `<label>` with `aria-hidden="true"`.
+
+- `toHaveAccessibleName('Email address')` passes — the marking is skipped by the name computation.
+- Chrome's accessibility tree for the same field reports name `Email address` with `required=true`.
+- `getByLabelText('Email address')` **fails**, and that is not a defect: that query matches the label element's
+  whole text content, `aria-hidden` included, which is not what a screen reader computes. Every test in the
+  category queries by role and accessible name for this reason, and the comment beside them says so.
+
+### Decision
+The visible word, `aria-hidden`, plus `aria-required` on the control. A word rather than an asterisk, because an
+asterisk is a convention a reader has to already know.
+
+### Consequences
+- Accepted: a sighted screen-reader user sees "(required)" and hears "required" — the same fact from two channels,
+  which is the point rather than a duplication.
+- Accepted: `aria-required` on a checkbox and on a radio is not in ARIA 1.2's support list for those roles.
+  Measured rather than assumed: axe-core raises **no** `aria-allowed-attr` violation for either, in both modes and
+  in both valid and invalid states, because HTML-ARIA permits the attribute wherever the native `required`
+  attribute is allowed. Recorded because a future axe upgrade could change the answer.
+- Rejected: the native `required` attribute. The two form blocks submit with `noValidate`, so it would do nothing
+  there, and on a standalone field it would produce a browser bubble the block can neither style nor announce —
+  the call `newsletter-form` already made.
+
+## ADR-216 — The Radix Select trigger is named by its label and by the element holding its value
+
+**Date** 2026-08-19 · **Prompt** 41 · **Status** Accepted
+
+### Question
+Prompt 41 specifies Radix Select for `select-field`. Radix's own documentation labels it with `<Label htmlFor>`
+pointing at `<Select.Trigger id>`. But the trigger is a `<button>`, and HTML-AAM computes a button's name from its
+contents rather than from an associated label — so does the label reach the accessible name, and where does the
+chosen value go?
+
+### Criterion (set before measuring)
+The trigger's computed accessible name has to contain the field's label **and** the current value, in the
+computation `@testing-library` and axe use. Try the three candidate wirings and take the one that produces it.
+
+### Measurement
+`toHaveAccessibleName` on the trigger, with a value selected:
+
+| Wiring | Computed name |
+| --- | --- |
+| `<label for>` alone | `Export target` — from the label; the value is absent |
+| `aria-labelledby="labelId triggerId"` (self-reference) | `Export target` — the self-reference contributes nothing |
+| `aria-labelledby="labelId valueId"` (shipped) | `Export target Next.js` |
+
+`valueId` is a span wrapping `Select.Value`, so it holds the chosen option's text or the placeholder.
+
+### Decision
+`<label htmlFor={triggerId}>` **and** `aria-labelledby="labelId valueId"`. The `htmlFor` stays because it is what
+makes clicking the label reach the control — measured in Chrome: the click lands on the trigger and opens the
+list, which is what a select should do. `fieldIds` gained a `valueId` for the one field that needs it.
+
+### Consequences
+- Accepted: the name changes as the value changes. For a combobox that is correct — the value is part of what the
+  control currently is — and it is the only wiring of the three that announces it at all.
+- Accepted: one field in the category is named differently from the other four. The reason is the element, not a
+  preference, and the block's a11y notes state it.
+- Named: Radix Select needs `Element.prototype.scrollIntoView`, `hasPointerCapture` and `releasePointerCapture`,
+  and jsdom implements none of them. Stubbed in the two test files that open the list rather than in the shared
+  setup, so a global stub cannot hide a missing method from an unrelated test.
+
+## ADR-217 — The honeypot is an off-screen input inside an `aria-hidden` wrapper
+
+**Date** 2026-08-19 · **Prompt** 41 · **Status** Accepted
+
+### Question
+Prompt 41 asks for a honeypot "`aria-hidden` and visually hidden with a technique that does not hide it from spam
+bots (an off-screen input, not `display: none`)". Two things could go wrong with that instruction followed
+literally: an `aria-hidden` container holding a focusable element is what axe's `aria-hidden-focus` rule exists to
+catch, and a filled trap has to produce *some* outcome.
+
+### Criterion (set before measuring)
+Five properties, each asserted: the field is submitted, it is not reachable by `Tab`, it is not in the
+accessibility tree, it does not shift layout, and it is not `display: none`, `visibility: hidden` or `[hidden]`.
+Plus zero axe violations on the form that contains it.
+
+### Measurement
+`absolute -left-[9999px] size-px overflow-hidden` on the wrapper, `tabIndex={-1}` and `autoComplete="off"` on the
+input.
+
+- `expectNoViolations` on `contact-form` and `waitlist-form`: **clean**, at defaults and with every field invalid.
+  axe treats a `tabindex="-1"` descendant of an `aria-hidden` subtree as needing review rather than as a
+  violation, so the rule does not fire.
+- Real `Tab` presses in Chrome walk name → email → message → Send and then leave the block. The trap is never a
+  stop.
+- Chrome's accessibility tree for the form contains no node for it.
+
+### Decision
+The wrapper carries `aria-hidden` and the off-screen box; the input carries `tabIndex={-1}` and
+`autoComplete="off"` — the last so a browser's own autofill cannot make a real person look like a bot. A filled
+trap resolves the form to **success without calling the handler**. Telling a bot it failed teaches it what to
+change.
+
+### Consequences
+- Accepted: a person who somehow fills the trap gets a success message and no message sent. The alternative —
+  showing them an error on a field they cannot see — is worse, and the case requires defeating both `tabindex` and
+  the viewport.
+- Accepted: the honeypot's field name (`reference`) is part of the block's contract. The codegen note says it must
+  stay off-screen, because hiding it with `display: none` is the one change that silently stops it working.
+- Named: axe's verdict is "incomplete", not "pass". If a future axe version promotes it, this entry is where the
+  decision to revisit lives.
+
+## ADR-218 — What the two new categories reuse, and what they restate
+
+**Date** 2026-08-19 · **Prompt** 41 · **Status** Accepted
+
+### Question
+Every category before these two declared its own vocabulary rather than importing a neighbour's — sizes, focus
+rings, length caps. Data and Forms both have neighbours holding things they need: `content/stat`'s delta,
+`interactive`'s control geometry and glyph lookup, `marketing`'s heading-level component. Which of those should be
+imported and which restated?
+
+### Criterion (set before deciding)
+Reuse when the thing is a **decision already made and tested** and the import carries no assumption about its
+container. Restate when it is only a vocabulary constant, or when reuse would drag a container's assumptions
+across a category boundary.
+
+### Decision
+Reused:
+
+| From | What | Why it qualifies |
+| --- | --- | --- |
+| `content/stat` | `DELTA_DIRECTIONS`, `deltaTone`, `StatDelta`, `statValueStyles` | Whether a change is good is one decision with a tested three-way answer; a second copy is a second thing to get wrong |
+| `interactive` | `INTERACTIVE_FOCUS`, `INTERACTIVE_TRANSITION`, `controlStyles` | A field and a `button` block on one exported page have to draw the same ring and be the same height; neither category can decide that alone |
+| `interactive` | `ControlIcon`, `panelChildren`, `iconNameField` | The glyph-by-name lookup is FILE_FORMAT.md § Security's rule in code, and ADR-206's children fallback is one decision |
+| `marketing` | `SectionHeading`, `headingLevel`, `HEADING_LEVELS` | The one place a level becomes a tag; a block that hard-coded one would make the page skip a level |
+
+Restated, per category: the length caps, the density scale, the plate, the entrance spec, the frame controls.
+
+`chart-preview` does **not** reuse `content/stat`'s `sparklinePath`, and that is the criterion applied the other
+way: that function's viewBox is fixed at 100 × 32 with no bar mode and no baseline choice, so reusing it would
+mean adding two parameters for one caller. It has its own `chart-geometry.ts`, whose bar branch measures from zero
+where the line branch measures from the series' own range — two different normalisations that a shared function
+would have had to take a flag for.
+
+### Consequences
+- Accepted: `data` imports from `content` and `interactive`, and `forms` imports from `interactive` and
+  `marketing`. Intra-package and one direction only; the same shape `accordion` already had when it took
+  `headingLevel` from `marketing`.
+- Accepted: the focus ring is now declared in `interactive` and used by three categories. Moving it to a
+  package-level constant would be the cleaner home and is a refactor of five files this prompt did not ask for.
+- Avoided: a fifth transcription of the same two class lists, and a second copy of `deltaTone`.
+
+## ADR-219 — The progress ring animates from a `from`-only keyframe, so its export needs no client directive
+
+**Date** 2026-08-19 · **Prompt** 41 · **Status** Accepted
+
+### Question
+Prompt 41 requires the ring's fill to animate and to "respect reduced motion by showing the final value
+immediately". A JS animation would need an effect, which would make the exported component a client component for
+the sake of a decoration. Can CSS do it?
+
+### Criterion (set before measuring)
+Under an emulated `prefers-reduced-motion: reduce`, the ring shows its **final** value and `getAnimations()`
+returns nothing. At full motion the arc draws. No hook, no effect, no runtime check.
+
+### Measurement
+`stroke-dasharray` and `stroke-dashoffset` are written as custom properties on the arc — the exemption
+COMPONENT_LIBRARY.md § Rules 3 grants — and the keyframe in `blocks.css` declares only a `from`, so the animation
+interpolates *towards* the style the element already carries. No fill mode.
+
+Over CDP at 1440 in both colour modes:
+
+| Condition | `document.getAnimations()` | Arc |
+| --- | --- | --- |
+| Full motion | `['ms-ring-fill']` | draws from empty to 68 % |
+| `prefers-reduced-motion: reduce` | `[]` | 68 % immediately |
+
+The same page reports zero animations for the other nine blocks under either condition.
+
+### Decision
+CSS, and `client: { kind: 'never' }`. The media query removes the animation outright and the token duration
+collapses it to `0ms` under the studio's own preview override — ADR-021's two mechanisms, both of which land on
+the same final state because the element owns it.
+
+### Consequences
+- Accepted: the fill is not a motion preset and a user cannot remove it from the inspector. That is deliberate:
+  `stroke-dashoffset` is not on any channel the motion model animates, and a reader who removed the entrance
+  should still see the ring draw itself.
+- Accepted: the ring is the only block of the ten with a hover clip in the palette, because it is the only one
+  that animates. The generator decides that by asking the page, not from a list.
+
+## ADR-220 — The client boundary for the ten, by one criterion
+
+**Date** 2026-08-19 · **Prompt** 41 · **Status** Accepted
+
+### Question
+ADR-199 made the `'use client'` declaration a block's own answer and made an absent declaration an export failure.
+Ten blocks arrive with prompt 41. Which of them need the directive?
+
+### Criterion (set before deciding)
+A fact about the component rather than a judgement about the block: **`always` if the component calls a React hook
+or attaches an event handler; `never` if it is markup and arithmetic.** `whenAnyProp` only where one prop set
+removes every hook and every handler.
+
+### Measurement
+Applied to the ten:
+
+| Block | Kind | The fact |
+| --- | --- | --- |
+| `table` | `always` | `useReactTable` at every prop set, holding the sort |
+| `stat-grid` | `never` | figures and labels |
+| `progress-ring` | `never` | two circles and a CSS keyframe (ADR-219) |
+| `timeline` | `never` | an ordered list; the strip scrolls in CSS |
+| `chart-preview` | `never` | paths computed during render |
+| `input-field` | `always` | `useId` |
+| `select-field` | `always` | `useId`, and Radix Select holds the open state |
+| `checkbox-field` | `always` | `useId` |
+| `contact-form` | `always` | `useId`, `useForm`, `useFormSubmit` |
+| `waitlist-form` | `always` | the same three |
+
+No block in either category qualifies for `whenAnyProp`: `useId` is unconditional in all five form blocks, and
+`table` calls its hook whatever its props say.
+
+### Decision
+As measured. `data.codegen.test.ts` and `forms.codegen.test.ts` assert the table above, so a component that gains
+a hook and does not change its declaration fails the build.
+
+### Consequences
+- Accepted: four of the five data blocks print as Server Components and all five form blocks do not. That is the
+  honest split rather than a target.
+- Accepted: `table` pulls TanStack Table into the client bundle of an exported page for the sake of sorting. The
+  prompt specifies the library; the cost is the emitted project's, and `codegen.dependencies` states it.
+- Named: fifty-three blocks in the six earlier categories still declare nothing, and the registry meta-test
+  asserts exactly that rather than a rule nobody has met. Auditing them is prompt 42's first task, as ADR-199 said.
+
+## ADR-221 — The registry holds 72 entries, and the documents say 62
+
+**Date** 2026-08-19 · **Prompt** 41 · **Status** Accepted
+
+### Question
+Prompt 41 says the last ten blocks complete the registry "at **62 blocks**" and asks for the actual number.
+COMPONENT_LIBRARY.md § Catalogue heads its list with the same figure. `blockRegistry.list().length` is 72.
+
+### Measurement
+Counted from `definitions.ts` per category:
+
+| Category | Entries |
+| --- | --- |
+| Layout | 7 |
+| Hero | 6 |
+| Content | 9 |
+| Marketing | 12 |
+| Navigation | 6 |
+| Interactive | 9 |
+| Data | 5 |
+| Forms | 5 |
+| Effects | 13 |
+| **Total** | **72** |
+
+Placeable blocks — everything but the effects, which attach to a node rather than replacing one — are **59**.
+
+Where 62 came from is arithmetic rather than a mystery: the six categories through Interactive sum to 49, and
+49 + 13 effects is 62. The figure was written before Data and Forms existed, and the catalogue's own list has
+always named them. Neither 62 nor any grouping of the rows produces it once the last two categories are in.
+
+### Decision
+The measured numbers. COMPONENT_LIBRARY.md § Catalogue states them explicitly — 72 registry entries, 59 placeable
+blocks, 13 effect layers — in the same commit as this entry, and `registry.meta.test.ts` asserts all three, so the
+count cannot drift again without a test failing.
+
+### Consequences
+- **Escalated, not resolved:** the figure 62 also appears in ACCESSIBILITY.md § Testing, DESIGN_SYSTEM.md,
+  PERFORMANCE.md, ROADMAP.md § M8, and prompts 04, 22, 46, 52, 55, 57, 59 and 61. Those are the build plan and the
+  documents that set its gates; changing them is the owner's call, not a block prompt's. This entry is the record
+  of what the number actually is.
+- Accepted: a reader of ROADMAP.md will find a number that disagrees with the registry until that sweep happens.
+  Recorded rather than quietly corrected in one file and left inconsistent in eight.

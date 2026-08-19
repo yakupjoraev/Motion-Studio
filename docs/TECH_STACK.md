@@ -57,8 +57,10 @@ Only for the `/blocks` gallery and `/docs` search index — cached, deduped fetc
 JSON. Not used for editor state. If you reach for it inside the editor, you are wrong.
 
 ### TanStack Table 8
-The data-heavy blocks (Table, Pricing comparison) and the export file list. Headless, so it
-composes with our own chrome.
+The data-heavy blocks and the export file list. Headless, so it composes with our own chrome:
+`data/table` takes it for the sorting model and writes every element itself, which is the only way the
+markup can be the semantic table a screen reader needs. `comparison-table` and `pricing-table` do not
+take it — neither sorts, and a matrix of fixed columns is markup rather than a model.
 
 ### TanStack Virtual 3
 Layers tree, block list, export file list. Anything that can exceed ~50 rows.
@@ -97,7 +99,7 @@ Some of them are a **block's** dependency rather than the chrome's, and that cha
 is declared. A block is exported into the user's project, so the primitive it uses travels with it
 through the codegen descriptor's `dependencies` and is installed by the emitted `package.json`.
 `packages/blocks` therefore depends on those primitives directly — a block that imported one through
-`@motion-studio/ui` would export code that does not compile outside this repository. Eight do so far:
+`@motion-studio/ui` would export code that does not compile outside this repository. Nine do so far:
 
 | Primitive | Blocks | Why that primitive |
 | --- | --- | --- |
@@ -109,6 +111,7 @@ through the codegen descriptor's `dependencies` and is installed by the emitted 
 | Tabs | `tabs` | Roving tabindex, `aria-selected`, and panel association both ways |
 | Toggle Group | `button-group` | One roving tab stop for a segmented control, multiple selection |
 | Radio Group | `button-group` | Single selection, where the arrow keys have to *check* and not only move — ADR-208 |
+| Select | `select-field` | A styleable listbox with type-ahead. Its trigger is a `<button>`, which moves the accessible name — ADR-216 |
 
 Radix Tooltip is deliberately **not** on that list. It needs a `Tooltip.Provider` above it, and a block
 cannot supply an application root — ADR-190, restated for `tooltip-target` in ADR-202.
@@ -153,6 +156,12 @@ schema plus migrations. Types are inferred from schemas — never declared twice
 ### React Hook Form 7
 Only in genuine forms: the theme builder's numeric form, export options, and the Form blocks'
 own previews. Not for the inspector — the inspector is command-driven, not form-driven.
+
+Validation reaches it through **`@hookform/resolvers`**, imported as `@hookform/resolvers/zod`. 866 B
+gzipped, no dependencies of its own, and the part worth not owning is flattening a `ZodError`'s `path`
+array into RHF's dotted field names — ADR-212 has the measurement. `contact-form` and `waitlist-form`
+are the only two blocks that take it, and both carry it plus `react-hook-form` and `zod` in their
+codegen descriptors, so the emitted project installs what the emitted component imports.
 
 ## Tooling
 
