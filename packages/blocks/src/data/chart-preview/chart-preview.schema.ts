@@ -47,6 +47,15 @@ export const chartPreviewSchema = z.object({
    * decoration, and this is what turns the summary into data the reader can check.
    */
   showTable: z.boolean().default(true),
+  /**
+   * The value scale: three labelled gridlines beside the plot. A chart whose values can only be guessed from the
+   * shape is a decoration, and the ends of the range are the two numbers a reader wants first.
+   */
+  showGrid: z.boolean().default(true),
+  /** The point names under the plot. Without this the `labels` prop is visible only to a screen reader. */
+  showPointLabels: z.boolean().default(true),
+  /** The category's plate around the whole figure, for a chart that is not already inside a band. */
+  plate: z.boolean().default(false),
   caption: z.string().max(CELL_MAX_LENGTH).default(''),
   ...dataFrameFields(),
 })

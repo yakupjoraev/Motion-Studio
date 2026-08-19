@@ -23,6 +23,16 @@ const defaults = chartPreviewDefinition.defaults
 
 export const Default: Story = { args: defaults }
 
+/** The plate, the value scale and the point names together — the block doing everything it can. */
+export const Complete: Story = {
+  args: { ...defaults, plate: true, height: 'lg', caption: 'Exports per week, six weeks' },
+}
+
+/** Bare: no scale, no names, no plate. What the block was before the axes existed. */
+export const Bare: Story = {
+  args: { ...defaults, showGrid: false, showPointLabels: false },
+}
+
 export const Line: Story = { args: { ...defaults, kind: 'line' } }
 
 export const Bars: Story = { args: { ...defaults, kind: 'bar' } }

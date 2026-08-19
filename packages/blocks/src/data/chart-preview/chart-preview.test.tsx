@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { expectNoViolations, renderBlock } from '../../test/render-block'
 import { requireAt } from '../../test/require-at'
 
+import { axisTicks, formatTick } from './chart-axis'
 import {
   CHART_VIEWBOX,
   areaPath,
@@ -115,6 +116,88 @@ describe('ChartPreview', () => {
     const { container } = render()
 
     expect(container.querySelectorAll('a, button, input, [tabindex]')).toHaveLength(0)
+  })
+})
+
+describe('ChartPreview axes', () => {
+  it('draws a value scale of three gridlines and labels each one', () => {
+    render()
+
+    const ticks = axisTicks(defaults.kind, defaults.series)
+
+    expect(screen.getByTestId('chart-grid').querySelectorAll('line')).toHaveLength(3)
+    expect(screen.getByTestId('chart-value-axis')).toHaveTextContent(
+      formatTick(requireAt(ticks, 0)),
+    )
+    expect(screen.getByTestId('chart-value-axis')).toHaveTextContent(
+      formatTick(requireAt(ticks, 2)),
+    )
+  })
+
+  it('draws the point names the author gave, which were otherwise invisible', () => {
+    render()
+
+    const axis = screen.getByTestId('chart-point-axis')
+
+    for (const label of defaults.labels) {
+      expect(axis).toHaveTextContent(label)
+    }
+  })
+
+  it('hides both axes from the accessibility tree, because the hidden table carries the numbers', () => {
+    render()
+
+    expect(screen.getByTestId('chart-value-axis')).toHaveAttribute('aria-hidden', 'true')
+    expect(screen.getByTestId('chart-point-axis')).toHaveAttribute('aria-hidden', 'true')
+  })
+
+  it('drops each axis when the author turned it off', () => {
+    render({ showGrid: false, showPointLabels: false })
+
+    expect(screen.queryByTestId('chart-value-axis')).toBeNull()
+    expect(screen.queryByTestId('chart-grid')).toBeNull()
+    expect(screen.queryByTestId('chart-point-axis')).toBeNull()
+  })
+
+  it('wears the category plate only when asked', () => {
+    const { unmount } = render()
+    expect(screen.getByTestId('chart-preview').className).not.toContain('border-border')
+    unmount()
+
+    render({ plate: true })
+    expect(screen.getByTestId('chart-preview').className).toContain('border-border')
+  })
+
+  it('has no axe violations with both axes and the plate on', async () => {
+    const { container } = render({ plate: true, caption: 'Exports per week' })
+
+    await expectNoViolations(container)
+  })
+})
+
+describe('axisTicks', () => {
+  it('scales a line from the series’ own range', () => {
+    expect(axisTicks('line', [12, 46, 84])).toEqual([84, 48, 12])
+  })
+
+  it('scales bars from zero, because a bar length is read as a magnitude', () => {
+    expect(axisTicks('bar', [12, 46, 84])).toEqual([84, 42, 0])
+  })
+
+  it('reports one tick for a flat series rather than a scale with no width', () => {
+    expect(axisTicks('line', [40, 40])).toEqual([40])
+  })
+
+  it('has nothing to label without data', () => {
+    expect(axisTicks('area', [])).toEqual([])
+  })
+})
+
+describe('formatTick', () => {
+  it('leaves an integer alone and rounds anything else to one decimal', () => {
+    expect(formatTick(84)).toBe('84')
+    expect(formatTick(41.66)).toBe('41.7')
+    expect(formatTick(42.0)).toBe('42')
   })
 })
 

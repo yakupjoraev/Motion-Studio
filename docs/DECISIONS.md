@@ -9047,3 +9047,63 @@ received it. The ten new blocks never churned, and the three affected pre-existi
 committed bytes rather than carried into this prompt's diff. Recorded as a known fluctuation in the generator's
 focus timing rather than chased: it reproduces, it is not this category's, and `--verify` is not currently a
 reliable gate for those two blocks.
+
+## ADR-223 — `chart-preview` gets a value scale, point names and a plate
+
+**Date** 2026-08-19 · **Prompt** 41 · **Status** Accepted
+
+ADR-222 named this block the weakest of the ten and said what it would take: "an axis with two or three labelled
+gridlines and an optional plate". This is that work, done rather than deferred.
+
+### Question
+A chart whose only accessible form is a hidden table and whose only visible form is a shape has two defects a
+reader meets immediately: they cannot read a value off it, and the `labels` prop they filled in is invisible to
+them — it reached the hidden table and nothing else.
+
+### Criterion (set before deciding)
+Three properties: a reader can name the top and bottom of the range without counting pixels; a point name the
+author typed appears on the page; and neither addition costs the block its `cheap` cost class or its `never`
+client boundary.
+
+### Decision
+Three props, all off-switchable, none of them a new dependency:
+
+| Prop | What it draws |
+| --- | --- |
+| `showGrid` | three gridlines inside the SVG and their values beside it |
+| `showPointLabels` | the `labels` array under the plot |
+| `plate` | the category's own surface and hairline around the figure |
+
+Two things about it are forced rather than chosen, and both are recorded because a later prompt could undo them
+by accident:
+
+1. **Both axes are HTML, not SVG text.** The plot is drawn with `preserveAspectRatio="none"`, so text inside the
+   viewBox is stretched horizontally by whatever aspect the container has. The gridlines *are* inside the SVG,
+   because a line survives stretching when it carries `vectorEffect="non-scaling-stroke"`.
+2. **The scale's bottom is not always the series' minimum.** `axisTicks` splits the same way the marks already do:
+   bars are measured from zero, so their axis starts at zero or the labels would describe a drawing that is not
+   there; a line normalises to its own range, so its axis does too.
+
+A tick has to sit *on* its gridline, and it does so without coordinate arithmetic or an inline style:
+`justify-between` leaves the first and last labels half a line-height inside the ends of the column, so those two
+are pulled back by exactly that and the middle one needs nothing.
+
+Both axes are `aria-hidden`. The hidden table already carries every value *as a table*, with a row header per
+point; the same numbers loose in the accessibility tree would be a scatter of digits a reader has to step over.
+
+### Measurement
+- `/studio` first-load JS: 319 kB → **320 kB**. The three additions cost 1 kB, so the cost class stays `cheap`.
+- Still no hook, no effect, no handler: `client: { kind: 'never' }` is unchanged, and `data.codegen.test.ts`
+  asserts it.
+- Eighty frames re-shot at 360, 768 and 1440 in both modes: zero horizontal overflow, zero animations under
+  reduced motion.
+- axe: clean with both axes and the plate on, and with a caption.
+- blocks: **1 932** tests in 88 files, all passing.
+
+### Consequences
+- Accepted: three more props on a block that had thirteen. Each is a switch with a visible effect and a default
+  that makes the block look finished out of the palette, which is what a prop on a content block is for.
+- Accepted: the value scale is three ticks and not five. Five inside `h-20` — the block's smallest height — is a
+  hatch pattern rather than a scale.
+- Named: the verdict in ADR-222 is superseded for this block. It now reads as a chart rather than as a drawing:
+  plate, scale, names, vertices. What it still does not have is a second series, and that is a different block.

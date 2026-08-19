@@ -1,4 +1,8 @@
+export { AXIS_TICKS, axisTicks, formatTick } from './chart-axis'
 export { ChartDataTable, type ChartDataTableProps } from './chart-data-table'
+export { ChartGrid, type ChartGridProps } from './chart-grid'
+export { ChartPointAxis, type ChartPointAxisProps } from './chart-point-axis'
+export { ChartValueAxis, type ChartValueAxisProps } from './chart-value-axis'
 export {
   CHART_VIEWBOX,
   areaPath,
@@ -26,8 +30,15 @@ export {
 } from './chart-preview.schema'
 export {
   CHART_AREA_OPACITY,
+  CHART_AXIS_TEXT,
   CHART_CAPTION,
+  CHART_GRID_LINE,
+  CHART_LAYOUT,
+  CHART_TICK,
+  CHART_VALUE_AXIS,
   chartFrameStyles,
   chartSvgStyles,
+  pointAxisStyles,
+  pointLabelStyles,
 } from './chart-preview.styles'
 export type { ChartPreviewProps } from './chart-preview.types'
