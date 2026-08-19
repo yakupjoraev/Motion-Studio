@@ -8939,3 +8939,111 @@ count cannot drift again without a test failing.
   of what the number actually is.
 - Accepted: a reader of ROADMAP.md will find a number that disagrees with the registry until that sweep happens.
   Recorded rather than quietly corrected in one file and left inconsistent in eight.
+
+## ADR-222 — What the side-by-side, the keyboard pass and the responsive pass changed in the two categories
+
+**Date** 2026-08-19 · **Prompt** 41 · **Status** Accepted
+
+DESIGN_REFERENCES.md holds blocks at the reference's full standard and GLOBAL_RULES § The design bar says the
+verdict gets reported. This is the pass and what it changed — recorded here rather than in a session report,
+because four of the changes are decisions a later prompt could otherwise undo by accident.
+
+### What was measured
+Eighty frames: each of the ten blocks at 360, 768 and 1440 in both colour modes, and again at 1440 under an
+emulated `prefers-reduced-motion: reduce`, screenshotted over CDP through the Storybook build. Each frame also
+recorded `document.getAnimations()` and the document's horizontal overflow. Then a real keyboard pass on
+`contact-form` with `Input.dispatchKeyEvent`, and Chrome's own accessibility tree for five of the blocks.
+
+### What the first pass got wrong, and the fix
+
+1. **`chart-preview` made the page scroll sideways at 360 px** — by 6 px, in both modes. The hidden data table
+   carried `sr-only` directly, and that utility sets `width: 1px`, which a `display: table` box treats as a
+   minimum and ignores: the table laid itself out at its content width and extended the document's scroll area.
+   The utility moved to a wrapping `<div>`, whose 1 px box with `overflow: hidden` clips it and contributes
+   nothing. Zero overflow in all eighty frames afterwards.
+2. **`stat-grid`'s dividers were invisible in light mode.** The plate was composed from `DATA_SURFACE`, which
+   carries `bg-surface-1`, so two `bg-*` utilities landed on one element and Tailwind's emission order decided
+   which won — the grid painted itself white and the one-pixel gaps disappeared into it. The plate is written out
+   without a background of its own. The same trap `interactive.styles.ts` records for padding, in a different
+   property.
+3. **`table`'s numeric headings sat 200 px from their own numbers.** The sort control fills its cell, and a
+   left-hugging `inline-flex` inside a right-aligned cell reads as two columns rather than one. The control now
+   places its content from the column's `align`, reversing the row for `end` so the glyph stays beside the label.
+4. **`chart-preview` flattened every series at 1440.** With `preserveAspectRatio="none"` the drawn slope is
+   decided entirely by the container's aspect, and a full-width chart at `h-32` is 10.6 : 1 — the six values read
+   as one straight line. The figure gained `max-w-2xl`, which makes it 5.25 : 1, and the vertices gained markers
+   drawn as zero-length segments with a round linecap: a `<circle>` in a stretched viewBox is an ellipse, and a
+   zero-length subpath with `vectorEffect="non-scaling-stroke"` is a round dot in device space.
+
+### The keyboard pass, in real Chrome
+`contact-form` at 1440, every press a real `Tab` or `Enter` over CDP — a programmatic `.focus()` does not qualify
+as `:focus-visible` in a headless page.
+
+| Step | Where focus went | Ring |
+| --- | --- | --- |
+| Tab ×1 | `Your name` | 2 px, `:focus-visible` |
+| Tab ×2 | `Email address` | 2 px, `:focus-visible` |
+| Tab ×3 | `What can we help with?` (textarea) | 2 px, `:focus-visible` |
+| Tab ×4 | `Send message` | 2 px, `:focus-visible` |
+| Tab ×5 | out of the block | — |
+| `Enter` on Send, nothing filled | **`Your name`** — the first invalid field | 2 px |
+| … announced | all three messages, each in its own `role="alert"` | |
+| `Enter` on Send, name filled | **`Email address`** — the first field *still* invalid | 2 px |
+| … announced | the remaining two messages | |
+| `Enter` on Send, all valid | **the success panel**, which has replaced the form | 2 px |
+| Tab after success | out of the block — the panel is `tabIndex={-1}` and adds no stop | — |
+
+The honeypot is never a stop, which is the property it exists to have.
+
+### What a screen reader is given
+No screen reader was driven — a headless Chrome cannot run one. What was measured instead is the tree a screen
+reader reads, over CDP `Accessibility.getFullAXTree`:
+
+- `contact-form`, after a failed submit: three `textbox` nodes named by their labels alone (`Your name`, not
+  `Your name (required)`), each `required=true invalid="true"`, each described by its hint then its error, each
+  with an `alert` sibling reported `live="assertive" atomic=true`. No node for the honeypot.
+- `checkbox-field`: a `group` named by its legend and described by the group's hint, three `checkbox` nodes each
+  named by its own label, the first also described by its own hint.
+- `select-field`: one `combobox` named `Export target Next.js`, `required=true expanded=false`.
+- `table`: a `region` named `Export runs`, a `table` named by its caption, five `columnheader` nodes named by
+  their columns and four `button` nodes named by the column alone — the sort state is on the cell, not in the name.
+- `chart-preview`: the drawing as one `img` named by the summary, and the hidden table with a `rowheader` per point.
+- `progress-ring`: one `progressbar` named `Migration progress` with `valuemin` 0 and `valuemax` 100. CDP reports
+  `valuetext` as an empty property and `valuenow` not at all; the DOM carries `aria-valuenow="68"` and
+  `aria-valuetext="68 percent complete"`, so this is the serialisation rather than the markup.
+
+### Reduced motion
+**0** running animations in all ten blocks, in both colour modes, at 1440. At full motion exactly one animation
+runs anywhere in the two categories — `ms-ring-fill` on `progress-ring` — and the ring is correspondingly the only
+one of the ten with a hover clip in the palette.
+
+### The bundle
+`/studio` first-load JS: **309 kB → 319 kB**, +10 kB for ten blocks. Eager, for the reason ADR-210 measured and
+this prompt did not re-litigate: the package barrel re-exports every block, so `lazy` in `components.ts` moves
+nothing. ADR-179 remains the owner's standing decision about the 250 kB budget.
+
+### The verdict, stated
+The forms category holds on finish and is the stronger of the two: one control geometry shared with
+`interactive`, a reserved line for every message so nothing jumps, the invalid state carried by a border and a
+ring as well as by colour, and a success panel that is a real composition rather than a sentence where a form
+used to be. `contact-form` is the best of the ten beside the reference.
+
+The data category is more uneven, and two of the five are worth naming honestly:
+
+- `table` and `stat-grid` are shippable: hairline dividers, tabular figures that line up, a sticky header with a
+  real line under it, and sort affordances visible before hover.
+- **`chart-preview` is the weakest of the ten.** After the two fixes it reads correctly and the data is legible,
+  but it is a bare drawing: no value axis, no grid, no plate, and its caption defaults to empty. Against the
+  reference it is competent rather than good. What it would take is an axis with two or three labelled gridlines
+  and an optional plate — both of which are props, a schema change and a second geometry pass, which is more than
+  this prompt's deliverable for one of ten blocks. Named rather than ticked.
+
+### One known fluctuation, reproduced twice
+`pnpm generate:thumbnails --verify` reported churn in **two runs out of two**, and named different files each
+time: `modal-trigger-light` + `modal-trigger-dark` on the first, `button-group-light` + `modal-trigger-dark` on the
+second. Neither block belongs to this prompt; both are interactive blocks whose still is taken while something has
+focus — Radix Dialog moves focus to the close button, and the segmented group's first item may or may not have
+received it. The ten new blocks never churned, and the three affected pre-existing files were restored to their
+committed bytes rather than carried into this prompt's diff. Recorded as a known fluctuation in the generator's
+focus timing rather than chased: it reproduces, it is not this category's, and `--verify` is not currently a
+reliable gate for those two blocks.
