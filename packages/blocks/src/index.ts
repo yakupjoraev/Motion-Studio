@@ -326,6 +326,114 @@ export * from './interactive/command-menu-preview/index'
 export * from './interactive/theme-toggle/index'
 
 /*
+ * The data category, through each block's own index for the reason the four before it give — a category barrel
+ * exports a `definitions` and a `components`, and five of those would collide here. The shared vocabulary goes
+ * with it: the length caps, the density scale, the plate every block in the category sits on, and the arrival
+ * they share.
+ */
+export {
+  CAPTION_MAX_LENGTH,
+  CELL_MAX_LENGTH as DATA_CELL_MAX_LENGTH,
+  DENSITIES,
+  LABEL_MAX_LENGTH as DATA_LABEL_MAX_LENGTH,
+  MAX_SERIES_POINTS as DATA_MAX_SERIES_POINTS,
+  SUMMARY_MAX_LENGTH,
+  dataFrameFields,
+  density,
+  scrollRegionFields,
+  seriesField,
+  type DataFrameShape,
+  type Density,
+  type ScrollRegionShape,
+} from './data/data.schema'
+export { DATA_FRAME_CONTROLS, DENSITY_CONTROL, SCROLL_REGION_CONTROLS } from './data/data.controls'
+export {
+  DATA_EMPTY,
+  DATA_FOCUS,
+  DATA_HEADING,
+  DATA_LABEL,
+  DATA_SCROLLER,
+  DATA_SURFACE,
+  DATA_TRANSITION,
+  DATA_VALUE,
+  DENSITY_PADDING,
+  dataBlockStyles,
+} from './data/data.styles'
+export { dataEntrance, dataMotion } from './data/data.motion'
+export * from './data/table/index'
+export * from './data/stat-grid/index'
+export * from './data/progress-ring/index'
+export * from './data/timeline/index'
+export * from './data/chart-preview/index'
+
+/*
+ * The forms category, likewise. The shared vocabulary here is the wiring itself — the ids a field derives, the
+ * shell that renders label, control, hint and error in that order, the always-mounted alert, the spam trap and the
+ * four-state submit — because prompt 41's requirement is that the structure is one implementation rather than five
+ * transcriptions of it.
+ */
+export {
+  ERROR_MAX_LENGTH,
+  FIELD_LABEL_MAX_LENGTH,
+  FORM_STATES,
+  HINT_MAX_LENGTH,
+  INPUT_TYPES,
+  MESSAGE_MAX_LENGTH,
+  NAME_MAX_LENGTH,
+  OPTION_MAX_LENGTH,
+  PLACEHOLDER_MAX_LENGTH,
+  REQUIRED_SUFFIX,
+  fieldFields,
+  formsFrameFields,
+  type FieldShape,
+  type FormState,
+  type FormsFrameShape,
+  type InputType,
+} from './forms/forms.schema'
+export { FIELD_CONTROLS, FORMS_FRAME_CONTROLS } from './forms/forms.controls'
+export {
+  CHOICE_INPUT,
+  CHOICE_LABEL,
+  FIELD_ERROR,
+  FIELD_GROUP,
+  FIELD_HINT,
+  FIELD_LABEL,
+  FIELD_LEGEND,
+  FIELD_REQUIRED,
+  FORM_ACTIONS,
+  FORM_FIELD,
+  FORM_SUCCESS,
+  HONEYPOT,
+  choiceListStyles,
+  fieldControlStyles,
+  fieldTextareaStyles,
+  formBlockStyles,
+  formMessageStyles,
+} from './forms/forms.styles'
+export { formsEntrance, formsMotion } from './forms/forms.motion'
+export { fieldIds, type FieldIds } from './forms/field-ids'
+export { FieldLabel, type FieldLabelProps } from './forms/field-label'
+export {
+  FieldError,
+  FieldHint,
+  type FieldErrorProps,
+  type FieldHintProps,
+} from './forms/field-messages'
+export { FieldShell, type FieldShellProps } from './forms/field-shell'
+export { FormActions, type FormActionsProps } from './forms/form-actions'
+export { FormField, type FormFieldProps } from './forms/form-field'
+export { HONEYPOT_NAME, Honeypot, type HoneypotProps } from './forms/honeypot'
+export { InputControl, type InputControlProps } from './forms/input-control'
+export { RequiredMark } from './forms/required-mark'
+export { SuccessPanel, type SuccessPanelProps } from './forms/success-panel'
+export { useFormSubmit, type FormSubmit } from './forms/use-form-submit'
+export * from './forms/input-field/index'
+export * from './forms/select-field/index'
+export * from './forms/checkbox-field/index'
+export * from './forms/contact-form/index'
+export * from './forms/waitlist-form/index'
+
+/*
  * The effects category, through its own barrel: thirteen blocks plus the stack that mounts them on a
  * node, and the shared vocabulary every one of them is built from.
  */

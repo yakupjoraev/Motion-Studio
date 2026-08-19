@@ -327,6 +327,30 @@
 }
 
 /*
+ * The progress ring's fill, on `data/progress-ring`.
+ *
+ * Two things make this correct under reduced motion without a runtime check. The element carries its own
+ * `stroke-dashoffset` — the **final** value, written from a custom property — and the keyframe declares only
+ * a `from`, so the animation interpolates towards the style the element already has. No fill mode, so a
+ * duration collapsed to `0ms` by `motionScale` or by the studio's preview override leaves the ring at the
+ * value it is reporting rather than empty, and the media query below removes the animation outright.
+ *
+ * The token is `--ms-duration-slower`: a ring that draws in 120 ms has not been seen to draw at all, and one
+ * that takes a second is a block the reader waits for.
+ */
+@keyframes ms-ring-fill {
+  from {
+    stroke-dashoffset: var(--ms-ring-length);
+  }
+}
+
+.ms-ring-fill {
+  stroke-dasharray: var(--ms-ring-length);
+  stroke-dashoffset: var(--ms-ring-offset);
+  animation: ms-ring-fill var(--ms-duration-slower) var(--ms-ease-decelerate);
+}
+
+/*
  * The dock's magnification.
  *
  * Two contributions multiply: `--ms-dock-pointer`, written per item from the shared pointer bus, and
@@ -356,6 +380,7 @@
   .ms-aurora-layer,
   .ms-terminal-caret,
   .ms-price-swap,
+  .ms-ring-fill,
   .ms-spin {
     animation: none;
   }

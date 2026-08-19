@@ -226,17 +226,36 @@ describe('the registry as a whole', () => {
     )
   })
 
+  it('groups the data category in catalogue order too', () => {
+    expect(blockRegistry.byCategory('data').map((one) => one.id)).toEqual(
+      ['table', 'stat-grid', 'progress-ring', 'timeline', 'chart-preview'].map(blockId),
+    )
+  })
+
+  it('groups the forms category in catalogue order too', () => {
+    expect(blockRegistry.byCategory('forms').map((one) => one.id)).toEqual(
+      ['input-field', 'select-field', 'checkbox-field', 'contact-form', 'waitlist-form'].map(
+        blockId,
+      ),
+    )
+  })
+
   /*
-   * ADR-199. The declaration arrives with the interactive category and the rest of the registry has not been
-   * audited for it, so this asserts what is true today rather than a rule nobody has met: the nine declare it,
-   * and the printer's answer for a block that does not is to fail rather than to guess.
+   * ADR-199. The declaration arrived with the interactive category and prompt 41 added the two that complete the
+   * catalogue; the fifty-three blocks of the six categories before them are still unaudited, so this asserts what
+   * is true today rather than a rule nobody has met. The printer's answer for a block that does not declare one is
+   * to fail rather than to guess.
    */
-  it('declares a client boundary for every interactive block and for no others yet', () => {
+  it('declares a client boundary for the three newest categories and for no others yet', () => {
     const declared = DEFINITIONS.filter((one) => one.codegen.client !== undefined).map(
       (one) => one.id,
     )
 
-    expect(declared).toEqual(blockRegistry.byCategory('interactive').map((one) => one.id))
+    expect(declared).toEqual([
+      ...blockRegistry.byCategory('interactive').map((one) => one.id),
+      ...blockRegistry.byCategory('data').map((one) => one.id),
+      ...blockRegistry.byCategory('forms').map((one) => one.id),
+    ])
   })
 
   it('opts four blocks into container queries and no others (ADR-184)', () => {
@@ -244,8 +263,27 @@ describe('the registry as a whole', () => {
       (one) => one.id,
     )
 
-    // RESPONSIVE_ENGINE.md § Container queries names four; `stat-grid` arrives with prompt 41.
-    expect(opted).toEqual(['feature-grid', 'bento-grid', 'testimonial-card'].map(blockId))
+    // RESPONSIVE_ENGINE.md § Container queries names exactly these four, and `stat-grid` is the last of them.
+    expect(opted).toEqual(
+      ['feature-grid', 'bento-grid', 'testimonial-card', 'stat-grid'].map(blockId),
+    )
+  })
+
+  /*
+   * Prompt 41's own gate: the catalogue is complete, and this is the measured size of it.
+   *
+   * **Not 62.** COMPONENT_LIBRARY.md § Catalogue heads its list with "62 blocks in v1", and that figure is the
+   * sum of the six categories before Data and Forms plus the thirteen effects — it was written before the last
+   * two categories were, and the list underneath it has always named them. The arithmetic the catalogue's own
+   * rows produce is 59 placeable blocks and 13 effect layers. ADR-221 has the count per category and the other
+   * documents that still carry the old number.
+   */
+  it('holds every block the catalogue names, counted', () => {
+    const placeable = DEFINITIONS.filter((one) => one.category !== 'effects')
+
+    expect(blockRegistry.list()).toHaveLength(72)
+    expect(placeable).toHaveLength(59)
+    expect(blockRegistry.byCategory('effects')).toHaveLength(13)
   })
 
   it('groups the effects category in catalogue order too', () => {

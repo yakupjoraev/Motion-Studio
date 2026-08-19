@@ -3,7 +3,9 @@ import { MotionStudioError } from '@motion-studio/utils'
 import type { ComponentType } from 'react'
 
 import { components as content } from './content/components'
+import { components as data } from './data/components'
 import { components as effects } from './effects/components'
+import { components as forms } from './forms/components'
 import { components as hero } from './hero/components'
 import { components as interactive } from './interactive/components'
 import { components as layout } from './layout/components'
@@ -27,6 +29,8 @@ export const renderRegistry: Readonly<Record<string, BlockComponent>> = {
   ...marketing,
   ...navigation,
   ...interactive,
+  ...data,
+  ...forms,
   ...effects,
 }
 

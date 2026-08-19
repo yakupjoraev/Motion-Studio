@@ -1,7 +1,9 @@
 import { type BlockDefinition, type BlockRegistry, createRegistry } from '@motion-studio/schema'
 
 import { definitions as content } from './content/definitions'
+import { definitions as data } from './data/definitions'
 import { definitions as effects } from './effects/definitions'
+import { definitions as forms } from './forms/definitions'
 import { definitions as hero } from './hero/definitions'
 import { definitions as interactive } from './interactive/definitions'
 import { definitions as layout } from './layout/definitions'
@@ -23,6 +25,8 @@ export const DEFINITIONS: readonly BlockDefinition[] = [
   ...Object.values(marketing),
   ...Object.values(navigation),
   ...Object.values(interactive),
+  ...Object.values(data),
+  ...Object.values(forms),
   ...Object.values(effects),
 ]
 
