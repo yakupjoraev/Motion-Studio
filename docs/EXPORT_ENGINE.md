@@ -325,21 +325,97 @@ That readability is the point. A reviewer should see structure immediately.
 ### HTML
 
 Single self-contained `index.html`: `<style>` with reset + theme variables + generated rules +
-keyframes, semantic markup, and a small vanilla `<script>` for interactions (accordion, tabs,
-hover effects via CSS variables, `IntersectionObserver` entrances). Wrapped in a
-`prefers-reduced-motion` media query. No framework, no build step, opens from the filesystem.
+keyframes, semantic markup, and a small vanilla `<script>` for interactions. No framework, no build
+step, no CDN link, opens from the filesystem — and therefore no `dependencies`, which is a statement
+rather than an omission.
 
-CSS-engine presets translate directly. Motion-engine presets are approximated with CSS
-transitions and a warning names each approximation — an honest downgrade beats a silent one.
+Two options are **resolved** rather than offered for this target, and the dialog shows them as such:
+`singleFile` is true because a single document has no module boundary to spend components on
+(ADR-237), and `imageComponent` is `img` because `next/image` is a React component and a document
+with no React in it would print `<image>`, which HTML reads as the SVG element (ADR-242).
+
+#### The stylesheet
+
+Classes become real CSS rules, generated from the IR's `usedClasses` and nothing else. Tailwind's CDN
+build is not shipped: 3 MB and a network request in a file whose whole promise is that it is local.
+
+Every themed declaration points at the `--ms-*` variable that `packages/tokens` § to-tailwind points
+the same Tailwind namespace at — `rounded-lg` becomes `border-radius: var(--ms-radius-lg)`, never a
+resolved `12px`. That is what keeps the HTML target painting what the React target paints, and it is
+what keeps the colour-mode toggle working, since switching modes only moves variables (ADR-238). A
+class the table does not know emits no rule and one `unsupported` warning naming it.
+
+**Fonts** are the theme's system stack plus a commented-out `@font-face` the user can uncomment. A
+Google Fonts URL would break the target's own promise twice — it needs a network, and it discloses
+every visitor's IP to a third party from a file the user believes is local. `assets: 'inline'` is
+meant to emit a base64 `woff2` subset instead; it currently emits the same stack and a warning,
+because the repository holds no font binaries to encode (ADR-241). The emitted CSS carries a
+one-line comment stating which mode produced it.
+
+#### Motion
+
+CSS-engine presets translate directly: their fragments already produced classes and keyframes, and
+`buildIR` already put both in the stylesheet. Motion-engine and GSAP presets are approximated or
+omitted by `printers/html/approximate-motion.ts`, which reads `IRElement.motion` — the preset ids
+pass 4 recorded (ADR-239) — and never the baked attributes.
+
+| Preset | CSS approximation | Warning |
+| --- | --- | --- |
+| `fade`, `fade-up` | `.ms-reveal` + `IntersectionObserver` | none — faithful |
+| `blur-in`, `clip-reveal` | the same, with a modifier class | none — faithful |
+| `scale-in`, `flip-in`, `scale-hover` | overshoot bezier | "approximated: spring physics → bezier" |
+| `magnetic`, `liquid` | `transform` on hover | "approximated: no cursor tracking" |
+| `sticky-stack` | `position: sticky` + scroll-linked class | "approximated: no scale interpolation" |
+| `counter`, `typewriter`, `text-scramble` | omitted | "omitted: needs a per-frame script" |
+| `scroll-timeline`, `horizontal-scroll` | omitted | "omitted: requires a scroll timeline" |
+| `particles` | omitted | "omitted: requires WebGL" |
+
+A preset the table does not name degrades by engine and says so, so a new preset is loud rather than
+silent. Every approximation and omission appears in the export warnings, once per preset.
+
+#### Behaviour, and the `data-ms-*` contract
+
+The script is assembled per feature and only when the document contains what the feature drives.
+Animation sits inside `if (!matchMedia('(prefers-reduced-motion: reduce)').matches)`. **Function sits
+outside it** — an accordion that stops opening because the reader asked for less motion is a broken
+page, not a considerate one. Target: under 3 kB for a typical landing page. Past that, something is
+being reimplemented in JavaScript that belongs in CSS.
+
+| Feature | Driven by | Implementation |
+| --- | --- | --- |
+| Entrance animations | `.ms-reveal`, from the motion table | `IntersectionObserver` adding `is-visible` |
+| Cursor effects | `.ms-pointer`, from the motion table | one `pointermove` writing `--ms-pointer-x/y` |
+| Sticky stack | `.ms-sticky`, from the motion table | `IntersectionObserver` toggling `is-stuck` |
+| Theme toggle | `data-ms-color-mode-toggle` | `localStorage` + `data-color-mode` + `aria-pressed` |
+| Accordion / tabs | `data-ms-disclosure` on the container | delegated click, `aria-expanded` + `hidden` |
+| Carousel | `data-ms-carousel` | native scroll-snap; `data-ms-carousel-step` calls `scrollBy` |
+| Mobile menu | `data-ms-menu` | class toggle + `aria-expanded` + focus trap |
+| Hover effects, marquee | classes only | pure CSS |
+
+The last four hang off attributes rather than off block ids, so the contract is readable in the
+emitted HTML and a block that starts emitting one starts working with no change to the printer. **No
+block emits them yet** — a block descriptor describes its root element only, which is the open
+escalation this target inherits: the interactions are implemented and unreachable until a block's
+internal markup is specified.
+
+`.ms-reveal` starts at zero opacity and the observer is what clears it, so two fallbacks are not
+optional: the stylesheet's `prefers-reduced-motion` block sets the visible state, and a `<noscript>`
+block does the same for a reader with no JavaScript. Without either, the page is blank for them.
 
 ### JSON
 
-`serializeDocument` from [FILE_FORMAT.md](FILE_FORMAT.md). Byte-stable.
+`serializeDocument` from [FILE_FORMAT.md](FILE_FORMAT.md). Byte-stable, and delegated rather than
+reimplemented — a second serialiser would drift from that guarantee. This target reads no
+`CodegenIR` at all, because nothing the IR decides appears in its output (ADR-240).
 
 ### Tokens
 
-Bonus target: the resolved theme as CSS variables, a Tailwind config, JSON, or Figma Tokens
-format.
+The resolved theme as CSS variables, a Tailwind config, JSON, or Figma Tokens format.
+
+The four generators live in `packages/theme/src/export/` and take one `ThemeExport`, so the formats
+cannot disagree — [THEME_ENGINE.md](THEME_ENGINE.md) § Theme in export. `packages/codegen` writes
+none of them: the printed strings arrive on `PrintedTheme.tokens` the way the stylesheet arrives on
+`PrintedTheme.css`, and this target decides which files exist and in what order (ADR-236).
 
 ## Options
 
@@ -361,6 +437,10 @@ export interface ExportOptions {
 `scope: 'selection'` is what powers **Copy React** on a single node — the same pipeline, one
 subtree. There is exactly one code path, so the button in the context menu cannot drift from the
 export dialog.
+
+`resolveOptions` is the one place a target may narrow a field, and it does so twice, both for `html`:
+`singleFile` to true and `imageComponent` to `img`. The dialog reads the resolved set, so a control a
+target fixes reads as fixed rather than as a choice that is quietly ignored.
 
 ### There is no styling option, and that is a structural fact
 

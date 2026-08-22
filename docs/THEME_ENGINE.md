@@ -289,10 +289,11 @@ The theme travels with the document and is emitted by every export target:
 `Export tokens` additionally offers: CSS variables, Tailwind config, JSON, and Figma Tokens
 format.
 
-The four generators live in `packages/theme/src/export/` and take a `ThemeResolution`, so the
-formats cannot disagree with each other or with what the export engine emits — `packages/codegen`
-reads the same functions rather than restating them. Each is a pure string function: no DOM, no
-clipboard, no download. The dialog owns those.
+The four generators live in `packages/theme/src/export/` and take one `ThemeExport`, so the formats
+cannot disagree with each other or with what the export engine emits. `packages/codegen` restates
+none of them: it receives their output on `PrintedTheme`, because an import would put React in the
+export engine's runtime graph — ADR-232 for the stylesheet, ADR-236 for the four token formats. Each
+is a pure string function: no DOM, no clipboard, no download. The dialog owns those.
 
 ## Scoped themes
 

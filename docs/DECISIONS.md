@@ -9619,3 +9619,237 @@ golden tree with `next-env.d.ts` and `*.tsbuildinfo` in it would fail its own fi
   the project the user already has; neither is an edit to the export.
 - Accepted: updating a golden is a two-step ritual — run the script, read the diff. That reading is the
   review gate the document asks for, and making it one step would remove it.
+
+## ADR-236 — The token target's four formats arrive as an argument; `codegen` writes none of them
+
+**Date** 2026-08-22 · **Prompt** 44 · **Status** Accepted
+
+### Question
+Prompt 44 asks for `printers/tokens/print-css-vars.ts`, `print-tailwind-config.ts`,
+`print-json-tokens.ts` and `print-figma-tokens.ts` inside `packages/codegen`. Those four generators
+already exist, in `packages/theme/src/export/`, written by prompt 36. Does `codegen` get a second
+copy, an import, or the output?
+
+### Criterion (set before deciding)
+Two documents and one existing test constrain this, and all three must hold.
+`THEME_ENGINE.md` § Theme in export: "The four generators live in `packages/theme/src/export/` and
+take a `ThemeResolution`, so the formats cannot disagree with each other or with what the export
+engine emits — `packages/codegen` reads the same functions rather than restating them."
+`ARCHITECTURE.md` § Dependency graph rule 3. And `packages/codegen/src/no-react.test.ts`, which
+imports the barrel in a `node` environment and fails if React is in the runtime graph.
+
+### Measurement
+`@motion-studio/theme`'s barrel re-exports `src/apply/use-color-mode.ts`, a React hook. Importing the
+package — the only legal form, since deep imports are banned by rule 6 and the contract's barrel-only
+rule — puts React in `codegen`'s runtime graph and fails `no-react.test.ts`. Measured, not predicted:
+the same edge ADR-226 rejected for the preset catalogue.
+
+A second copy fails the other constraint outright. The formats "cannot disagree" only because there
+is one resolution and one set of generators; two sets is the disagreement the sentence forbids.
+
+### Decision
+`PrintedTheme` gains a `tokens` field: the four format strings, printed by
+`packages/theme/src/export/TOKEN_FORMATS` and handed over. `printTokens` decides file names, file
+order and the export report, and writes no token syntax of its own. This is ADR-232 a third time.
+
+The parity assertion prompt 44 asks for — "the accent colour is byte-identical across all four
+outputs" — is already made where it can be real, at `packages/theme/src/export/export.test.ts`
+§ "all carry the same accent, because they come from one resolution". Restating it in `codegen`
+against an injected fixture would assert the fixture.
+
+### Consequences
+- Accepted: prompt 44's deliverable list names four files this session does not create. The list is
+  superseded by `THEME_ENGINE.md`, which is the specification; § 9.1 makes the document win.
+- Accepted: a caller can hand over token strings that do not match the document's theme, the same
+  hole ADR-232 accepted for `theme.css`. The alternative is the graph edge above.
+- Accepted: the `tokens` target with no `tokens` argument emits nothing and warns, rather than
+  emitting a theme it invented.
+
+## ADR-237 — The HTML target resolves `singleFile` to true
+
+**Date** 2026-08-22 · **Prompt** 44 · **Status** Accepted
+
+### Question
+`buildIR` splits a document into components: an entry plus one per section, plus one per repeated
+subtree. A single self-contained `index.html` has no module boundary to spend them on. Does the HTML
+printer inline the component references itself, or does the IR arrive already flat?
+
+### Criterion (set before deciding)
+`EXPORT_ENGINE.md` § Pipeline, stated twice: "The IR exists so printers are dumb… A printer only
+serialises." A printer that substituted a component's root for its reference, rewrote
+`{ kind: 'reference' }` attributes into the caller's values, and merged two components' hoisted
+constants would be re-running passes 1 and 3. That is the second decision site the IR exists to
+prevent.
+
+### Decision
+`resolveOptions` resolves `singleFile: true` whenever `target` is `html`. The option already produces
+exactly the tree the HTML target needs — one component, everything inlined — and it produces it in
+pass 1, where component boundaries are decided.
+
+### Consequences
+- Accepted: the export dialog's "Single file" checkbox is not a free choice under HTML. It reflects
+  the resolved option, so it reads as checked and disabled, which is the honest presentation of a
+  setting the target fixes.
+- Accepted: `extractProps` still runs, and under `singleFile` it extracts nothing, because rule 3's
+  output is a component and rule 1 has already claimed every node. No warning is emitted for it: the
+  props still reach the markup, inlined at each site.
+- Named: `json` and `tokens` ignore `singleFile` entirely; neither reads the component list.
+
+## ADR-238 — The HTML target's utility CSS is a transcribed table pointing at `--ms-*` variables
+
+**Date** 2026-08-22 · **Prompt** 44 · **Status** Accepted
+
+### Question
+`class="rounded-lg bg-surface-1 px-6"` has to become real CSS in a file with no build step. Does the
+generated rule carry a resolved value (`border-radius: 12px`) or a variable reference
+(`border-radius: var(--ms-radius-lg)`)?
+
+### Criterion (set before deciding)
+The rule must paint what the React export paints, or the two targets disagree about the same
+document and one of them is lying. What the React export paints is decided by `packages/tokens`
+§ to-tailwind, which is the `@theme` block Tailwind reads.
+
+### Measurement
+`packages/tokens/src/build/to-tailwind.ts` maps every Tailwind namespace onto a runtime variable and
+never onto a value: `--radius-lg: var(--ms-radius-lg)`, `--color-surface-1: var(--ms-color-surface-1)`,
+`--spacing-6: var(--ms-space-6)`. So in a real build `rounded-lg` already resolves through
+`--ms-radius-lg`. A resolved value in the HTML target would be a third spelling of the same token and
+would stop responding to the colour-mode switch the same file ships — measured against that file's own
+`data-color-mode` block, which only moves variables.
+
+### Decision
+`utility-rules.ts` transcribes the utility families the class vocabulary can produce, and every
+themed declaration points at the `--ms-*` variable the `@theme` block points at. The theme's `:root`
+blocks are inlined in the same document, so the variables are defined.
+
+A class with no entry in the table emits no rule and one `unsupported` warning naming it. Guessing a
+declaration from a class name is how a generator silently paints the wrong thing.
+
+### Consequences
+- Accepted: the table is a transcription and can fall behind Tailwind, exactly like
+  `ir/tailwind/class-order.ts`. Both are tested against the classes the descriptors can produce
+  rather than against Tailwind's whole surface, and an unknown class is reported, not invented.
+- Accepted: an arbitrary-value class — `grid-cols-[repeat(auto-fit,minmax(16rem,1fr))]` — is read by
+  unwrapping the bracket rather than by a table entry, because the value is in the class.
+- Accepted: a document whose theme is not passed exports HTML whose variables are undefined, so the
+  page renders with browser defaults. The same warning `printReact` emits already names it.
+
+## ADR-239 — The IR records which presets an element carries, so a target can approximate them
+
+**Date** 2026-08-22 · **Prompt** 44 · **Status** Accepted
+
+### Question
+`approximate-motion.ts` maps `magnetic` to a hover transform and `particles` to nothing, each with a
+named warning. Pass 4 currently turns a preset into `motion.section` plus four attributes and keeps
+no record of which preset produced them. Where does the HTML target learn the preset id?
+
+### Criterion (set before deciding)
+The same rule ADR-227 applied: anything that needs the registry, or that dedupes across the document,
+is IR work; anything that is target-specific serialisation is printer work. The preset id on a node
+is a *fact* the registry supplies. The CSS a given preset degrades to is a *decision* only the HTML
+target makes.
+
+### Decision
+Pass 4 records `{ presetId, engine, channel }` per applied spec, `NodeMotion` carries it, and
+`IRElement.motion` holds it. The React and Next printers never read the field — they print the
+attributes pass 4 baked. `approximate-motion.ts` reads it and nothing else.
+
+The alternative considered and rejected: parsing the baked attribute code — `initial="hidden"`,
+`transition={fadeUpTransition}` — back into an animation. That is a decompiler, and it would fail on
+the first preset whose fragment names a helper.
+
+### Consequences
+- Accepted: `IRElement` grows a field two of four printers ignore. It is a fact rather than a
+  decision, which is the line ADR-227 drew, and the alternative put a parser in a printer.
+- Accepted: a preset the approximation table does not name is omitted with an `unsupported` warning
+  carrying its id, so a new preset degrades loudly rather than silently.
+
+## ADR-240 — The JSON target does not build an IR
+
+**Date** 2026-08-22 · **Prompt** 44 · **Status** Accepted
+
+### Question
+Every other target is `buildIR` then a printer. The JSON target's whole output is
+`serializeDocument(document)`. Does it take a `PrintInput` like the others, for uniformity?
+
+### Criterion (set before deciding)
+`EXPORT_ENGINE.md` § JSON, in full: "`serializeDocument` from FILE_FORMAT.md. Byte-stable." And
+prompt 44: "Do not reimplement — a second serialiser would drift from the byte-stability guarantee."
+Byte-stability is a property of the document, and nothing in the IR is in the output.
+
+### Decision
+`printJsonTarget({ document })` has its own input type and returns the same `ExportResult` the others
+do. It never reads a `CodegenIR`. A uniform `PrintInput` would have required a `document` field that
+three of the five targets never read, and would have suggested — falsely — that the JSON output can
+disagree with the IR.
+
+### Consequences
+- Accepted: prompt 45's orchestrator branches on the target before it decides whether to call
+  `buildIR` at all. That is cheaper than building an IR nobody reads, and it is one `switch`.
+- Accepted: the IR's warnings do not reach the JSON export report. They are statements about
+  generated code, and this target generates none.
+
+## ADR-241 — The HTML target ships no base64 font, because the theme has no font files
+
+**Date** 2026-08-22 · **Prompt** 44 · **Status** Accepted
+
+### Question
+Prompt 44 fixes the font policy: a system stack plus a commented-out `@font-face` by default, and
+under `assets: 'inline'` "a base64 `woff2` subset (latin, the two used weights) inside the
+`@font-face`". What does `assets: 'inline'` emit?
+
+### Criterion (set before measuring)
+The subset has to be produced from a font file the repository holds. If no file exists there is
+nothing to encode, and emitting an empty `src` would produce a document that silently falls back
+while claiming to self-host.
+
+### Measurement
+The repository holds no font binaries. `packages/theme`'s pairings name Geist, Inter, JetBrains Mono,
+Satoshi, Söhne and Berkeley Mono; ADR-025 already records that three of them are declared with no
+files, and the other three are fetched at build time by `next/font/google`, which is a build step the
+HTML target does not have. Zero files, five pairings.
+
+### Decision
+Both modes emit the system stack and the commented `@font-face` block. Under `assets: 'inline'` the
+export additionally carries an `unsupported` warning naming the families and the fact that no file is
+available to encode. The one-line comment in the CSS states which mode produced it, as the prompt
+requires, and under `inline` it states why the mode changed nothing.
+
+### Consequences
+- Accepted: `assets: 'inline'` is inert for fonts in the HTML target until font files land. It still
+  governs images, which is where the option's other half lives.
+- Named: this is a downgrade against the prompt's stated behaviour, produced by a measurement rather
+  than by preference. When the files exist, the encoder is the only thing missing.
+
+## ADR-242 — The HTML target resolves `imageComponent` to `img`
+
+**Date** 2026-08-22 · **Prompt** 44 · **Status** Accepted
+
+### Question
+`imageComponent` is a user-visible control with two values, and its default is `next-image`. The HTML
+target has no React and no Next. What does it do with the default?
+
+### Criterion (set before measuring)
+The emitted document has to render the image. Anything that does not is wrong regardless of what the
+option said.
+
+### Measurement
+Printed with the option left at its default, the full-landing HTML export emitted
+`<image src="…" width="1600" height="1000">`. HTML has no `image` element; the name is the SVG one,
+and in an HTML document the parser produces an unknown element that lays out as an empty inline box.
+The image did not render. Measured on the golden output before the fix.
+
+### Decision
+`resolveOptions` resolves `imageComponent: 'img'` whenever `target` is `html`, beside the `singleFile`
+resolution ADR-237 made. Pass 6 then emits the plain-`img` attribute set it already knows —
+`loading="lazy"`, `decoding="async"`, and no `sizes`/`placeholder`, which `AssetResult.suppressed`
+already strips.
+
+The alternative — a printer that rewrote the tag — was rejected for ADR-237's reason: the attribute
+set differs between the two components, so the rewrite would have to redo pass 6's work in a printer.
+
+### Consequences
+- Accepted: the dialog's image control is fixed under HTML, the same way the single-file checkbox is.
+  Both read as resolved rather than chosen, which is what they are.
+- Accepted: `resolveOptions` is now the one place a target may narrow an option. A third such rule
+  would be a sign the option set is wrong rather than the resolution.
