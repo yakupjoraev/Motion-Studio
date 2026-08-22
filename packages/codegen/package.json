@@ -15,6 +15,12 @@
   "devDependencies": {
     "@motion-studio/config": "workspace:*",
     "@vitest/coverage-v8": "^2.1.9",
-    "vitest": "^2.1.9"
+    "vitest": "^2.1.9",
+    "zod": "^3.23.8"
+  },
+  "dependencies": {
+    "@motion-studio/motion": "workspace:*",
+    "@motion-studio/schema": "workspace:*",
+    "@motion-studio/utils": "workspace:*"
   }
 }

@@ -173,6 +173,34 @@ export interface RuntimeModule {
   readonly source: string
 }
 
+/**
+ * How a block's props become classes on the element it prints as — EXPORT_ENGINE.md § Class generation.
+ *
+ * Data rather than a function, for the reason `ClientBoundary` gives: a declaration can be checked
+ * against the schema and against what the block actually renders, and a closure cannot (ADR-225). The
+ * block builds it from the same object its `cva` call takes, so the class the canvas paints and the
+ * class the export writes are one declaration.
+ */
+export type ClassRule =
+  /** Classes the element always carries — the `cva` base. */
+  | { readonly kind: 'static'; readonly classes: readonly string[] }
+  /** One prop, and the classes each of its values spends. Keys are the value written as a string. */
+  | {
+      readonly kind: 'variant'
+      readonly prop: string
+      readonly cases: Readonly<Record<string, readonly string[]>>
+    }
+  /**
+   * A prop with no Tailwind equivalent. The export writes `variable` on the element and a rule
+   * setting `property` from it, rather than an arbitrary-value class Tailwind would never generate.
+   */
+  | {
+      readonly kind: 'custom'
+      readonly prop: string
+      readonly property: string
+      readonly variable: string
+    }
+
 export interface CodegenDescriptor {
   /** `'section'`, `'div'`, or a component name the import below provides. */
   readonly tag: string
@@ -206,6 +234,12 @@ export interface CodegenDescriptor {
    */
   readonly client?: ClientBoundary
   readonly runtimeModule?: RuntimeModule
+  /**
+   * Absent means the export emits the element's tag with no prop-derived classes on it. Every
+   * catalogue entry is expected to declare it; ADR-225 records why the mapping cannot live in
+   * `codegen` and what is still missing.
+   */
+  readonly classes?: readonly ClassRule[]
 }
 
 export interface A11yNotes {
