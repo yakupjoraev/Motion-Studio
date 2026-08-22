@@ -44,7 +44,52 @@ export const FIXTURE_THEME_CSS = `/*
 export const FIXTURE_COLOR_MODE_SCRIPT =
   "try{var m=localStorage.getItem('ms-color-mode');if(m==='light'||m==='dark'){document.documentElement.dataset.colorMode=m}}catch(e){}"
 
+export const FIXTURE_COLOR_MODE_KEY = 'ms-color-mode'
+
+/**
+ * What `TOKEN_FORMATS.map((format) => ({ ...format, contents: format.print(theme) }))` hands over —
+ * ADR-236. Short for the same reason the stylesheet above is: the thing under test is which files the
+ * target writes and in what order, not the palette, which `packages/theme` asserts for itself.
+ */
+export const FIXTURE_TOKEN_FORMATS: PrintedTheme['tokens'] = [
+  { id: 'css', filename: 'theme.css', contents: FIXTURE_THEME_CSS },
+  {
+    id: 'tailwind',
+    filename: 'tailwind.config.ts',
+    contents: `// Theme: Fixture
+export default {
+  theme: {
+    extend: {
+      colors: {
+        'accent': 'var(--ms-color-accent)',
+      },
+    },
+  },
+}
+`,
+  },
+  {
+    id: 'json',
+    filename: 'theme.json',
+    contents: `{
+  "config": { "id": "fixture", "name": "Fixture" },
+  "resolved": { "light": { "--ms-color-accent": "oklch(62% 0.19 285)" } }
+}
+`,
+  },
+  {
+    id: 'figma',
+    filename: 'figma-tokens.json',
+    contents: `{
+  "color": { "light": { "accent": { "$type": "color", "$value": "#6b4ff0" } } }
+}
+`,
+  },
+]
+
 export const fixtureTheme = (): PrintedTheme => ({
   css: FIXTURE_THEME_CSS,
   colorModeScript: FIXTURE_COLOR_MODE_SCRIPT,
+  colorModeStorageKey: FIXTURE_COLOR_MODE_KEY,
+  tokens: FIXTURE_TOKEN_FORMATS,
 })

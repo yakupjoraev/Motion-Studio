@@ -363,6 +363,9 @@ importers:
       '@motion-studio/schema':
         specifier: workspace:*
         version: link:../schema
+      '@motion-studio/tokens':
+        specifier: workspace:*
+        version: link:../tokens
       '@motion-studio/utils':
         specifier: workspace:*
         version: link:../utils
@@ -373,6 +376,9 @@ importers:
       '@motion-studio/config':
         specifier: workspace:*
         version: link:../config
+      '@motion-studio/theme':
+        specifier: workspace:*
+        version: link:../theme
       '@types/node':
         specifier: ^26.1.2
         version: 26.1.2

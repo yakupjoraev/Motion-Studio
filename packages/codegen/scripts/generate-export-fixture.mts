@@ -1,6 +1,16 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 
+import {
+  COLOR_MODE_SCRIPT,
+  COLOR_MODE_STORAGE_KEY,
+  TOKEN_FORMATS,
+  resolveForExport,
+  toCssVariables,
+} from '@motion-studio/theme'
+
+import { EXPORT_TARGETS, type ExportTarget } from '../src/options.types'
+import type { PrintedTheme } from '../src/printers/printer.types'
 import { GOLDEN_DOCUMENTS } from '../src/test/documents'
 import type { GoldenCase } from '../src/test/golden-cases'
 import { printCase } from '../src/test/print-case'
@@ -11,6 +21,7 @@ import { printCase } from '../src/test/print-case'
  *
  * ```
  * pnpm generate:export-fixture --document full-landing --target next --out ../exported
+ * pnpm generate:export-fixture --document full-landing --target html --out ../exported
  * ```
  *
  * It runs against the fixture catalogue rather than `packages/blocks`, because `codegen` may not import
@@ -29,7 +40,10 @@ for (let index = 2; index < process.argv.length; index += 2) {
 }
 
 const documentName = flags.get('document') ?? 'full-landing'
-const target = flags.get('target') === 'react' ? 'react' : 'next'
+const requested = flags.get('target') ?? 'next'
+const target = (EXPORT_TARGETS as readonly string[]).includes(requested)
+  ? (requested as ExportTarget)
+  : 'next'
 const out = resolve(flags.get('out') ?? join(process.cwd(), 'exported'))
 const make = GOLDEN_DOCUMENTS[documentName]
 
@@ -44,7 +58,25 @@ const goldenCase: GoldenCase = {
   document: documentName,
   options: { target },
 }
-const result = await printCase(goldenCase, make())
+const document = make()
+
+/**
+ * The real theme, resolved and printed the way the export dialog will do it — ADR-232 and ADR-236.
+ * `printCase` defaults to the short test stylesheet, which is right for a golden file and wrong here:
+ * a manual proof against a theme with no `--ms-space-*` in it measures nothing.
+ */
+const exported = resolveForExport(document.theme)
+const theme: PrintedTheme = {
+  css: toCssVariables(exported),
+  colorModeScript: COLOR_MODE_SCRIPT,
+  colorModeStorageKey: COLOR_MODE_STORAGE_KEY,
+  tokens: TOKEN_FORMATS.map((format) => ({
+    id: format.id,
+    filename: format.filename,
+    contents: format.print(exported),
+  })),
+}
+const result = await printCase(goldenCase, document, theme)
 
 for (const file of result.files) {
   const path = join(out, file.path)

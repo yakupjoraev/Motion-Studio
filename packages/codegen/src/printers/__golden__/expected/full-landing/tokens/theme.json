@@ -1,0 +1,4 @@
+{
+  "config": { "id": "fixture", "name": "Fixture" },
+  "resolved": { "light": { "--ms-color-accent": "oklch(62% 0.19 285)" } }
+}

@@ -61,6 +61,30 @@ const SPACE = {
   lg: ['px-8', 'py-24'],
 }
 
+const HOOK_PROPS = [
+  'aria-controls',
+  'aria-expanded',
+  'aria-pressed',
+  'data-ms-carousel',
+  'data-ms-carousel-step',
+  'data-ms-carousel-track',
+  'data-ms-color-mode-toggle',
+  'data-ms-disclosure',
+  'data-ms-menu',
+  'data-ms-menu-panel',
+  'data-ms-menu-trigger',
+  'hidden',
+  'href',
+  'id',
+]
+
+const HOOKED = (tag: string): BlockDefinition['codegen'] => ({
+  tag,
+  client: { kind: 'always', reason: 'The disclosure, the menu and the toggle all keep state.' },
+  passthroughProps: HOOK_PROPS,
+  classes: [{ kind: 'static', classes: ['flex', 'flex-col', 'gap-2'] }],
+})
+
 export const FIXTURE_BLOCKS: readonly BlockDefinition[] = [
   define('page', {
     name: 'Page',
@@ -249,6 +273,17 @@ export const FIXTURE_BLOCKS: readonly BlockDefinition[] = [
       dependencies: { 'recharts-fixture': '^1.0.0' },
       classes: [{ kind: 'static', classes: ['relative', 'h-32'] }],
     },
+  }),
+  /**
+   * The two entries that declare the behaviour contract of `EXPORT_ENGINE.md` § HTML — the `data-ms-*`
+   * attributes the vanilla script delegates from. No shipped block emits them yet, because a descriptor
+   * describes its root element only; these exist so the contract is exercised rather than promised.
+   */
+  define('hook-box', { name: 'Hook box', category: 'interactive', codegen: HOOKED('div') }),
+  define('hook-button', {
+    name: 'Hook button',
+    category: 'interactive',
+    codegen: HOOKED('button'),
   }),
   /** The one entry with no `client`, so the error path has something to fail on. */
   define('undeclared', { name: 'Undeclared', codegen: { tag: 'div' } }),

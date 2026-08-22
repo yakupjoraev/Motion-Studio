@@ -50,6 +50,17 @@ export interface IRExpression {
 
 export type IRChild = IRElement | IRText | IRExpression
 
+/**
+ * A preset that reached this element, recorded rather than the animation it produced — ADR-239. The
+ * React and Next printers never read it; the HTML target reads it and nothing else, because the CSS a
+ * preset degrades to is a decision only that target makes.
+ */
+export interface IRElementMotion {
+  readonly presetId: string
+  readonly engine: 'css' | 'motion' | 'gsap'
+  readonly channel: string
+}
+
 export interface IRElement {
   readonly kind: 'element'
   /** `'div'`, `'section'`, `'motion.div'`, or the name of another component in this export. */
@@ -61,6 +72,8 @@ export interface IRElement {
   readonly cssVars?: Readonly<Record<string, string>>
   /** The descriptor's `notes`, emitted as comments above the element. */
   readonly notes?: readonly string[]
+  /** The presets pass 4 applied here, for a target that cannot print them — ADR-239. */
+  readonly motion?: readonly IRElementMotion[]
   /** Already gated on the descriptor's `enabledBy` prop — ADR-194. */
   readonly structuredData?: StructuredDataType
   readonly key?: string

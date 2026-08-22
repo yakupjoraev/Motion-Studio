@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en" data-color-mode="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fixture</title>
+    <script>
+      try {
+        var m = localStorage.getItem('ms-color-mode')
+        if (m === 'light' || m === 'dark') {
+          document.documentElement.dataset.colorMode = m
+        }
+      } catch (e) {}
+    </script>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        border: 0 solid;
+      }
+
+      * {
+        margin: 0;
+      }
+
+      html {
+        -webkit-text-size-adjust: 100%;
+        tab-size: 4;
+      }
+
+      body {
+        min-height: 100vh;
+        font-family: var(--ms-font-sans);
+        color: var(--ms-color-foreground);
+        background-color: var(--ms-color-surface-0);
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      img,
+      svg,
+      video,
+      canvas {
+        display: block;
+        max-width: 100%;
+        height: auto;
+      }
+
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+        color: inherit;
+        background: none;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: inherit;
+      }
+
+      :focus-visible {
+        outline: 2px solid var(--ms-color-accent);
+        outline-offset: 2px;
+      }
+
+      /*
+       * Theme: Fixture
+       */
+
+      :root {
+        --ms-color-surface-0: oklch(98.5% 0.0014 285);
+        --ms-color-surface-1: oklch(100% 0 0);
+        --ms-color-foreground: oklch(14% 0.0056 285);
+        --ms-color-accent: oklch(62% 0.19 285);
+        --ms-font-sans: 'Geist Sans', system-ui, sans-serif;
+        --ms-font-display: 'Geist Sans', system-ui, sans-serif;
+        --ms-font-mono: 'Geist Mono', ui-monospace, monospace;
+      }
+
+      :root[data-color-mode='dark'] {
+        --ms-color-surface-0: oklch(14% 0.0056 285);
+        --ms-color-surface-1: oklch(17.5% 0.007 285);
+        --ms-color-foreground: oklch(98.5% 0.0014 285);
+        --ms-color-accent: oklch(70% 0.17 285);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-color-mode]) {
+          --ms-color-surface-0: oklch(14% 0.0056 285);
+          --ms-color-surface-1: oklch(17.5% 0.007 285);
+          --ms-color-foreground: oklch(98.5% 0.0014 285);
+          --ms-color-accent: oklch(70% 0.17 285);
+        }
+      }
+
+      /*
+       * Fonts: system stack, mode 'reference'. The theme's families are declared in the variables above.
+       * To self-host, drop a woff2 beside this file and uncomment the block below.
+       *
+       * @font-face {
+       *   font-family: 'Your Family';
+       *   src: url('./your-family.woff2') format('woff2');
+       *   font-weight: 400 700;
+       *   font-display: swap;
+       * }
+       */
+
+      .mx-auto {
+        margin-inline: auto;
+      }
+
+      .flex {
+        display: flex;
+      }
+
+      .max-w-3xl {
+        max-width: 48rem;
+      }
+
+      .flex-col {
+        flex-direction: column;
+      }
+
+      .px-8 {
+        padding-inline: var(--ms-space-8);
+      }
+
+      .py-24 {
+        padding-block: var(--ms-space-24);
+      }
+
+      .text-center {
+        text-align: center;
+      }
+
+      .ms-reveal {
+        opacity: 0;
+        transform: translateY(1rem);
+        transition:
+          opacity var(--ms-duration-slow) var(--ms-ease-decelerate),
+          transform var(--ms-duration-slow) var(--ms-ease-decelerate),
+          filter var(--ms-duration-slow) var(--ms-ease-decelerate),
+          clip-path var(--ms-duration-slow) var(--ms-ease-decelerate);
+      }
+
+      .ms-reveal.is-visible {
+        opacity: 1;
+        transform: none;
+        filter: none;
+        clip-path: none;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .ms-reveal,
+        .ms-magnetic {
+          opacity: 1;
+          transform: none;
+          filter: none;
+          clip-path: none;
+        }
+
+        .ms-reveal,
+        .ms-magnetic,
+        .ms-spring {
+          transition: none;
+        }
+      }
+    </style>
+    <noscript>
+      <style>
+        .ms-reveal {
+          opacity: 1;
+          transform: none;
+          filter: none;
+          clip-path: none;
+        }
+      </style>
+    </noscript>
+  </head>
+  <body>
+    <main class="flex flex-col">
+      <section class="mx-auto max-w-3xl px-8 py-24 text-center ms-reveal"></section>
+    </main>
+    <script>
+      ;(() => {
+        const reduced = matchMedia('(prefers-reduced-motion: reduce)')
+
+        const revealed = document.querySelectorAll('.ms-reveal')
+        if (reduced.matches) {
+          revealed.forEach((node) => node.classList.add('is-visible'))
+        } else {
+          const observer = new IntersectionObserver(
+            (entries) => {
+              entries.forEach((entry) => {
+                if (!entry.isIntersecting) return
+                entry.target.classList.add('is-visible')
+                observer.unobserve(entry.target)
+              })
+            },
+            { rootMargin: '0px 0px -10% 0px', threshold: 0.2 },
+          )
+          revealed.forEach((node) => observer.observe(node))
+        }
+      })()
+    </script>
+  </body>
+</html>

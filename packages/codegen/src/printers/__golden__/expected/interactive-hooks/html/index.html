@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en" data-color-mode="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fixture</title>
+    <script>
+      try {
+        var m = localStorage.getItem('ms-color-mode')
+        if (m === 'light' || m === 'dark') {
+          document.documentElement.dataset.colorMode = m
+        }
+      } catch (e) {}
+    </script>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        border: 0 solid;
+      }
+
+      * {
+        margin: 0;
+      }
+
+      html {
+        -webkit-text-size-adjust: 100%;
+        tab-size: 4;
+      }
+
+      body {
+        min-height: 100vh;
+        font-family: var(--ms-font-sans);
+        color: var(--ms-color-foreground);
+        background-color: var(--ms-color-surface-0);
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      img,
+      svg,
+      video,
+      canvas {
+        display: block;
+        max-width: 100%;
+        height: auto;
+      }
+
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+        color: inherit;
+        background: none;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: inherit;
+      }
+
+      :focus-visible {
+        outline: 2px solid var(--ms-color-accent);
+        outline-offset: 2px;
+      }
+
+      /*
+       * Theme: Fixture
+       */
+
+      :root {
+        --ms-color-surface-0: oklch(98.5% 0.0014 285);
+        --ms-color-surface-1: oklch(100% 0 0);
+        --ms-color-foreground: oklch(14% 0.0056 285);
+        --ms-color-accent: oklch(62% 0.19 285);
+        --ms-font-sans: 'Geist Sans', system-ui, sans-serif;
+        --ms-font-display: 'Geist Sans', system-ui, sans-serif;
+        --ms-font-mono: 'Geist Mono', ui-monospace, monospace;
+      }
+
+      :root[data-color-mode='dark'] {
+        --ms-color-surface-0: oklch(14% 0.0056 285);
+        --ms-color-surface-1: oklch(17.5% 0.007 285);
+        --ms-color-foreground: oklch(98.5% 0.0014 285);
+        --ms-color-accent: oklch(70% 0.17 285);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-color-mode]) {
+          --ms-color-surface-0: oklch(14% 0.0056 285);
+          --ms-color-surface-1: oklch(17.5% 0.007 285);
+          --ms-color-foreground: oklch(98.5% 0.0014 285);
+          --ms-color-accent: oklch(70% 0.17 285);
+        }
+      }
+
+      /*
+       * Fonts: system stack, mode 'reference'. The theme's families are declared in the variables above.
+       * To self-host, drop a woff2 beside this file and uncomment the block below.
+       *
+       * @font-face {
+       *   font-family: 'Your Family';
+       *   src: url('./your-family.woff2') format('woff2');
+       *   font-weight: 400 700;
+       *   font-display: swap;
+       * }
+       */
+
+      .flex {
+        display: flex;
+      }
+
+      .flex-col {
+        flex-direction: column;
+      }
+
+      .gap-2 {
+        gap: var(--ms-space-2);
+      }
+    </style>
+    <noscript>
+      <style>
+        .ms-reveal {
+          opacity: 1;
+          transform: none;
+          filter: none;
+          clip-path: none;
+        }
+      </style>
+    </noscript>
+  </head>
+  <body>
+    <main class="flex flex-col">
+      <button
+        aria-pressed="true"
+        data-ms-color-mode-toggle="true"
+        class="flex flex-col gap-2"
+      ></button>
+      <div data-ms-disclosure="single" class="flex flex-col gap-2">
+        <button aria-controls="answer-1" aria-expanded="false" class="flex flex-col gap-2"></button>
+        <div hidden id="answer-1" class="flex flex-col gap-2"></div>
+      </div>
+      <div data-ms-menu="true" class="flex flex-col gap-2">
+        <button
+          aria-expanded="false"
+          data-ms-menu-trigger="true"
+          class="flex flex-col gap-2"
+        ></button>
+        <div data-ms-menu-panel="true" hidden class="flex flex-col gap-2">
+          <button href="#a" class="flex flex-col gap-2"></button>
+        </div>
+      </div>
+      <div data-ms-carousel="true" class="flex flex-col gap-2">
+        <div data-ms-carousel-track="true" class="flex flex-col gap-2"></div>
+        <button data-ms-carousel-step="1" class="flex flex-col gap-2"></button>
+      </div>
+    </main>
+    <script>
+      ;(() => {
+        const reduced = matchMedia('(prefers-reduced-motion: reduce)')
+
+        const root = document.documentElement
+
+        const store = (mode) => {
+          try {
+            localStorage.setItem('ms-color-mode', mode)
+          } catch (error) {}
+        }
+
+        document.querySelectorAll('[data-ms-color-mode-toggle]').forEach((button) => {
+          button.addEventListener('click', () => {
+            const next = root.dataset.colorMode === 'dark' ? 'light' : 'dark'
+            root.dataset.colorMode = next
+            button.setAttribute('aria-pressed', String(next === 'dark'))
+            store(next)
+          })
+        })
+
+        document.querySelectorAll('[data-ms-disclosure]').forEach((group) => {
+          group.addEventListener('click', (event) => {
+            const trigger = event.target.closest('[aria-controls]')
+            if (!trigger || !group.contains(trigger)) return
+            const panel = document.getElementById(trigger.getAttribute('aria-controls'))
+            if (!panel) return
+            const open = trigger.getAttribute('aria-expanded') === 'true'
+            if (group.dataset.msDisclosure === 'single') {
+              group.querySelectorAll('[aria-controls]').forEach((other) => {
+                other.setAttribute('aria-expanded', 'false')
+                const owned = document.getElementById(other.getAttribute('aria-controls'))
+                if (owned) owned.hidden = true
+              })
+            }
+            trigger.setAttribute('aria-expanded', String(!open))
+            panel.hidden = open
+          })
+        })
+
+        document.querySelectorAll('[data-ms-carousel]').forEach((carousel) => {
+          const track = carousel.querySelector('[data-ms-carousel-track]') || carousel
+          carousel.querySelectorAll('[data-ms-carousel-step]').forEach((button) => {
+            button.addEventListener('click', () => {
+              const step = Number(button.dataset.msCarouselStep) * track.clientWidth
+              track.scrollBy({ left: step, behavior: reduced.matches ? 'auto' : 'smooth' })
+            })
+          })
+        })
+
+        document.querySelectorAll('[data-ms-menu]').forEach((menu) => {
+          const trigger = menu.querySelector('[data-ms-menu-trigger]')
+          const panel = menu.querySelector('[data-ms-menu-panel]')
+          if (!trigger || !panel) return
+          const focusable = () =>
+            panel.querySelectorAll('a[href], button:not([disabled]), [tabindex="0"]')
+          const setOpen = (open) => {
+            trigger.setAttribute('aria-expanded', String(open))
+            panel.hidden = !open
+            menu.classList.toggle('is-open', open)
+            if (open) focusable()[0]?.focus()
+            else trigger.focus()
+          }
+          trigger.addEventListener('click', () =>
+            setOpen(trigger.getAttribute('aria-expanded') !== 'true'),
+          )
+          menu.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') return setOpen(false)
+            if (event.key !== 'Tab' || panel.hidden) return
+            const items = [...focusable()]
+            const edge = event.shiftKey ? items[0] : items[items.length - 1]
+            if (document.activeElement !== edge) return
+            event.preventDefault()
+            ;(event.shiftKey ? items[items.length - 1] : items[0]).focus()
+          })
+        })
+      })()
+    </script>
+  </body>
+</html>

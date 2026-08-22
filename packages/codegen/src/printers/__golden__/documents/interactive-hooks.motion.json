@@ -1,0 +1,256 @@
+{
+  "version": 1,
+  "meta": {
+    "id": "doc_fixture",
+    "name": "Fixture",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "generator": "motion-studio@0.0.0",
+    "canvas": {
+      "background": "surface-0",
+      "width": 1440
+    }
+  },
+  "theme": {
+    "colorMode": "dark",
+    "elevationStyle": "soft",
+    "id": "fixture",
+    "motionScale": 1,
+    "name": "Fixture",
+    "palette": {
+      "accent": "oklch(62% 0.19 285)",
+      "accentHueShift": 0,
+      "neutral": "zinc",
+      "repairContrast": true,
+      "saturation": 1
+    },
+    "radiusScale": 1,
+    "spacingScale": 1,
+    "surface": {
+      "borderStyle": "hairline",
+      "glassLevel": "subtle",
+      "noiseLevel": "subtle"
+    },
+    "typography": {
+      "baseSize": 16,
+      "pairing": "geist",
+      "scaleRatio": 1.25
+    }
+  },
+  "rootId": "node_root",
+  "nodes": {
+    "node_a1": {
+      "id": "node_a1",
+      "blockId": "hook-box",
+      "name": "Answer",
+      "parentId": "node_faq",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "hidden": true,
+        "id": "answer-1"
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_carousel": {
+      "id": "node_carousel",
+      "blockId": "hook-box",
+      "name": "Carousel",
+      "parentId": "node_root",
+      "slot": "children",
+      "children": [
+        "node_track",
+        "node_next"
+      ],
+      "props": {
+        "data-ms-carousel": true
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_faq": {
+      "id": "node_faq",
+      "blockId": "hook-box",
+      "name": "Questions",
+      "parentId": "node_root",
+      "slot": "children",
+      "children": [
+        "node_q1",
+        "node_a1"
+      ],
+      "props": {
+        "data-ms-disclosure": "single"
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_menu": {
+      "id": "node_menu",
+      "blockId": "hook-box",
+      "name": "Menu",
+      "parentId": "node_root",
+      "slot": "children",
+      "children": [
+        "node_menu_trigger",
+        "node_menu_panel"
+      ],
+      "props": {
+        "data-ms-menu": true
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_menu_link": {
+      "id": "node_menu_link",
+      "blockId": "hook-button",
+      "name": "Item",
+      "parentId": "node_menu_panel",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "href": "#a"
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_menu_panel": {
+      "id": "node_menu_panel",
+      "blockId": "hook-box",
+      "name": "Menu panel",
+      "parentId": "node_menu",
+      "slot": "children",
+      "children": [
+        "node_menu_link"
+      ],
+      "props": {
+        "data-ms-menu-panel": true,
+        "hidden": true
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_menu_trigger": {
+      "id": "node_menu_trigger",
+      "blockId": "hook-button",
+      "name": "Menu trigger",
+      "parentId": "node_menu",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "aria-expanded": false,
+        "data-ms-menu-trigger": true
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_next": {
+      "id": "node_next",
+      "blockId": "hook-button",
+      "name": "Next",
+      "parentId": "node_carousel",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "data-ms-carousel-step": 1
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_q1": {
+      "id": "node_q1",
+      "blockId": "hook-button",
+      "name": "Question",
+      "parentId": "node_faq",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "aria-controls": "answer-1",
+        "aria-expanded": false
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_root": {
+      "id": "node_root",
+      "blockId": "page",
+      "name": "Page",
+      "parentId": null,
+      "slot": "root",
+      "children": [
+        "node_toggle",
+        "node_faq",
+        "node_menu",
+        "node_carousel"
+      ],
+      "props": {},
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_toggle": {
+      "id": "node_toggle",
+      "blockId": "hook-button",
+      "name": "Colour mode",
+      "parentId": "node_root",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "aria-pressed": true,
+        "data-ms-color-mode-toggle": true
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_track": {
+      "id": "node_track",
+      "blockId": "hook-box",
+      "name": "Track",
+      "parentId": "node_carousel",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "data-ms-carousel-track": true
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    }
+  },
+  "assets": {}
+}
+

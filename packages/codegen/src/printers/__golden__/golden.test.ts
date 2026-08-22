@@ -64,7 +64,7 @@ describe('the golden cases', () => {
    * `golden-cases.ts` states beside them; the two printed targets are the ones this prompt builds.
    */
   it('cover every option field at a non-default value', () => {
-    const exempt = new Set(['format', 'assets', 'target'])
+    const exempt = new Set(['format', 'assets'])
     const covered = new Set<string>()
 
     for (const entry of GOLDEN_CASES) {
@@ -80,7 +80,12 @@ describe('the golden cases', () => {
     )
 
     expect(uncovered).toEqual([])
-    expect(EXPORT_TARGETS).toContain('next')
+  })
+
+  it('cover every export target', () => {
+    const used = new Set(GOLDEN_CASES.map((entry) => entry.options.target ?? 'react'))
+
+    expect(EXPORT_TARGETS.filter((target) => !used.has(target))).toEqual([])
   })
 
   it('cover every document', () => {

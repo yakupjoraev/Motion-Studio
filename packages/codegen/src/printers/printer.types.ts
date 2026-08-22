@@ -28,6 +28,22 @@ export interface PrintedTheme {
   readonly css: string
   /** `COLOR_MODE_SCRIPT`: the blocking `<head>` script that sets `data-color-mode` before first paint. */
   readonly colorModeScript: string
+  /** `COLOR_MODE_STORAGE_KEY`. The HTML target's toggle writes it; nothing else reads it. */
+  readonly colorModeStorageKey?: string
+  /** What the `tokens` target writes out, printed by `TOKEN_FORMATS` and handed over — ADR-236. */
+  readonly tokens?: readonly PrintedTokenFormat[]
+}
+
+/**
+ * One entry of `packages/theme`'s `TOKEN_FORMATS`, already printed. `codegen` carries neither the ids
+ * nor the file names nor a line of token syntax: restating any of the three is what ADR-236 rejected,
+ * because "the formats cannot disagree" holds only while there is one generator.
+ */
+export interface PrintedTokenFormat {
+  readonly id: string
+  /** `theme.css`, `tailwind.config.ts`, `theme.json`, `figma-tokens.json`. */
+  readonly filename: string
+  readonly contents: string
 }
 
 /**

@@ -2,9 +2,12 @@ import { type IRWarning, warning } from '../../warnings'
 import type { ExportFile } from '../printer.types'
 
 /**
- * EXPORT_ENGINE.md § Formatting. Prettier standalone plus the estree, typescript and postcss plugins,
- * **dynamically imported** — roughly 180 kB that has no business in the studio's first load, and it
- * only loads when somebody exports.
+ * EXPORT_ENGINE.md § Formatting. Prettier standalone plus the estree, typescript, postcss, html and
+ * babel plugins, **dynamically imported** — roughly 180 kB that has no business in the studio's first
+ * load, and it only loads when somebody exports.
+ *
+ * The html parser pulls babel with it: Prettier formats an inline `<script>` with the same estree
+ * printer it uses for a `.js` file, and it reaches that printer through babel rather than typescript.
  *
  * The failure path is not a thrown error. Offline, or behind a chunk that will not load, the export
  * ships unformatted with a warning: working unformatted code beats a failed export.
@@ -40,6 +43,7 @@ const PARSERS: Readonly<Record<string, string>> = {
   js: 'typescript',
   jsx: 'typescript',
   css: 'css',
+  html: 'html',
 }
 
 export const parserFor = (path: string): string | undefined =>
@@ -53,18 +57,20 @@ type Format = (source: string, parser: string) => Promise<string>
  */
 export async function loadPrettier(): Promise<Format | undefined> {
   try {
-    const [standalone, estree, typescript, postcss] = await Promise.all([
+    const [standalone, estree, typescript, postcss, html, babel] = await Promise.all([
       import('prettier/standalone'),
       import('prettier/plugins/estree'),
       import('prettier/plugins/typescript'),
       import('prettier/plugins/postcss'),
+      import('prettier/plugins/html'),
+      import('prettier/plugins/babel'),
     ])
 
     return (source, parser) =>
       standalone.format(source, {
         ...FORMAT_CONFIG,
         parser,
-        plugins: [estree, typescript, postcss],
+        plugins: [estree, typescript, postcss, html, babel],
       })
   } catch {
     return undefined

@@ -17,6 +17,7 @@
   },
   "devDependencies": {
     "@motion-studio/config": "workspace:*",
+    "@motion-studio/theme": "workspace:*",
     "@types/node": "^26.1.2",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
@@ -32,6 +33,7 @@
   },
   "dependencies": {
     "@motion-studio/motion": "workspace:*",
+    "@motion-studio/tokens": "workspace:*",
     "@motion-studio/schema": "workspace:*",
     "@motion-studio/utils": "workspace:*",
     "prettier": "^3.9.6"

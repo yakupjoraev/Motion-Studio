@@ -261,6 +261,89 @@ export const nestedContainers = (): MotionDocument =>
   })
 
 /**
+ * The `data-ms-*` contract of EXPORT_ENGINE.md § HTML, as a document. It is the only fixture whose
+ * export reaches the disclosure, carousel, menu and colour-mode blocks of the vanilla script, because
+ * the shipped catalogue declares none of those attributes yet — prompt 42's first escalation.
+ */
+export const interactiveHooks = (): MotionDocument =>
+  document({
+    id: 'node_root',
+    block: 'page',
+    name: 'Page',
+    children: [
+      {
+        id: 'node_toggle',
+        block: 'hook-button',
+        name: 'Colour mode',
+        props: { 'data-ms-color-mode-toggle': true, 'aria-pressed': true },
+      },
+      {
+        id: 'node_faq',
+        block: 'hook-box',
+        name: 'Questions',
+        props: { 'data-ms-disclosure': 'single' },
+        children: [
+          {
+            id: 'node_q1',
+            block: 'hook-button',
+            name: 'Question',
+            props: { 'aria-controls': 'answer-1', 'aria-expanded': false },
+          },
+          {
+            id: 'node_a1',
+            block: 'hook-box',
+            name: 'Answer',
+            props: { id: 'answer-1', hidden: true },
+          },
+        ],
+      },
+      {
+        id: 'node_menu',
+        block: 'hook-box',
+        name: 'Menu',
+        props: { 'data-ms-menu': true },
+        children: [
+          {
+            id: 'node_menu_trigger',
+            block: 'hook-button',
+            name: 'Menu trigger',
+            props: { 'data-ms-menu-trigger': true, 'aria-expanded': false },
+          },
+          {
+            id: 'node_menu_panel',
+            block: 'hook-box',
+            name: 'Menu panel',
+            props: { 'data-ms-menu-panel': true, hidden: true },
+            children: [
+              { id: 'node_menu_link', block: 'hook-button', name: 'Item', props: { href: '#a' } },
+            ],
+          },
+        ],
+      },
+      {
+        id: 'node_carousel',
+        block: 'hook-box',
+        name: 'Carousel',
+        props: { 'data-ms-carousel': true },
+        children: [
+          {
+            id: 'node_track',
+            block: 'hook-box',
+            name: 'Track',
+            props: { 'data-ms-carousel-track': true },
+          },
+          {
+            id: 'node_next',
+            block: 'hook-button',
+            name: 'Next',
+            props: { 'data-ms-carousel-step': 1 },
+          },
+        ],
+      },
+    ],
+  })
+
+/**
  * The documents EXPORT_ENGINE.md § Testing lists, keyed by the name the golden tree and the export
  * fixture script address them by. One authoring source — ADR-235: the `.motion.json` files beside the
  * expected output are serialised from these, and a drift between the two fails a test.
@@ -272,4 +355,5 @@ export const GOLDEN_DOCUMENTS: Readonly<Record<string, () => MotionDocument>> = 
   'responsive-overrides': responsiveOverrides,
   'nested-containers': nestedContainers,
   'eight-fade-up': eightFadeUp,
+  'interactive-hooks': interactiveHooks,
 }

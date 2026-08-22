@@ -157,6 +157,7 @@ export function buildElement(
     attributes,
     children: childrenOf(node, unit, context, into),
     ...(Object.keys(classes.cssVars).length > 0 ? { cssVars: classes.cssVars } : {}),
+    ...(motion.presets.length === 0 ? {} : { motion: motion.presets }),
     ...(definition.codegen.notes === undefined ? {} : { notes: definition.codegen.notes }),
     ...(emitStructured && structured !== undefined ? { structuredData: structured.type } : {}),
   }

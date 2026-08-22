@@ -72,4 +72,20 @@ export const GOLDEN_CASES: readonly GoldenCase[] = [
   },
   { id: 'nested-containers/react', document: 'nested-containers', options: { target: 'react' } },
   { id: 'eight-fade-up/react', document: 'eight-fade-up', options: { target: 'react' } },
+  { id: 'single-hero/html', document: 'single-hero', options: { target: 'html' } },
+  { id: 'full-landing/html', document: 'full-landing', options: { target: 'html' } },
+  {
+    /** The one case that exercises the omission half of the approximation table. */
+    id: 'responsive-overrides/html',
+    document: 'responsive-overrides',
+    options: { target: 'html' },
+  },
+  {
+    /** The one case whose script reaches the disclosure, carousel, menu and colour-mode blocks. */
+    id: 'interactive-hooks/html',
+    document: 'interactive-hooks',
+    options: { target: 'html' },
+  },
+  { id: 'full-landing/json', document: 'full-landing', options: { target: 'json' } },
+  { id: 'full-landing/tokens', document: 'full-landing', options: { target: 'tokens' } },
 ]

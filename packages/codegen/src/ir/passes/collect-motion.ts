@@ -4,7 +4,7 @@ import type { ImportSpec, MotionSpec, Node } from '@motion-studio/schema'
 import { hash } from '../../hash'
 import type { ExportOptions } from '../../options.types'
 import { type IRWarning, warning } from '../../warnings'
-import type { HoistedConst, IRRule, IRTheme, IRValue } from '../ir.types'
+import type { HoistedConst, IRElementMotion, IRRule, IRTheme, IRValue } from '../ir.types'
 
 import { REDUCED_HOOK, reducedMotionRules, toValue, withReducedMotion } from './reduced-motion'
 
@@ -25,6 +25,8 @@ export interface NodeMotion {
   readonly hooks: readonly string[]
   /** The names this node references. Placement is decided once the whole document is known. */
   readonly hoisted: readonly string[]
+  /** Which presets got this far, for a target that has to approximate them — ADR-239. */
+  readonly presets: readonly IRElementMotion[]
 }
 
 export const EMPTY_MOTION: NodeMotion = {
@@ -33,6 +35,7 @@ export const EMPTY_MOTION: NodeMotion = {
   imports: [],
   hooks: [],
   hoisted: [],
+  presets: [],
 }
 
 /** Import specifier → the package the emitted `package.json` must install, at a real range. */
@@ -156,6 +159,7 @@ export function createMotionCollector(input: MotionCollectorInput): MotionCollec
     const imports: ImportSpec[] = []
     const hooks: string[] = []
     const referenced: string[] = []
+    const applied: IRElementMotion[] = []
     let tagPrefix: string | undefined
 
     for (const spec of specs) {
@@ -164,6 +168,12 @@ export function createMotionCollector(input: MotionCollectorInput): MotionCollec
       if (fragment === undefined) {
         continue
       }
+
+      applied.push({
+        presetId: spec.presetId,
+        engine: presets.get(spec.presetId)?.engine ?? 'css',
+        channel: spec.channel,
+      })
 
       const renames = new Map<string, string>()
 
@@ -220,6 +230,7 @@ export function createMotionCollector(input: MotionCollectorInput): MotionCollec
       imports,
       hooks: [...new Set(hooks)],
       hoisted: [...new Set(referenced)],
+      presets: applied,
     }
   }
 

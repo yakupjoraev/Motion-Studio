@@ -46,7 +46,19 @@ export const DEFAULT_EXPORT_OPTIONS: ExportOptions = {
   scope: 'document',
 }
 
-export const resolveOptions = (overrides: Partial<ExportOptions> = {}): ExportOptions => ({
-  ...DEFAULT_EXPORT_OPTIONS,
-  ...overrides,
-})
+/**
+ * Two fields the HTML target does not leave open. `singleFile` because a single self-contained document
+ * has no module boundary to spend components on, and pass 1 is where component boundaries are decided
+ * — ADR-237. `imageComponent` because `next/image` is a React component, and a document with no React
+ * in it would print `<image>`, which HTML reads as the SVG element and renders as nothing — ADR-242.
+ *
+ * Both are resolved here rather than worked around in the printer, so the dialog shows what the export
+ * will actually do and the IR is built from the same set the printer reads.
+ */
+export const resolveOptions = (overrides: Partial<ExportOptions> = {}): ExportOptions => {
+  const resolved = { ...DEFAULT_EXPORT_OPTIONS, ...overrides }
+
+  return resolved.target === 'html'
+    ? { ...resolved, singleFile: true, imageComponent: 'img' }
+    : resolved
+}

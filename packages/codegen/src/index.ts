@@ -35,6 +35,7 @@ export type {
   IRClient,
   IRComponent,
   IRElement,
+  IRElementMotion,
   IRExpression,
   IRModule,
   IRProp,
@@ -90,6 +91,7 @@ export {
   type ExportFile,
   type ExportResult,
   type PrintedTheme,
+  type PrintedTokenFormat,
   type PrintInput,
 } from './printers/printer.types'
 export { isEmpty, printStylesheet } from './printers/print-stylesheet'
@@ -153,3 +155,32 @@ export {
 export { printTsconfig, tsconfigFileName } from './printers/next/print-tsconfig'
 export { printReadme } from './printers/next/print-readme'
 export { printNext } from './printers/next/print-next'
+export {
+  REVEAL_CLASS,
+  VISIBLE_CLASS,
+  approximateMotion,
+  approximationRules,
+  type MotionApproximation,
+} from './printers/html/approximate-motion'
+export { declarationsFor } from './printers/html/utility-rules'
+export { KEYWORDS } from './printers/html/utility-keywords'
+export {
+  printCss,
+  utilitySheet,
+  type CssInput,
+  type UtilitySheet,
+} from './printers/html/print-css'
+export { printMarkup, type MarkupContext } from './printers/html/print-markup'
+export {
+  FEATURE_ATTRIBUTES,
+  printScripts,
+  type ScriptFeature,
+  type ScriptInput,
+} from './printers/html/print-scripts'
+export { HTML_FILE, SCRIPT_BUDGET, printHtml } from './printers/html/print-html'
+export {
+  documentFileName,
+  printJsonTarget,
+  type JsonPrintInput,
+} from './printers/json/print-json'
+export { printTokens, type TokensPrintInput } from './printers/tokens/print-tokens'

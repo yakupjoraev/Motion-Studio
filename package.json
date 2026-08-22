@@ -26,6 +26,7 @@
     "generate:thumbnails": "node scripts/generate-thumbnails.mjs",
     "generate:fixtures": "tsx scripts/generate-fixtures.ts",
     "golden:update": "pnpm --filter @motion-studio/codegen golden:update",
+    "verify:html-export": "node scripts/verify-html-export.mjs",
     "generate:export-fixture": "pnpm --filter @motion-studio/codegen export-fixture",
     "clean": "turbo clean && rm -rf node_modules",
     "check:deps": "node scripts/check-deps.mjs",
