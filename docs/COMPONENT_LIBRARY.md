@@ -75,7 +75,7 @@ against the viewport: it draws a `container-type: inline-size` element around ea
 transform-scaled artboard answers the query with the untransformed width, which is right for the export
 and slightly wrong for the preview.
 
-The four codegen fields that exist for a block that cannot finish its own story:
+The five codegen fields that exist for a block that cannot finish its own story:
 
 ```ts
 readonly notes?: readonly string[]        // comments the printers emit above the element
@@ -89,7 +89,15 @@ readonly runtimeModule?: {                // a local module the export writes be
   readonly named: readonly string[]
   readonly source: string
 }
+readonly classes?: readonly ClassRule[]   // how props become classes on the root element
 ```
+
+`classes` is how `generateClasses` (EXPORT_ENGINE.md § Class generation) knows that `gapX: 'md'` spends
+`gap-x-4` while `padding: 'md'` spends `p-6`. It is built from the same object the block's `cva` call
+takes, so the class the canvas paints and the class the export writes are one declaration rather than
+two — ADR-225. Three kinds: `static` for classes the element always carries, `variant` for a prop and
+the classes each of its values spends, and `custom` for a prop with no Tailwind equivalent, which
+becomes a CSS variable plus a stylesheet rule instead of an arbitrary-value class.
 
 `notes` is where `newsletter-form` says its submit handler is a no-op the reader has to replace.
 `structuredData` is where `faq-accordion` says the export emits `FAQPage` JSON-LD when the user asked

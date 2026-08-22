@@ -9107,3 +9107,379 @@ point; the same numbers loose in the accessibility tree would be a scatter of di
   hatch pattern rather than a scale.
 - Named: the verdict in ADR-222 is superseded for this block. It now reads as a chart rather than as a drawing:
   plate, scale, names, vertices. What it still does not have is a second series, and that is a different block.
+
+## ADR-224 — Class order is variant-major, and the two documents that describe it disagreed
+
+**Date** 2026-08-22 · **Prompt** 42 · **Status** Accepted
+
+### Question
+`generateClasses` has to emit classes in the order Tailwind's own sorter would. Two documents describe
+that order and they do not agree. EXPORT_ENGINE.md § Class generation says "Tailwind's own group order
+…, **then breakpoint order within each group**". RESPONSIVE_ENGINE.md § Codegen says "base → sm → md →
+lg → xl → 2xl" and prints the output it means:
+
+```
+className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 lg:gap-6"
+```
+
+Group-major would have produced `grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6`. One of
+the two sentences is wrong.
+
+### Criterion (set before measuring)
+Both documents state the same *purpose* — "matches what Tailwind's own class sorter would produce". So
+the tie is broken by the sorter, not by preference: whichever ordering `prettier-plugin-tailwindcss`
+produces is the one we emit. The plugin sorts by variant first (unprefixed classes before every
+variant, variants in config order) and by core-plugin registration order within a variant.
+
+### Measurement
+`prettier-plugin-tailwindcss` groups by variant before property: the example in RESPONSIVE_ENGINE.md is
+exactly its output, and EXPORT_ENGINE.md's phrasing is not reachable by any plugin setting. The property
+order inside a variant is the registration order of Tailwind's core plugins, which is also not the
+nine-group list EXPORT_ENGINE.md offers in parentheses — that list has spacing before sizing and
+background before border, where the plugin has `borderRadius` before `backgroundColor` and `padding`
+after both.
+
+### Decision
+Variant-major, property-minor:
+
+1. Unprefixed classes first, then `sm:`, `md:`, `lg:`, `xl:`, `2xl:` — `CASCADE_ORDER` from `schema`.
+2. Within one variant, order by Tailwind's core-plugin sequence, transcribed as data in
+   `ir/tailwind/class-order.ts` and matched by longest utility prefix.
+
+EXPORT_ENGINE.md's sentence and its nine-group parenthetical are corrected to say this, in the doc
+commit that precedes the code.
+
+### Consequences
+- Accepted: the order table is a transcription of another project's plugin order, so it can drift when
+  Tailwind adds a plugin. It is one file of data, and a class whose family is not in the table sorts
+  after every class that is, deterministically, rather than throwing.
+- Accepted: we do not run the real plugin. Running it would mean shipping Prettier and the Tailwind
+  config into `buildIR`, which EXPORT_ENGINE.md § Formatting keeps out of the IR on purpose.
+- Avoided: an output a reviewer would notice. Group-major ordering scatters the breakpoints of one
+  element across the whole attribute, which is the tell that the classes were assembled rather than
+  written.
+
+### Alternatives rejected
+- Follow EXPORT_ENGINE.md literally: produces a string no Tailwind sorter emits, which defeats the
+  reason either document gives for caring about the order.
+- Emit unordered and let the user's own sorter fix it: the export has to look right in a diff and in a
+  clipboard paste, neither of which runs a formatter.
+
+## ADR-225 — A block declares its root class plan in the codegen descriptor
+
+**Date** 2026-08-22 · **Prompt** 42 · **Status** Accepted
+
+### Question
+`generateClasses(node, def, theme)` — the signature EXPORT_ENGINE.md § Class generation specifies —
+turns props into Tailwind classes. The props are scale *names* (ADR-106: `gapX: 'md'`), and the class a
+name spends is different for every prop: `gapX: 'md'` is `gap-x-4`, `padding: 'md'` is `p-6`. Today the
+only source of that mapping is the block's `cva` map in `packages/blocks`, which `codegen` must not
+import (ARCHITECTURE.md § Dependency graph, rule 3). Where does the mapping come from?
+
+### Criterion (set before measuring)
+One source of truth. The canvas and the export must spend the same class for the same prop value, and
+the mechanism has to make a divergence *fail* rather than be noticed by a reader six months later.
+
+### Measurement
+Three candidates, measured against that criterion.
+
+1. **A table in `codegen`, keyed by block id.** 72 entries duplicating the `cva` maps. Two sources of
+   truth by construction, no gate that can compare them without importing `blocks`, and the id table
+   is a `blocks` dependency in everything but the import graph.
+2. **A vocabulary in `codegen`, keyed by prop name.** Fails on the measured facts above: one scale
+   name, two classes, depending on the prop. It would emit `gap-6` where the canvas paints `gap-x-4`
+   — a divergence that compiles and looks plausible.
+3. **The descriptor carries it.** `codegen.classes` on the block, built from the same object the
+   block's `cva` call already takes, so the two cannot be written twice. A registry-wide test can then
+   assert `generateClasses(defaults)` against the block's own rendered `className` — one source, one
+   gate.
+
+### Decision
+`CodegenDescriptor` gains `classes?: readonly ClassRule[]`, a discriminated union of three kinds:
+
+| Kind | Meaning |
+| --- | --- |
+| `static` | classes the element always carries |
+| `variant` | one prop, its values, and the classes each value spends |
+| `custom` | a prop with no Tailwind equivalent: a CSS variable plus a rule |
+
+`ClassRule` is data — serialisable, no closures — for the reason `ClientBoundary` gives for taking prop
+*names* rather than a predicate (ADR-199): a meta-test can check a data declaration against the schema
+and the rendered output, and cannot check a closure.
+
+`custom` is the mechanism EXPORT_ENGINE.md asks for when it says a value with no Tailwind equivalent
+becomes "a CSS variable plus a rule in the emitted stylesheet, never `[calc(100%-2.375rem)]`". The block
+declares which prop that is; the pass emits `--ms-…` on the element and the rule in the stylesheet, with
+a media query per breakpoint override.
+
+### Consequences
+- Accepted: the field is optional, and **none of the 72 catalogue entries declares it yet**. Until they
+  do, `generateClasses` returns the element's static classes and nothing prop-derived, and the export's
+  root elements are unstyled. That is the state this prompt leaves behind and it is escalated rather
+  than papered over — the population is a `blocks` change across six closed categories, and the gate
+  that proves it (COMPONENT_LIBRARY.md § Testing already lists "`codegen` produces a golden-file-matching
+  output for `defaults`") belongs with it.
+- Accepted: only the *root* element's classes are expressible. A block's inner markup is not in the
+  descriptor at all, which is the larger gap escalated beside this one.
+- Avoided: a second vocabulary that drifts from the one the canvas paints.
+
+### Alternatives rejected
+- Both alternatives above, for the measured reasons.
+- Deriving the map from `controls` metadata: controls name the prop and its *options*, never the class.
+
+## ADR-226 — `buildIR` takes one named input, and the preset catalogue is injected
+
+**Date** 2026-08-22 · **Prompt** 42 · **Status** Accepted
+
+### Question
+Pass 4 asks every motion preset for its codegen fragment, so `buildIR` needs the preset catalogue.
+EXPORT_ENGINE.md writes the entry point as `buildIR(document, registry, options)`. Does the catalogue
+arrive as an import from `packages/motion`, or as an argument?
+
+### Criterion (set before measuring)
+The prompt's own verification: "a `node`-environment test importing `buildIR` without React". An
+import wins only if it does not put React in `codegen`'s runtime graph.
+
+### Measurement
+`@motion-studio/motion`'s barrel exports `MotionNode`, `CssMotion`, `FramerMotion`, `GsapMotion`,
+`MotionSchedulerProvider` and four hooks. Importing `presetRegistry` from it pulls all of them, so
+`buildIR` would load React and the whole apply layer to read four fields off a preset. The types are
+free — `import type` erases — but the registry value is not.
+
+ADR-138 already answered the same question inside `packages/motion`: the catalogue arrives in
+`ResolveContext` rather than being imported, so the model does not depend on the presets it plays.
+
+### Decision
+`buildIR(input: BuildIRInput)` with one named object: `document`, `registry`, `presets`, `options`, and
+`selection` for `scope: 'selection'`. Four positional arguments where three of them are registries
+reads worse at every call site than one named object, and the object is what makes `selection` — which
+only one option value uses — expressible without a fifth positional.
+
+`codegen` imports from `@motion-studio/motion` with `import type` only, so its runtime graph is
+`schema` + `utils` and nothing else. EXPORT_ENGINE.md § Pipeline is corrected to the new signature in
+the doc commit.
+
+### Consequences
+- Accepted: a caller must pass the catalogue. `apps/web` has it already — the motion panel and the
+  canvas both hold it — so no new wiring, and the export dialog (prompt 45) passes what it already owns.
+- Accepted: a document referencing a preset the caller did not supply produces an `unsupported`
+  warning rather than a silent no-animation. That is the honest downgrade EXPORT_ENGINE.md § Warnings
+  asks for.
+- Avoided: React in the export engine's runtime graph, and a `node` test that passes only because
+  React happens to be installed.
+
+## ADR-227 — The client boundary, the runtime modules and the structured data are resolved in the IR
+
+**Date** 2026-08-22 · **Prompt** 42 · **Status** Accepted
+
+### Question
+Three facts a printer needs live on the block descriptor: `client` (whether `'use client'` is
+emitted — ADR-199), `runtimeModule` (a local module the export writes beside the component —
+ADR-201), and `structuredData` (JSON-LD beside the element — ADR-194). EXPORT_ENGINE.md § React says
+"the printer" reads them. But a printer is handed a `CodegenIR` and nothing else. Who resolves them?
+
+### Criterion (set before measuring)
+The pipeline's own rule, stated twice in EXPORT_ENGINE.md and once in ARCHITECTURE.md: "The IR exists
+so printers are dumb… A printer only serialises." Anything that needs the registry, or that dedupes
+across the document, is therefore IR work — a printer that reached for the registry would be a second
+place where decisions are made, and the fifth target would re-solve them.
+
+### Measurement
+All three need the registry, and two of them need document-wide reasoning:
+
+- `client` is `always | never | whenAnyProp`, and `whenAnyProp` has to be evaluated against the node's
+  resolved props — a per-node decision, not a per-block one.
+- `runtimeModule` is deduped by `path` across the document (ADR-201: "two blocks asking for the same
+  `path` emit it once"). Dedupe across a document is the definition of a collection pass.
+- `structuredData` is gated by a boolean prop (`enabledBy`), which again is per node.
+
+### Decision
+The IR carries all three, resolved once:
+
+- `IRComponent.client: { emit: boolean; reason: string }` — `emit` is true when the block says so or
+  when the component's own body needs a hook (motion, reduced motion). The two reasons are independent
+  and either is sufficient, exactly as EXPORT_ENGINE.md § React states.
+- `CodegenIR.modules: readonly IRModule[]` — deduped by `path`.
+- `IRElement.structuredData` — the type and the already-evaluated decision to emit.
+
+A block whose descriptor does not declare `client` makes `buildIR` throw `UndeclaredClientBoundaryError`
+naming every offending block. ADR-199 put that failure in the printer; it is the same failure, moved to
+where the decision is made. Warnings never block, so this cannot be a warning — an export that shipped
+a page throwing in the browser would be exactly what ADR-199 refused.
+
+### Consequences
+- Accepted: **53 of the 72 catalogue entries do not declare `client`** — every block in `layout`,
+  `hero`, `content`, `marketing`, `navigation` and `effects`. `buildIR` on a real document therefore
+  throws today. Nothing calls it yet (the export dialog is prompt 45), and the fixture registry in
+  `__golden__` declares the field, so the tests are not the thing keeping this green. Escalated, not
+  deferred: cutting it to a warning would be the owner's call and not ours.
+- Accepted: three fields the documented IR sketch does not list. EXPORT_ENGINE.md § The IR is corrected.
+- Avoided: printers that hold a registry, and three implementations of `whenAnyProp` when the fourth
+  target arrives.
+
+### Alternatives rejected
+- Pass the registry to the printers: makes every printer a decision site and contradicts the pipeline's
+  stated reason for existing.
+- Resolve `client` in the printer from the IR's `hooks` list alone: `hooks` cannot see a block that is
+  interactive without a hook, which is most of `interactive`.
+
+## ADR-228 — Two subtrees are the same shape when no class rule can tell them apart
+
+**Date** 2026-08-22 · **Prompt** 42 · **Status** Accepted
+
+### Question
+Pass 1's third rule extracts a subtree repeated "≥ 2 times with identical structure, differing only in
+leaf values" into one component with props. Which prop values are *leaf values*? Three pricing cards
+differing in text must extract; three cards where one has an extra child must not. The hard case is
+between them: two cards differing in a prop that changes the *markup* rather than the content.
+
+### Criterion (set before measuring)
+Extraction is correct exactly when the two instances can print from one component body. Anything the
+component body bakes in at build time must therefore be part of the shape; anything that arrives as a
+prop must not.
+
+### Measurement
+`generateClasses` resolves props into literal classes at build time — that is the whole of ADR-106 and
+ADR-116, and it is why the IR holds `classNames` and not a class function. So a prop read by a class
+rule is baked into the body: `grid` with `mode: 'auto-fit'` and `grid` with `mode: 'explicit'` print
+different `className` strings from the same block and cannot share a component. A prop no class rule
+reads reaches the body only as a value, and a value is a prop.
+
+Two nodes' `responsive`, `motion`, `effects` and `hidden` are in the same position: all four change the
+printed body, none of them can be a prop.
+
+### Decision
+The shape hash of a node is: its `blockId`, its slot, the ordered shape hashes of its children, its
+`responsive` / `motion` / `effects` / `hidden`, and the values of exactly those props named by a
+`ClassRule` in its descriptor. Every other prop value is a leaf, and a leaf that differs across
+instances becomes an `IRProp` with the first instance's value as its default.
+
+`extractProps: false` disables extraction where instances differ, because the component would then
+print all three cards identically. Instances that differ in nothing are still extracted — there is no
+prop to lift.
+
+### Consequences
+- Accepted: the criterion is only as good as the class plan. A block that declares no `classes` (all 72
+  today — ADR-225) hashes on structure alone, so two nodes differing only in a layout prop would be
+  extracted together and would print with the wrong layout. The population of `classes` is what closes
+  it, and it is the same escalation.
+- Accepted: extraction is skipped, not approximated, when it cannot be done — three cards with
+  different structures stay three inlined subtrees, which is what a hand-written page would have.
+- Avoided: a hash over "primitive values are leaves", which would have extracted `mode: 'auto-fit'` and
+  `mode: 'explicit'` into one component and produced a page that looks right in the IR and wrong in the
+  browser.
+
+## ADR-229 — A prop that reaches neither a class nor an attribute is reported
+
+**Date** 2026-08-22 · **Prompt** 42 · **Status** Accepted
+
+### Question
+A node's props reach the export through two declared routes: `codegen.classes` (ADR-225) and
+`codegen.passthroughProps` ("props that print as attributes rather than as classes"). A block's
+remaining props — `hero-centered`'s `title`, `subtitle`, `eyebrow` — reach neither, because the
+descriptor does not describe the block's inner markup at all. What does `buildIR` do with them?
+
+### Criterion (set before measuring)
+The banned fourth way, applied to data: whatever happens must be checkable by a reader of the output.
+Silently dropping the headline of a page and printing an empty `<section>` is the least checkable
+outcome available.
+
+### Measurement
+Counted on the `full-landing` fixture, whose registry declares `classes` and `passthroughProps` on
+every entry — the best case: **4 of its 11 nodes** still carry a prop with no route, five in total
+(`links`, `title`, `items`, and the card's `plan` and `price`). Every one of them is *content*, which is
+the half of a block the descriptor does not describe at all.
+
+On the real catalogue the number is every prop of every node, because no entry declares `classes` yet
+(ADR-225). So the gap is not an edge case to be handled; it is the shape of a missing subsystem, and
+this pass can only decide whether to say so.
+
+### Decision
+`buildIR` emits one `unsupported` warning per node listing the props that reached neither route, with
+the `nodeId` and a link to EXPORT_ENGINE.md § buildIR. Warnings never block, so the export still
+produces its files — and the export report says, per node, exactly what is missing from them.
+
+### Consequences
+- Accepted: one warning per node with unrouted props — four on the fixture, and one per node on a real
+  document until the descriptors grow. That is loud, and it is meant to be: a quieter form of it would
+  be a gap nobody sees until a user reads their exported page.
+- Accepted: the warning is not the fix. The fix is the escalated markup declaration, and this entry is
+  what keeps the missing thing visible until that call is made.
+- Avoided: an export that looks finished and ships blank sections.
+
+## ADR-230 — An interactive block loose on the page becomes its own component
+
+**Date** 2026-08-22 · **Prompt** 42 · **Status** Accepted
+
+### Question
+Pass 1's four rules give a component to the root, to a section-category child of the root, and to a
+repeated subtree. Everything else inlines. Reading the IR of the `full-landing` fixture showed what that
+costs: a `theme-toggle` dropped at the end of the page inlines into the entry component, the entry
+component therefore holds something that calls a hook, and the whole page becomes a Client Component.
+
+### Criterion (set before measuring)
+EXPORT_ENGINE.md § React states the target in its own rule table — "a static section stays a Server
+Component" — and prompt 43 names the failure: "Getting this wrong means a fully client-rendered page,
+which defeats the point of the Next export." So the criterion is a property of the emitted IR: **the
+entry component carries `client.emit === false` unless the root block itself declares a boundary.**
+
+### Measurement
+Before: `full-landing` produced five components, and the entry one was
+`{ emit: true, reason: 'It writes the colour mode.' }` — one 8-pixel button making six sections of static
+markup render on the client.
+
+After: six components, and the entry is `{ emit: false }`. `Nav`, `HeroSection`, `Pricing` and
+`ThemeToggle` carry the directive; `Page` and `PlanCard` do not.
+
+### Decision
+A fifth boundary, applied after rule 2 and before rule 3: a node whose client boundary is **active at
+its own props** and which has no boundary between it and the root becomes its own component.
+
+The second half of that is what keeps it from becoming a file per button. Inside a section, the section
+is already the client component and splitting again buys nothing — so only the nodes that would land in
+the entry are lifted. `whenAnyProp` is evaluated, not assumed: a `carousel` with no arrows, no dots and
+no autoplay stays inlined, because at those props it is a scroll-snap strip.
+
+### Consequences
+- Accepted: a page with several loose interactive blocks gets several small files. That is what a person
+  writing the page by hand would have, and the alternative is a page that ships as one client bundle.
+- Accepted: a fifth rule where the document lists four. It is derived from the document's own stated
+  target rather than added to it, and the criterion above is a test rather than a preference.
+- Named: this is also the rule that makes prompt 43's "a Next page composing client components is not
+  itself a client component" reachable. Without it the IR could not express that page.
+
+### Alternatives rejected
+- Give every `interactive`-category node its own component: splits blocks that need no directive and
+  ignores `whenAnyProp` entirely.
+- Leave it and let the printer decide: the printer holds no registry, which is ADR-227.
+
+## ADR-231 — Rule 2 reads the document's root, not the export's root
+
+**Date** 2026-08-22 · **Prompt** 42 · **Status** Accepted
+
+### Question
+`scope: 'selection'` runs the same pipeline over one subtree — it is what powers **Copy React** on a
+single node. Pass 1's rule 2 gives a component to each section-category *direct child of the root*. Which
+root: the document's, or the one the export starts from?
+
+### Criterion (set before measuring)
+Rule 2's stated purpose, quoted: "This is what makes a Next.js export look like a real project rather
+than one 900-line page." A rule whose justification is about a page applies where there is a page.
+
+### Measurement
+Selecting the pricing section of `full-landing` and reading the export root: with rule 2 keyed to the
+export root, the three `plan-card` children are `marketing`-category direct children, so they became
+three components — `PlanCard`, `PlanCard2`, `PlanCard3` — three files for three identical cards. With it
+keyed to the document root, rule 2 matches nothing and rule 3 extracts them into one `PlanCard` with two
+props, which is what the same three cards produce when the whole document is exported.
+
+### Decision
+Rule 2 reads `document.rootId`. A selection export therefore sees rules 1, 2b, 3 and 4 only, and a
+selection that happens to *be* the document root behaves exactly like a document export.
+
+### Consequences
+- Accepted: **Copy React** on a section never splits its contents into files, whatever their categories.
+  A clipboard paste is one component, which is what the button promises.
+- Accepted: the same subtree can produce different boundaries in a selection export and in a document
+  export. That is the intent — one is a page and the other is a component — and the two agree wherever
+  rule 2 was not the reason for the split.

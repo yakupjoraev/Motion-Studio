@@ -10,7 +10,7 @@ no wrapper soup, formatted, and it must compile with zero edits.
 MotionDocument + ExportOptions
         │
         ▼
-  buildIR(document, registry, options)          ← all the thinking happens here
+  buildIR({ document, registry, presets, options })   ← all the thinking happens here
         │
         ▼
      CodegenIR
@@ -30,6 +30,13 @@ The IR exists so printers are dumb. Naming, hoisting, dedupe, import collection,
 generation are decided **once**. A printer only serialises. Adding a fifth target means writing a
 printer, not re-solving the hard problems.
 
+That rule is what puts three registry-backed facts in the IR rather than in a printer: the client
+boundary, the runtime modules a block asks the export to write beside it, and the structured data a
+block emits when a prop turns it on. All three need the registry, and two of them dedupe across the
+whole document, so a printer holding them would be a second decision site — ADR-227. The preset
+catalogue arrives as an argument for the reason ADR-226 records: importing it would put React in the
+export engine's runtime graph.
+
 ## The IR
 
 ```ts
@@ -39,6 +46,8 @@ export interface CodegenIR {
   readonly entry: ComponentName
   readonly theme: IRTheme
   readonly assets: readonly IRAsset[]
+  readonly stylesheet: IRStylesheet         // rules and keyframes passes 3 and 4 produced
+  readonly modules: readonly IRModule[]     // `runtimeModule`s, deduped by path — ADR-201
   readonly dependencies: Readonly<Record<string, string>>   // name → semver range
   readonly warnings: readonly IRWarning[]
 }
@@ -50,6 +59,7 @@ export interface IRComponent {
   readonly imports: readonly ImportSpec[]
   readonly hoisted: readonly HoistedConst[]  // variants, transitions, data arrays
   readonly hooks: readonly string[]
+  readonly client: IRClient               // whether `'use client'` is printed, and why
   readonly root: IRElement
   readonly usedClasses: readonly string[]
 }
@@ -60,6 +70,8 @@ export interface IRElement {
   readonly attributes: Readonly<Record<string, IRValue>>
   readonly children: readonly (IRElement | IRText | IRExpression)[]
   readonly cssVars?: Readonly<Record<string, string>>
+  readonly notes?: readonly string[]      // comments the printer emits above the element
+  readonly structuredData?: StructuredDataType   // already gated on `enabledBy`
   readonly key?: string
 }
 
@@ -111,16 +123,22 @@ Per node: resolve base props → Tailwind classes; resolve each responsive overr
 classes; merge; order.
 
 ```ts
-export function generateClasses(node: Node, def: BlockDefinition, theme: IRTheme): string[]
+export function generateClasses(node: Node, def: BlockDefinition, theme: IRTheme): ClassResult
 ```
 
-- Ordering follows Tailwind's own group order (layout → flex/grid → spacing → sizing →
-  typography → background → border → effects → transition), then breakpoint order within each
-  group. Matching the official sort means the output looks like it went through the Tailwind
-  plugin, because effectively it did.
+The prop-to-class mapping comes off the descriptor — `codegen.classes`, a list of `ClassRule`s the
+block builds from the same object its `cva` call takes, so the canvas and the export cannot spend
+different classes for the same prop value (ADR-225). `ClassResult` is the classes plus the CSS
+variables and stylesheet rules the `custom` rules produced, because one walk of the props decides all
+three.
+
+- Ordering is **variant-major**: unprefixed classes first, then `sm:` → `2xl:`, and within one
+  variant the order of Tailwind's core plugins. That is what `prettier-plugin-tailwindcss` emits, and
+  matching the official sort means the output looks like it went through the plugin, because
+  effectively it did. ADR-224 records why the group-major reading of this sentence was wrong.
 - Redundant overrides (equal to the inherited value) are dropped.
-- Values with no Tailwind equivalent become a CSS variable plus a rule in the emitted stylesheet.
-  Never `[calc(100%-2.375rem)]` unless the user literally typed that.
+- Values with no Tailwind equivalent become a CSS variable plus a rule in the emitted stylesheet —
+  a `custom` rule on the descriptor. Never `[calc(100%-2.375rem)]` unless the user literally typed that.
 - Duplicate/conflicting classes are resolved with `tailwind-merge` semantics at build time, so no
   runtime `cn()` is needed in the output.
 
@@ -380,6 +398,10 @@ The export dialog shows a warning list before the code. Categories:
 | `a11y` | "`hero-video` has no captions track." |
 
 Warnings never block. They inform, and each links to the relevant doc section.
+
+One `unsupported` warning is per node rather than per document: the props that reached neither a class
+rule nor `passthroughProps`, listed by name. A block's descriptor describes its root element, so a
+content prop with no route into the markup would otherwise vanish and print a blank section — ADR-229.
 
 ## Export dialog
 
