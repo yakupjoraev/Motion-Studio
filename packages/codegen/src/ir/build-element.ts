@@ -124,6 +124,10 @@ export function buildElement(
     }
   }
 
+  for (const name of media.suppressed) {
+    delete attributes[name]
+  }
+
   Object.assign(attributes, media.attributes, motion.attributes)
 
   into.imports.push(
@@ -195,7 +199,12 @@ function childrenOf(
   return children
 }
 
-/** `<PlanCard plan={…} />`: the boundary's name, and the props this instance differs in. */
+/**
+ * `<PlanCard plan={…} />`: the boundary's name, and the props this instance differs in.
+ *
+ * No `key`. Three siblings written out in JSX are not a mapped array, and the only value available was
+ * the node's id — the first editor artifact EXPORT_ENGINE.md § React's rule table bans (ADR-234).
+ */
 function referenceElement(
   nodeId: NodeId,
   unit: ComponentUnit,
@@ -224,7 +233,6 @@ function referenceElement(
     classNames: [],
     attributes,
     children: [],
-    ...(unit.instances.length > 1 ? { key: String(nodeId) } : {}),
   }
 }
 

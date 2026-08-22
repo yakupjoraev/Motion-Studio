@@ -151,6 +151,21 @@ describe('the image component', () => {
     expect(result.attributes['decoding']).toEqual({ kind: 'literal', value: 'async' })
   })
 
+  /**
+   * `sizes` is how `next/image` picks a candidate from its srcset. On a plain `<img>` with no srcset
+   * the browser ignores it and a reviewer asks about it, so a passthrough prop may not put it there.
+   */
+  it('names the attributes only next/image can spend, so a passthrough prop cannot leak them', () => {
+    const props = { src: PNG, alt: 'A', width: 800, height: 600, sizes: '100vw' }
+
+    expect(collect(imageNode(props), { imageComponent: 'img' }).result.suppressed).toEqual([
+      'sizes',
+      'placeholder',
+      'blurDataURL',
+    ])
+    expect(collect(imageNode(props)).result.suppressed).toEqual([])
+  })
+
   it('reserves the box from the asset record over the props', () => {
     const source = stored({ type: 'data', dataUrl: PNG })
     const { result } = collect(imageNode({ src: PNG, width: 10, height: 10 }), {}, source)

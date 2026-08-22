@@ -91,14 +91,20 @@ describe('the IR of the full-landing fixture', () => {
     ])
   })
 
-  it('keys the three usages, because they are a list', () => {
+  /**
+   * ADR-234, which supersedes the keys this used to assert. Three siblings written out in JSX are not
+   * a mapped array, and the only value available was the node id — the first editor artifact
+   * EXPORT_ENGINE.md § React's rule table bans from generated output.
+   */
+  it('keys none of the three usages, and carries no node id into the output', () => {
     const pricing = component(ir, 'Pricing')?.root.children ?? []
 
     expect(pricing.map((child) => (child.kind === 'element' ? child.key : undefined))).toEqual([
-      'node_plan1',
-      'node_plan2',
-      'node_plan3',
+      undefined,
+      undefined,
+      undefined,
     ])
+    expect(JSON.stringify(component(ir, 'Pricing'))).not.toContain('node_plan')
   })
 
   it('carries the descriptor notes and the structured data the props enabled', () => {

@@ -4,5 +4,8 @@
   // from either means reading a `.tsx` file. Nothing in this package is React — the runtime graph is
   // `schema` and `utils`, and `no-react.test.ts` asserts it.
   "extends": "@motion-studio/config/tsconfig/react.json",
-  "include": ["src", "vitest.config.ts"]
+  "include": ["src", "scripts", "vitest.config.ts"],
+  // The golden tree is printed output, not source: it imports `react` and `next`, which this
+  // package deliberately does not. `test:compile` type-checks it against its own emitted config.
+  "exclude": ["src/printers/__golden__/expected", ".compile"]
 }

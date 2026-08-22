@@ -1,0 +1,316 @@
+{
+  "version": 1,
+  "meta": {
+    "id": "doc_fixture",
+    "name": "Fixture",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "generator": "motion-studio@0.0.0",
+    "canvas": {
+      "background": "surface-0",
+      "width": 1440
+    }
+  },
+  "theme": {
+    "colorMode": "dark",
+    "elevationStyle": "soft",
+    "id": "fixture",
+    "motionScale": 1,
+    "name": "Fixture",
+    "palette": {
+      "accent": "oklch(62% 0.19 285)",
+      "accentHueShift": 0,
+      "neutral": "zinc",
+      "repairContrast": true,
+      "saturation": 1
+    },
+    "radiusScale": 1,
+    "spacingScale": 1,
+    "surface": {
+      "borderStyle": "hairline",
+      "glassLevel": "subtle",
+      "noiseLevel": "subtle"
+    },
+    "typography": {
+      "baseSize": 16,
+      "pairing": "geist",
+      "scaleRatio": 1.25
+    }
+  },
+  "rootId": "node_root",
+  "nodes": {
+    "node_root": {
+      "id": "node_root",
+      "blockId": "page",
+      "name": "Page",
+      "parentId": null,
+      "slot": "root",
+      "children": [
+        "node_s0",
+        "node_s1",
+        "node_s2",
+        "node_s3",
+        "node_s4",
+        "node_s5",
+        "node_s6",
+        "node_s7"
+      ],
+      "props": {},
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_s0": {
+      "id": "node_s0",
+      "blockId": "hero",
+      "name": "Band 1",
+      "parentId": "node_root",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "padding": "md"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 32,
+            "duration": 0.6
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_s1": {
+      "id": "node_s1",
+      "blockId": "hero",
+      "name": "Band 2",
+      "parentId": "node_root",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "padding": "md"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 32,
+            "duration": 0.6
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_s2": {
+      "id": "node_s2",
+      "blockId": "hero",
+      "name": "Band 3",
+      "parentId": "node_root",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "padding": "md"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 32,
+            "duration": 0.6
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_s3": {
+      "id": "node_s3",
+      "blockId": "hero",
+      "name": "Band 4",
+      "parentId": "node_root",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "padding": "md"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 32,
+            "duration": 0.6
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_s4": {
+      "id": "node_s4",
+      "blockId": "hero",
+      "name": "Band 5",
+      "parentId": "node_root",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "padding": "md"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 32,
+            "duration": 0.6
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_s5": {
+      "id": "node_s5",
+      "blockId": "hero",
+      "name": "Band 6",
+      "parentId": "node_root",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "padding": "md"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 32,
+            "duration": 0.6
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_s6": {
+      "id": "node_s6",
+      "blockId": "hero",
+      "name": "Band 7",
+      "parentId": "node_root",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "padding": "md"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 32,
+            "duration": 0.6
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_s7": {
+      "id": "node_s7",
+      "blockId": "hero",
+      "name": "Band 8",
+      "parentId": "node_root",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "padding": "md"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 32,
+            "duration": 0.6
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    }
+  },
+  "assets": {}
+}
+

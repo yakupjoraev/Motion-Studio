@@ -1,0 +1,291 @@
+{
+  "version": 1,
+  "meta": {
+    "id": "doc_fixture",
+    "name": "Fixture",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "generator": "motion-studio@0.0.0",
+    "canvas": {
+      "background": "surface-0",
+      "width": 1440
+    }
+  },
+  "theme": {
+    "colorMode": "dark",
+    "elevationStyle": "soft",
+    "id": "fixture",
+    "motionScale": 1,
+    "name": "Fixture",
+    "palette": {
+      "accent": "oklch(62% 0.19 285)",
+      "accentHueShift": 0,
+      "neutral": "zinc",
+      "repairContrast": true,
+      "saturation": 1
+    },
+    "radiusScale": 1,
+    "spacingScale": 1,
+    "surface": {
+      "borderStyle": "hairline",
+      "glassLevel": "subtle",
+      "noiseLevel": "subtle"
+    },
+    "typography": {
+      "baseSize": 16,
+      "pairing": "geist",
+      "scaleRatio": 1.25
+    }
+  },
+  "rootId": "node_root",
+  "nodes": {
+    "node_faq": {
+      "id": "node_faq",
+      "blockId": "faq",
+      "name": "FAQ",
+      "parentId": "node_root",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "items": [
+          {
+            "a": "The editor is.",
+            "q": "Is it free?"
+          }
+        ],
+        "schemaOrg": true
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_hero": {
+      "id": "node_hero",
+      "blockId": "hero",
+      "name": "Hero",
+      "parentId": "node_root",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "padding": "lg",
+        "title": "Design motion, ship code"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 32,
+            "duration": 0.6
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        },
+        "hover": {
+          "channel": "hover",
+          "params": {},
+          "presetId": "shine",
+          "trigger": {
+            "kind": "hover"
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_image": {
+      "id": "node_image",
+      "blockId": "image",
+      "name": "Screenshot",
+      "parentId": "node_media",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "alt": "The studio canvas",
+        "height": 1000,
+        "sizes": "100vw",
+        "src": "https://cdn.example.com/studio.png",
+        "width": 1600
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_media": {
+      "id": "node_media",
+      "blockId": "section",
+      "name": "Media",
+      "parentId": "node_root",
+      "slot": "children",
+      "children": [
+        "node_image"
+      ],
+      "props": {
+        "padding": "md",
+        "tint": "oklch(22% 0.02 285)"
+      },
+      "responsive": {
+        "lg": {
+          "padding": "lg"
+        }
+      },
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_nav": {
+      "id": "node_nav",
+      "blockId": "nav",
+      "name": "Nav",
+      "parentId": "node_root",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "links": [
+          "Product",
+          "Pricing"
+        ]
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_plan1": {
+      "id": "node_plan1",
+      "blockId": "plan-card",
+      "name": "Plan card",
+      "parentId": "node_pricing",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "plan": "Starter",
+        "price": 0
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_plan2": {
+      "id": "node_plan2",
+      "blockId": "plan-card",
+      "name": "Plan card",
+      "parentId": "node_pricing",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "plan": "Pro",
+        "price": 29
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_plan3": {
+      "id": "node_plan3",
+      "blockId": "plan-card",
+      "name": "Plan card",
+      "parentId": "node_pricing",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "plan": "Team",
+        "price": 79
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_pricing": {
+      "id": "node_pricing",
+      "blockId": "pricing-grid",
+      "name": "Pricing",
+      "parentId": "node_root",
+      "slot": "children",
+      "children": [
+        "node_plan1",
+        "node_plan2",
+        "node_plan3"
+      ],
+      "props": {
+        "columns": 3,
+        "gap": "lg"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 32,
+            "duration": 0.6
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_root": {
+      "id": "node_root",
+      "blockId": "page",
+      "name": "Page",
+      "parentId": null,
+      "slot": "root",
+      "children": [
+        "node_nav",
+        "node_hero",
+        "node_pricing",
+        "node_media",
+        "node_faq",
+        "node_toggle"
+      ],
+      "props": {},
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_toggle": {
+      "id": "node_toggle",
+      "blockId": "toggle",
+      "name": "Theme toggle",
+      "parentId": "node_root",
+      "slot": "children",
+      "children": [],
+      "props": {},
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    }
+  },
+  "assets": {}
+}
+

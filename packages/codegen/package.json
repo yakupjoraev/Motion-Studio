@@ -10,17 +10,30 @@
   "scripts": {
     "lint": "biome check .",
     "test": "vitest run --passWithNoTests",
-    "typecheck": "tsc --noEmit"
+    "test:compile": "node scripts/compile-golden.mjs",
+    "typecheck": "tsc --noEmit",
+    "golden:update": "tsx scripts/generate-golden.mts",
+    "export-fixture": "tsx scripts/generate-export-fixture.mts"
   },
   "devDependencies": {
     "@motion-studio/config": "workspace:*",
+    "@types/node": "^26.1.2",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
     "@vitest/coverage-v8": "^2.1.9",
+    "gsap": "^3.15.0",
+    "motion": "^11.18.2",
+    "next": "^15.5.4",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "typescript": "~5.6.3",
     "vitest": "^2.1.9",
     "zod": "^3.23.8"
   },
   "dependencies": {
     "@motion-studio/motion": "workspace:*",
     "@motion-studio/schema": "workspace:*",
-    "@motion-studio/utils": "workspace:*"
+    "@motion-studio/utils": "workspace:*",
+    "prettier": "^3.9.6"
   }
 }

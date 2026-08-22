@@ -1,0 +1,16 @@
+.v-section-tint {
+  background-color: var(--ms-section-tint);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ms-shine {
+    animation: none;
+    transition: none;
+  }
+}
+
+@keyframes ms-shine {
+  to {
+    background-position: 200% 0;
+  }
+}

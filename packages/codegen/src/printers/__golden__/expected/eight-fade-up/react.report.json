@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "motion": "^11.18.2"
+  },
+  "warnings": [
+    {
+      "code": "dependency",
+      "message": "Adds motion@^11.18.2."
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+@import 'tailwindcss';
+
+/*
+ * Theme: Fixture
+ */
+
+:root {
+  --ms-color-surface-0: oklch(98.5% 0.0014 285);
+  --ms-color-surface-1: oklch(100% 0 0);
+  --ms-color-foreground: oklch(14% 0.0056 285);
+  --ms-color-accent: oklch(62% 0.19 285);
+  --ms-font-sans: 'Geist Sans', system-ui, sans-serif;
+  --ms-font-display: 'Geist Sans', system-ui, sans-serif;
+  --ms-font-mono: 'Geist Mono', ui-monospace, monospace;
+}
+
+:root[data-color-mode='dark'] {
+  --ms-color-surface-0: oklch(14% 0.0056 285);
+  --ms-color-surface-1: oklch(17.5% 0.007 285);
+  --ms-color-foreground: oklch(98.5% 0.0014 285);
+  --ms-color-accent: oklch(70% 0.17 285);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-color-mode]) {
+    --ms-color-surface-0: oklch(14% 0.0056 285);
+    --ms-color-surface-1: oklch(17.5% 0.007 285);
+    --ms-color-foreground: oklch(98.5% 0.0014 285);
+    --ms-color-accent: oklch(70% 0.17 285);
+  }
+}
+
+body {
+  --ms-font-display: var(--ms-font-sans);
+}

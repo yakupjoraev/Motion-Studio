@@ -9483,3 +9483,139 @@ selection that happens to *be* the document root behaves exactly like a document
 - Accepted: the same subtree can produce different boundaries in a selection export and in a document
   export. That is the intent — one is a page and the other is a component — and the two agree wherever
   rule 2 was not the reason for the split.
+
+## ADR-232 — The theme's CSS reaches the printers as an argument, not as an import
+
+**Date** 2026-08-22 · **Prompt** 43 · **Status** Accepted
+
+### Question
+The Next target emits `app/globals.css` with the resolved theme variables and a `<head>` script that
+sets the colour mode before first paint. Both strings are already produced by
+`packages/theme/src/export/` and `packages/theme/src/script/`. How does `packages/codegen` get them?
+
+### Criterion (set before deciding)
+Two documents constrain this and they must both hold. `ARCHITECTURE.md` § Dependency graph rule 3:
+"`codegen` depends on `schema` only." `THEME_ENGINE.md` § Theme in export: "`packages/codegen` reads
+the same functions rather than restating them." A resolution that breaks either is wrong.
+
+### Decision
+`PrintInput` carries an optional `theme: { css, colorModeScript }`, and the caller — the export dialog
+in `apps/web`, which already depends on `theme` — passes `toCssVariables(resolveForExport(config))` and
+`COLOR_MODE_SCRIPT`. This is ADR-226 applied a second time: the preset catalogue arrives as an argument
+for the same reason, and for the same kind of edge in the graph.
+
+Nothing is restated: `codegen` contains no palette maths, no ramp, and no variable names. Absent, the
+printer emits the project without a stylesheet body and warns, rather than inventing one.
+
+### Consequences
+- Accepted: a caller can pass a stylesheet that does not match the document's theme. The alternative
+  was an edge from `codegen` to `theme` that `check-deps` would have to be told to allow.
+- Accepted: a `next` export printed with no `theme` argument compiles and runs unstyled beyond the
+  Tailwind classes. That is the honest downgrade — a missing argument is not a reason to fail an
+  export, and the warning names it.
+- Named: `THEME_ENGINE.md` § Theme in export says codegen "reads the same functions". It receives their
+  output. The sentence's intent — one generator, not two — holds either way.
+
+## ADR-233 — Custom properties in a printed `style` prop
+
+**Date** 2026-08-22 · **Prompt** 43 · **Status** Accepted
+
+### Question
+A `custom` class rule puts a CSS variable on the element: `style={{ '--ms-section-tint': 'oklch(…)' }}`.
+React's `CSSProperties` is `csstype`'s `Properties`, which declares no index signature. Does the plain
+object literal type-check, or does the printed attribute need an annotation?
+
+### Criterion (set before measuring)
+Print the plain object literal if `tsc --noEmit` accepts it under the golden project's own
+`tsconfig.json` with the React 19 types the export declares. Add `as CSSProperties` and the type-only
+`react` import only if it does not. The generated code carries no cast it does not need.
+
+### Measurement
+`@types/react` 19.2.18, `tsc` 5.6, `strict`, `jsx: react-jsx`:
+
+```
+<div style={{ '--ms-section-tint': 'oklch(22% 0.02 285)' }} />
+  error TS2353: Object literal may only specify known properties, and
+  ''--ms-section-tint'' does not exist in type 'Properties<string | number, string & {}>'.
+```
+
+The same element with `as CSSProperties` and a type-only `react` import compiles clean.
+
+### Decision
+The printer emits `style={{ … } as CSSProperties}` and adds `import type { CSSProperties } from 'react'`
+to that component's imports. The annotation is printed **only** for an element that carries custom
+properties, so a component with none takes no React type import.
+
+### Consequences
+- Accepted: a cast in generated code. It is the one the React types require for a documented CSS
+  feature, and the measurement is what puts it there rather than a habit.
+- Accepted: the answer is tied to a `@types/react` version. `test:compile` re-checks it on every run, so
+  a types release that removes the need fails nothing and one that changes the shape fails loudly.
+- Rejected: `style={{ ['--x' as string]: … }}`, which type-checks by widening the key rather than the
+  object and reads as a trick.
+
+## ADR-234 — A statically listed sibling carries no `key`
+
+**Date** 2026-08-22 · **Prompt** 43 · **Status** Accepted
+
+### Question
+Pass 1 extracts three identical cards into one `PlanCard`, and `referenceElement` gave each instance a
+`key` — the node's id. Should the printer emit it?
+
+### Criterion (set before deciding)
+`EXPORT_ENGINE.md` § React's rule table, last row: "No editor artifacts — no `data-node-id`, no
+wrappers, no dead classes." A node id is the editor artifact that row names first. Separately, React
+requires `key` only for children produced from an array; three siblings written out in JSX are not.
+
+### Measurement
+`full-landing`, printed with the key: `<PlanCard key="node_plan1" plan="Starter" price={0} />`. The
+document's internal identifier, verbatim, in code the user pastes into their project. Printed without
+it the three lines carry the two props the cards actually differ in and nothing else.
+
+### Decision
+`referenceElement` stops setting `key`. `IRElement.key` stays in the type — `EXPORT_ENGINE.md` § The IR
+specifies the field, and `print-element.ts` prints it when it is set — but nothing in `buildIR` sets it
+today, and a producer may only set it for children that are genuinely mapped from an array.
+
+### Consequences
+- Accepted: a field with no producer. Removing it instead would put `codegen` out of step with the IR
+  the document specifies, which is the larger of the two costs.
+- Rejected: keying on the instance ordinal. It is not a node id, but it is still a key on children that
+  do not need one, and a reader would have to work out why it is there.
+
+## ADR-235 — The golden harness: generated documents, checked-in output, `tsc` in place
+
+**Date** 2026-08-22 · **Prompt** 43 · **Status** Accepted
+
+### Question
+`EXPORT_ENGINE.md` § Testing specifies `__golden__/documents/*.motion.json` beside
+`__golden__/expected/`. The same documents already exist as typed builders in `src/test/documents.ts`,
+which 171 IR tests run against. Two copies of a fixture drift. How are both satisfied?
+
+### Criterion (set before deciding)
+One authoring source, because a fixture that can disagree with itself proves nothing; and the files the
+document specifies present on disk, because prompt 46 and the playground read documents rather than
+build them.
+
+### Decision
+`src/test/documents.ts` stays the source. `pnpm golden:update` serialises each entry through
+`serializeDocument` into `__golden__/documents/<name>.motion.json` and prints every
+`(document × target × option-set)` into `__golden__/expected/`. The golden test reads the JSON files
+back through `documentSchema.parse`, so a stale JSON file fails rather than being ignored, and the
+export it drives is one that survived serialisation.
+
+`test:compile` copies each expected project byte for byte into `.compile/` and runs `tsc --noEmit`
+there: a `next` project against **its own printed `tsconfig.json`**, a `react` output against one host
+config, because a React export is not a project — the user pastes it into theirs. The copy is what
+makes the golden tree assertable at all: `tsc` and Next both write into a project they inspect, and a
+golden tree with `next-env.d.ts` and `*.tsbuildinfo` in it would fail its own file-list assertion.
+
+### Consequences
+- Accepted: `packages/codegen` gains `react`, `react-dom`, `next`, `motion`, `gsap` and their types as
+  **dev** dependencies, so the golden tree resolves its imports. The runtime graph is unchanged and
+  `no-react.test.ts` still enforces it per file.
+- Accepted: `next-env.d.ts` is written into each copied `next` project before `tsc` runs, and the React
+  copies get a host `tsconfig.json`. Next generates the first itself on `next build` and the second is
+  the project the user already has; neither is an edit to the export.
+- Accepted: updating a golden is a two-step ritual — run the script, read the diff. That reading is the
+  review gate the document asks for, and making it one step would remove it.

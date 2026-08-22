@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "meta": {
+    "id": "doc_fixture",
+    "name": "Fixture",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "generator": "motion-studio@0.0.0",
+    "canvas": {
+      "background": "surface-0",
+      "width": 1440
+    }
+  },
+  "theme": {
+    "colorMode": "dark",
+    "elevationStyle": "soft",
+    "id": "fixture",
+    "motionScale": 1,
+    "name": "Fixture",
+    "palette": {
+      "accent": "oklch(62% 0.19 285)",
+      "accentHueShift": 0,
+      "neutral": "zinc",
+      "repairContrast": true,
+      "saturation": 1
+    },
+    "radiusScale": 1,
+    "spacingScale": 1,
+    "surface": {
+      "borderStyle": "hairline",
+      "glassLevel": "subtle",
+      "noiseLevel": "subtle"
+    },
+    "typography": {
+      "baseSize": 16,
+      "pairing": "geist",
+      "scaleRatio": 1.25
+    }
+  },
+  "rootId": "node_root",
+  "nodes": {
+    "node_grid": {
+      "id": "node_grid",
+      "blockId": "pricing-grid",
+      "name": "Grid",
+      "parentId": "node_root",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "columns": 1,
+        "gap": "md"
+      },
+      "responsive": {
+        "lg": {
+          "columns": 3,
+          "gap": "lg"
+        },
+        "md": {
+          "columns": 2
+        },
+        "xl": {
+          "gap": "lg"
+        }
+      },
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_root": {
+      "id": "node_root",
+      "blockId": "page",
+      "name": "Page",
+      "parentId": null,
+      "slot": "root",
+      "children": [
+        "node_grid"
+      ],
+      "props": {},
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    }
+  },
+  "assets": {}
+}
+

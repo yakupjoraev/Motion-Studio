@@ -1,0 +1,169 @@
+{
+  "version": 1,
+  "meta": {
+    "id": "doc_fixture",
+    "name": "Fixture",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "generator": "motion-studio@0.0.0",
+    "canvas": {
+      "background": "surface-0",
+      "width": 1440
+    }
+  },
+  "theme": {
+    "colorMode": "dark",
+    "elevationStyle": "soft",
+    "id": "fixture",
+    "motionScale": 1,
+    "name": "Fixture",
+    "palette": {
+      "accent": "oklch(62% 0.19 285)",
+      "accentHueShift": 0,
+      "neutral": "zinc",
+      "repairContrast": true,
+      "saturation": 1
+    },
+    "radiusScale": 1,
+    "spacingScale": 1,
+    "surface": {
+      "borderStyle": "hairline",
+      "glassLevel": "subtle",
+      "noiseLevel": "subtle"
+    },
+    "typography": {
+      "baseSize": 16,
+      "pairing": "geist",
+      "scaleRatio": 1.25
+    }
+  },
+  "rootId": "node_root",
+  "nodes": {
+    "node_a": {
+      "id": "node_a",
+      "blockId": "plan-card",
+      "name": "Plan card",
+      "parentId": "node_grid",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "plan": "Starter",
+        "price": 0
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_b": {
+      "id": "node_b",
+      "blockId": "plan-card",
+      "name": "Plan card",
+      "parentId": "node_grid",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "plan": "Pro",
+        "price": 29
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_badge": {
+      "id": "node_badge",
+      "blockId": "section",
+      "name": "section",
+      "parentId": "node_d",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "padding": "sm"
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_c": {
+      "id": "node_c",
+      "blockId": "plan-card",
+      "name": "Plan card",
+      "parentId": "node_grid",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "plan": "Team",
+        "price": 79
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_d": {
+      "id": "node_d",
+      "blockId": "plan-card",
+      "name": "Plan card",
+      "parentId": "node_grid",
+      "slot": "children",
+      "children": [
+        "node_badge"
+      ],
+      "props": {
+        "plan": "Custom",
+        "price": 0
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_grid": {
+      "id": "node_grid",
+      "blockId": "pricing-grid",
+      "name": "Pricing",
+      "parentId": "node_root",
+      "slot": "children",
+      "children": [
+        "node_a",
+        "node_b",
+        "node_c",
+        "node_d"
+      ],
+      "props": {
+        "columns": 3,
+        "gap": "md"
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_root": {
+      "id": "node_root",
+      "blockId": "page",
+      "name": "Page",
+      "parentId": null,
+      "slot": "root",
+      "children": [
+        "node_grid"
+      ],
+      "props": {},
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    }
+  },
+  "assets": {}
+}
+

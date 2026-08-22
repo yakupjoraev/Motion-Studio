@@ -137,6 +137,11 @@ export interface IRComponent {
 export interface CodegenIR {
   readonly components: readonly IRComponent[]
   readonly entry: ComponentName
+  /**
+   * `document.meta.name`. The Next target spends it three times — the package name, `metadata.title`
+   * and the README heading — and a name derived from a component would be one the author never wrote.
+   */
+  readonly documentName: string
   readonly theme: IRTheme
   readonly assets: readonly IRAsset[]
   readonly stylesheet: IRStylesheet

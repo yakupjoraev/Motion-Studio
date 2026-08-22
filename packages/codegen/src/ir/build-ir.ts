@@ -268,6 +268,7 @@ export function buildIR(input: BuildIRInput): CodegenIR {
   return {
     components,
     entry: nameOf.get(root) ?? 'Section',
+    documentName: document.meta.name,
     theme,
     assets: assets.assets,
     stylesheet: { rules: [...rules.values()], keyframes: motion.keyframes },

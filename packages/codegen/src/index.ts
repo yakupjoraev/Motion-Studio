@@ -83,3 +83,73 @@ export {
 } from './ir/passes/handle-assets'
 export { familyRank, sortClasses, splitVariant, type ClassParts } from './ir/tailwind/class-order'
 export { mergeAndSort } from './ir/tailwind/merge-classes'
+
+export {
+  moduleExtension,
+  withoutExtension,
+  type ExportFile,
+  type ExportResult,
+  type PrintedTheme,
+  type PrintInput,
+} from './printers/printer.types'
+export { isEmpty, printStylesheet } from './printers/print-stylesheet'
+export { printJson, printJsonFile } from './printers/print-json'
+export {
+  FORMAT_CONFIG,
+  formatFiles,
+  loadPrettier,
+  parserFor,
+  type FormatOutcome,
+} from './printers/format/format'
+export {
+  INDENT,
+  PRINT_WIDTH,
+  REACT_TYPE_IMPORT,
+  STYLE_TYPE,
+  needsStyleType,
+  noteLines,
+  printElement,
+  structuredDataScript,
+} from './printers/react/print-element'
+export { printImport, printImports } from './printers/react/print-imports'
+export { printHoisted, printModule } from './printers/react/print-hoisted'
+export {
+  defaultOfProp,
+  printPropsInterface,
+  printPropsParameter,
+  propsTypeName,
+  tsType,
+  typeOfProp,
+} from './printers/react/print-props'
+export { USE_CLIENT, printComponent, type ComponentInput } from './printers/react/print-component'
+export { printReact, referencedNames, referencesOf } from './printers/react/print-react'
+export {
+  DISPLAY_VARIABLE,
+  MONO_VARIABLE,
+  SANS_VARIABLE,
+  fontPlan,
+  type FontImport,
+  type FontPlan,
+} from './printers/next/fonts'
+export { printLayout, type LayoutInput } from './printers/next/print-layout'
+export {
+  COMPONENTS_DIR,
+  MISSING_ENTRY,
+  componentSpecifier,
+  printPage,
+} from './printers/next/print-page'
+export {
+  TAILWIND_IMPORT,
+  printGlobalsCss,
+  type GlobalsInput,
+} from './printers/next/print-globals-css'
+export {
+  POSTCSS_CONFIG,
+  RUNTIME_VERSIONS,
+  TOOLING_VERSIONS,
+  printPackageJson,
+  projectName,
+} from './printers/next/print-package-json'
+export { printTsconfig, tsconfigFileName } from './printers/next/print-tsconfig'
+export { printReadme } from './printers/next/print-readme'
+export { printNext } from './printers/next/print-next'

@@ -23,6 +23,8 @@ storybook-static/
 
 # testing
 coverage/
+# `test:compile` copies the golden export tree here and lets tsc and Next write into the copies.
+packages/codegen/.compile/
 playwright-report/
 test-results/
 blob-report/

@@ -10,7 +10,8 @@ import type { ImportSpec } from '@motion-studio/schema'
  */
 const RANKS = { builtin: 0, external: 1, alias: 2, relative: 3 } as const
 
-function rank(from: string): number {
+/** Exported so the printer groups the statements the way it sorted them, from one table. */
+export function importRank(from: string): number {
   if (from.startsWith('node:')) {
     return RANKS.builtin
   }
@@ -53,7 +54,7 @@ export function collectImports(specs: readonly ImportSpec[]): readonly ImportSpe
 
   return [...merged.values()]
     .sort((left, right) => {
-      const groups = rank(left.from) - rank(right.from)
+      const groups = importRank(left.from) - importRank(right.from)
 
       if (groups !== 0) {
         return groups

@@ -23,11 +23,20 @@ export interface AssetResult {
   /** The image element's tag, when the option and the descriptor agree on `next/image`. */
   readonly tag?: string
   readonly attributes: Readonly<Record<string, IRValue>>
+  /**
+   * Attribute names a passthrough prop must not put on this element. `sizes` is the case that made the
+   * field necessary: it is how `next/image` picks a candidate from its srcset, and on a plain `<img>`
+   * with no srcset it is an attribute the browser ignores and a reviewer asks about.
+   */
+  readonly suppressed: readonly string[]
   readonly imports: readonly ImportSpec[]
   readonly assets: readonly IRAsset[]
 }
 
-const EMPTY: AssetResult = { attributes: {}, imports: [], assets: [] }
+const EMPTY: AssetResult = { attributes: {}, suppressed: [], imports: [], assets: [] }
+
+/** What only `next/image` can spend. A plain `<img>` carrying any of them is carrying dead markup. */
+const NEXT_ONLY: readonly string[] = ['sizes', 'placeholder', 'blurDataURL']
 
 /** The elements a block's own root can be, and therefore the ones asset attributes can land on. */
 const MEDIA_TAGS = new Set(['img', 'video'])
@@ -186,6 +195,7 @@ export function createAssetCollector(
     return {
       ...(tag === undefined ? {} : { tag }),
       attributes,
+      suppressed: useNext ? [] : NEXT_ONLY,
       imports,
       assets: found,
     }

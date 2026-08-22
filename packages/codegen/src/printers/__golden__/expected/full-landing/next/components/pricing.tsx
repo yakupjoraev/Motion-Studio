@@ -1,0 +1,25 @@
+'use client'
+
+import { motion, useReducedMotion } from 'motion/react'
+
+import { PlanCard } from '@/components/plan-card'
+import { fadeUpTransition, fadeUpVariants } from '@/lib/motion'
+
+export function Pricing() {
+  const shouldReduceMotion = useReducedMotion()
+
+  return (
+    <motion.div
+      variants={fadeUpVariants}
+      initial={shouldReduceMotion ? 'visible' : 'hidden'}
+      whileInView="visible"
+      viewport={{ once: true, amount: 0.3 }}
+      transition={shouldReduceMotion ? { duration: 0 } : fadeUpTransition}
+      className="grid grid-cols-3 gap-8"
+    >
+      <PlanCard plan="Starter" price={0} />
+      <PlanCard plan="Pro" price={29} />
+      <PlanCard plan="Team" price={79} />
+    </motion.div>
+  )
+}

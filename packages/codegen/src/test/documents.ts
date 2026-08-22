@@ -259,3 +259,17 @@ export const nestedContainers = (): MotionDocument =>
       },
     ],
   })
+
+/**
+ * The documents EXPORT_ENGINE.md § Testing lists, keyed by the name the golden tree and the export
+ * fixture script address them by. One authoring source — ADR-235: the `.motion.json` files beside the
+ * expected output are serialised from these, and a drift between the two fails a test.
+ */
+export const GOLDEN_DOCUMENTS: Readonly<Record<string, () => MotionDocument>> = {
+  'single-hero': singleHero,
+  'full-landing': fullLanding,
+  'repeated-subtrees': repeatedSubtrees,
+  'responsive-overrides': responsiveOverrides,
+  'nested-containers': nestedContainers,
+  'eight-fade-up': eightFadeUp,
+}
