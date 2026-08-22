@@ -292,11 +292,17 @@ lib/
   motion.ts            shared variants and transitions
 public/
   <bundled assets>
+postcss.config.mjs     Tailwind v4 runs as a PostCSS plugin; without this the page has no utilities
 tailwind.config.ts     only if the user asked for the config form
 package.json
-tsconfig.json
+tsconfig.json          the `@/*` alias every printed import uses
 README.md              what this is, how to run it
 ```
+
+`postcss.config.mjs` is not optional and is not a preference. Tailwind v4 takes its configuration from
+CSS — which is why `globals.css` opens with `@import 'tailwindcss'` and there is no config file by
+default — and it generates nothing at all unless the PostCSS plugin is wired up. An export missing it
+installs, builds and serves an unstyled page, which is the failure this whole section exists to prevent.
 
 `page.tsx` is intentionally boring:
 
@@ -449,7 +455,7 @@ __golden__/
 │   ├── responsive-overrides.motion.json
 │   └── repeated-subtrees.motion.json
 └── expected/
-    ├── single-hero/react/HeroSection.tsx
+    ├── single-hero/react/hero-section.tsx
     ├── single-hero/next/app/page.tsx
     ├── single-hero/html/index.html
     └── ...
