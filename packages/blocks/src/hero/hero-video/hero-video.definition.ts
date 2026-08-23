@@ -80,7 +80,15 @@ export const heroVideoDefinition = defineBlock({
 
   defaultMotion: heroVideoMotion,
 
-  codegen: { tag: 'section' },
+  codegen: {
+    tag: 'section',
+    client: {
+      kind: 'whenAnyProp',
+      props: ['src'],
+      reason:
+        'Playback is started from an effect that checks reduced motion first. With no source the poster and the copy are markup.',
+    },
+  },
 
   a11y: {
     notes: [

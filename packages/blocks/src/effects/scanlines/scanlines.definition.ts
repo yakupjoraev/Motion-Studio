@@ -54,7 +54,13 @@ export const scanlinesDefinition = defineBlock({
 
   capabilities: effectCapabilities('cheap'),
   defaultMotion: {},
-  codegen: { tag: 'div' },
+  codegen: {
+    tag: 'div',
+    client: {
+      kind: 'never',
+      reason: 'A repeating linear gradient, drifting on a keyframe when asked to.',
+    },
+  },
   a11y: {
     notes: [
       ...EFFECT_A11Y_NOTES,

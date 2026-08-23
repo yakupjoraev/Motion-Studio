@@ -85,7 +85,13 @@ export const columnsDefinition = defineBlock({
 
   defaultMotion: columnsMotion,
 
-  codegen: { tag: 'div' },
+  codegen: {
+    tag: 'div',
+    client: {
+      kind: 'never',
+      reason: 'Two tracks whose ratio is a class pair, and the collapse below md is a prefix.',
+    },
+  },
 
   a11y: {
     notes: [

@@ -90,6 +90,11 @@ export const dockDefinition = defineBlock({
 
   codegen: {
     tag: 'nav',
+    client: {
+      kind: 'always',
+      reason:
+        'The swell is a custom property per item written from a pointer listener, and the arrow keys move focus along the row.',
+    },
     notes: [
       'The swell is one custom property per item, written from a throttled pointermove listener. Keep it off React state, or the dock costs a render per frame.',
     ],

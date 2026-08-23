@@ -88,7 +88,13 @@ export const heroSplitDefinition = defineBlock({
 
   defaultMotion: heroSplitMotion,
 
-  codegen: { tag: 'section' },
+  codegen: {
+    tag: 'section',
+    client: {
+      kind: 'never',
+      reason: 'Two columns of markup; the media is an element and the reversal is a class.',
+    },
+  },
 
   a11y: {
     notes: [

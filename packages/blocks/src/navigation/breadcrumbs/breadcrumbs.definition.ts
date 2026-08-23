@@ -90,6 +90,11 @@ export const breadcrumbsDefinition = defineBlock({
     imports: [{ from: '@radix-ui/react-dropdown-menu', default: 'DropdownMenu' }],
     // ADR-185's rule, ADR-194's type: generated in the export, never rendered in the canvas.
     structuredData: { type: 'BreadcrumbList', enabledBy: 'jsonLd' },
+    client: {
+      kind: 'always',
+      reason:
+        'The folded middle of a long trail is a Radix DropdownMenu, which holds whether it is open.',
+    },
     notes: [
       'BreadcrumbList JSON-LD is emitted beside this nav when the jsonLd prop is on. The trail has to match the page it is on, or the structured data is a penalty rather than a feature.',
     ],

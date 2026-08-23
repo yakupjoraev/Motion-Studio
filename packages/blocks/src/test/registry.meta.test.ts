@@ -241,21 +241,36 @@ describe('the registry as a whole', () => {
   })
 
   /*
-   * ADR-199. The declaration arrived with the interactive category and prompt 41 added the two that complete the
-   * catalogue; the fifty-three blocks of the six categories before them are still unaudited, so this asserts what
-   * is true today rather than a rule nobody has met. The printer's answer for a block that does not declare one is
-   * to fail rather than to guess.
+   * ADR-199 and ADR-243. Absent is not `never`: the export refuses a block that has not answered, so the
+   * assertion is that every entry has. The reason is asserted too — the printer may emit it as a comment,
+   * and a boundary declared with nothing to say beside the directive is a boundary nobody can check.
    */
-  it('declares a client boundary for the three newest categories and for no others yet', () => {
-    const declared = DEFINITIONS.filter((one) => one.codegen.client !== undefined).map(
+  it('declares a client boundary, with a reason, for every entry', () => {
+    const undeclared = DEFINITIONS.filter((one) => one.codegen.client === undefined).map(
       (one) => one.id,
     )
 
-    expect(declared).toEqual([
-      ...blockRegistry.byCategory('interactive').map((one) => one.id),
-      ...blockRegistry.byCategory('data').map((one) => one.id),
-      ...blockRegistry.byCategory('forms').map((one) => one.id),
-    ])
+    expect(undeclared).toEqual([])
+
+    for (const definition of DEFINITIONS) {
+      expect(definition.codegen.client?.reason.length ?? 0).toBeGreaterThan(0)
+    }
+  })
+
+  it('names props on every whenAnyProp boundary, and names them in its own schema', () => {
+    for (const definition of DEFINITIONS) {
+      const boundary = definition.codegen.client
+
+      if (boundary?.kind !== 'whenAnyProp') {
+        continue
+      }
+
+      expect(boundary.props.length).toBeGreaterThan(0)
+
+      for (const prop of boundary.props) {
+        expect(schemaHasPath(definition.propsSchema, prop)).toBe(true)
+      }
+    }
   })
 
   it('opts four blocks into container queries and no others (ADR-184)', () => {

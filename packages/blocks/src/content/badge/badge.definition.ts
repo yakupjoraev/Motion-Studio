@@ -66,7 +66,13 @@ export const badgeDefinition = defineBlock({
 
   defaultMotion: badgeMotion,
 
-  codegen: { tag: 'span' },
+  codegen: {
+    tag: 'span',
+    client: {
+      kind: 'never',
+      reason: 'A span with a variant class and, at most, a glyph beside its label.',
+    },
+  },
 
   a11y: {
     notes: [

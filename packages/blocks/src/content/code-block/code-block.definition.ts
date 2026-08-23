@@ -81,7 +81,15 @@ export const codeBlockDefinition = defineBlock({
 
   defaultMotion: codeBlockMotion,
 
-  codegen: { tag: 'pre' },
+  codegen: {
+    tag: 'pre',
+    client: {
+      kind: 'whenAnyProp',
+      props: ['showCopyButton'],
+      reason:
+        'The copy button holds the confirmation in state and clears its timer on unmount. Without it the sample is a pre and one span per token.',
+    },
+  },
 
   a11y: {
     notes: [

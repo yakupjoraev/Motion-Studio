@@ -54,7 +54,13 @@ export const heroCenteredDefinition = defineBlock({
 
   defaultMotion: heroCenteredMotion,
 
-  codegen: { tag: 'section' },
+  codegen: {
+    tag: 'section',
+    client: {
+      kind: 'never',
+      reason: 'Copy in a centred column: a heading, a paragraph and anchors.',
+    },
+  },
 
   a11y: {
     notes: [

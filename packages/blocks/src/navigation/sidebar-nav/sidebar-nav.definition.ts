@@ -123,6 +123,10 @@ export const sidebarNavDefinition = defineBlock({
     tag: 'nav',
     dependencies: { '@radix-ui/react-collapsible': '^1.1.20' },
     imports: [{ from: '@radix-ui/react-collapsible', default: 'Collapsible' }],
+    client: {
+      kind: 'always',
+      reason: 'useId names every group heading, and a hook cannot run in a Server Component.',
+    },
   },
 
   a11y: {

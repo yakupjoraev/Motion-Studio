@@ -47,7 +47,13 @@ export const borderBeamDefinition = defineBlock({
 
   capabilities: effectCapabilities('cheap'),
   defaultMotion: {},
-  codegen: { tag: 'div' },
+  codegen: {
+    tag: 'div',
+    client: {
+      kind: 'never',
+      reason: 'A conic gradient rotating behind a masked border.',
+    },
+  },
   a11y: {
     notes: [
       ...EFFECT_A11Y_NOTES,

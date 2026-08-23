@@ -110,7 +110,13 @@ export const headingDefinition = defineBlock({
 
   defaultMotion: headingMotion,
 
-  codegen: { tag: 'h2' },
+  codegen: {
+    tag: 'h2',
+    client: {
+      kind: 'never',
+      reason: 'One heading element, with its level and its size chosen by props.',
+    },
+  },
 
   a11y: {
     notes: [

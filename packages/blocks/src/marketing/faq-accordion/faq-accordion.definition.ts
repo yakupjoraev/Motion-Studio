@@ -111,6 +111,10 @@ export const faqAccordionDefinition = defineBlock({
     imports: [{ from: '@radix-ui/react-accordion', default: 'Accordion' }],
     // ADR-185: generated in the export, never rendered in the canvas.
     structuredData: { type: 'FAQPage', enabledBy: 'jsonLd' },
+    client: {
+      kind: 'always',
+      reason: 'Radix Accordion holds which answers are open and manages the hidden attribute.',
+    },
     notes: [
       'FAQPage JSON-LD is emitted beside this section when the jsonLd prop is on. Check the answers match the page before publishing them as structured data.',
     ],

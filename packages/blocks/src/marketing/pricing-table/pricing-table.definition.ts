@@ -174,7 +174,15 @@ export const pricingTableDefinition = defineBlock({
 
   defaultMotion: pricingTableMotion,
 
-  codegen: { tag: 'section' },
+  codegen: {
+    tag: 'section',
+    client: {
+      kind: 'whenAnyProp',
+      props: ['showToggle'],
+      reason:
+        'The interval toggle owns the chosen interval after the first render. Without it the plans print at the interval the document stores.',
+    },
+  },
 
   a11y: {
     notes: [

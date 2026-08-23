@@ -48,7 +48,14 @@ export const particlesDefinition = defineBlock({
 
   capabilities: effectCapabilities('heavy'),
   defaultMotion: {},
-  codegen: { tag: 'div' },
+  codegen: {
+    tag: 'div',
+    client: {
+      kind: 'never',
+      reason:
+        'Every point is a span placed from a hash of the seed and moved by a keyframe — no canvas and no timer.',
+    },
+  },
   a11y: {
     notes: [
       ...EFFECT_A11Y_NOTES,

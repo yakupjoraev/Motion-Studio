@@ -56,7 +56,13 @@ export const spacerDefinition = defineBlock({
 
   defaultMotion: spacerMotion,
 
-  codegen: { tag: 'div' },
+  codegen: {
+    tag: 'div',
+    client: {
+      kind: 'never',
+      reason: 'A div with a height on it. There is nothing else in the component.',
+    },
+  },
 
   a11y: {
     notes: [

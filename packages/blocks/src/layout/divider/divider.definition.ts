@@ -85,7 +85,14 @@ export const dividerDefinition = defineBlock({
 
   defaultMotion: dividerMotion,
 
-  codegen: { tag: 'hr' },
+  codegen: {
+    tag: 'hr',
+    client: {
+      kind: 'never',
+      reason:
+        'An hr, or a labelled div with a rule either side of a span — markup at both prop sets.',
+    },
+  },
 
   a11y: {
     notes: [

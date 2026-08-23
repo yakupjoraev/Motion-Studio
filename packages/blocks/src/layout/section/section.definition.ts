@@ -96,7 +96,13 @@ export const sectionDefinition = defineBlock({
 
   defaultMotion: sectionMotion,
 
-  codegen: { tag: 'section' },
+  codegen: {
+    tag: 'section',
+    client: {
+      kind: 'never',
+      reason: 'A padded band: the padding, the width cap and the tint are classes on one element.',
+    },
+  },
 
   a11y: {
     notes: [

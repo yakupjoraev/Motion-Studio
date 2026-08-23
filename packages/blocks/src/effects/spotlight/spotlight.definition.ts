@@ -45,7 +45,15 @@ export const spotlightDefinition = defineBlock({
 
   capabilities: effectCapabilities('moderate'),
   defaultMotion: {},
-  codegen: { tag: 'div' },
+  codegen: {
+    tag: 'div',
+    client: {
+      kind: 'whenAnyProp',
+      props: ['followPointer'],
+      reason:
+        'Following the cursor writes two custom properties from the pointer bus. Pinned, the light is one gradient in CSS.',
+    },
+  },
   a11y: {
     notes: [
       ...EFFECT_A11Y_NOTES,

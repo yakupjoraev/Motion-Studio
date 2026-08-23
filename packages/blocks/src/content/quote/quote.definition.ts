@@ -96,7 +96,13 @@ export const quoteDefinition = defineBlock({
 
   defaultMotion: quoteMotion,
 
-  codegen: { tag: 'figure' },
+  codegen: {
+    tag: 'figure',
+    client: {
+      kind: 'never',
+      reason: 'A figure holding a blockquote and a caption.',
+    },
+  },
 
   a11y: {
     notes: [

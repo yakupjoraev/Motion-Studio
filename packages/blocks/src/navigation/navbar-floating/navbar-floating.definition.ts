@@ -85,6 +85,10 @@ export const navbarFloatingDefinition = defineBlock({
     tag: 'nav',
     dependencies: { '@radix-ui/react-dialog': '^1.1.23' },
     imports: [{ from: '@radix-ui/react-dialog', default: 'Dialog' }],
+    client: {
+      kind: 'always',
+      reason: 'The pill shrinks from a scroll listener, and the drawer below md is a Radix Dialog.',
+    },
     notes: [
       `The scrolled state is a data-scrolled attribute written past ${FLOATING_SHRINK_PX} px of scroll. Keep the scroll listener passive and off React state, or the bar costs a render per frame.`,
     ],

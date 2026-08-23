@@ -42,7 +42,13 @@ export const beamsDefinition = defineBlock({
 
   capabilities: effectCapabilities('moderate'),
   defaultMotion: {},
-  codegen: { tag: 'div' },
+  codegen: {
+    tag: 'div',
+    client: {
+      kind: 'never',
+      reason: 'One gradient per beam and one keyframe animation over them.',
+    },
+  },
   a11y: {
     notes: [
       ...EFFECT_A11Y_NOTES,

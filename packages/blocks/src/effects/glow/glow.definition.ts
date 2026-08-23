@@ -58,6 +58,12 @@ export const glowDefinition = defineBlock({
 
   capabilities: effectCapabilities('cheap'),
   defaultMotion: {},
-  codegen: { tag: 'div' },
+  codegen: {
+    tag: 'div',
+    client: {
+      kind: 'never',
+      reason: 'One radial gradient, sized and tinted from custom properties.',
+    },
+  },
   a11y: { notes: EFFECT_A11Y_NOTES },
 })

@@ -96,7 +96,13 @@ export const gridDefinition = defineBlock({
 
   defaultMotion: gridMotion,
 
-  codegen: { tag: 'div' },
+  codegen: {
+    tag: 'div',
+    client: {
+      kind: 'never',
+      reason: 'Column counts and gaps are classes at every breakpoint — no state, no handler.',
+    },
+  },
 
   a11y: {
     notes: [

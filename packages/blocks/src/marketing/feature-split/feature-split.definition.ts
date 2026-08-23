@@ -116,7 +116,13 @@ export const featureSplitDefinition = defineBlock({
 
   defaultMotion: featureSplitMotion,
 
-  codegen: { tag: 'section' },
+  codegen: {
+    tag: 'section',
+    client: {
+      kind: 'never',
+      reason: 'Copy beside media, with the order of the two a class.',
+    },
+  },
 
   a11y: {
     notes: [

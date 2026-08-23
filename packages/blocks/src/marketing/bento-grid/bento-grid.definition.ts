@@ -105,7 +105,13 @@ export const bentoGridDefinition = defineBlock({
 
   defaultMotion: bentoGridMotion,
 
-  codegen: { tag: 'section' },
+  codegen: {
+    tag: 'section',
+    client: {
+      kind: 'never',
+      reason: 'Tiles spanning a grid: every cell is markup and every span is a class.',
+    },
+  },
 
   a11y: {
     notes: [

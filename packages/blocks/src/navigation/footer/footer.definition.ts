@@ -166,7 +166,14 @@ export const footerDefinition = defineBlock({
 
   defaultMotion: footerMotion,
 
-  codegen: { tag: 'footer' },
+  codegen: {
+    tag: 'footer',
+    client: {
+      kind: 'never',
+      reason:
+        'Columns of links, a legal row, and a slot the signup form arrives in as its own block.',
+    },
+  },
 
   a11y: {
     role: 'contentinfo',

@@ -106,7 +106,13 @@ export const textDefinition = defineBlock({
 
   defaultMotion: textMotion,
 
-  codegen: { tag: 'p' },
+  codegen: {
+    tag: 'p',
+    client: {
+      kind: 'never',
+      reason: 'A paragraph. The measure, the leading and the balance are classes.',
+    },
+  },
 
   a11y: {
     notes: [

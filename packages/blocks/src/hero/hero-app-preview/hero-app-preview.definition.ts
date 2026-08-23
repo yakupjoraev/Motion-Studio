@@ -99,7 +99,13 @@ export const heroAppPreviewDefinition = defineBlock({
 
   defaultMotion: heroAppPreviewMotion,
 
-  codegen: { tag: 'section' },
+  codegen: {
+    tag: 'section',
+    client: {
+      kind: 'never',
+      reason: 'A tilted plate and a glow behind it: one transform and one gradient.',
+    },
+  },
 
   a11y: {
     notes: [

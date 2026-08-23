@@ -126,7 +126,14 @@ export const logoCloudDefinition = defineBlock({
 
   defaultMotion: logoCloudMotion,
 
-  codegen: { tag: 'section' },
+  codegen: {
+    tag: 'section',
+    client: {
+      kind: 'never',
+      reason:
+        'Grid mode is a wrapping row and marquee mode is the marquee preset’s animation — CSS either way.',
+    },
+  },
 
   a11y: {
     notes: [

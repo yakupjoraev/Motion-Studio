@@ -53,6 +53,12 @@ export const auroraBackgroundDefinition = defineBlock({
 
   capabilities: effectCapabilities('moderate'),
   defaultMotion: {},
-  codegen: { tag: 'div' },
+  codegen: {
+    tag: 'div',
+    client: {
+      kind: 'never',
+      reason: 'Two drifting gradients on a decorative layer, both in CSS.',
+    },
+  },
   a11y: { notes: EFFECT_A11Y_NOTES },
 })

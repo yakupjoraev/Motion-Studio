@@ -40,6 +40,12 @@ export const dotGridDefinition = defineBlock({
 
   capabilities: effectCapabilities('cheap'),
   defaultMotion: {},
-  codegen: { tag: 'div' },
+  codegen: {
+    tag: 'div',
+    client: {
+      kind: 'never',
+      reason: 'A repeating radial gradient with a mask over it.',
+    },
+  },
   a11y: { notes: [...EFFECT_A11Y_NOTES, 'Static: nothing here moves at any setting.'] },
 })

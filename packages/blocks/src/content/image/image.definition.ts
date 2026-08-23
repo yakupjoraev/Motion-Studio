@@ -133,6 +133,11 @@ export const imageDefinition = defineBlock({
     tag: 'img',
     imports: [{ from: 'next/image', default: 'Image' }],
     passthroughProps: ['src', 'alt', 'width', 'height', 'sizes'],
+    client: {
+      kind: 'never',
+      reason:
+        'An image element with its box reserved; lazy loading is an attribute the browser reads.',
+    },
   },
 
   a11y: {

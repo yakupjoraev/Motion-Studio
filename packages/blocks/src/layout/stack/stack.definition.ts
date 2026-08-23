@@ -84,7 +84,13 @@ export const stackDefinition = defineBlock({
 
   defaultMotion: stackMotion,
 
-  codegen: { tag: 'div' },
+  codegen: {
+    tag: 'div',
+    client: {
+      kind: 'never',
+      reason: 'Direction, gap and alignment are classes; nothing in it runs in the browser.',
+    },
+  },
 
   a11y: {
     notes: [

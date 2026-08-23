@@ -73,7 +73,13 @@ export const heroAuroraDefinition = defineBlock({
 
   defaultMotion: heroAuroraMotion,
 
-  codegen: { tag: 'section' },
+  codegen: {
+    tag: 'section',
+    client: {
+      kind: 'never',
+      reason: 'The aurora is a CSS animation on a decorative layer, so the section is markup.',
+    },
+  },
 
   a11y: {
     notes: [

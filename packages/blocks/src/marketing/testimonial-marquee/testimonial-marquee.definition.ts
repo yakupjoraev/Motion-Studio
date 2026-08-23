@@ -127,7 +127,14 @@ export const testimonialMarqueeDefinition = defineBlock({
 
   defaultMotion: testimonialMarqueeMotion,
 
-  codegen: { tag: 'section' },
+  codegen: {
+    tag: 'section',
+    client: {
+      kind: 'never',
+      reason:
+        'The rows scroll on the marquee preset’s animation and pause on hover from a CSS selector.',
+    },
+  },
 
   a11y: {
     notes: [

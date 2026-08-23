@@ -116,7 +116,13 @@ export const statDefinition = defineBlock({
 
   defaultMotion: statMotion,
 
-  codegen: { tag: 'div' },
+  codegen: {
+    tag: 'div',
+    client: {
+      kind: 'never',
+      reason: 'A figure with a number, a label and a direction arrow — no counter, no observer.',
+    },
+  },
 
   a11y: {
     notes: [

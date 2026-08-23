@@ -99,7 +99,13 @@ export const featureGridDefinition = defineBlock({
 
   defaultMotion: featureGridMotion,
 
-  codegen: { tag: 'section' },
+  codegen: {
+    tag: 'section',
+    client: {
+      kind: 'never',
+      reason: 'A grid of cards, each an icon, a heading and a sentence.',
+    },
+  },
 
   a11y: {
     notes: [

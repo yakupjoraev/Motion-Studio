@@ -39,7 +39,13 @@ export const grainOverlayDefinition = defineBlock({
 
   capabilities: effectCapabilities('moderate'),
   defaultMotion: {},
-  codegen: { tag: 'div' },
+  codegen: {
+    tag: 'div',
+    client: {
+      kind: 'never',
+      reason: 'An SVG turbulence texture as a background image.',
+    },
+  },
   a11y: {
     notes: [
       ...EFFECT_A11Y_NOTES,

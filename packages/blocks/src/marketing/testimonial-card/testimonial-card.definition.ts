@@ -117,7 +117,13 @@ export const testimonialCardDefinition = defineBlock({
 
   defaultMotion: testimonialCardMotion,
 
-  codegen: { tag: 'figure' },
+  codegen: {
+    tag: 'figure',
+    client: {
+      kind: 'never',
+      reason: 'A figure with a quote, an avatar and a name under it.',
+    },
+  },
 
   a11y: {
     notes: [

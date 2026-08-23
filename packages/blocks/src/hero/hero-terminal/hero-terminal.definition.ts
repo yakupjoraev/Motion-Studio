@@ -92,7 +92,14 @@ export const heroTerminalDefinition = defineBlock({
 
   defaultMotion: heroTerminalMotion,
 
-  codegen: { tag: 'section' },
+  codegen: {
+    tag: 'section',
+    client: {
+      kind: 'never',
+      reason:
+        'The transcript is text on a surface, and the typing is a motion preset the export resolves rather than this component.',
+    },
+  },
 
   a11y: {
     notes: [

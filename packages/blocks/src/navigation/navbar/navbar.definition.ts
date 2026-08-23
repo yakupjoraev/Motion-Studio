@@ -109,6 +109,11 @@ export const navbarDefinition = defineBlock({
       { from: '@radix-ui/react-navigation-menu', default: 'NavigationMenu' },
       { from: '@radix-ui/react-dialog', default: 'Dialog' },
     ],
+    client: {
+      kind: 'always',
+      reason:
+        'The bar writes its scrolled state from a scroll listener, and the drawer below md is a Radix Dialog.',
+    },
     notes: [
       'The skip link points at #main. Give the page a <main id="main"> or turn the skip link off — a skip link that lands nowhere is worse than none.',
     ],

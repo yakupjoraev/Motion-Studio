@@ -139,6 +139,11 @@ export const ctaSplitDefinition = defineBlock({
   codegen: {
     tag: 'section',
     // ADR-185, the same note `newsletter-form` carries: this block embeds the same field.
+    client: {
+      kind: 'always',
+      reason:
+        'The form half validates the address and holds the submitted state. Only side: form needs it, and a prop-set test cannot ask which value a prop has — ADR-243.',
+    },
     notes: [
       'The submit handler is a no-op. Replace `onSubmit` with your own call — this block deliberately ships no backend.',
     ],

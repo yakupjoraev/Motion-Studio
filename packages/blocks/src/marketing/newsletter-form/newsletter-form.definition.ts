@@ -81,6 +81,11 @@ export const newsletterFormDefinition = defineBlock({
     tag: 'div',
     // ADR-185. The one thing this markup cannot say for itself, emitted above the component so the reader
     // of the generated file is told rather than finding out in production.
+    client: {
+      kind: 'always',
+      reason:
+        'The field holds the address, its validity and the submitted state, and the submit handler is the reader’s to supply.',
+    },
     notes: [
       'The submit handler is a no-op. Replace `onSubmit` with your own call — this block deliberately ships no backend.',
     ],

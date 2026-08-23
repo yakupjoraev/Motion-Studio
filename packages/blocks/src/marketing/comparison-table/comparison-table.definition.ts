@@ -117,7 +117,13 @@ export const comparisonTableDefinition = defineBlock({
 
   defaultMotion: comparisonTableMotion,
 
-  codegen: { tag: 'section' },
+  codegen: {
+    tag: 'section',
+    client: {
+      kind: 'never',
+      reason: 'A table whose two sticky axes are position sticky and a z-index ladder in CSS.',
+    },
+  },
 
   a11y: {
     notes: [

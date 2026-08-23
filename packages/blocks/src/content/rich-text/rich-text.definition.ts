@@ -73,7 +73,14 @@ export const richTextDefinition = defineBlock({
 
   defaultMotion: richTextMotion,
 
-  codegen: { tag: 'div' },
+  codegen: {
+    tag: 'div',
+    client: {
+      kind: 'never',
+      reason:
+        'Each block it renders is an element chosen by prop, and none of them carries behaviour.',
+    },
+  },
 
   a11y: {
     notes: [

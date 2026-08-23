@@ -41,6 +41,12 @@ export const gridLinesDefinition = defineBlock({
 
   capabilities: effectCapabilities('cheap'),
   defaultMotion: {},
-  codegen: { tag: 'div' },
+  codegen: {
+    tag: 'div',
+    client: {
+      kind: 'never',
+      reason: 'Two repeating linear gradients and a mask.',
+    },
+  },
   a11y: { notes: [...EFFECT_A11Y_NOTES, 'Static: nothing here moves at any setting.'] },
 })

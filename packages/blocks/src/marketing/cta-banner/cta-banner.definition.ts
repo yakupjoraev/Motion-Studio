@@ -124,7 +124,13 @@ export const ctaBannerDefinition = defineBlock({
 
   defaultMotion: ctaBannerMotion,
 
-  codegen: { tag: 'section' },
+  codegen: {
+    tag: 'section',
+    client: {
+      kind: 'never',
+      reason: 'A band, a heading and up to two anchors.',
+    },
+  },
 
   a11y: {
     notes: [

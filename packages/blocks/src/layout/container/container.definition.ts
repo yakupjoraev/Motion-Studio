@@ -124,7 +124,13 @@ export const containerDefinition = defineBlock({
 
   defaultMotion: containerMotion,
 
-  codegen: { tag: 'div' },
+  codegen: {
+    tag: 'div',
+    client: {
+      kind: 'never',
+      reason: 'A max-width box with padding — classes on a div, no state and no handler.',
+    },
+  },
 
   a11y: {
     notes: [

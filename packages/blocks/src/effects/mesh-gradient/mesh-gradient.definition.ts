@@ -49,7 +49,13 @@ export const meshGradientDefinition = defineBlock({
 
   capabilities: effectCapabilities('heavy'),
   defaultMotion: {},
-  codegen: { tag: 'div' },
+  codegen: {
+    tag: 'div',
+    client: {
+      kind: 'never',
+      reason: 'Four gradients drifting on their own keyframes.',
+    },
+  },
   a11y: {
     notes: [
       ...EFFECT_A11Y_NOTES,

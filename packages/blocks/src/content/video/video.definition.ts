@@ -107,7 +107,16 @@ export const videoDefinition = defineBlock({
 
   defaultMotion: videoMotion,
 
-  codegen: { tag: 'video', passthroughProps: ['src', 'poster', 'controls', 'loop', 'muted'] },
+  codegen: {
+    tag: 'video',
+    passthroughProps: ['src', 'poster', 'controls', 'loop', 'muted'],
+    client: {
+      kind: 'whenAnyProp',
+      props: ['autoplay'],
+      reason:
+        'Autoplay is started from an effect that checks reduced motion first. A video the reader drives with controls is an element with attributes.',
+    },
+  },
 
   a11y: {
     notes: [
