@@ -10027,3 +10027,92 @@ it — one code path, which is what the prompt's requirement is actually about.
   deliberately left to this prompt rather than inventing a second one beside the fixtures.
 - `codegen` keeps exporting parts rather than a façade, so the playground and the docs site can print
   one file without constructing a whole export.
+
+## ADR-247 — `codegen` exports its option set on its own subpath
+
+**Date** 2026-08-23 · **Prompt** 45 · **Status** Accepted
+
+### Question
+The dialog's controls have to render in the frame the button is pressed, and two of the things they
+render are `codegen`'s: `DEFAULT_EXPORT_OPTIONS`, the set they open on, and `resolveOptions`, which
+decides whether a control reads as a choice or as fixed. Both live in `codegen`, which
+PERFORMANCE.md § Mandatory dynamic imports forbids in the studio's first load. Where do they come from?
+
+### Criterion
+Already specified twice over, and the two specifications collide: the option set is a single source of
+truth (ADR-237 and ADR-242 put the resolution in exactly one place so the dialog cannot disagree with
+the printer), and the 45 kB pipeline may not be in the studio chunk. Any answer that restates the
+defaults or the resolution rule in `apps/web` breaks the first; any answer that imports the barrel
+breaks the second.
+
+### Decision
+`packages/codegen` gains `"./options": "./src/options.types.ts"`, beside the precedent
+`packages/blocks` set with `./registry`. The file is the whole option vocabulary and has **no imports
+at all** — two constants, one six-line resolver and the types — so the subpath is about a kilobyte and
+carries none of the pipeline. The measured chunk split confirms it: `codegen` is its own 25 kB gzip
+chunk and is absent from the studio's page chunk.
+
+The alternative shape — the dialog rendering its controls from whatever the last generation returned —
+was rejected on behaviour: for the first frames after opening, and for the frames after a target
+change, every control would read as a free choice while the export had already fixed two of them.
+
+### Consequences
+- Accepted: a third entry point into `codegen`, and a consumer could import the option set without the
+  pipeline. That is what the subpath is for.
+- The dialog's panel is correct in its first frame rather than after a round trip, and there is still
+  exactly one place that knows `html` means `singleFile`.
+
+## ADR-248 — The export dialog's own code stays in the studio chunk, and it costs 23 kB
+
+**Date** 2026-08-23 · **Prompt** 45 · **Status** Accepted
+
+### Question
+The command palette and the shortcut sheet are `next/dynamic` chunks, mounted only while open
+(ADR-152). The export dialog is the same kind of surface. Is it a chunk too?
+
+### Criterion
+Prompt 45 states the requirement it is judged on: "The dialog appears in the frame the button is
+pressed. **Never** await generation before showing the dialog." A chunk fetched on the click is a
+fetch the first open has to await, so the two cannot both be true. What is negotiable is the price,
+which is measured rather than assumed.
+
+### Measurement
+Two production builds of `apps/web`, identical but for the `<ExportDialog />` mount, First Load JS for
+`/studio`:
+
+| Build | First Load JS |
+| --- | --- |
+| Without the dialog | 322 kB |
+| With the dialog | **345 kB** |
+
+23 kB. It is not the dialog's own JSX, which is six small files: it is the inspector's control layer.
+`ControlRow`, `SwitchField`, `SegmentedField` and `SelectField` were reachable only from the
+inspector, which is code-split, so they lived in the inspector's chunk. A statically imported dialog
+that uses the same controls makes them shared, and shared means first load.
+
+The four modules the budget actually names are all where they should be, measured from the chunk
+contents of the same build:
+
+| Module | Chunk | Size (gzip) |
+| --- | --- | --- |
+| `@motion-studio/codegen` | `750.*.js` | 25 kB |
+| `jszip` | `3482.*.js` | 27 kB |
+| Prettier standalone + 5 plugins | `0a040314.*`, `bf1ccba6.*`, `d2fe6198.*`, `4683.*`, `4756.*` | 79 kB for the largest |
+| `@motion-studio/blocks/highlight` | `787.*.js`, `9710.*.js` | 2 kB |
+
+None of the four appears in `app/studio/page-*.js`.
+
+### Decision
+Static import, mounted always, opened on `ui.exportDialogOpen`. The price is 23 kB on a budget ADR-179
+already recorded the owner accepting an overrun on, and it buys the one property the surface is judged
+on.
+
+### Consequences
+- Named for the owner: `/studio` first load is now 345 kB against a 250 kB budget. 322 of that predates
+  this prompt (ADR-179); 23 is this dialog and 2 is the fifty-three client-boundary sentences the
+  registry now carries.
+- Accepted: the controls move rather than duplicate. A user who opens the inspector downloads the same
+  bytes either way; what changed is that they arrive in the first load instead of on first open.
+- The escape hatch, if the budget is ever enforced: `next/dynamic` plus a preload after hydration —
+  the shortcut map's arrangement. It trades the guarantee for a probability, which is why it was not
+  taken here.
