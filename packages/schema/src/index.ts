@@ -127,6 +127,31 @@ export {
   type UnknownProps,
 } from './registry/registry.types'
 export {
+  children,
+  classList,
+  defineMarkup,
+  el,
+  expr,
+  literal,
+  ref,
+  refText,
+  slot,
+  txt,
+  type ElementInput,
+} from './registry/markup'
+export type {
+  MarkupChild,
+  MarkupElement,
+  MarkupExpression,
+  MarkupInput,
+  MarkupMotion,
+  MarkupProducer,
+  MarkupRegistry,
+  MarkupSlot,
+  MarkupText,
+  MarkupValue,
+} from './registry/markup.types'
+export {
   DuplicateBlockError,
   REGISTRY_CODES,
   UnknownBlockError,

@@ -21,6 +21,13 @@ const HERE = dirname(fileURLToPath(import.meta.url))
 const ALLOWED_PACKAGES = new Set(['@motion-studio/schema', '@motion-studio/utils', 'zod'])
 
 /**
+ * The markup half — ADR-249. Its producers call the blocks' own `cva`, so it reaches one package the
+ * metadata half does not, and that is the whole difference: it must still be React-free, because the
+ * export runs it under `node`.
+ */
+const ALLOWED_FOR_MARKUP = new Set([...ALLOWED_PACKAGES, 'class-variance-authority'])
+
+/**
  * The clause between `import`/`export` and `from` is a name list — it never contains a quote. Saying so
  * is what stops the scan walking *through* a string literal to reach a later `from`, which is how
  * `code-block`'s default sample — a snippet of TypeScript containing `from '@/components/…'` — used to
@@ -29,6 +36,14 @@ const ALLOWED_PACKAGES = new Set(['@motion-studio/schema', '@motion-studio/utils
  * A test that constrained what a block's example text may say would be testing the wrong thing.
  */
 const IMPORT_RE = /(?:^|\n)\s*(?:import|export)(?:[^'"`;]|\n)*?from\s*['"]([^'"]+)['"]/g
+
+/**
+ * `import type` is erased, so the module it names is never loaded and cannot break the split. What
+ * this test is about is the **runtime** graph, so a type-only statement is skipped rather than
+ * followed — otherwise a producer importing its block's props type reads as importing React, which is
+ * exactly what `import type` exists to prevent.
+ */
+const TYPE_ONLY = /^\s*(?:import|export)\s+type\s/
 
 const resolveModule = (from: string, specifier: string): string | null => {
   const base = resolve(dirname(from), specifier)
@@ -63,6 +78,10 @@ function walk(entry: string): { files: string[]; packages: string[] } {
     const source = readFileSync(file, 'utf8')
 
     for (const match of source.matchAll(IMPORT_RE)) {
+      if (TYPE_ONLY.test(match[0])) {
+        continue
+      }
+
       const specifier = match[1] ?? ''
 
       if (!specifier.startsWith('.')) {
@@ -100,6 +119,29 @@ describe('blockRegistry under node', () => {
 
     for (const name of graph.packages) {
       expect(ALLOWED_PACKAGES, name).toContain(name)
+    }
+  })
+
+  it('keeps the markup producers out of its own graph', () => {
+    const graph = walk(resolve(HERE, '..', 'registry.ts'))
+
+    expect(graph.packages).not.toContain('class-variance-authority')
+  })
+})
+
+describe('markupRegistry under node', () => {
+  it('pulls no component into its module graph', () => {
+    const graph = walk(resolve(HERE, '..', 'markup-registry.ts'))
+
+    expect(graph.files.filter((file) => file.endsWith('.tsx'))).toEqual([])
+    expect(graph.packages.filter((name) => name.startsWith('react'))).toEqual([])
+  })
+
+  it('reaches only the packages a producer is allowed to', () => {
+    const graph = walk(resolve(HERE, '..', 'markup-registry.ts'))
+
+    for (const name of graph.packages) {
+      expect(ALLOWED_FOR_MARKUP, name).toContain(name)
     }
   })
 })

@@ -1,3 +1,4 @@
+import { markupRegistry } from '@motion-studio/blocks/markup'
 import { blockRegistry } from '@motion-studio/blocks/registry'
 import {
   type CodegenIR,
@@ -98,6 +99,7 @@ export function buildExportIR(request: ExportRequest): CodegenIR | null {
     document: request.document,
     registry: blockRegistry,
     presets: presetRegistry,
+    markup: markupRegistry,
     options,
     ...(request.selection === undefined ? {} : { selection: request.selection }),
   })

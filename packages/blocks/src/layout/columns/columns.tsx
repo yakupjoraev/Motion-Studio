@@ -1,6 +1,6 @@
 import { Children, type ReactNode } from 'react'
 
-import { columnsStyles } from './columns.styles'
+import { COLUMN_CELL, columnsStyles } from './columns.styles'
 import type { ColumnsProps } from './columns.types'
 
 /**
@@ -22,8 +22,8 @@ export function Columns({
 
   return (
     <div className={columnsStyles({ split, gap, align, reverseOnMobile, hidden })}>
-      <div className="min-w-0">{left ?? firstChild}</div>
-      <div className="min-w-0">{right ?? secondChild}</div>
+      <div className={COLUMN_CELL}>{left ?? firstChild}</div>
+      <div className={COLUMN_CELL}>{right ?? secondChild}</div>
     </div>
   )
 }

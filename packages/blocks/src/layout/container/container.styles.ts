@@ -1,5 +1,7 @@
 import { cva } from 'class-variance-authority'
 
+import type { ContainerProps } from './container.types'
+
 /** Literal classes only — ADR-106. `gap` and `padding` share the space scale the section uses. */
 export const containerStyles = cva('w-full', {
   variants: {
@@ -61,3 +63,34 @@ export const containerStyles = cva('w-full', {
     { direction: 'row', divide: true, class: 'divide-x' },
   ],
 })
+
+/**
+ * The mode branch, in the one place both the component and the export read — ADR-249. Grid mode has
+ * no direction and no wrap: the column count decides the flow, and passing both would emit two class
+ * families that contradict each other.
+ */
+export const containerClassName = (props: ContainerProps): string =>
+  props.mode === 'grid'
+    ? containerStyles({
+        mode: props.mode,
+        columns: props.columns as 1 | 2 | 3 | 4,
+        gap: props.gap,
+        padding: props.padding,
+        align: props.align,
+        justify: props.justify,
+        maxWidth: props.maxWidth,
+        divide: props.divide,
+        hidden: props.hidden,
+      })
+    : containerStyles({
+        mode: props.mode,
+        direction: props.direction,
+        gap: props.gap,
+        padding: props.padding,
+        align: props.align,
+        justify: props.justify,
+        wrap: props.wrap,
+        maxWidth: props.maxWidth,
+        divide: props.divide,
+        hidden: props.hidden,
+      })

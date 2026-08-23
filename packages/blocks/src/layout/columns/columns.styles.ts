@@ -32,3 +32,6 @@ export const columnsStyles = cva('flex flex-col md:grid', {
     hidden: { true: 'hidden', false: 'flex' },
   },
 })
+
+/** One cell of the pair. Named because the export writes the same two cells the component does. */
+export const COLUMN_CELL = 'min-w-0'

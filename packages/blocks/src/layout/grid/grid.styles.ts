@@ -1,5 +1,7 @@
 import { cva } from 'class-variance-authority'
 
+import type { GridProps } from './grid.types'
+
 /**
  * Both grid modes are literal classes, which is what makes them export as themselves — ADR-116.
  * Explicit mode is `grid-cols-N`; auto-fit is the arbitrary value most builders do not offer, and
@@ -41,3 +43,21 @@ export const gridStyles = cva('grid', {
     hidden: { true: 'hidden', false: 'grid' },
   },
 })
+
+/** The track branch, read by the component and by the export alike — ADR-249. */
+export const gridClassName = (props: GridProps): string =>
+  props.mode === 'auto-fit'
+    ? gridStyles({
+        minItemWidth: props.minItemWidth,
+        gapX: props.gapX,
+        gapY: props.gapY,
+        dense: props.dense,
+        hidden: props.hidden,
+      })
+    : gridStyles({
+        columns: props.columns as 1 | 2 | 3 | 4 | 5 | 6,
+        gapX: props.gapX,
+        gapY: props.gapY,
+        dense: props.dense,
+        hidden: props.hidden,
+      })

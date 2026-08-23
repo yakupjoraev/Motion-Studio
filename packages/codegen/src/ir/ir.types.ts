@@ -2,9 +2,14 @@ import type { MotionPresetRegistry } from '@motion-studio/motion'
 import type {
   BlockRegistry,
   ImportSpec,
+  MarkupElement,
+  MarkupExpression,
+  MarkupMotion,
+  MarkupRegistry,
+  MarkupText,
+  MarkupValue,
   MotionDocument,
   NodeId,
-  StructuredDataType,
 } from '@motion-studio/schema'
 
 import type { ExportOptions } from '../options.types'
@@ -33,50 +38,29 @@ export interface IRTheme {
   readonly config: MotionDocument['theme']
 }
 
-export type IRValue =
-  | { readonly kind: 'literal'; readonly value: string | number | boolean }
-  | { readonly kind: 'expression'; readonly code: string }
-  | { readonly kind: 'reference'; readonly name: string }
-
-export interface IRText {
-  readonly kind: 'text'
-  readonly value: string
-}
-
-export interface IRExpression {
-  readonly kind: 'expression'
-  readonly code: string
-}
-
-export type IRChild = IRElement | IRText | IRExpression
+/**
+ * The markup vocabulary is `packages/schema`'s — ADR-249. It is aliased rather than restated because
+ * `packages/blocks` writes these nodes and the printers read them, and neither package may import the
+ * other. The `IR*` names stay: they are what the printers were written against.
+ */
+export type IRValue = MarkupValue
+export type IRText = MarkupText
+export type IRExpression = MarkupExpression
 
 /**
- * A preset that reached this element, recorded rather than the animation it produced — ADR-239. The
- * React and Next printers never read it; the HTML target reads it and nothing else, because the CSS a
- * preset degrades to is a decision only that target makes.
+ * What a printer meets. Narrower than `MarkupChild` on purpose: a producer may write a `slot`, and
+ * `buildElement` resolves every one of them into the elements it built for that slot.
  */
-export interface IRElementMotion {
-  readonly presetId: string
-  readonly engine: 'css' | 'motion' | 'gsap'
-  readonly channel: string
-}
+export type IRChild = IRElement | IRText | IRExpression
 
-export interface IRElement {
-  readonly kind: 'element'
-  /** `'div'`, `'section'`, `'motion.div'`, or the name of another component in this export. */
-  readonly tag: string
-  /** Already variant-ordered and conflict-merged — ADR-224. A printer joins them and stops. */
-  readonly classNames: readonly string[]
-  readonly attributes: Readonly<Record<string, IRValue>>
+export type IRElementMotion = MarkupMotion
+
+/**
+ * One element, as the printers read it: `classNames` variant-ordered and conflict-merged (ADR-224),
+ * every slot resolved, every child an element, a text or an expression.
+ */
+export interface IRElement extends Omit<MarkupElement, 'children'> {
   readonly children: readonly IRChild[]
-  readonly cssVars?: Readonly<Record<string, string>>
-  /** The descriptor's `notes`, emitted as comments above the element. */
-  readonly notes?: readonly string[]
-  /** The presets pass 4 applied here, for a target that cannot print them — ADR-239. */
-  readonly motion?: readonly IRElementMotion[]
-  /** Already gated on the descriptor's `enabledBy` prop — ADR-194. */
-  readonly structuredData?: StructuredDataType
-  readonly key?: string
 }
 
 export interface IRProp {
@@ -173,6 +157,12 @@ export interface BuildIRInput {
   readonly document: MotionDocument
   readonly registry: BlockRegistry
   readonly presets: MotionPresetRegistry
+  /**
+   * The markup producers — ADR-249, injected for ADR-226's reason: they live in `packages/blocks`,
+   * which `codegen` may not import. A block with no producer exports as its root element alone,
+   * which is what every block did before the producers existed.
+   */
+  readonly markup?: MarkupRegistry
   readonly options?: Partial<ExportOptions>
   /** Required by `scope: 'selection'`, ignored otherwise. */
   readonly selection?: NodeId

@@ -76,6 +76,7 @@ export {
   toValue,
   withReducedMotion,
 } from './ir/passes/reduced-motion'
+export { applyMarkup, type MarkupApplication } from './ir/apply-markup'
 export { collectImports } from './ir/passes/collect-imports'
 export {
   createAssetCollector,

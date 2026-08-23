@@ -1,7 +1,7 @@
 import {
-  type BlockDefinition,
   type BlockRegistry,
   type ImportSpec,
+  type MarkupRegistry,
   type MotionDocument,
   type Node,
   type NodeId,
@@ -12,6 +12,7 @@ import { getPath } from '@motion-studio/utils'
 import type { ExportOptions } from '../options.types'
 import { type IRWarning, warning } from '../warnings'
 
+import { applyMarkup } from './apply-markup'
 import { clientReason } from './client-boundary'
 import type { ComponentName, IRChild, IRElement, IRRule, IRTheme, IRValue } from './ir.types'
 import type { MotionCollector } from './passes/collect-motion'
@@ -19,6 +20,7 @@ import type { Boundaries, ComponentUnit } from './passes/detect-components'
 import { generateClasses } from './passes/generate-classes'
 import type { AssetCollector } from './passes/handle-assets'
 import { mergeAndSort } from './tailwind/merge-classes'
+import { reportUnreachedProps } from './unreached-props'
 
 /**
  * The element tree, built once per component boundary. Not one of the six passes — it is what calls
@@ -34,6 +36,8 @@ export interface ElementContext {
   readonly nameOf: ReadonlyMap<NodeId, ComponentName>
   readonly motion: MotionCollector
   readonly assets: AssetCollector
+  /** ADR-249. Empty until a block has a producer, and then it is that block's whole interior. */
+  readonly markup: MarkupRegistry
 }
 
 /** What one component's body contributes, gathered as the tree is walked rather than re-derived. */
@@ -139,37 +143,86 @@ export function buildElement(
   into.rules.push(...classes.rules)
   into.warnings.push(...classes.warnings)
 
-  reportUnreachedProps(node, definition, classes.consumed, passthrough, into.warnings)
+  const producer = context.markup[String(definition.id)]
+
+  if (producer === undefined) {
+    reportUnreachedProps(node, definition, classes.consumed, passthrough, into.warnings)
+  }
 
   /** Sorted as one list: a CSS-engine preset's class is on the element too, not appended after it. */
   const classNames = mergeAndSort([...classes.classNames, ...motion.classNames])
-
-  into.classes.push(...classNames)
-
-  const tag = `${motion.tagPrefix ?? ''}${media.tag ?? definition.codegen.tag}`
   const structured = definition.codegen.structuredData
   const emitStructured = structured !== undefined && getPath(props, structured.enabledBy) === true
-
-  return {
-    kind: 'element',
-    tag,
-    classNames,
-    attributes,
-    children: childrenOf(node, unit, context, into),
-    ...(Object.keys(classes.cssVars).length > 0 ? { cssVars: classes.cssVars } : {}),
+  const extras = {
     ...(motion.presets.length === 0 ? {} : { motion: motion.presets }),
     ...(definition.codegen.notes === undefined ? {} : { notes: definition.codegen.notes }),
     ...(emitStructured && structured !== undefined ? { structuredData: structured.type } : {}),
   }
+
+  /*
+   * The producer owns the interior and the root's own classes; everything the export decides for the
+   * element — the motion wrapper's tag prefix, the asset collector's attributes, the preset list, the
+   * notes and the structured data — is still applied here, because none of it is a block's to know.
+   */
+  if (producer !== undefined) {
+    const applied = applyMarkup(producer({ props }), slotsOf(node, unit, context, into))
+
+    into.classes.push(...applied.classes, ...classNames)
+
+    return {
+      ...applied.root,
+      tag: `${motion.tagPrefix ?? ''}${media.tag ?? applied.root.tag}`,
+      classNames: mergeAndSort([...applied.root.classNames, ...classNames]),
+      attributes: { ...applied.root.attributes, ...attributes },
+      ...extras,
+    }
+  }
+
+  into.classes.push(...classNames)
+
+  return {
+    kind: 'element',
+    tag: `${motion.tagPrefix ?? ''}${media.tag ?? definition.codegen.tag}`,
+    classNames,
+    attributes,
+    children: childrenOf(node, unit, context, into),
+    ...(Object.keys(classes.cssVars).length > 0 ? { cssVars: classes.cssVars } : {}),
+    ...extras,
+  }
 }
 
-function childrenOf(
+/** The document's children, grouped by the slot each one was dropped into. */
+function slotsOf(
   node: Node,
   unit: ComponentUnit,
   context: ElementContext,
   into: Accumulator,
-): readonly IRChild[] {
-  const children: IRChild[] = []
+): ReadonlyMap<string, readonly IRChild[]> {
+  const slots = new Map<string, IRChild[]>()
+
+  for (const entry of childEntries(node, unit, context, into)) {
+    const list = slots.get(entry.slot) ?? []
+
+    list.push(entry.element)
+    slots.set(entry.slot, list)
+  }
+
+  return slots
+}
+
+/** A child and the slot it sits in, so a producer can place each slot where its markup says. */
+interface ChildEntry {
+  readonly slot: string
+  readonly element: IRChild
+}
+
+function childEntries(
+  node: Node,
+  unit: ComponentUnit,
+  context: ElementContext,
+  into: Accumulator,
+): readonly ChildEntry[] {
+  const entries: ChildEntry[] = []
 
   for (const childId of node.children) {
     const child = context.document.nodes[childId]
@@ -179,26 +232,25 @@ function childrenOf(
     }
 
     const boundary = context.boundaries.referenceOf.get(childId)
-
-    if (boundary !== undefined && boundary !== unit) {
-      const reference = referenceElement(childId, boundary, context)
-
-      if (reference !== undefined) {
-        children.push(reference)
-      }
-
-      continue
-    }
-
-    const element = buildElement(childId, unit, context, into)
+    const element =
+      boundary !== undefined && boundary !== unit
+        ? referenceElement(childId, boundary, context)
+        : buildElement(childId, unit, context, into)
 
     if (element !== undefined) {
-      children.push(element)
+      entries.push({ slot: child.slot, element })
     }
   }
 
-  return children
+  return entries
 }
+
+const childrenOf = (
+  node: Node,
+  unit: ComponentUnit,
+  context: ElementContext,
+  into: Accumulator,
+): readonly IRChild[] => childEntries(node, unit, context, into).map((entry) => entry.element)
 
 /**
  * `<PlanCard plan={…} />`: the boundary's name, and the props this instance differs in.
@@ -235,39 +287,4 @@ function referenceElement(
     attributes,
     children: [],
   }
-}
-
-/**
- * ADR-229. A prop that reached neither a class rule nor an attribute is named in the export report,
- * because the alternative is a page that looks finished and ships a blank section.
- */
-function reportUnreachedProps(
-  node: Node,
-  definition: BlockDefinition,
-  consumed: readonly string[],
-  passthrough: readonly string[],
-  warnings: IRWarning[],
-): void {
-  const routed = new Set([
-    ...consumed,
-    ...passthrough,
-    ...(definition.codegen.structuredData === undefined
-      ? []
-      : [definition.codegen.structuredData.enabledBy]),
-  ])
-  const missing = Object.keys(node.props)
-    .filter((name) => !routed.has(name))
-    .sort()
-
-  if (missing.length === 0) {
-    return
-  }
-
-  warnings.push(
-    warning(
-      'unsupported',
-      `${definition.id} has no export route for ${missing.join(', ')}; its descriptor covers the root element only.`,
-      node.id,
-    ),
-  )
 }

@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { markupRegistry } from '@motion-studio/blocks/markup'
 import { blockRegistry } from '@motion-studio/blocks/registry'
 import {
   type ExportTarget,
@@ -97,7 +98,13 @@ async function once(target: ExportTarget): Promise<Sample> {
     }
   }
 
-  const ir = buildIR({ document, registry: blockRegistry, presets: presetRegistry, options })
+  const ir = buildIR({
+    document,
+    registry: blockRegistry,
+    presets: presetRegistry,
+    markup: markupRegistry,
+    options,
+  })
   const built = performance.now()
   const result = (PRINTERS[target] ?? printReact)({ ir, options, theme })
   const printed = performance.now()

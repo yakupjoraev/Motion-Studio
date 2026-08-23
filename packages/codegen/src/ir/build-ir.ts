@@ -169,7 +169,8 @@ export function buildIR(input: BuildIRInput): CodegenIR {
   const nameOf = nameUnits(boundaries.units, document, registry)
   const motion = createMotionCollector({ presets, theme, options })
   const assets = createAssetCollector(document, options)
-  const context = { document, registry, options, theme, boundaries, nameOf, motion, assets }
+  const markup = input.markup ?? {}
+  const context = { document, registry, options, theme, boundaries, nameOf, motion, assets, markup }
 
   const drafts = boundaries.units.flatMap((unit) => {
     const into: Accumulator = accumulator()
