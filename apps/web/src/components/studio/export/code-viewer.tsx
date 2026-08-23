@@ -96,8 +96,17 @@ export function CodeViewer({ file, ready, onCopy, maxLines = MAX_LINES }: CodeVi
   }, [copied])
 
   const lines = useMemo<readonly (readonly Token[])[]>(() => {
-    if (file === null || highlighter === null) {
+    if (file === null) {
       return []
+    }
+
+    // Before the tokeniser's chunk lands the file is shown as plain text rather than as nothing: the
+    // code is the point of the panel, and the colours are how it reads, not whether it is there.
+    if (highlighter === null) {
+      return file.contents
+        .split('\n')
+        .slice(0, maxLines)
+        .map((line) => [{ kind: 'plain', text: line }] as readonly Token[])
     }
 
     const language = languageOf(file.path)

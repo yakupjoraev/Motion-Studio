@@ -174,6 +174,14 @@ export const GLOBAL_SHORTCUTS: readonly StudioShortcut[] = [
         return
       }
 
+      // Radix closes the export dialog itself; this stops the same press also clearing the canvas
+      // selection behind it, which is a surprise nobody asked Escape for.
+      if (state.ui.exportDialogOpen) {
+        state.setExportDialogOpen(false)
+
+        return
+      }
+
       if (state.selection.isolationId !== null) {
         state.exitNode()
 

@@ -26,13 +26,13 @@ describe('CodeViewer', () => {
     expect(region).toHaveAttribute('tabindex', '0')
   })
 
-  it('numbers the lines', async () => {
+  it('numbers the lines, and shows the file before the tokeniser has landed', async () => {
     render(<CodeViewer file={file} onCopy={vi.fn()} ready />)
 
-    await screen.findByRole('region', { name: /app\/page\.tsx/ })
-
+    // Synchronous: the panel renders the file as plain text first, so the code is never missing.
     expect(screen.getByText('1')).toBeInTheDocument()
     expect(screen.getByText('2')).toBeInTheDocument()
+    expect(screen.getByText(/const answer = 42/)).toBeInTheDocument()
   })
 
   it('highlights with the tokeniser once its chunk has landed', async () => {
