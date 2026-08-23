@@ -116,8 +116,16 @@ function attributesOf(element: IRElement, context: MarkupContext): readonly stri
   ]
 }
 
+/** `backgroundSize` is a React spelling; CSS has one name for it, and a custom property has none. */
+const cssProperty = (property: string): string =>
+  property.startsWith('--')
+    ? property
+    : property.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)
+
 const styleAttribute = (cssVars: Readonly<Record<string, string>>): string => {
-  const entries = Object.entries(cssVars).map(([property, value]) => `${property}: ${value}`)
+  const entries = Object.entries(cssVars).map(
+    ([property, value]) => `${cssProperty(property)}: ${value}`,
+  )
 
   return `style="${escapeAttribute(entries.join('; '))}"`
 }

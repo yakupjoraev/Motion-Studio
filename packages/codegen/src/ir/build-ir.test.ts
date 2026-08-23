@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 import type { ExportOptions } from '../options.types'
 import { fixtureRegistry } from '../test/blocks'
 import { document, eightFadeUp, fullLanding, singleHero } from '../test/documents'
+import { fixtureMarkup } from '../test/markup'
 import { fixturePresets } from '../test/presets'
 import { CODEGEN_ERROR_CODES, MOTION_MODULE_PATH, buildIR } from './build-ir'
 import type { CodegenIR, IRChild, IRElement } from './ir.types'
@@ -16,6 +17,7 @@ const build = (
   buildIR({
     document: source,
     registry: fixtureRegistry(),
+    markup: fixtureMarkup,
     presets: fixturePresets(),
     options,
     ...(selection === undefined ? {} : { selection: nodeId(selection) }),
@@ -120,11 +122,9 @@ describe('the IR of the full-landing fixture', () => {
   })
 
   it('collects the stylesheet passes 3 and 4 produced', () => {
+    // The tint is inline on the element that carries it: a declaration only reaches the stylesheet
+    // when a breakpoint overrides it and a media query has to hold the override — ADR-252.
     expect(ir.stylesheet.rules).toEqual([
-      {
-        selector: '.v-section-tint',
-        declarations: ['background-color: var(--ms-section-tint)'],
-      },
       {
         selector: '.ms-shine',
         declarations: ['animation: none', 'transition: none'],
@@ -139,15 +139,11 @@ describe('the IR of the full-landing fixture', () => {
     expect(ir.assets[0]?.alt).toBe('The studio canvas')
   })
 
-  it('names the props that reach neither a class nor an attribute — ADR-229', () => {
-    const unreached = ir.warnings.filter((entry) => entry.code === 'unsupported')
-
-    expect(unreached.map((entry) => entry.nodeId)).toEqual([
-      'node_faq',
-      'node_nav',
-      'node_hero',
-      'node_plan1',
-    ])
+  it('has nothing left to report as unreached — ADR-229 closes with ADR-252', () => {
+    // The warning existed because a descriptor named the props that reached a class and left the rest
+    // unaccounted for. A producer reads whichever props it likes and prints them, so there is no
+    // second list to be short against, and the count on this fixture is the report.
+    expect(ir.warnings.filter((entry) => entry.code === 'unsupported')).toEqual([])
   })
 })
 

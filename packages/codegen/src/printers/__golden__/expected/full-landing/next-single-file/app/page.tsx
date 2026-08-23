@@ -36,13 +36,22 @@ export default function Page() {
         transition={shouldReduceMotion ? { duration: 0 } : fadeUpTransition}
         className="grid grid-cols-3 gap-8"
       >
-        <article className="rounded-xl border bg-surface-1 p-6" />
-        <article className="rounded-xl border bg-surface-1 p-6" />
-        <article className="rounded-xl border bg-surface-1 p-6" />
+        <article className="rounded-xl border bg-surface-1 p-6">
+          <h3 className="font-semibold">Starter</h3>
+          <p className="tabular-nums">0</p>
+        </article>
+        <article className="rounded-xl border bg-surface-1 p-6">
+          <h3 className="font-semibold">Pro</h3>
+          <p className="tabular-nums">29</p>
+        </article>
+        <article className="rounded-xl border bg-surface-1 p-6">
+          <h3 className="font-semibold">Team</h3>
+          <p className="tabular-nums">79</p>
+        </article>
       </motion.div>
       <section
-        className="relative isolate overflow-hidden px-6 py-16 v-section-tint lg:px-8 lg:py-24"
-        style={{ '--ms-section-tint': 'oklch(22% 0.02 285)' } as CSSProperties}
+        className="relative isolate overflow-hidden px-6 py-16 lg:px-8 lg:py-24"
+        style={{ backgroundColor: 'oklch(22% 0.02 285)' } as CSSProperties}
       >
         <Image
           src="https://cdn.example.com/studio.png"

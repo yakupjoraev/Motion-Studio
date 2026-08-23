@@ -38,6 +38,14 @@ vi.mock('./run-export', () => ({
   printedTheme: vi.fn(),
 }))
 
+/*
+ * Every test in this file re-imports the hook and, with it, the editor store's whole module graph —
+ * `vi.resetModules()` below is what makes the caches testable, and it is also what makes the import
+ * cost real per test. Under `pnpm test`, where fourteen packages compile at once, that import has been
+ * measured past the 5 s default and failed a test that asserts nothing about time.
+ */
+vi.setConfig({ testTimeout: 20_000 })
+
 /**
  * The module holds the two caches, so every test gets its own copy of it. Resetting the store's
  * document is not enough: `replaceDocument` sets `version` back to zero, which is exactly the key a

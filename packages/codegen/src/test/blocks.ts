@@ -11,8 +11,8 @@ import { z } from 'zod'
  * import `blocks` (ARCHITECTURE.md § Dependency graph, rule 3), so the fixtures declare the same
  * descriptor fields the catalogue declares and nothing else.
  *
- * Every entry declares `client` and `classes`, which is what a catalogue entry is supposed to do —
- * ADR-225 and ADR-227 record what the real one is still missing.
+ * Every entry declares `client`, and every one has a producer in `markup.ts` — which is what a
+ * catalogue entry is: the metadata here, the markup beside it (ADR-249, ADR-252).
  */
 const base = {
   description: 'A fixture block',
@@ -54,13 +54,6 @@ const define = (id: string, overrides: Partial<BlockDefinition>): BlockDefinitio
 
 const NEVER = { kind: 'never' as const, reason: 'Static markup, no state and no handler.' }
 
-const SPACE = {
-  none: [],
-  sm: ['px-4', 'py-8'],
-  md: ['px-6', 'py-16'],
-  lg: ['px-8', 'py-24'],
-}
-
 const HOOK_PROPS = [
   'aria-controls',
   'aria-expanded',
@@ -82,7 +75,6 @@ const HOOKED = (tag: string): BlockDefinition['codegen'] => ({
   tag,
   client: { kind: 'always', reason: 'The disclosure, the menu and the toggle all keep state.' },
   passthroughProps: HOOK_PROPS,
-  classes: [{ kind: 'static', classes: ['flex', 'flex-col', 'gap-2'] }],
 })
 
 export const FIXTURE_BLOCKS: readonly BlockDefinition[] = [
@@ -91,7 +83,6 @@ export const FIXTURE_BLOCKS: readonly BlockDefinition[] = [
     codegen: {
       tag: 'main',
       client: NEVER,
-      classes: [{ kind: 'static', classes: ['flex', 'flex-col'] }],
     },
   }),
   define('section', {
@@ -99,17 +90,6 @@ export const FIXTURE_BLOCKS: readonly BlockDefinition[] = [
     codegen: {
       tag: 'section',
       client: NEVER,
-      classes: [
-        { kind: 'static', classes: ['relative', 'isolate', 'overflow-hidden'] },
-        { kind: 'variant', prop: 'padding', cases: SPACE },
-        { kind: 'variant', prop: 'hidden', cases: { true: ['hidden'], false: ['block'] } },
-        {
-          kind: 'custom',
-          prop: 'tint',
-          property: 'background-color',
-          variable: '--ms-section-tint',
-        },
-      ],
     },
   }),
   define('hero', {
@@ -118,10 +98,6 @@ export const FIXTURE_BLOCKS: readonly BlockDefinition[] = [
     codegen: {
       tag: 'section',
       client: NEVER,
-      classes: [
-        { kind: 'static', classes: ['mx-auto', 'max-w-3xl', 'text-center'] },
-        { kind: 'variant', prop: 'padding', cases: SPACE },
-      ],
     },
   }),
   define('nav', {
@@ -130,7 +106,6 @@ export const FIXTURE_BLOCKS: readonly BlockDefinition[] = [
     codegen: {
       tag: 'nav',
       client: { kind: 'always', reason: 'The menu opens and closes.' },
-      classes: [{ kind: 'static', classes: ['flex', 'items-center', 'gap-4'] }],
     },
   }),
   define('pricing-grid', {
@@ -139,15 +114,6 @@ export const FIXTURE_BLOCKS: readonly BlockDefinition[] = [
     codegen: {
       tag: 'div',
       client: NEVER,
-      classes: [
-        { kind: 'static', classes: ['grid'] },
-        {
-          kind: 'variant',
-          prop: 'columns',
-          cases: { 1: ['grid-cols-1'], 2: ['grid-cols-2'], 3: ['grid-cols-3'] },
-        },
-        { kind: 'variant', prop: 'gap', cases: { sm: ['gap-2'], md: ['gap-4'], lg: ['gap-8'] } },
-      ],
     },
   }),
   /** A case that carries its own breakpoints, the way the real `grid` block's `cva` map does. */
@@ -156,17 +122,6 @@ export const FIXTURE_BLOCKS: readonly BlockDefinition[] = [
     codegen: {
       tag: 'div',
       client: NEVER,
-      classes: [
-        { kind: 'static', classes: ['grid'] },
-        {
-          kind: 'variant',
-          prop: 'columns',
-          cases: {
-            1: ['grid-cols-1'],
-            3: ['grid-cols-1', 'sm:grid-cols-2', 'lg:grid-cols-3'],
-          },
-        },
-      ],
     },
   }),
   /** A variant that overrides its own static base, so the merge has a conflict to resolve. */
@@ -175,10 +130,6 @@ export const FIXTURE_BLOCKS: readonly BlockDefinition[] = [
     codegen: {
       tag: 'div',
       client: NEVER,
-      classes: [
-        { kind: 'static', classes: ['rounded-lg', 'p-4'] },
-        { kind: 'variant', prop: 'density', cases: { compact: ['p-2'], loose: ['p-8'] } },
-      ],
     },
   }),
   define('plan-card', {
@@ -187,7 +138,6 @@ export const FIXTURE_BLOCKS: readonly BlockDefinition[] = [
     codegen: {
       tag: 'article',
       client: NEVER,
-      classes: [{ kind: 'static', classes: ['rounded-xl', 'border', 'bg-surface-1', 'p-6'] }],
     },
   }),
   define('grid', {
@@ -195,17 +145,6 @@ export const FIXTURE_BLOCKS: readonly BlockDefinition[] = [
     codegen: {
       tag: 'div',
       client: NEVER,
-      classes: [
-        { kind: 'static', classes: ['grid'] },
-        {
-          kind: 'variant',
-          prop: 'mode',
-          cases: {
-            explicit: ['grid-cols-3'],
-            'auto-fit': ['grid-cols-[repeat(auto-fit,minmax(16rem,1fr))]'],
-          },
-        },
-      ],
     },
   }),
   define('image', {
@@ -223,7 +162,6 @@ export const FIXTURE_BLOCKS: readonly BlockDefinition[] = [
       client: NEVER,
       imports: [{ from: 'next/image', default: 'Image' }],
       passthroughProps: ['src', 'alt', 'width', 'height', 'sizes'],
-      classes: [{ kind: 'static', classes: ['w-full', 'rounded-lg', 'object-cover'] }],
     },
   }),
   define('faq', {
@@ -233,7 +171,6 @@ export const FIXTURE_BLOCKS: readonly BlockDefinition[] = [
       tag: 'section',
       client: NEVER,
       structuredData: { type: 'FAQPage', enabledBy: 'schemaOrg' },
-      classes: [{ kind: 'static', classes: ['flex', 'flex-col', 'gap-2'] }],
       notes: ['Answers are plain text; wire them to your CMS.'],
     },
   }),
@@ -243,7 +180,6 @@ export const FIXTURE_BLOCKS: readonly BlockDefinition[] = [
     codegen: {
       tag: 'button',
       client: { kind: 'always', reason: 'It writes the colour mode.' },
-      classes: [{ kind: 'static', classes: ['inline-flex', 'size-8', 'rounded-md'] }],
       runtimeModule: {
         path: 'lib/color-mode.ts',
         named: ['setColorMode'],
@@ -261,7 +197,6 @@ export const FIXTURE_BLOCKS: readonly BlockDefinition[] = [
         props: ['arrows', 'dots', 'autoplay'],
         reason: 'The arrows, dots and autoplay all need state.',
       },
-      classes: [{ kind: 'static', classes: ['flex', 'snap-x', 'overflow-x-auto'] }],
     },
   }),
   define('chart', {
@@ -271,7 +206,6 @@ export const FIXTURE_BLOCKS: readonly BlockDefinition[] = [
       tag: 'figure',
       client: NEVER,
       dependencies: { 'recharts-fixture': '^1.0.0' },
-      classes: [{ kind: 'static', classes: ['relative', 'h-32'] }],
     },
   }),
   /**

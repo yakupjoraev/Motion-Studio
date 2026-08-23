@@ -159,10 +159,10 @@ export interface BuildIRInput {
   readonly presets: MotionPresetRegistry
   /**
    * The markup producers — ADR-249, injected for ADR-226's reason: they live in `packages/blocks`,
-   * which `codegen` may not import. A block with no producer exports as its root element alone,
-   * which is what every block did before the producers existed.
+   * which `codegen` may not import. Required since ADR-252: a block with no producer has no interior,
+   * and the export says so rather than printing an empty tag.
    */
-  readonly markup?: MarkupRegistry
+  readonly markup: MarkupRegistry
   readonly options?: Partial<ExportOptions>
   /** Required by `scope: 'selection'`, ignored otherwise. */
   readonly selection?: NodeId

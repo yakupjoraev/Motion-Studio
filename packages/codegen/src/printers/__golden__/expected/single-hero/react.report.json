@@ -4,11 +4,6 @@
   },
   "warnings": [
     {
-      "code": "unsupported",
-      "message": "hero has no export route for title; its descriptor covers the root element only.",
-      "nodeId": "node_hero"
-    },
-    {
       "code": "dependency",
       "message": "Adds motion@^11.18.2."
     }

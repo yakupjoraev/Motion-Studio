@@ -5,6 +5,7 @@ import type { IRElement } from '../../ir/ir.types'
 import { resolveOptions } from '../../options.types'
 import { fixtureRegistry } from '../../test/blocks'
 import { GOLDEN_DOCUMENTS } from '../../test/documents'
+import { fixtureMarkup } from '../../test/markup'
 import { fixturePresets } from '../../test/presets'
 import { fixtureTheme } from '../../test/theme'
 import type { PrintedTheme } from '../printer.types'
@@ -27,6 +28,7 @@ function html(name = 'full-landing', overrides = {}, theme: PrintedTheme | null 
   const ir = buildIR({
     document: make(),
     registry: fixtureRegistry(),
+    markup: fixtureMarkup,
     presets: fixturePresets(),
     options,
   })
@@ -55,6 +57,7 @@ function irOf() {
         throw new Error('no fixture')
       })(),
     registry: fixtureRegistry(),
+    markup: fixtureMarkup,
     presets: fixturePresets(),
     options: resolveOptions({ target: 'html' }),
   })

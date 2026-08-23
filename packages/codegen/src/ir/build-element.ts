@@ -1,5 +1,6 @@
 import {
   type BlockRegistry,
+  CASCADE_ORDER,
   type ImportSpec,
   type MarkupRegistry,
   type MotionDocument,
@@ -7,7 +8,7 @@ import {
   type NodeId,
   resolveResponsiveProps,
 } from '@motion-studio/schema'
-import { getPath } from '@motion-studio/utils'
+import { MotionStudioError, getPath } from '@motion-studio/utils'
 
 import type { ExportOptions } from '../options.types'
 import { type IRWarning, warning } from '../warnings'
@@ -17,10 +18,10 @@ import { clientReason } from './client-boundary'
 import type { ComponentName, IRChild, IRElement, IRRule, IRTheme, IRValue } from './ir.types'
 import type { MotionCollector } from './passes/collect-motion'
 import type { Boundaries, ComponentUnit } from './passes/detect-components'
-import { generateClasses } from './passes/generate-classes'
 import type { AssetCollector } from './passes/handle-assets'
+import { liftProps } from './passes/lift-props'
+import { applyResponsive } from './passes/responsive-classes'
 import { mergeAndSort } from './tailwind/merge-classes'
-import { reportUnreachedProps } from './unreached-props'
 
 /**
  * The element tree, built once per component boundary. Not one of the six passes — it is what calls
@@ -111,7 +112,6 @@ export function buildElement(
     into.clientReasons.push(reason)
   }
 
-  const classes = generateClasses(node, definition, context.theme)
   const motion = context.motion.collect(node)
   const media = context.assets.collect(node, definition)
   const passthrough = definition.codegen.passthroughProps ?? []
@@ -140,17 +140,18 @@ export function buildElement(
   into.imports.push(...media.imports, ...motion.imports)
   into.hooks.push(...motion.hooks)
   into.hoisted.push(...motion.hoisted)
-  into.rules.push(...classes.rules)
-  into.warnings.push(...classes.warnings)
-
   const producer = context.markup[String(definition.id)]
 
   if (producer === undefined) {
-    reportUnreachedProps(node, definition, classes.consumed, passthrough, into.warnings)
+    // ADR-252: a block without a producer has no interior, which is not a page anybody asked for.
+    throw new MotionStudioError(
+      `Block '${definition.id}' declares no markup producer, so it cannot be exported.`,
+      'MARKUP_PRODUCER_MISSING',
+    )
   }
 
   /** Sorted as one list: a CSS-engine preset's class is on the element too, not appended after it. */
-  const classNames = mergeAndSort([...classes.classNames, ...motion.classNames])
+  const classNames = mergeAndSort(motion.classNames)
   const structured = definition.codegen.structuredData
   const emitStructured = structured !== undefined && getPath(props, structured.enabledBy) === true
   const extras = {
@@ -164,32 +165,38 @@ export function buildElement(
    * element — the motion wrapper's tag prefix, the asset collector's attributes, the preset list, the
    * notes and the structured data — is still applied here, because none of it is a block's to know.
    */
-  if (producer !== undefined) {
-    const applied = applyMarkup(
-      producer({ props, id: String(node.id) }),
-      slotsOf(node, unit, context, into),
-    )
+  const filled = slotsOf(node, unit, context, into)
+  const counts = Object.fromEntries([...filled].map(([name, list]) => [name, list.length]))
+  const produce = (at: Record<string, unknown>) =>
+    applyMarkup(producer({ props: at, id: String(node.id), slots: counts }), filled)
 
-    into.classes.push(...applied.classes, ...classNames)
+  const applied = produce(props)
 
-    return {
-      ...applied.root,
-      tag: `${motion.tagPrefix ?? ''}${media.tag ?? applied.root.tag}`,
-      classNames: mergeAndSort([...applied.root.classNames, ...classNames]),
-      attributes: { ...applied.root.attributes, ...attributes },
-      ...extras,
-    }
-  }
+  /*
+   * The producer is a pure function of its props, so a breakpoint's overrides are answered by running
+   * it again with them — ADR-252. `applyResponsive` compares the trees and carries the difference as
+   * prefixed classes, or as a rule when it is an inline declaration.
+   */
+  const layers = CASCADE_ORDER.filter(
+    (breakpoint) => breakpoint !== 'base' && node.responsive[breakpoint] !== undefined,
+  ).map((breakpoint) => ({
+    breakpoint,
+    root: produce(resolveResponsiveProps<Record<string, unknown>>(node, breakpoint)).root,
+  }))
 
-  into.classes.push(...classNames)
+  /* A shared component's body says `{plan}` where this node said "Starter" — ADR-252. */
+  const body = liftProps(applied.root, props, unit.propNames)
+  const responsive = applyResponsive(body, layers, node.id)
+
+  into.rules.push(...responsive.rules)
+  into.warnings.push(...responsive.warnings)
+  into.classes.push(...applied.classes, ...classNames, ...responsive.root.classNames)
 
   return {
-    kind: 'element',
-    tag: `${motion.tagPrefix ?? ''}${media.tag ?? definition.codegen.tag}`,
-    classNames,
-    attributes,
-    children: childrenOf(node, unit, context, into),
-    ...(Object.keys(classes.cssVars).length > 0 ? { cssVars: classes.cssVars } : {}),
+    ...responsive.root,
+    tag: `${motion.tagPrefix ?? ''}${media.tag ?? responsive.root.tag}`,
+    classNames: mergeAndSort([...responsive.root.classNames, ...classNames]),
+    attributes: { ...responsive.root.attributes, ...attributes },
     ...extras,
   }
 }
@@ -247,13 +254,6 @@ function childEntries(
 
   return entries
 }
-
-const childrenOf = (
-  node: Node,
-  unit: ComponentUnit,
-  context: ElementContext,
-  into: Accumulator,
-): readonly IRChild[] => childEntries(node, unit, context, into).map((entry) => entry.element)
 
 /**
  * `<PlanCard plan={…} />`: the boundary's name, and the props this instance differs in.

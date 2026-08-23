@@ -61,7 +61,6 @@ export {
   toComponentName,
   uniqueName,
 } from './ir/passes/name-components'
-export { generateClasses, type ClassResult } from './ir/passes/generate-classes'
 export {
   DEPENDENCIES,
   EMPTY_MOTION,

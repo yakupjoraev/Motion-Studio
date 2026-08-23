@@ -12,6 +12,7 @@ import { printTokens } from '../printers/tokens/print-tokens'
 
 import { fixtureRegistry } from './blocks'
 import type { GoldenCase } from './golden-cases'
+import { fixtureMarkup } from './markup'
 import { fixturePresets } from './presets'
 import { fixtureTheme } from './theme'
 
@@ -48,6 +49,7 @@ export async function printCase(
   const ir = buildIR({
     document,
     registry: fixtureRegistry(),
+    markup: fixtureMarkup,
     presets: fixturePresets(),
     options,
     ...(goldenCase.selection === undefined ? {} : { selection: nodeId(goldenCase.selection) }),

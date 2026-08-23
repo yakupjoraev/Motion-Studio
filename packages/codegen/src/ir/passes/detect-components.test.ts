@@ -4,12 +4,14 @@ import { describe, expect, it } from 'vitest'
 import { resolveOptions } from '../../options.types'
 import { fixtureRegistry } from '../../test/blocks'
 import { document, fullLanding, nestedContainers, repeatedSubtrees } from '../../test/documents'
+import { fixtureMarkup } from '../../test/markup'
 import { type Boundaries, detectComponents } from './detect-components'
 
 const detect = (source: MotionDocument, overrides = {}): Boundaries =>
   detectComponents({
     document: source,
     registry: fixtureRegistry(),
+    markup: fixtureMarkup,
     options: resolveOptions(overrides),
     root: source.rootId,
   })

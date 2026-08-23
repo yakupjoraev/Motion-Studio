@@ -9,6 +9,8 @@ import {
   walk,
 } from '@motion-studio/schema'
 
+import type { MarkupRegistry } from '@motion-studio/schema'
+
 import type { ExportOptions } from '../../options.types'
 import { clientReason } from '../client-boundary'
 
@@ -58,6 +60,8 @@ export const SECTION_CATEGORIES: readonly BlockCategory[] = ['hero', 'marketing'
 export interface DetectInput {
   readonly document: MotionDocument
   readonly registry: BlockRegistry
+  /** Rule 3 compares what the blocks *produce*, so it needs the producers — ADR-252. */
+  readonly markup: MarkupRegistry
   readonly options: ExportOptions
   readonly root: NodeId
 }
@@ -78,14 +82,14 @@ function printable(document: MotionDocument, root: NodeId): readonly Node[] {
 }
 
 export function detectComponents(input: DetectInput): Boundaries {
-  const { document, registry, options, root } = input
+  const { document, registry, markup, options, root } = input
   const nodes = printable(document, root)
   const units: ComponentUnit[] = [{ kind: 'entry', source: root, instances: [root], propNames: [] }]
 
   if (!options.singleFile) {
     units.push(...sections({ document, registry, nodes, root }))
     units.push(...clientLeaves({ document, registry, nodes, root, taken: units }))
-    units.push(...extractRepeats({ document, registry, options, nodes, taken: units }))
+    units.push(...extractRepeats({ document, registry, markup, options, nodes, taken: units }))
   }
 
   const unitOf = new Map(units.map((unit) => [unit.source, unit]))

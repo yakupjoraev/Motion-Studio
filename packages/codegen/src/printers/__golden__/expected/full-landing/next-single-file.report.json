@@ -7,36 +7,6 @@
   },
   "warnings": [
     {
-      "code": "unsupported",
-      "message": "nav has no export route for links; its descriptor covers the root element only.",
-      "nodeId": "node_nav"
-    },
-    {
-      "code": "unsupported",
-      "message": "hero has no export route for title; its descriptor covers the root element only.",
-      "nodeId": "node_hero"
-    },
-    {
-      "code": "unsupported",
-      "message": "plan-card has no export route for plan, price; its descriptor covers the root element only.",
-      "nodeId": "node_plan1"
-    },
-    {
-      "code": "unsupported",
-      "message": "plan-card has no export route for plan, price; its descriptor covers the root element only.",
-      "nodeId": "node_plan2"
-    },
-    {
-      "code": "unsupported",
-      "message": "plan-card has no export route for plan, price; its descriptor covers the root element only.",
-      "nodeId": "node_plan3"
-    },
-    {
-      "code": "unsupported",
-      "message": "faq has no export route for items; its descriptor covers the root element only.",
-      "nodeId": "node_faq"
-    },
-    {
       "code": "dependency",
       "message": "Adds motion@^11.18.2."
     }

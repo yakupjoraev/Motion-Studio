@@ -33,6 +33,8 @@ import {
   toCssVariables,
 } from '@motion-studio/theme'
 
+import { startFormatWorker } from './format-worker-client'
+
 /**
  * The export pipeline, run from the studio — ADR-246. There is no `exportDocument` in `codegen`
  * because a document and an option set are not enough to run it: the block registry, the preset
@@ -162,10 +164,19 @@ export interface Formatting {
 
 /**
  * Prettier once, then a formatter that takes one file. The dialog formats file by file so each one
- * appears as it lands rather than all twenty at the end — on the sixty-node fixture the whole step is
- * 46 ms of the 48 (ADR-244), and it is the only part of the pipeline a user can watch happen.
+ * appears as it lands rather than all twenty at the end — and on the sixty-node fixture this step is
+ * 99 ms of the 114 (ADR-253), which is why it is asked of a worker before it is asked of this thread.
+ *
+ * The main thread is the fallback rather than the plan: a browser with no worker, or a bundle that
+ * will not start one, formats here exactly as it did before.
  */
 export async function loadFormatting(): Promise<Formatting> {
+  const worker = await startFormatWorker()
+
+  if (worker !== null) {
+    return { format: worker.format, warnings: worker.warnings }
+  }
+
   const format = await loadPrettier()
 
   if (format === undefined) {

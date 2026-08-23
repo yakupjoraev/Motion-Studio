@@ -13,8 +13,8 @@ export default function Page() {
       <HeroSection />
       <Pricing />
       <section
-        className="relative isolate overflow-hidden px-6 py-16 v-section-tint lg:px-8 lg:py-24"
-        style={{ '--ms-section-tint': 'oklch(22% 0.02 285)' } as CSSProperties}
+        className="relative isolate overflow-hidden px-6 py-16 lg:px-8 lg:py-24"
+        style={{ backgroundColor: 'oklch(22% 0.02 285)' } as CSSProperties}
       >
         <Image
           src="https://cdn.example.com/studio.png"

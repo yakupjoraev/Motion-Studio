@@ -1,25 +1,4 @@
 {
   "dependencies": {},
-  "warnings": [
-    {
-      "code": "unsupported",
-      "message": "plan-card has no export route for plan, price; its descriptor covers the root element only.",
-      "nodeId": "node_a"
-    },
-    {
-      "code": "unsupported",
-      "message": "plan-card has no export route for plan, price; its descriptor covers the root element only.",
-      "nodeId": "node_b"
-    },
-    {
-      "code": "unsupported",
-      "message": "plan-card has no export route for plan, price; its descriptor covers the root element only.",
-      "nodeId": "node_c"
-    },
-    {
-      "code": "unsupported",
-      "message": "plan-card has no export route for plan, price; its descriptor covers the root element only.",
-      "nodeId": "node_d"
-    }
-  ]
+  "warnings": []
 }

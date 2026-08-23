@@ -1,8 +1,10 @@
 import {
   type BlockRegistry,
+  type MarkupRegistry,
   type MotionDocument,
   type Node,
   type NodeId,
+  resolveResponsiveProps,
   walk,
 } from '@motion-studio/schema'
 import { deepEqual } from '@motion-studio/utils'
@@ -11,6 +13,7 @@ import { hashValue } from '../../hash'
 import type { ExportOptions } from '../../options.types'
 
 import type { ComponentUnit } from './detect-components'
+import { carriesValue, markupShape } from './markup-shape'
 
 /**
  * Rule 3 of pass 1 — EXPORT_ENGINE.md § Component boundary detection: a subtree repeated twice or more
@@ -19,32 +22,32 @@ import type { ComponentUnit } from './detect-components'
  */
 
 /**
- * Props that change the printed body rather than travelling into it as a value — ADR-228. A prop a
- * class rule reads is baked into `className` at build time, so two nodes that disagree on one cannot
- * share a component body.
+ * What a node's own markup looks like with every value erased — ADR-252, the producer's answer to what
+ * ADR-228 called the shape of a subtree.
+ *
+ * A class rule used to declare which props reached the printed body. A producer reaches whichever it
+ * likes, so the question is answered by running it: two nodes have the same shape when the trees they
+ * produce differ only in the values a prop can travel into.
  */
-function structuralProps(registry: BlockRegistry, node: Node): readonly string[] {
-  const descriptor = registry.get(node.blockId)?.codegen
+function markupOf(
+  markup: MarkupRegistry,
+  node: Node,
+): ReturnType<MarkupRegistry[string]> | undefined {
+  const producer = markup[String(node.blockId)]
 
-  if (descriptor === undefined) {
-    return []
+  if (producer === undefined) {
+    return undefined
   }
 
-  const fromClasses = (descriptor.classes ?? []).flatMap((rule) =>
-    rule.kind === 'static' ? [] : [rule.prop],
-  )
-  const gate = descriptor.structuredData?.enabledBy
-
-  return gate === undefined ? fromClasses : [...fromClasses, gate]
+  return producer({
+    props: resolveResponsiveProps<Record<string, unknown>>(node, 'base'),
+    id: String(node.id),
+    slots: {},
+  })
 }
 
-const pick = (
-  props: Readonly<Record<string, unknown>>,
-  keys: readonly string[],
-): Record<string, unknown> => Object.fromEntries(keys.map((key) => [key, props[key]]))
-
 export function shapeHashes(
-  registry: BlockRegistry,
+  markup: MarkupRegistry,
   nodes: readonly Node[],
 ): ReadonlyMap<NodeId, string> {
   const hashes = new Map<NodeId, string>()
@@ -60,7 +63,11 @@ export function shapeHashes(
         responsive: node.responsive,
         motion: node.motion,
         effects: node.effects,
-        structural: pick(node.props, structuralProps(registry, node)),
+        structural: (() => {
+          const produced = markupOf(markup, node)
+
+          return produced === undefined ? String(node.id) : markupShape(produced)
+        })(),
         children: node.children
           .filter((child) => present.has(child))
           .map((child) => hashes.get(child) ?? ''),
@@ -87,6 +94,7 @@ function differingProps(nodes: readonly Node[]): readonly string[] {
 export interface RepeatInput {
   readonly document: MotionDocument
   readonly registry: BlockRegistry
+  readonly markup: MarkupRegistry
   readonly options: ExportOptions
   readonly nodes: readonly Node[]
   readonly taken: readonly ComponentUnit[]
@@ -101,8 +109,8 @@ const descendantIds = (document: MotionDocument, id: NodeId): readonly NodeId[] 
  * Over-extraction is the failure mode this ordering exists to avoid.
  */
 export function extractRepeats(input: RepeatInput): readonly ComponentUnit[] {
-  const { document, registry, options, nodes, taken } = input
-  const hashes = shapeHashes(registry, nodes)
+  const { document, markup, options, nodes, taken } = input
+  const hashes = shapeHashes(markup, nodes)
   const claimed = new Set<NodeId>(taken.flatMap((unit) => [...unit.instances]))
   const byId = new Map(nodes.map((node) => [node.id, node]))
   const groups = new Map<string, NodeId[]>()
@@ -147,6 +155,24 @@ export function extractRepeats(input: RepeatInput): readonly ComponentUnit[] {
 
     // With no props to lift, three cards that differ would print identically — so they do not extract.
     if (propNames.length > 0 && !options.extractProps) {
+      continue
+    }
+
+    /*
+     * A prop only becomes a component's prop if the producer put its value somewhere a reference can
+     * take its place. One it folded into a longer string, or read to pick a class, cannot be lifted —
+     * and a component printing one instance's text for all three is worse than three of them.
+     */
+    const liftable = instances.every((instance) => {
+      const produced = markupOf(markup, instance)
+
+      return (
+        produced !== undefined &&
+        propNames.every((name) => carriesValue(produced, instance.props[name]))
+      )
+    })
+
+    if (!liftable) {
       continue
     }
 

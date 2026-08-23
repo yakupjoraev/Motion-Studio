@@ -226,6 +226,14 @@
         text-align: center;
       }
 
+      .font-semibold {
+        font-weight: var(--ms-font-weight-semibold);
+      }
+
+      .tabular-nums {
+        font-variant-numeric: tabular-nums;
+      }
+
       .ms-reveal {
         opacity: 0;
         transform: translateY(1rem);
@@ -241,10 +249,6 @@
         transform: none;
         filter: none;
         clip-path: none;
-      }
-
-      .v-section-tint {
-        background-color: var(--ms-section-tint);
       }
 
       @media (min-width: 1024px) {
@@ -300,13 +304,22 @@
       <nav class="flex items-center gap-4"></nav>
       <section class="mx-auto ms-shine max-w-3xl px-8 py-24 text-center ms-reveal"></section>
       <div class="grid grid-cols-3 gap-8 ms-reveal">
-        <article class="rounded-xl border bg-surface-1 p-6"></article>
-        <article class="rounded-xl border bg-surface-1 p-6"></article>
-        <article class="rounded-xl border bg-surface-1 p-6"></article>
+        <article class="rounded-xl border bg-surface-1 p-6">
+          <h3 class="font-semibold">Starter</h3>
+          <p class="tabular-nums">0</p>
+        </article>
+        <article class="rounded-xl border bg-surface-1 p-6">
+          <h3 class="font-semibold">Pro</h3>
+          <p class="tabular-nums">29</p>
+        </article>
+        <article class="rounded-xl border bg-surface-1 p-6">
+          <h3 class="font-semibold">Team</h3>
+          <p class="tabular-nums">79</p>
+        </article>
       </div>
       <section
-        class="relative isolate overflow-hidden px-6 py-16 v-section-tint lg:px-8 lg:py-24"
-        style="--ms-section-tint: oklch(22% 0.02 285)"
+        class="relative isolate overflow-hidden px-6 py-16 lg:px-8 lg:py-24"
+        style="background-color: oklch(22% 0.02 285)"
       >
         <img
           src="https://cdn.example.com/studio.png"

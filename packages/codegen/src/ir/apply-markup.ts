@@ -48,7 +48,9 @@ const gateOpen = (node: MarkupElement, slots: ReadonlyMap<string, readonly IRChi
     return true
   }
 
-  const filled = (slots.get(node.slotGate.slot) ?? []).length > 0
+  const list = slots.get(node.slotGate.slot) ?? []
+  const filled =
+    node.slotGate.index === undefined ? list.length > 0 : list[node.slotGate.index] !== undefined
 
   return node.slotGate.when === 'filled' ? filled : !filled
 }
@@ -64,7 +66,10 @@ function childrenOf(
     if (node.kind === 'slot') {
       // An unfilled slot contributes nothing: a container with no children is a container with no
       // children, and the alternative is markup that says so out loud in somebody's page.
-      resolved.push(...(slots.get(node.name) ?? []))
+      const filled = slots.get(node.name) ?? []
+      const one = node.index === undefined ? undefined : filled[node.index]
+
+      resolved.push(...(node.index === undefined ? filled : one === undefined ? [] : [one]))
 
       continue
     }

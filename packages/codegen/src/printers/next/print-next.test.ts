@@ -5,6 +5,7 @@ import { buildIR } from '../../ir/build-ir'
 import { type ExportOptions, resolveOptions } from '../../options.types'
 import { fixtureRegistry } from '../../test/blocks'
 import { document, fullLanding, singleHero } from '../../test/documents'
+import { fixtureMarkup } from '../../test/markup'
 import { fixturePresets } from '../../test/presets'
 import { fixtureTheme } from '../../test/theme'
 
@@ -16,6 +17,7 @@ const print = (source: MotionDocument, overrides: Partial<ExportOptions> = {}) =
   const ir = buildIR({
     document: source,
     registry: fixtureRegistry(),
+    markup: fixtureMarkup,
     presets: fixturePresets(),
     options,
   })
@@ -131,6 +133,7 @@ describe('a broken entry', () => {
     const ir = buildIR({
       document: singleHero(),
       registry: fixtureRegistry(),
+      markup: fixtureMarkup,
       presets: fixturePresets(),
       options,
     })
@@ -182,6 +185,7 @@ describe('the report', () => {
     const ir = buildIR({
       document: singleHero(),
       registry: fixtureRegistry(),
+      markup: fixtureMarkup,
       presets: fixturePresets(),
       options,
     })

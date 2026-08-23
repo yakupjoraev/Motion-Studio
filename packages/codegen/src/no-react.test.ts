@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest'
 import { buildIR } from './ir/build-ir'
 import { fixtureRegistry } from './test/blocks'
 import { fullLanding } from './test/documents'
+import { fixtureMarkup } from './test/markup'
 import { fixturePresets } from './test/presets'
 
 /**
@@ -88,6 +89,7 @@ describe('buildIR under node', () => {
     const ir = buildIR({
       document: fullLanding(),
       registry: fixtureRegistry(),
+      markup: fixtureMarkup,
       presets: fixturePresets(),
     })
 

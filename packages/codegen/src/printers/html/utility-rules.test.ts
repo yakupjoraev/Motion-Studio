@@ -1,10 +1,53 @@
+import type { MarkupChild } from '@motion-studio/schema'
 import { LIGHT, RADIUS, SPACE } from '@motion-studio/tokens'
 import { describe, expect, it } from 'vitest'
 
 import { FIXTURE_BLOCKS } from '../../test/blocks'
+import { fixtureMarkup } from '../../test/markup'
 
 import { KEYWORDS } from './utility-keywords'
 import { declarationsFor } from './utility-rules'
+
+/**
+ * Every class a fixture's producer can put on an element, gathered by running it — the producers hold
+ * the mapping now, so the completeness gate reads them rather than a declaration (ADR-252).
+ *
+ * The props are the union of every variant the fixtures switch on, so one run reaches every branch a
+ * table has; a producer that ignores a prop simply produces its own classes twice.
+ */
+const VARIANTS: readonly Record<string, unknown>[] = [
+  { padding: 'sm', columns: 1, gap: 'sm', density: 'compact', mode: 'explicit', hidden: false },
+  { padding: 'md', columns: 2, gap: 'md', density: 'loose', mode: 'auto-fit', hidden: true },
+  { padding: 'lg', columns: 3, gap: 'lg' },
+]
+
+const walk = (node: MarkupChild, into: string[]): void => {
+  if (node.kind !== 'element') {
+    return
+  }
+
+  into.push(...node.classNames)
+
+  for (const child of node.children) {
+    walk(child, into)
+  }
+}
+
+function classesOf(id: string): readonly string[] {
+  const producer = fixtureMarkup[id]
+
+  if (producer === undefined) {
+    return []
+  }
+
+  const found: string[] = []
+
+  for (const props of VARIANTS) {
+    walk(producer({ props, id: 'fixture', slots: {} }), found)
+  }
+
+  return found
+}
 
 /**
  * ADR-238's claim, checked rather than asserted in prose: every declaration this table produces for a
@@ -80,15 +123,7 @@ describe('declarationsFor', () => {
    * with no rule is a block that paints nothing in the HTML export and says so only in a warning.
    */
   it('covers every class the fixture catalogue can produce', () => {
-    const classes = FIXTURE_BLOCKS.flatMap((block) =>
-      (block.codegen.classes ?? []).flatMap((rule) =>
-        rule.kind === 'static'
-          ? rule.classes
-          : rule.kind === 'variant'
-            ? Object.values(rule.cases).flat()
-            : [],
-      ),
-    )
+    const classes = FIXTURE_BLOCKS.flatMap((block) => classesOf(String(block.id)))
     const unresolved = [...new Set(classes)]
       .map((className) => className.replace(/^[a-z0-9]+:/, ''))
       .filter((utility) => declarationsFor(utility) === undefined)

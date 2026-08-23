@@ -34,10 +34,6 @@ body {
   --ms-font-display: var(--ms-font-sans);
 }
 
-.v-section-tint {
-  background-color: var(--ms-section-tint);
-}
-
 @media (prefers-reduced-motion: reduce) {
   .ms-shine {
     animation: none;

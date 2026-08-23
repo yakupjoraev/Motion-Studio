@@ -116,6 +116,9 @@ export const KEYWORDS: Readonly<Record<string, readonly string[]>> = {
   'no-underline': ['text-decoration-line: none'],
   antialiased: ['-webkit-font-smoothing: antialiased', '-moz-osx-font-smoothing: grayscale'],
   truncate: ['overflow: hidden', 'text-overflow: ellipsis', 'white-space: nowrap'],
+  // Numerals of one width, which is what stops a column of figures jittering as it changes.
+  'tabular-nums': ['font-variant-numeric: tabular-nums'],
+  'proportional-nums': ['font-variant-numeric: proportional-nums'],
   'whitespace-nowrap': ['white-space: nowrap'],
   'whitespace-pre-line': ['white-space: pre-line'],
   'break-words': ['overflow-wrap: break-word'],
