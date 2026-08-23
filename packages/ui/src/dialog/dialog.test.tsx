@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { ReactElement } from 'react'
+import { type ReactElement, useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
 import { Button } from '../button/index'
@@ -59,6 +59,38 @@ describe('Dialog', () => {
     await userEvent.keyboard('{Escape}')
 
     expect(screen.getByRole('button', { name: 'Delete' })).toHaveFocus()
+  })
+
+  /**
+   * The controlled case, which is what a dialog opened from a store flag or a keyboard shortcut is.
+   * There is no `Trigger` for Radix to return focus to, and measured against the shortcut sheet and
+   * the export dialog it returned it to `body` — so the primitive tracks the element itself.
+   */
+  it('restores focus to whatever had it, with no trigger to return to', async () => {
+    function Controlled() {
+      const [open, setOpen] = useState(false)
+
+      return (
+        <>
+          <button onClick={() => setOpen(true)} type="button">
+            Open from outside
+          </button>
+          <Dialog description="One sentence." onOpenChange={setOpen} open={open} title="Controlled">
+            <p>Body</p>
+          </Dialog>
+        </>
+      )
+    }
+
+    render(<Controlled />)
+
+    const opener = screen.getByRole('button', { name: 'Open from outside' })
+
+    opener.focus()
+    await userEvent.click(opener)
+    await userEvent.keyboard('{Escape}')
+
+    expect(opener).toHaveFocus()
   })
 
   it('closes on Escape', async () => {

@@ -2,7 +2,7 @@ import { XIcon } from '@motion-studio/icons'
 import { Z_INDEX } from '@motion-studio/tokens'
 import { cn } from '@motion-studio/utils'
 import * as RadixDialog from '@radix-ui/react-dialog'
-import type { ReactElement } from 'react'
+import { type ReactElement, useEffect, useRef, useState } from 'react'
 
 import { Button } from '../button/index'
 
@@ -33,11 +33,40 @@ export function Dialog({
   onOpenChange,
   className,
 }: DialogProps): ReactElement {
+  /*
+   * ACCESSIBILITY.md § Dialogs: focus returns where it came from. Radix restores whatever was active
+   * when its content mounted, and for a dialog opened from a store flag or a keyboard shortcut that is
+   * already `body` — measured on this primitive, with the shortcut sheet and the export dialog both
+   * landing on `body`. So the element is tracked while the dialog is closed and restored explicitly.
+   */
+  const previous = useRef<HTMLElement | null>(null)
+  const [uncontrolled, setUncontrolled] = useState(defaultOpen ?? false)
+  const visible = open ?? uncontrolled
+
+  useEffect(() => {
+    if (visible) {
+      return
+    }
+
+    const record = (event: FocusEvent): void => {
+      if (event.target instanceof HTMLElement) {
+        previous.current = event.target
+      }
+    }
+
+    document.addEventListener('focusin', record)
+
+    return () => document.removeEventListener('focusin', record)
+  }, [visible])
+
   // `exactOptionalPropertyTypes`: omit an absent prop rather than passing `undefined`.
   const rootProps = {
     ...(open === undefined ? {} : { open }),
     ...(defaultOpen === undefined ? {} : { defaultOpen }),
-    ...(onOpenChange === undefined ? {} : { onOpenChange }),
+    onOpenChange: (next: boolean) => {
+      setUncontrolled(next)
+      onOpenChange?.(next)
+    },
   }
 
   return (
@@ -52,6 +81,10 @@ export function Dialog({
         />
         <RadixDialog.Content
           data-ms-overlay="dialog"
+          onCloseAutoFocus={(event) => {
+            event.preventDefault()
+            previous.current?.focus()
+          }}
           style={{ zIndex: Z_INDEX.dialog }}
           className={cn(dialogContentStyles({ size }), className)}
         >
