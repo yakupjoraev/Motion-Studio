@@ -21,6 +21,7 @@
       "accent": "oklch(70.00% 0.1560 285.00)",
       "accentHueShift": 0,
       "neutral": "slate",
+      "repairContrast": true,
       "saturation": 1
     },
     "radiusScale": 1,

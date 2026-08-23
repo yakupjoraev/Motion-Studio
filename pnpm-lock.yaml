@@ -14,6 +14,12 @@ importers:
       '@motion-studio/blocks':
         specifier: workspace:*
         version: link:packages/blocks
+      '@motion-studio/codegen':
+        specifier: workspace:*
+        version: link:packages/codegen
+      '@motion-studio/motion':
+        specifier: workspace:*
+        version: link:packages/motion
       '@motion-studio/schema':
         specifier: workspace:*
         version: link:packages/schema
