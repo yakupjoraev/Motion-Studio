@@ -10202,3 +10202,72 @@ interiors.
   move in front of it.
 - `EXPORT_ENGINE.md` § buildIR gains the producer as pass 0; `ARCHITECTURE.md` § Dependency graph
   records why the markup types sit in `schema`.
+
+## ADR-250 — Icon geometry is a table of shapes, and an exported icon is an inline `<svg>`
+
+**Date** 2026-08-23 · **Prompt** 45b · **Status** Accepted
+
+### Question
+Twenty-two of the catalogue's render files draw an icon, and an icon's geometry is JSX inside
+`packages/icons`. A markup producer is React-free by construction (ADR-249) and the exported project
+may not depend on `@motion-studio/icons` at all — `PRODUCT.md` § 7 promises the export compiles in a
+fresh scaffold. Where does the geometry live so that both halves read the same one?
+
+### Decision
+`packages/icons/src/geometry.ts` holds every glyph as data, `createIcon` builds the components from
+it, and `packages/blocks/src/markup/icon.ts` emits a real inline `<svg>` from the same table. Four
+decisions come with it.
+
+1. **The table holds shape records, not a markup string.** `prompts/45b` specified
+   `Record<IconName, string>`. A string cannot become `MarkupElement` children without either a parser
+   in `blocks` or a raw-HTML node kind that all three printers would have to carry, and the catalogue's
+   whole vocabulary is two tags — `path` and `circle` — with six attributes between them. Records are
+   what `el()` already takes, so the producer is a `map` and nothing else. The prompt file is corrected
+   to say so.
+
+2. **The name set is derived from the table.** `IconName` was `keyof typeof ICON_REGISTRY`; it is now
+   `keyof typeof ICON_GEOMETRY`. The old direction cannot survive `createIcon(name: IconName)` — the
+   registry's type would depend on the argument type of the calls that build it. `ICON_REGISTRY` is
+   annotated `Record<IconName, IconComponent>` instead, so a glyph with no component fails to compile
+   and a component with no glyph has nowhere to come from.
+
+3. **The IR carries the React spelling of an SVG attribute; the HTML printer hyphenates it.**
+   `stroke-width` in JSX is a dev-mode `Invalid DOM property` warning in every React app that renders
+   the exported component — `possibleStandardNames` in `react-dom` maps it to `strokeWidth` — so the
+   printed React must be camelCase. The HTML printer already renamed `className` and `htmlFor` for the
+   same reason, and four more entries is the whole cost. It also gains the twelve SVG attribute names
+   an icon actually uses; without them every one was reported `unsupported` and the glyph printed as
+   an empty tag.
+
+4. **A shared producer bakes its text with `txt`.** ADR-249 § 5 emits a scalar prop as a reference so
+   pass 6 can print `{headline}`, but a producer shared by six heroes does not know what the calling
+   block named its fields, and the parity renderer resolves a reference in an attribute while an
+   expression child renders as its own code. Text is therefore literal in the shared producers, and
+   whether a block references a prop instead is that block's decision in 45c, where the name is known.
+
+### Criterion (set before the refactor)
+The rendered SVG of every icon is byte-identical before and after, and the set stays under the 8 kB
+gzipped source budget prompt 07 attached to the eager registry.
+
+### Measurement
+93 icons rendered through `renderToStaticMarkup` before and after: **0 differences**. Gzipped source
+of the whole set: **6 230 → 7 336 bytes**, still under the 8 192 budget. The growth is the table's
+constructors and comments arriving while the 93 one-line modules stay; what the bundle carries — one
+factory and one table instead of 93 JSX trees — was not measured and is not claimed.
+
+### Consequences
+- Accepted: an icon module is now one line, which reads as ceremony until the second consumer is seen.
+  The alternative is a second copy of 93 glyphs in `blocks`, which is the drift this prevents.
+- Accepted: a markup producer may now reach `@motion-studio/tokens` and `@motion-studio/icons/geometry`.
+  Both are data with no React in them, which is the only property `registry.node.test.ts` guards — and
+  it now walks every `*.markup.ts` on disk rather than only the ones a block already names.
+- The exported `<svg>` carries `aria-hidden="true"` unless the call site names it, which is the
+  component's own rule and closes half of the empty-`<button>` a11y defect prompt 44 recorded.
+- `DESIGN_SYSTEM.md` § Iconography records that the geometry is data; `EXPORT_ENGINE.md` § HTML gains
+  the SVG attributes the target accepts.
+
+### Alternatives rejected
+- **Copy the glyphs into `blocks`.** Two sources for one drawing, and nothing that notices when they
+  disagree — the defect ADR-249 spent a parity test to avoid.
+- **Emit `import { PlusIcon } from '@motion-studio/icons'`.** The user's project does not have the
+  package, so the export would not compile — the one claim the export is not allowed to break.

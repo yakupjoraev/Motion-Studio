@@ -669,6 +669,11 @@ export const Z = {
 icon is a React component with `size` and `strokeWidth` props. No icon font, no sprite sheet, no
 runtime SVG fetching.
 
+The geometry is **data**, not JSX: `geometry.ts` holds every glyph as a list of shapes and the stroke
+contract above as one constant, `createIcon` builds the components from it, and the export engine reads
+the same table to print an inline `<svg>` into a page that has no icon package — ADR-250. `IconName` is
+derived from that table, so a glyph nobody drew and a component nobody registered both fail to compile.
+
 ## Generated output
 
 ```ts

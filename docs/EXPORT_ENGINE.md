@@ -373,6 +373,15 @@ pass 4 recorded (ADR-239) — and never the baked attributes.
 A preset the table does not name degrades by engine and says so, so a new preset is loud rather than
 silent. Every approximation and omission appears in the export warnings, once per preset.
 
+#### Icons
+
+An icon prints as an inline `<svg>` with its geometry inside it, never as an import: the project a
+user unzips has no icon package. The glyph and the stroke contract come from `packages/icons`'
+geometry table, which is data (ADR-250), and the target accepts the twelve SVG attribute names that
+table produces — `viewBox`, `fill`, `stroke`, the four `stroke-*` properties, `focusable`, `d`,
+`cx`, `cy` and `r`. The IR spells them the way React does and this printer hyphenates them, the same
+rename `className` and `htmlFor` go through.
+
 #### Behaviour, and the `data-ms-*` contract
 
 The script is assembled per feature and only when the document contains what the feature drives.

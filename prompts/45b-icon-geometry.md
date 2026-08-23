@@ -23,7 +23,7 @@ is used by 8 blocks, `control-icon` by 8, `hero-copy` and `section-heading` by 6
 
 ```
 packages/icons/src/
-├── geometry.ts                ICON_GEOMETRY: Record<IconName, string> — the inner SVG markup
+├── geometry.ts                ICON_GEOMETRY: every glyph as shapes — path and circle records
 ├── create-icon.tsx            builds the component from the table; the contract is unchanged
 └── registry.test.tsx          asserts every name in the table and no name outside it
 
