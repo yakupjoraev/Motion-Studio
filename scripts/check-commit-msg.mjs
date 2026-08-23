@@ -69,7 +69,8 @@ const lines = message.split('\n').filter((line) => !line.startsWith('#'))
 const [subject = ''] = lines
 const errors = []
 
-const header = /^([a-z]+)(?:\(([a-z-]+)\))?(!)?: (.+)$/.exec(subject)
+// The scope class carries a digit because `e2e` is in the list above and could never match without one.
+const header = /^([a-z]+)(?:\(([a-z0-9-]+)\))?(!)?: (.+)$/.exec(subject)
 
 if (header === null) {
   errors.push(`subject must be 'type(scope): subject' — received: ${JSON.stringify(subject)}`)
