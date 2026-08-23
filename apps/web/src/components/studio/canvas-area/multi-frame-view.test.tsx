@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useStudioStore } from '../../../store/editor-store'
 
+import { ToastProvider } from '@motion-studio/ui'
 import { CanvasHost } from './canvas-host'
 import { COMPARISON_FRAMES } from './multi-frame-view'
 
@@ -57,9 +58,18 @@ beforeEach(() => {
   })
 })
 
+/**
+ * The canvas ports publish the Copy React confirmation, so the host needs the provider the studio
+ * shell gives it. Rendering it bare is the one arrangement the application never produces.
+ */
+const Host = () => (
+  <ToastProvider>
+    <CanvasHost />
+  </ToastProvider>
+)
 describe('multi-frame comparison', () => {
   it('is off until it is asked for, and then draws base, md and xl', () => {
-    render(<CanvasHost />)
+    render(<Host />)
 
     expect(screen.queryByTestId('multi-frame-view')).toBeNull()
     expect(screen.getByTestId('canvas-root')).toBeInTheDocument()
@@ -88,7 +98,7 @@ describe('multi-frame comparison', () => {
       )
       state().toggleMultiFrame()
     })
-    render(<CanvasHost />)
+    render(<Host />)
 
     // The base frame keeps the block's own level; `md` and up take the override.
     expect(
@@ -110,7 +120,7 @@ describe('multi-frame comparison', () => {
 
     expect(screen.queryByText('editing')).toBeNull()
 
-    render(<CanvasHost />)
+    render(<Host />)
 
     expect(within(screen.getByTestId('frame-md')).getByText('editing')).toBeInTheDocument()
     expect(within(screen.getByTestId('frame-base')).queryByText('editing')).toBeNull()
@@ -121,7 +131,7 @@ describe('multi-frame comparison', () => {
     const heading = insertHeading()
 
     act(() => state().toggleMultiFrame())
-    render(<CanvasHost />)
+    render(<Host />)
 
     await userEvent.click(within(screen.getByTestId('frame-xl')).getByRole('heading', { level: 2 }))
 
@@ -138,7 +148,7 @@ describe('multi-frame comparison', () => {
       state().select([heading])
       state().toggleMultiFrame()
     })
-    render(<CanvasHost />)
+    render(<Host />)
 
     await userEvent.click(screen.getByTestId('multi-frame-view'))
 

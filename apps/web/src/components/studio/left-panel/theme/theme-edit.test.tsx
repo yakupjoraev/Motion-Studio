@@ -3,6 +3,7 @@ import { PRESETS } from '@motion-studio/theme'
 import { act, render, renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { ToastProvider } from '@motion-studio/ui'
 import { useStudioStore } from '../../../../store/editor-store'
 import { CanvasHost } from '../../canvas-area/canvas-host'
 
@@ -38,6 +39,16 @@ beforeEach(() => {
  * The two-write pattern, as the prompt states it: the variables land now, the command lands on
  * release, and the canvas never renders for either.
  */
+
+/**
+ * The canvas ports publish the Copy React confirmation, so the host needs the provider the studio
+ * shell gives it. Rendering it bare is the one arrangement the application never produces.
+ */
+const Host = () => (
+  <ToastProvider>
+    <CanvasHost />
+  </ToastProvider>
+)
 describe('a theme control', () => {
   it('writes the affected variables without touching the store', () => {
     const { result } = renderHook(() => useThemeEdit())
@@ -87,7 +98,7 @@ describe('a theme control', () => {
   })
 
   it('renders the canvas zero times, dragging and committing', () => {
-    render(<CanvasHost />)
+    render(<Host />)
 
     const { result } = renderHook(() => useThemeEdit())
     const before = canvasRenders()

@@ -93,9 +93,16 @@ describe('menuAvailability', () => {
     expect(menuAvailability(state(), 'resetOverrides')).toBeUndefined()
   })
 
-  it('says which prompt the two unbuilt items are waiting for — ADR-098', () => {
+  it('says which prompt the one unbuilt item is waiting for — ADR-098', () => {
     expect(menuAvailability(state(), 'addMotion')).toContain('motion engine')
-    expect(menuAvailability(state(), 'copyReact')).toContain('export engine')
+  })
+
+  it('offers Copy React with a selection and not without one', () => {
+    expect(menuAvailability(state(), 'copyReact')).toBe('Select a block first')
+
+    state().select([insert(root(), 'section')])
+
+    expect(menuAvailability(state(), 'copyReact')).toBeUndefined()
   })
 })
 
@@ -167,10 +174,18 @@ describe('runMenuAction', () => {
     expect(state().document.nodes[section]?.responsive['lg']).toBeUndefined()
   })
 
-  it('does nothing for the items that are only reasons', () => {
+  it('does nothing for the item that is only a reason', () => {
     const before = state().version
 
     runMenuAction(useStudioStore, 'addMotion')
+
+    expect(state().version).toBe(before)
+  })
+
+  /** Copy React reads the document and writes to the clipboard; it must not edit anything. */
+  it('leaves the document alone when it copies React', () => {
+    const before = state().version
+
     runMenuAction(useStudioStore, 'copyReact')
 
     expect(state().version).toBe(before)

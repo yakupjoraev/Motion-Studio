@@ -10,6 +10,7 @@ import { usePanelLayout } from '../../hooks/use-panel-layout'
 import { useViewportGuard } from '../../hooks/use-viewport-guard'
 
 import { DndHost } from './dnd-host'
+import { ExportDialog } from './export/export-dialog'
 import { Inspector } from './inspector/inspector'
 import { LeftPanel } from './left-panel/left-panel'
 import { ThemeHost } from './left-panel/theme/theme-host'
@@ -180,6 +181,11 @@ export function StudioShell({ canvas }: StudioShellProps) {
       </DndHost>
 
       <ShortcutHost panels={panels} />
+
+      {/* Mounted always, open on a flag: "visible in the frame the button is pressed" is what the
+          export dialog is judged on, and a chunk fetched on the click cannot promise it. The four
+          heavy modules it needs are behind dynamic imports of their own. */}
+      <ExportDialog />
 
       {/* Renders nothing: it holds the subscription that puts `document.theme` on the root — ADR-172. */}
       <ThemeHost />

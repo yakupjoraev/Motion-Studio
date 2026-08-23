@@ -9,6 +9,7 @@ import {
 import { act, render, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { ToastProvider } from '@motion-studio/ui'
 import { useStudioStore } from '../../../store/editor-store'
 import { CanvasHost } from '../canvas-area/canvas-host'
 
@@ -66,12 +67,22 @@ afterEach(() => {
  * the canvas a render. It holds because nothing in the host subscribes to the document — the rect
  * cache hears about a change through the scene's own subscription (ADR-112).
  */
+
+/**
+ * The canvas ports publish the Copy React confirmation, so the host needs the provider the studio
+ * shell gives it. Rendering it bare is the one arrangement the application never produces.
+ */
+const Host = () => (
+  <ToastProvider>
+    <CanvasHost />
+  </ToastProvider>
+)
 describe('the cost of a drag', () => {
   it('renders the canvas zero times while a control is dragged, and records one history entry', () => {
     const heading = insert('heading')
 
     act(() => state().select([heading]))
-    render(<CanvasHost />)
+    render(<Host />)
 
     const { result } = renderHook(() => useControlCommit(LEVEL, [heading]))
     const rendersBefore = canvasRenders()
@@ -92,7 +103,7 @@ describe('the cost of a drag', () => {
   })
 
   it('still renders the canvas when the thing that changed is the canvas', () => {
-    render(<CanvasHost />)
+    render(<Host />)
 
     const before = canvasRenders()
 

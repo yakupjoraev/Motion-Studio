@@ -73,7 +73,7 @@ export const GLOBAL_SHORTCUTS: readonly StudioShortcut[] = [
     label: 'Export',
     group: 'Global',
     scope: 'global',
-    when: () => false,
+    keywords: ['code', 'react', 'download', 'zip'],
     run: ({ store }) => {
       store.getState().setExportDialogOpen(true)
     },

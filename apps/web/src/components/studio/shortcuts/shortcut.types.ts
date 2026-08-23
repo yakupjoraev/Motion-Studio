@@ -1,5 +1,6 @@
 import type { EditorStore } from '@motion-studio/editor'
 import type { Shortcut } from '@motion-studio/hooks'
+import type { ToastOptions } from '@motion-studio/ui'
 
 /**
  * What a studio shortcut is handed. The store is the whole of it for anything that edits a document
@@ -29,6 +30,11 @@ export interface StudioShortcutContext {
   readonly store: EditorStore
   readonly canvas: CanvasCommands | null
   readonly panels: PanelCommands | null
+  /**
+   * The toast publisher. Copy React is the one binding whose result is invisible — the clipboard
+   * changed and the screen did not — so it is the one binding that has to be able to say so.
+   */
+  readonly notify: ((options: ToastOptions) => void) | null
 }
 
 export type StudioShortcut = Shortcut<StudioShortcutContext>

@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useStudioStore } from '../../../store/editor-store'
 
+import { ToastProvider } from '@motion-studio/ui'
 import { FIT_FALLBACK_MS } from './artboard-resize'
 import { CanvasHost } from './canvas-host'
 
@@ -62,9 +63,18 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
+/**
+ * The canvas ports publish the Copy React confirmation, so the host needs the provider the studio
+ * shell gives it. Rendering it bare is the one arrangement the application never produces.
+ */
+const Host = () => (
+  <ToastProvider>
+    <CanvasHost />
+  </ToastProvider>
+)
 describe('the artboard', () => {
   it('is the active breakpoint’s frame, and base is a phone — ADR-166', () => {
-    render(<CanvasHost />)
+    render(<Host />)
 
     expect(screen.getByTestId('canvas-artboard')).toHaveStyle({ width: '375px' })
 
@@ -75,7 +85,7 @@ describe('the artboard', () => {
   })
 
   it('fits the frame back into view when the new one no longer fits', () => {
-    render(<CanvasHost />)
+    render(<Host />)
     settle()
 
     expect(zoom()).toBe(1)
@@ -88,7 +98,7 @@ describe('the artboard', () => {
   })
 
   it('leaves the transform alone when the new frame still fits', () => {
-    render(<CanvasHost />)
+    render(<Host />)
     settle()
 
     act(() => state().setBreakpoint('sm'))
@@ -100,7 +110,7 @@ describe('the artboard', () => {
   it('does not fit on the first render, whatever the document was opened at', () => {
     act(() => state().setBreakpoint('2xl'))
 
-    render(<CanvasHost />)
+    render(<Host />)
     settle()
 
     // Opening a document must not move a transform it was saved with — only a switch does.

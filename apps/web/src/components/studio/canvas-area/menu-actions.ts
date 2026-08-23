@@ -3,6 +3,8 @@ import type { CanvasMenuAction } from '@motion-studio/canvas'
 import { type EditorState, type EditorStore, commands } from '@motion-studio/editor'
 import { blockId } from '@motion-studio/schema'
 
+import { type Notify, copySelection } from '../export/use-copy-selection'
+
 const CONTAINER = blockId('container')
 
 /** The container's own first slot, from the registry: the name is the block's to choose, not ours. */
@@ -38,12 +40,11 @@ export function menuAvailability(state: EditorState, action: CanvasMenuAction): 
       return node === undefined || node.responsive[state.viewport.breakpoint] === undefined
         ? 'No overrides at this breakpoint'
         : undefined
-    // Both arrive with the prompts that build them. Saying so is more use than an item that does
-    // nothing when it is clicked.
-    case 'addMotion':
-      return 'Motion arrives with the motion engine'
+    case 'copyReact':
+      return nothing
+    // Saying so is more use than an item that does nothing when it is clicked.
     default:
-      return 'Code export arrives with the export engine'
+      return 'Motion arrives with the motion engine'
   }
 }
 
@@ -56,7 +57,11 @@ const siblingsOf = (state: EditorState, id: string): readonly string[] => {
 }
 
 /** Every action is a store call, so the canvas menu and the command palette will run one thing. */
-export function runMenuAction(store: EditorStore, action: CanvasMenuAction): void {
+export function runMenuAction(
+  store: EditorStore,
+  action: CanvasMenuAction,
+  notify: Notify | null = null,
+): void {
   const state = store.getState()
   const ids = state.selection.ids
   const [first] = ids
@@ -129,8 +134,13 @@ export function runMenuAction(store: EditorStore, action: CanvasMenuAction): voi
 
       return
     }
+    case 'copyReact':
+      // The dialog's own pipeline, with `scope: 'selection'` — one code path, ADR-246.
+      void copySelection(store, notify)
+
+      return
     default:
-      // `addMotion` and `copyReact` are disabled with a reason; nothing to run.
+      // `addMotion` is disabled with a reason; there is nothing to run.
       return
   }
 }

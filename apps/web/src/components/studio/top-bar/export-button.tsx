@@ -1,13 +1,23 @@
 'use client'
 
 import { ExportIcon } from '@motion-studio/icons'
-import { Button } from '@motion-studio/ui'
+import { Button, Kbd } from '@motion-studio/ui'
 
-/** The one accent-carrying control in the chrome — § Character. Disabled until codegen lands. */
+import { useStudioStore } from '../../../store/editor-store'
+
+/** The one accent-carrying control in the chrome — § Character. */
 export function ExportButton() {
+  const setOpen = useStudioStore((state) => state.setExportDialogOpen)
+
   return (
-    <Button disabled leadingIcon={<ExportIcon size={16} />} size="sm" variant="primary">
+    <Button
+      leadingIcon={<ExportIcon size={16} />}
+      onClick={() => setOpen(true)}
+      size="sm"
+      variant="primary"
+    >
       Export
+      <Kbd keys="Mod+Shift+E" />
     </Button>
   )
 }

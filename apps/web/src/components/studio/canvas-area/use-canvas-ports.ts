@@ -11,6 +11,7 @@ import type {
 } from '@motion-studio/canvas'
 import { commands } from '@motion-studio/editor'
 import { resolveResponsiveProps } from '@motion-studio/schema'
+import { useToast } from '@motion-studio/ui'
 import { useMemo } from 'react'
 
 import { useStudioStore } from '../../../store/editor-store'
@@ -33,6 +34,10 @@ export interface CanvasPorts {
  * and the canvas never re-renders because a port changed identity.
  */
 export function useCanvasPorts(): CanvasPorts {
+  // Copy React is the one menu action whose result is invisible, so the ports carry the publisher
+  // that lets it say what landed on the clipboard.
+  const notify = useToast()
+
   return useMemo<CanvasPorts>(() => {
     const state = () => useStudioStore.getState()
 
@@ -77,7 +82,7 @@ export function useCanvasPorts(): CanvasPorts {
 
       menu: {
         unavailable: (action: CanvasMenuAction) => menuAvailability(state(), action),
-        run: (action: CanvasMenuAction) => runMenuAction(useStudioStore, action),
+        run: (action: CanvasMenuAction) => runMenuAction(useStudioStore, action, notify),
       },
 
       resize: {
@@ -114,5 +119,5 @@ export function useCanvasPorts(): CanvasPorts {
         replay: () => motionPlayback.replay(),
       },
     }
-  }, [])
+  }, [notify])
 }

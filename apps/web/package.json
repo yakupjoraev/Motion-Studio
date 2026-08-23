@@ -14,6 +14,7 @@
   "dependencies": {
     "@motion-studio/blocks": "workspace:*",
     "@motion-studio/canvas": "workspace:*",
+    "@motion-studio/codegen": "workspace:*",
     "@motion-studio/dnd": "workspace:*",
     "@motion-studio/editor": "workspace:*",
     "@motion-studio/hooks": "workspace:*",
@@ -25,6 +26,7 @@
     "@motion-studio/ui": "workspace:*",
     "@motion-studio/utils": "workspace:*",
     "@tanstack/react-virtual": "^3.14.9",
+    "jszip": "^3.10.1",
     "next": "^15.5.4",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"

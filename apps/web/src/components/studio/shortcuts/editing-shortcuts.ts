@@ -9,8 +9,8 @@ import { type StudioShortcut, type StudioShortcutContext, hasSelection } from '.
 const menu = (action: CanvasMenuAction) => ({
   when: ({ store }: StudioShortcutContext) =>
     menuAvailability(store.getState(), action) === undefined,
-  run: ({ store }: StudioShortcutContext) => {
-    runMenuAction(store, action)
+  run: ({ store, notify }: StudioShortcutContext) => {
+    runMenuAction(store, action, notify)
   },
 })
 
@@ -45,6 +45,15 @@ export const EDITING_SHORTCUTS: readonly StudioShortcut[] = [
     ...menu('duplicate'),
   },
   { id: 'copy', keys: 'mod+c', label: 'Copy', group: 'Editing', scope: 'global', ...menu('copy') },
+  {
+    id: 'copy-react',
+    keys: 'mod+shift+c',
+    label: 'Copy React',
+    group: 'Editing',
+    scope: 'global',
+    keywords: ['export', 'component', 'clipboard'],
+    ...menu('copyReact'),
+  },
   {
     id: 'cut',
     keys: 'mod+x',

@@ -1,6 +1,7 @@
 'use client'
 
 import { useShortcuts } from '@motion-studio/hooks'
+import { useToast } from '@motion-studio/ui'
 import dynamic from 'next/dynamic'
 import { useMemo } from 'react'
 
@@ -39,9 +40,11 @@ export function ShortcutHost({ canvas = null, panels = null }: ShortcutHostProps
   const paletteOpen = useStudioStore((state) => state.ui.commandPaletteOpen)
   const sheetOpen = useStudioStore((state) => state.ui.activeDialog === 'shortcuts')
 
+  const notify = useToast()
+
   const context = useMemo<StudioShortcutContext>(
-    () => ({ store: useStudioStore, canvas, panels }),
-    [canvas, panels],
+    () => ({ store: useStudioStore, canvas, panels, notify }),
+    [canvas, notify, panels],
   )
 
   useShortcuts({ registry: studioShortcuts, context })

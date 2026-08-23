@@ -59,7 +59,7 @@ describe('StudioShell', () => {
     expect(screen.getByRole('link', { name: /block gallery/ })).toHaveAttribute('href', '/blocks')
   })
 
-  it.each(['Undo', 'Redo', 'Zoom', 'Command palette', 'Export'])(
+  it.each(['Undo', 'Redo', 'Zoom', 'Command palette'])(
     'leaves %s genuinely disabled rather than inert-looking',
     (name) => {
       renderShell()

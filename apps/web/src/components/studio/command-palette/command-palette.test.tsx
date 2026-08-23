@@ -6,7 +6,12 @@ import type { StudioShortcutContext } from '../shortcuts/shortcut.types'
 
 import { CommandPalette } from './command-palette'
 
-const context: StudioShortcutContext = { store: useStudioStore, canvas: null, panels: null }
+const context: StudioShortcutContext = {
+  store: useStudioStore,
+  canvas: null,
+  panels: null,
+  notify: null,
+}
 
 /** The virtualizer measures the scroll element, and jsdom reports every box as zero. */
 const sizeTheList = (): void => {
@@ -142,16 +147,17 @@ describe('CommandPalette', () => {
     expect(screen.getByText(/Nothing matches/)).toBeInTheDocument()
   })
 
+  /** Persistence is prompt 50, so its bindings are the ones still declared unavailable. */
   it('shows an unavailable command greyed rather than hiding it', () => {
     open()
 
     fireEvent.change(screen.getByRole('combobox', { name: 'Search commands' }), {
-      target: { value: 'export' },
+      target: { value: 'save' },
     })
 
     const option = screen.getAllByRole('option')[0]
 
-    expect(within(option as HTMLElement).getByText(/Export/)).toBeInTheDocument()
+    expect(within(option as HTMLElement).getByText(/Save/)).toBeInTheDocument()
     expect(option).toHaveAttribute('aria-disabled', 'true')
   })
 })
