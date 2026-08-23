@@ -92,6 +92,7 @@ import { WaveIcon } from './wave'
 import { XIcon } from './x'
 import { ZapIcon } from './zap'
 
+import type { IconName } from './icon-name'
 import type { IconComponent } from './icon.types'
 
 /**
@@ -200,4 +201,4 @@ export const ICON_REGISTRY = {
   sun: SunIcon,
   moon: MoonIcon,
   monitor: MonitorIcon,
-} as const satisfies Record<string, IconComponent>
+} as const satisfies Readonly<Record<IconName, IconComponent>>

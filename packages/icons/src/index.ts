@@ -1,4 +1,11 @@
 export { createIcon } from './create-icon'
+export {
+  ICON_GEOMETRY,
+  ICON_SVG_ATTRIBUTES,
+  type IconCircle,
+  type IconPath,
+  type IconShape,
+} from './geometry'
 export { ICON_NAMES, type IconName } from './icon-name'
 export type { IconComponent, IconProps } from './icon.types'
 export { ICON_REGISTRY } from './registry'

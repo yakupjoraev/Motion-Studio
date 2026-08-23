@@ -5,6 +5,7 @@ import { gzipSync } from 'node:zlib'
 import { render } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
+import { ICON_GEOMETRY } from './geometry'
 import { ICON_NAMES, type IconName } from './icon-name'
 import { ICON_REGISTRY } from './registry'
 
@@ -136,6 +137,18 @@ describe('ICON_REGISTRY', () => {
     expect([...iconModules()].sort()).toEqual([...ICON_NAMES].sort())
   })
 
+  it('holds a component for every name in the geometry table, and no name outside it', () => {
+    // ADR-250: the table is the set. A glyph nobody draws and a component with no glyph both fail here,
+    // and the annotation on `ICON_REGISTRY` catches the second one at compile time as well.
+    expect(Object.keys(ICON_REGISTRY).sort()).toEqual(Object.keys(ICON_GEOMETRY).sort())
+  })
+
+  it('draws every glyph with at least one shape', () => {
+    for (const [name, shapes] of Object.entries(ICON_GEOMETRY)) {
+      expect(shapes.length, name).toBeGreaterThan(0)
+    }
+  })
+
   it('carries the 93 icons the set is now made of', () => {
     expect(ICON_NAMES).toHaveLength(93)
   })
@@ -160,13 +173,15 @@ describe('the eager registry stays affordable', () => {
     // conservative bound on the shipped size. Prompt 07 makes the 8 kB budget the condition on the eager
     // decision — if it is ever exceeded, the decision is revisited with a measurement, not silently
     // switched to lazy loading.
-    const sources = [...iconModules(), 'registry', 'create-icon']
-      .map((name) => {
-        const extension = name === 'registry' ? '.ts' : '.tsx'
-
-        return readFileSync(join(SOURCE_DIR, `${name}${extension}`), 'utf8')
-      })
-      .join('\n')
+    // `geometry.ts` carries every glyph since ADR-250; leaving it out would measure the budget against
+    // modules that no longer hold anything.
+    const files = [
+      ...iconModules().map((name) => `${name}.tsx`),
+      'registry.ts',
+      'geometry.ts',
+      'create-icon.tsx',
+    ]
+    const sources = files.map((file) => readFileSync(join(SOURCE_DIR, file), 'utf8')).join('\n')
 
     const gzipped = gzipSync(Buffer.from(sources)).byteLength
 
