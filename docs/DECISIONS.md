@@ -9853,3 +9853,56 @@ set differs between the two components, so the rewrite would have to redo pass 6
   Both read as resolved rather than chosen, which is what they are.
 - Accepted: `resolveOptions` is now the one place a target may narrow an option. A third such rule
   would be a sign the option set is wrong rather than the resolution.
+
+## ADR-243 — Every catalogue entry declares its client boundary, read as the block's own behaviour
+
+**Date** 2026-08-23 · **Prompt** 45 · **Status** Accepted
+
+### Question
+The export dialog runs `buildIR` on the user's document, and ADR-199 makes an undeclared
+`codegen.client` a hard error rather than a guess. Fifty-three of the seventy-two registry entries —
+`layout`, `hero`, `content`, `marketing`, `navigation` and `effects` — declare none, so every document
+built from the shipped catalogue throws. What does each of them declare, and by what rule?
+
+### Criterion (set before the audit)
+The rule is not new: it is the one the nineteen existing declarations were written under, read back off
+them. `input-field` declares `always` because it calls `useId`, and `carousel` declares
+`whenAnyProp: ['arrows', 'dots', 'autoplay']` even though `useCarousel` is called at every prop set.
+So the subject of the declaration is **the block's own realisation at that prop set** — the component
+the export exists to reproduce — and not what today's printer happens to emit for it.
+
+Read off the render component and everything it composes:
+
+- a `'use client'` directive, a hook call, an event handler or a browser API, unconditionally → `always`
+- the same, reachable only when a named prop is set → `whenAnyProp` on those props
+- markup and CSS at every prop set → `never`
+
+### Audit
+Fifty-three declarations, from the render tree of each block:
+
+| Declaration | Count | Blocks |
+| --- | --- | --- |
+| `never` | 40 | all seven of `layout`, five of six `hero`, seven of nine `content`, eight of twelve `marketing`, `footer`, and twelve of thirteen `effects` |
+| `always` | 8 | `cta-split`, `faq-accordion`, `newsletter-form`, `breadcrumbs`, `dock`, `navbar`, `navbar-floating`, `sidebar-nav` |
+| `whenAnyProp` | 5 | `hero-video` (`src`), `video` (`autoplay`), `code-block` (`showCopyButton`), `pricing-table` (`showToggle`), `spotlight` (`followPointer`) |
+
+The twelve `never` effects are the reason the category was worth auditing rather than assuming: each
+one is a `div` carrying custom properties and a CSS animation, `particles` included — it places its
+field from a hash of the seed rather than from a canvas, which is what lets it export as markup.
+
+### Decision
+All fifty-three declare, with the reason each block's own component gives. `registry.meta.test.ts`
+stops asserting which categories have declared one and asserts that every definition does, so the next
+block cannot be added without one.
+
+### Consequences
+- Accepted: eight `always` and five `whenAnyProp` declarations sit on blocks whose *printed* markup
+  today is a root element with classes on it, because no block declares its internal markup yet — the
+  open escalation from prompts 42 to 44. The declaration describes the block, so it is right the moment
+  that lands and over-declares in the safe direction until then: `'use client'` on a component that
+  needs nothing costs the reader Server Components, and the other guess ships a page that throws.
+- Named: `ClientBoundary` cannot say "this prop equals this value". `cta-split` is the case — only
+  `side: 'form'` needs the boundary, and `whenAnyProp: ['side']` is true at both of its values — so it
+  declares `always`. A fourth `whenPropEquals` kind would express it, and is not added for one block.
+- `buildIR` no longer throws on a document made from the shipped catalogue, which is what the export
+  dialog needs to run at all.
