@@ -1,4 +1,4 @@
-export { BreadcrumbOverflow, overflowLabel } from './breadcrumb-overflow'
+export { BreadcrumbOverflow } from './breadcrumb-overflow'
 export { Breadcrumbs } from './breadcrumbs'
 export { breadcrumbsDefinition } from './breadcrumbs.definition'
 export { breadcrumbsMotion } from './breadcrumbs.motion'
@@ -8,6 +8,7 @@ export {
   MIN_VISIBLE_CRUMBS,
   breadcrumbsSchema,
   collapseBreadcrumbs,
+  overflowLabel,
   type BreadcrumbSeparator,
   type BreadcrumbSlot,
 } from './breadcrumbs.schema'

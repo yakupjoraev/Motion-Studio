@@ -59,7 +59,7 @@ export type IRElementMotion = MarkupMotion
  * One element, as the printers read it: `classNames` variant-ordered and conflict-merged (ADR-224),
  * every slot resolved, every child an element, a text or an expression.
  */
-export interface IRElement extends Omit<MarkupElement, 'children'> {
+export interface IRElement extends Omit<MarkupElement, 'children' | 'slotGate'> {
   readonly children: readonly IRChild[]
 }
 

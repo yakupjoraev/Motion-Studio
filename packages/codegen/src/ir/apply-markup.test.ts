@@ -67,6 +67,46 @@ describe('applyMarkup', () => {
     expect([...applied.classes].sort()).toEqual(['flex', 'gap-2'])
   })
 
+  describe('a gated element', () => {
+    const frame = el('footer', {
+      children: [
+        el('div', {
+          classNames: ['frame'],
+          slotGate: { slot: 'newsletter', when: 'filled' },
+          children: [slot('newsletter')],
+        }),
+        el('p', {
+          classNames: ['empty'],
+          slotGate: { slot: 'newsletter', when: 'empty' },
+        }),
+      ],
+    })
+
+    it('survives when its slot was filled, and its fallback does not', () => {
+      const applied = applyMarkup(frame, slots({ newsletter: [child] }))
+
+      expect(applied.root.children).toHaveLength(1)
+      expect(
+        applied.root.children[0]?.kind === 'element' ? applied.root.children[0].classNames : [],
+      ).toEqual(['frame'])
+    })
+
+    it('is dropped when nothing was dropped into it, and the fallback takes its place', () => {
+      const applied = applyMarkup(frame, slots({}))
+
+      expect(applied.root.children).toHaveLength(1)
+      expect(
+        applied.root.children[0]?.kind === 'element' ? applied.root.children[0].classNames : [],
+      ).toEqual(['empty'])
+    })
+
+    it('leaves no trace of the gate for a printer to read', () => {
+      const applied = applyMarkup(frame, slots({ newsletter: [child] }))
+
+      expect(applied.root.children[0]).not.toHaveProperty('slotGate')
+    })
+  })
+
   it('carries text and expressions through untouched', () => {
     const applied = applyMarkup(
       el('p', { children: [txt('Hello'), { kind: 'expression', code: 'headline' }] }),

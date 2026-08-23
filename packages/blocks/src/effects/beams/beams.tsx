@@ -1,11 +1,8 @@
 import { effectVars } from '../effect-vars'
 import { EFFECT_LAYER_CLASS } from '../shared'
 
-import { beamStyle } from './beams.styles'
+import { BEAM_OFFSET, beamStyle } from './beams.styles'
 import type { BeamsProps } from './beams.types'
-
-/** Fractions of a cycle between one beam and the next. Prime-ish, so the group never marches in step. */
-const BEAM_OFFSET = 0.37
 
 /**
  * Beams.

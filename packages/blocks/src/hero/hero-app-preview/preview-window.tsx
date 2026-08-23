@@ -6,9 +6,8 @@ import {
   PLACEHOLDER_NODE,
   PLACEHOLDER_ROW,
   PLACEHOLDER_SIDEBAR,
+  SIDEBAR_ROWS,
 } from './hero-app-preview.styles'
-
-const SIDEBAR_ROWS = ['w-4/5', 'w-full', 'w-3/5', 'w-2/3'] as const
 
 /**
  * What the plate shows before a screenshot exists. Not a placeholder in the apologetic sense — it is

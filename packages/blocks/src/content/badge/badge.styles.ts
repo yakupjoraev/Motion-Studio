@@ -30,6 +30,9 @@ export const badgeStyles = cva(
 /** `currentColor`, so the dot never needs its own variant table. */
 export const BADGE_DOT = 'size-1.5 shrink-0 rounded-full bg-current'
 
+/** The glyph's pixel size per step, beside the class that sizes it so the export reads one table. */
+export const BADGE_ICON_PX = { sm: 12, md: 14, lg: 16 } as const
+
 export const badgeIconStyles = cva('shrink-0', {
   variants: {
     size: {

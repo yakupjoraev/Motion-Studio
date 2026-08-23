@@ -7,6 +7,7 @@ import type {
   MarkupSlot,
   MarkupText,
   MarkupValue,
+  SlotGate,
 } from './markup.types'
 
 /**
@@ -17,12 +18,14 @@ import type {
  * writes markup too, and one set of constructors is what keeps the two from drifting.
  */
 export interface ElementInput {
-  readonly classNames?: readonly string[]
+  /** The same conditional list `classList` takes: `[BASE, active && ACTIVE]` reads as the JSX does. */
+  readonly classNames?: readonly (string | false | undefined)[]
   readonly attributes?: Readonly<Record<string, MarkupValue>>
   readonly children?: readonly MarkupChild[]
   readonly cssVars?: Readonly<Record<string, string>>
   readonly notes?: readonly string[]
   readonly key?: string
+  readonly slotGate?: SlotGate
 }
 
 /**
@@ -45,6 +48,7 @@ export function el(tag: string, input: ElementInput = {}): MarkupElement {
     ...(input.cssVars === undefined ? {} : { cssVars: input.cssVars }),
     ...(input.notes === undefined ? {} : { notes: input.notes }),
     ...(input.key === undefined ? {} : { key: input.key }),
+    ...(input.slotGate === undefined ? {} : { slotGate: input.slotGate }),
   }
 }
 

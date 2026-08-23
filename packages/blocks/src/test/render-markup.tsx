@@ -63,6 +63,11 @@ export function renderMarkupNode(
     return null
   }
 
+  // Which is also the answer for a gated element: nothing was dropped into any slot here.
+  if (node.slotGate?.when === 'filled') {
+    return null
+  }
+
   return createElement(
     node.tag,
     { ...propsOf(node, values), ...(key === undefined ? {} : { key }) },

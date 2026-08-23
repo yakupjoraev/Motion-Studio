@@ -1,9 +1,7 @@
 import { ICON_REGISTRY, type IconName } from '@motion-studio/icons'
 
-import { BADGE_DOT, badgeIconStyles, badgeStyles } from './badge.styles'
+import { BADGE_DOT, BADGE_ICON_PX, badgeIconStyles, badgeStyles } from './badge.styles'
 import type { BadgeProps } from './badge.types'
-
-const ICON_PX = { sm: 12, md: 14, lg: 16 } as const
 
 /**
  * A pill: a label, an optional status dot, and an optional icon.
@@ -19,7 +17,7 @@ export function Badge({ label, variant, size, dot, icon, hidden }: BadgeProps) {
     <span className={badgeStyles({ variant, size, hidden })}>
       {dot && <span aria-hidden="true" className={BADGE_DOT} data-testid="badge-dot" />}
       {Icon !== undefined && (
-        <Icon aria-hidden="true" className={badgeIconStyles({ size })} size={ICON_PX[size]} />
+        <Icon aria-hidden="true" className={badgeIconStyles({ size })} size={BADGE_ICON_PX[size]} />
       )}
       {label}
     </span>

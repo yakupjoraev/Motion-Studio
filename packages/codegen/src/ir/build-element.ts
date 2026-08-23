@@ -165,7 +165,10 @@ export function buildElement(
    * notes and the structured data — is still applied here, because none of it is a block's to know.
    */
   if (producer !== undefined) {
-    const applied = applyMarkup(producer({ props }), slotsOf(node, unit, context, into))
+    const applied = applyMarkup(
+      producer({ props, id: String(node.id) }),
+      slotsOf(node, unit, context, into),
+    )
 
     into.classes.push(...applied.classes, ...classNames)
 

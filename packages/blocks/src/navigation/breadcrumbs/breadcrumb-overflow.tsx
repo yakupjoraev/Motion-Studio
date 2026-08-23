@@ -5,6 +5,7 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 
 import type { NavLink } from '../navigation.schema'
 
+import { overflowLabel } from './breadcrumbs.schema'
 import {
   BREADCRUMB_MENU,
   BREADCRUMB_MENU_ITEM,
@@ -14,10 +15,6 @@ import {
 export interface BreadcrumbOverflowProps {
   readonly hidden: readonly NavLink[]
 }
-
-/** "Show 3 hidden levels" — a count, because "more" does not say how much more. */
-export const overflowLabel = (count: number): string =>
-  `Show ${count} hidden ${count === 1 ? 'level' : 'levels'}`
 
 /**
  * The middle of a long trail, folded into a menu.

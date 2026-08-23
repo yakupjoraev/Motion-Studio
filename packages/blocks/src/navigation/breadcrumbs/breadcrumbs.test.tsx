@@ -6,10 +6,9 @@ import { expectNoViolations, renderBlock } from '../../test/render-block'
 import { requireAt } from '../../test/require-at'
 import type { NavLink } from '../navigation.schema'
 
-import { overflowLabel } from './breadcrumb-overflow'
 import { Breadcrumbs } from './breadcrumbs'
 import { breadcrumbsDefinition as definition } from './breadcrumbs.definition'
-import { collapseBreadcrumbs } from './breadcrumbs.schema'
+import { collapseBreadcrumbs, overflowLabel } from './breadcrumbs.schema'
 
 const trail = (count: number): NavLink[] =>
   Array.from({ length: count }, (_unused, index) => ({

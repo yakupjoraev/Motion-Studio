@@ -1,3 +1,5 @@
+import { cn } from '@motion-studio/utils'
+
 import type { Language } from './code-block.languages'
 import {
   CODE_LINE,
@@ -19,7 +21,7 @@ export interface CodeLineProps {
 export function CodeLine({ text, number, language, showNumber, highlighted }: CodeLineProps) {
   return (
     <span
-      className={`${CODE_LINE} ${highlighted ? CODE_LINE_HIGHLIGHTED : ''}`}
+      className={cn(CODE_LINE, highlighted && CODE_LINE_HIGHLIGHTED)}
       data-highlighted={highlighted ? 'true' : undefined}
     >
       {showNumber && (
@@ -27,7 +29,7 @@ export function CodeLine({ text, number, language, showNumber, highlighted }: Co
           {number}
         </span>
       )}
-      <span className={showNumber ? '' : 'col-span-2'}>
+      <span className={showNumber ? undefined : 'col-span-2'}>
         {tokenize(text, language).map((token, index) => (
           <span className={TOKEN_CLASS[token.kind]} key={`${number}-${index}-${token.text}`}>
             {token.text}

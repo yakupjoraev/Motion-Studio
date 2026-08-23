@@ -49,6 +49,17 @@ export interface MarkupElement {
   /** Already gated on the descriptor's `enabledBy` prop — ADR-194. */
   readonly structuredData?: StructuredDataType
   readonly key?: string
+  /**
+   * This element exists only when the named slot is filled — or only when it is empty, which is how a
+   * fallback is written. A frame around a slot nobody dropped anything into is not a frame, and the
+   * document knows which it is by the time `applyMarkup` runs, so no printer ever sees the question.
+   */
+  readonly slotGate?: SlotGate
+}
+
+export interface SlotGate {
+  readonly slot: string
+  readonly when: 'filled' | 'empty'
 }
 
 /**
@@ -64,12 +75,18 @@ export interface MarkupSlot {
 export type MarkupChild = MarkupElement | MarkupText | MarkupExpression | MarkupSlot
 
 /**
- * What a producer is handed. Deliberately only the props: a producer that branched on an export
- * option would be producing two different outputs for one block, and choosing between them is pass
- * 6's job, not a block's.
+ * What a producer is handed: the block's props, and the identity of the node they came from.
+ *
+ * Deliberately not an export option — a producer that branched on one would be producing two
+ * different outputs for one block, and choosing between them is pass 6's job, not a block's. The id
+ * is here because eight blocks link an element to another one by id (`for`, `aria-describedby`), and
+ * the canvas answers that with `useId`. An export has no React to ask, and two of the same block on
+ * one page must not both claim `email-hint` — ADR-251.
  */
 export interface MarkupInput<P = UnknownProps> {
   readonly props: P
+  /** Unique per node in the document. A producer suffixes it: `${id}-hint`. */
+  readonly id: string
 }
 
 /**

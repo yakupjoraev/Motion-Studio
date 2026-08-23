@@ -49,6 +49,10 @@ export type BreadcrumbSlot =
  * A pure function because it is the one thing in this block with a decision in it, and a decision that is
  * a function is a decision a test can pin down.
  */
+/** "Show 3 hidden levels" — a count, because "more" does not say how much more. */
+export const overflowLabel = (count: number): string =>
+  `Show ${count} hidden ${count === 1 ? 'level' : 'levels'}`
+
 export function collapseBreadcrumbs(
   items: readonly NavLink[],
   maxVisible: number,

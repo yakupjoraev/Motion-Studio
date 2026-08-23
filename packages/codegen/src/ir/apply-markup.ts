@@ -35,10 +35,22 @@ function element(
   classes: string[],
 ): IRElement {
   const classNames = mergeAndSort(node.classNames)
+  const { slotGate: _gate, ...rest } = node
 
   classes.push(...classNames)
 
-  return { ...node, classNames, children: childrenOf(node.children, slots, classes) }
+  return { ...rest, classNames, children: childrenOf(node.children, slots, classes) }
+}
+
+/** A gated element survives only when the slot it names is on the side of the gate it asked for. */
+const gateOpen = (node: MarkupElement, slots: ReadonlyMap<string, readonly IRChild[]>): boolean => {
+  if (node.slotGate === undefined) {
+    return true
+  }
+
+  const filled = (slots.get(node.slotGate.slot) ?? []).length > 0
+
+  return node.slotGate.when === 'filled' ? filled : !filled
 }
 
 function childrenOf(
@@ -57,7 +69,15 @@ function childrenOf(
       continue
     }
 
-    resolved.push(node.kind === 'element' ? element(node, slots, classes) : node)
+    if (node.kind !== 'element') {
+      resolved.push(node)
+
+      continue
+    }
+
+    if (gateOpen(node, slots)) {
+      resolved.push(element(node, slots, classes))
+    }
   }
 
   return resolved
