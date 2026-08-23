@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -25,7 +25,14 @@ const ALLOWED_PACKAGES = new Set(['@motion-studio/schema', '@motion-studio/utils
  * metadata half does not, and that is the whole difference: it must still be React-free, because the
  * export runs it under `node`.
  */
-const ALLOWED_FOR_MARKUP = new Set([...ALLOWED_PACKAGES, 'class-variance-authority'])
+const ALLOWED_FOR_MARKUP = new Set([
+  ...ALLOWED_PACKAGES,
+  'class-variance-authority',
+  // Data, both of them: the radius ladder a nested corner is computed from, and the glyph table an
+  // exported `<svg>` is drawn from (ADR-250). Neither pulls React, which is the only thing at stake.
+  '@motion-studio/tokens',
+  '@motion-studio/icons/geometry',
+])
 
 /**
  * The clause between `import`/`export` and `from` is a name list — it never contains a quote. Saying so
@@ -127,6 +134,43 @@ describe('blockRegistry under node', () => {
 
     expect(graph.packages).not.toContain('class-variance-authority')
   })
+})
+
+/**
+ * Every producer on disk, not only the ones a block already names. A shared producer written for the
+ * next prompt is React-free or it is not, and finding that out when it is wired is finding out late.
+ */
+const producerFiles = (directory: string): readonly string[] =>
+  readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const path = resolve(directory, entry.name)
+
+    if (entry.isDirectory()) {
+      return producerFiles(path)
+    }
+
+    return entry.name.endsWith('.markup.ts') ? [path] : []
+  })
+
+describe('the markup producers under node', () => {
+  const files = producerFiles(resolve(HERE, '..'))
+
+  it('finds the producers', () => {
+    expect(files.length).toBeGreaterThan(0)
+  })
+
+  it.each(files.map((file) => [file.slice(file.indexOf('src')), file] as const))(
+    '%s pulls no component and only the packages a producer may reach',
+    (_name, file) => {
+      const graph = walk(file)
+
+      expect(graph.files.filter((entry) => entry.endsWith('.tsx'))).toEqual([])
+      expect(graph.packages.filter((name) => name.startsWith('react'))).toEqual([])
+
+      for (const name of graph.packages) {
+        expect(ALLOWED_FOR_MARKUP, name).toContain(name)
+      }
+    },
+  )
 })
 
 describe('markupRegistry under node', () => {
