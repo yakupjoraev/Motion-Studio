@@ -146,16 +146,21 @@ Overrides become Tailwind prefixed classes:
 className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 lg:gap-6"
 ```
 
+The block's markup producer answers what each breakpoint looks like — it is a pure function of its
+props, so the export runs it once per breakpoint and compares the trees (ADR-252). The five rules are
+unchanged; what answers them is that comparison rather than a declared class map.
+
 Rules in `buildIR`:
 
 1. Base props emit unprefixed classes.
-2. Each override emits `{prefix}{class}`.
+2. Each override emits `{prefix}{class}` for the classes it adds.
 3. Classes are ordered `base → sm → md → lg → xl → 2xl` so the cascade is readable and matches
    what Tailwind's own class sorter would produce.
 4. An override equal to the inherited value is **dropped** — a user who set `md:columns = 1` when
    base is already `1` should not get dead classes in their export.
-5. A value with no Tailwind equivalent becomes a CSS variable plus a media query in the emitted
-   stylesheet, not an arbitrary-value class soup.
+5. A value with no Tailwind equivalent is an inline declaration, and one that differs by breakpoint
+   becomes a generated class plus a media query in the emitted stylesheet, not an arbitrary-value
+   class soup.
 
 Golden-file tests cover: base only, one override, multiple overrides, redundant override
 elimination, and the arbitrary-value fallback.

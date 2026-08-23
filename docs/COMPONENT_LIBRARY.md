@@ -89,15 +89,13 @@ readonly runtimeModule?: {                // a local module the export writes be
   readonly named: readonly string[]
   readonly source: string
 }
-readonly classes?: readonly ClassRule[]   // how props become classes on the root element
 ```
 
-`classes` is how `generateClasses` (EXPORT_ENGINE.md § Class generation) knows that `gapX: 'md'` spends
-`gap-x-4` while `padding: 'md'` spends `p-6`. It is built from the same object the block's `cva` call
-takes, so the class the canvas paints and the class the export writes are one declaration rather than
-two — ADR-225. Three kinds: `static` for classes the element always carries, `variant` for a prop and
-the classes each of its values spends, and `custom` for a prop with no Tailwind equivalent, which
-becomes a CSS variable plus a stylesheet rule instead of an arbitrary-value class.
+The descriptor says nothing about classes, and that is ADR-252: the block's **markup producer** —
+`*.markup.ts` beside the component, registered in `markup-registry.ts` — calls the block's own `cva`
+with the block's own props, so `gapX: 'md'` spends `gap-x-4` and `padding: 'md'` spends `p-6` from one
+function rather than from a declaration that has to agree with one. `registry.markup.test.tsx` renders
+both halves and compares the DOM, which is what keeps them honest (ADR-249).
 
 `notes` is where `newsletter-form` says its submit handler is a no-op the reader has to replace.
 `structuredData` is where `faq-accordion` says the export emits `FAQPage` JSON-LD when the user asked

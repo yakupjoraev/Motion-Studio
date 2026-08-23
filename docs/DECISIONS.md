@@ -10271,3 +10271,155 @@ factory and one table instead of 93 JSX trees — was not measured and is not cl
   disagree — the defect ADR-249 spent a parity test to avoid.
 - **Emit `import { PlusIcon } from '@motion-studio/icons'`.** The user's project does not have the
   package, so the export would not compile — the one claim the export is not allowed to break.
+
+## ADR-251 — The parity test normalises what a UI library writes for itself
+
+**Date** 2026-08-23 · **Prompt** 45c · **Status** Accepted
+
+### Question
+Nine blocks build their interactive parts on Radix. Radix writes attributes the export cannot and
+should not carry — `data-radix-collection-item`, `--radix-*` inline declarations, an `aria-hidden` its
+dialog puts on everything outside the open dialog — and it names elements `radix-_r_8_-trigger`. A
+producer that reproduced those would put a library the export does not ship into a user's page. What
+does the DOM parity test compare, then?
+
+### Decision
+The producer emits everything with meaning — the roles, the states (`data-state`, `aria-expanded`,
+`hidden`, `tabindex`), the linkage, the classes — and the normaliser drops three kinds of difference
+that belong to the library rather than to the markup:
+
+1. attributes named `data-radix-*`;
+2. the `aria-hidden` Radix pairs with `data-aria-hidden` when a dialog hides the rest of the document;
+3. six inline declarations Radix writes to drive its own animation and focus handling — every
+   `--radix-*` variable plus `outline`, `pointer-events`, `animation-duration`, `animation-name` and
+   `transition-duration`.
+
+Ids are renumbered in document order — every id and every reference to one, not only the ones that
+look generated. A producer cannot reproduce `radix-_r_8_-trigger-radix-_r_a_` and should not try; what
+has to survive is that the same pairs of elements are linked, which renumbering asserts exactly. The
+one case that costs — an id that is *content*, a heading's anchor — is asserted literally by its own
+test instead.
+
+`MarkupInput` gains the node's id for the same reason: eight blocks link an element to another by id
+and answer it with `useId`, and two of the same block on one page must not both claim `email-hint`.
+
+### Consequences
+- Accepted: the parity test no longer proves that an exported accordion carries Radix's exact
+  bookkeeping. It proves the page carries the same elements, classes, roles and states — which is what
+  a reader and an assistive technology meet, and what the HTML target's own script drives.
+- Two blocks changed to make the export honest rather than to make the test pass: `accordion` and
+  `faq-accordion` mount their closed panels (`forceMount`, hidden by `data-[state=closed]:hidden`) and
+  `tabs` mounts its inactive ones with `hidden`. A panel that is not in the DOM is a paragraph the
+  exported page does not contain, and the HTML target's disclosure script would have nothing to reveal.
+- The normalisation list is a rule, not an exception list. A block that cannot match still fails.
+
+## ADR-252 — Every block produces its markup, and the class-rule mechanism is deleted
+
+**Date** 2026-08-23 · **Prompt** 45c · **Status** Accepted, supersedes ADR-225
+
+### Question
+All 72 registry entries now have a markup producer (ADR-249). `codegen.classes` — the declarative
+mapping ADR-225 introduced and no block ever wrote — still stands beside them, and three passes read
+it: class generation, the responsive cascade, and the shape hash rule 3 extracts components from. What
+happens to each?
+
+### Decision
+The mechanism is deleted: `ClassRule`, `codegen.classes`, `generate-classes.ts` and
+`unreached-props.ts` are gone, the producer is required the way `client` is (ADR-199), and the three
+things the mechanism did are answered from the producers instead.
+
+**Classes** come from the producer, which calls the block's own `cva`. There is nothing left to
+declare.
+
+**Responsive overrides** are answered by running the producer again. It is a pure function of its
+props, so what a breakpoint does to the markup is the difference between two trees — `applyResponsive`
+walks them in parallel, prefixes the classes an override adds (`md:grid-cols-2` beside `grid-cols-1`),
+and moves an inline declaration that differs into a generated class with media rules, because a
+declaration cannot be prefixed. An override that changes the *shape* of the subtree is reported rather
+than guessed at. The `responsive-overrides` golden is byte-identical to what the class rules produced.
+
+**Rule 3** hashes the produced tree with every value erased, so two cards that differ only in a price
+still share a component, and two grids that differ in a class do not. The values are then lifted:
+where the body says what the source node's differing prop says, it becomes `{plan}` and each instance
+passes its own. A prop the producer folded into a longer string cannot be lifted, and the group prints
+separately rather than printing one instance's text three times.
+
+**ADR-229's warning** dissolves with the mechanism. It named props that reached neither a class rule
+nor an attribute; a producer reads whichever props it likes and prints them, so there is no second
+list to be short against.
+
+### Measurement
+`export-landing`, sixty nodes, the `react` target:
+
+| | before 45a | after 45a | now |
+| --- | --- | --- | --- |
+| elements in the export | 17 | 21 | **790** |
+| distinct classes | 0 | 21 | **321** |
+| `unsupported` warnings | 42 | 20 | **0** |
+
+The HTML target reports one `unsupported` warning, which is the list of Tailwind utilities its own
+stylesheet has no rule for — 80 of them, newly visible because the markup now carries the classes the
+canvas paints with. That is recorded as open data rather than closed here.
+
+`pnpm test:compile`: 16/16 golden projects type-check, 5 skipped for having no TypeScript.
+
+### Consequences
+- Accepted: the fixture catalogue in `codegen` grew a producer per entry. It had to: the goldens are
+  the only place the passes are proven, and a fixture with no interior proves nothing about a
+  mechanism whose whole subject is interiors.
+- Accepted: a block with no producer now fails the export with `MARKUP_PRODUCER_MISSING` rather than
+  printing an empty tag. That is the same trade ADR-199 made for the client boundary.
+- Every golden output changed. The diff was read: real interiors, `{plan}` in the shared component,
+  `style` spelled the way each target spells it, and the tint that used to travel through a generated
+  variable now sits inline until a breakpoint overrides it.
+- `EXPORT_ENGINE.md` § Class generation is rewritten around the producer; `RESPONSIVE_ENGINE.md`
+  § Codegen keeps its four rules and changes what answers them.
+
+## ADR-253 — Formatting runs in a worker; the rest of the export stays on the main thread
+
+**Date** 2026-08-23 · **Prompt** 45c · **Status** Accepted, supersedes ADR-244's placement
+
+### Question
+ADR-244 measured the export pipeline at 48.1 ms against a 100 ms threshold and put it on the main
+thread inside `startTransition`, with the note that "if a target or a printer grows,
+`pnpm measure:export` is the check". The producers grew it. Re-measured, what does the criterion say?
+
+### Criterion (ADR-244's, unchanged)
+`buildIR` + print + format on the sixty-node fixture, median of nine runs. Under 100 ms → the main
+thread. At or over → a worker.
+
+### Measurement
+`pnpm measure:export`, same script, same machine, same fixture:
+
+| Target | Files | `buildIR` | Print | Format | Total |
+| --- | --- | --- | --- | --- | --- |
+| `react` | 20 | 11.7 | 2.6 | 98.8 | **113.7** |
+| `next` | 24 | 17.0 | 2.4 | 151.1 | 171.2 |
+| `html` | 1 | 14.5 | 5.9 | 176.3 | 196.2 |
+| `json` | 1 | — | 0.8 | 4.2 | 4.8 |
+| `tokens` | 4 | — | — | 45.1 | 45.1 |
+
+113.7 ms is over the threshold, so the criterion has answered: not the main thread.
+
+**Which part**, since the answer is not "all of it": formatting is 98.8 of the 113.7 — 87 % — and it
+was 46 of 48 when ADR-244 measured. `buildIR` and the printers together are 14.3 ms.
+
+### Decision
+Prettier moves to a worker; `buildIR` and the printers stay. The split is not a compromise, it is
+where the structured-clone boundary can be drawn: formatting takes a string and returns a string,
+while the IR needs the block registry, the preset catalogue and the producers, none of which survive
+a clone — and none of which is where the time goes.
+
+The worker answers two messages: whether Prettier loaded, so the dialog says so once rather than per
+file, and one file at a time, so the dialog keeps filling its skeletons in as they land. A browser
+with no worker, or a bundle that will not start one, formats on the main thread exactly as before —
+the fallback the export already had for Prettier failing to load.
+
+### Consequences
+- Main-thread cost of an export: **14.3 ms** on this fixture, against a threshold of 100.
+- Accepted: the worker is a second module graph carrying Prettier. It is loaded only when somebody
+  exports, the same as before, and `/studio` first-load JS is unchanged at 350 kB.
+- Accepted: a worker that never answers hangs the formatting step. There is no timeout, because a
+  silent fallback would hide a bug in this repository behind a slow-looking export.
+- `measure:export` still measures the whole pipeline, which is the honest number for "how long until
+  the last file is formatted". Where that work runs is what this entry changed.

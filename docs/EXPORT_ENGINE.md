@@ -119,26 +119,34 @@ File names are the kebab-case of the component name.
 
 ### 3. Class generation
 
-Per node: resolve base props → Tailwind classes; resolve each responsive override → prefixed
-classes; merge; order.
+The classes are the producer's — it calls the block's own `cva` with the block's own props, so the
+canvas and the export cannot spend different classes for the same value. There is no declaration to
+keep in sync and no second mapping to be wrong; ADR-252 deleted the one there was.
+
+What this pass does is what a producer cannot: carry the responsive overrides.
 
 ```ts
-export function generateClasses(node: Node, def: BlockDefinition, theme: IRTheme): ClassResult
+export function applyResponsive(
+  base: IRElement,
+  layers: readonly ResponsiveLayer[],
+  node: NodeId,
+): ResponsiveResult
 ```
 
-The prop-to-class mapping comes off the descriptor — `codegen.classes`, a list of `ClassRule`s the
-block builds from the same object its `cva` call takes, so the canvas and the export cannot spend
-different classes for the same prop value (ADR-225). `ClassResult` is the classes plus the CSS
-variables and stylesheet rules the `custom` rules produced, because one walk of the props decides all
-three.
+A producer is a pure function of its props, so the export runs it again with each breakpoint's
+resolved props and compares the trees element by element.
 
 - Ordering is **variant-major**: unprefixed classes first, then `sm:` → `2xl:`, and within one
   variant the order of Tailwind's core plugins. That is what `prettier-plugin-tailwindcss` emits, and
   matching the official sort means the output looks like it went through the plugin, because
   effectively it did. ADR-224 records why the group-major reading of this sentence was wrong.
-- Redundant overrides (equal to the inherited value) are dropped.
-- Values with no Tailwind equivalent become a CSS variable plus a rule in the emitted stylesheet —
-  a `custom` rule on the descriptor. Never `[calc(100%-2.375rem)]` unless the user literally typed that.
+- The classes an override **adds** are prefixed; redundant overrides — equal to the inherited value —
+  emit nothing at all.
+- A class that carries its own breakpoint (`sm:grid-cols-2` inside a `cva` case) cannot take a second
+  prefix. The base classes stand and the report names the override that was not expressible.
+- An inline declaration that differs by breakpoint cannot be prefixed, so the element gains a
+  generated class and the declarations move to the stylesheet where a media query can hold them.
+- An override that changes the *shape* of the subtree is reported rather than guessed at.
 - Duplicate/conflicting classes are resolved with `tailwind-merge` semantics at build time, so no
   runtime `cn()` is needed in the output.
 
