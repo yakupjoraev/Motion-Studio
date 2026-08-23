@@ -52,12 +52,29 @@ rmSync(SCRATCH, { recursive: true, force: true })
 mkdirSync(SCRATCH, { recursive: true })
 
 const failures = []
+const skipped = []
 const list = projects()
+
+/**
+ * The HTML and JSON targets emit no TypeScript, so there is nothing for `tsc` to check and pointing it
+ * at one is a false red rather than a finding — it fails with TS18003, "no inputs were found". They are
+ * reported as skipped, which is the truth, and their own goldens are what locks their output.
+ */
+const hasTypeScript = (directory) =>
+  readdirSync(directory, { withFileTypes: true, recursive: true }).some(
+    (entry) => entry.isFile() && /\.(ts|tsx|js|jsx)$/.test(entry.name),
+  )
 
 for (const project of list) {
   const target = join(SCRATCH, project.name)
 
   cpSync(project.source, target, { recursive: true })
+
+  if (!hasTypeScript(target)) {
+    skipped.push(project.id)
+    console.log(`  skip ${project.id}  (no TypeScript to check)`)
+    continue
+  }
 
   const isNext = existsSync(join(target, 'tsconfig.json'))
 
@@ -83,7 +100,10 @@ for (const project of list) {
   console.error(`${run.stdout ?? ''}${run.stderr ?? ''}`.trimEnd())
 }
 
-console.log(`\n${list.length - failures.length}/${list.length} golden projects type-check`)
+console.log(
+  `
+${list.length - failures.length - skipped.length}/${list.length - skipped.length} golden projects type-check, ${skipped.length} skipped`,
+)
 
 if (failures.length > 0) {
   console.error(`\nFailed: ${failures.join(', ')}`)
