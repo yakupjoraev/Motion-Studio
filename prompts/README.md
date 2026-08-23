@@ -1,7 +1,12 @@
 # Build prompts
 
-62 prompts, one subsystem each, in dependency order. This is the execution plan for the
+65 prompts, one subsystem each, in dependency order. This is the execution plan for the
 specification in [`../docs/`](../docs/).
+
+`45a`–`45c` were added after prompt 45 ran: the export dialog made it demonstrable that a block
+exports as an empty root element, and closing that needs three subsystems rather than an insertion
+into an existing prompt. ADR-249 is the design; the numbering keeps them where they belong in the
+order rather than at the end.
 
 ## How to use them
 
@@ -47,7 +52,7 @@ Then read [`00-GLOBAL_RULES.md`](00-GLOBAL_RULES.md). It is the preamble every p
 | Motion | 30–34 | M6 | Curves, scheduler, 30+ presets, 13 effects, motion panel |
 | Responsive + theme | 35–37 | M7 | Breakpoints, override UI, theme builder |
 | Blocks wave 2 | 38–41 | M8 | 40 more blocks |
-| Export | 42–46 | M9 | IR, four printers, dialog, golden + compile tests |
+| Export | 42–46, 45a–45c | M9 | IR, four printers, dialog, block markup, golden + compile tests |
 | Playground | 47–49 | M10 | Sandboxes, CSS validation, vertex/bezier editors |
 | Persistence | 50 | M11 | IndexedDB, autosave, import, templates |
 | Public surfaces | 51–53 | M12 | Landing, gallery, docs site |

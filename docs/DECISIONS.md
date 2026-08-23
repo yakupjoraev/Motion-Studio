@@ -10116,3 +10116,89 @@ on.
 - The escape hatch, if the budget is ever enforced: `next/dynamic` plus a preload after hydration —
   the shortcut map's arrangement. It trades the guarantee for a probability, which is why it was not
   taken here.
+
+## ADR-249 — A block produces its own markup as IR, and a DOM parity test checks it
+
+**Date** 2026-08-23 · **Prompt** 45a · **Status** Accepted
+
+### Question
+A block's descriptor describes its root element and nothing else, so `hero-split` exports as
+`<motion.section />` — a self-closing tag with no headline, no image and no classes. Measured on the
+sixty-node fixture: 17 components, 19 files, **0** classes across the whole export and 42 `unsupported`
+warnings. The same gap has been escalated three times (prompts 42, 43, 44). Where does a block's
+interior come from, and how is it kept honest?
+
+### The options, and the numbers that separate them
+Counted across the catalogue: **771 elements** and **261 conditionals or iterations**. 53 of 72 entries
+are 15 elements or fewer; the largest is `pricing-table` at 53 elements and 23 conditionals.
+
+**A declarative markup plan in the descriptor.** To carry 261 conditionals, iteration over arrays of
+objects, and prop interpolation into text and attributes, the language has to be nearly as expressive
+as JSX. That is a template language, an evaluator in `codegen`, and a compiler from it to IR. Its
+claimed advantage — ADR-225's "a declaration can be checked and a closure cannot" — does not survive
+its own size: a 53-element template is no easier to check against a component than 53 lines of code.
+
+**A markup producer per block.** A pure function `(props, slots) => MarkupNode`, beside the component,
+returning the IR the printers already read. No template language, no evaluator, no printer work.
+
+The deciding argument is the check, not the shape: **either option needs the same test** — render the
+canvas component with `previewProps`, render the exported markup with the same props, compare
+normalised DOM. One option needs a language built on top of that test. The other does not.
+
+### Decision
+Each block gets a markup producer. Six decisions come with it.
+
+1. **It returns IR.** `IRElement` already carries `tag`, `classNames`, `attributes`, `children`,
+   `cssVars`, `notes`, `motion` and `structuredData`, and all three printers read it today. A block's
+   subtree is therefore printable the moment it exists.
+
+2. **The markup node types move to `packages/schema`.** `blocks` may not depend on `codegen` and
+   `codegen` may not depend on `blocks`; `schema` is the one package both may depend on. `codegen`
+   re-exports them from `ir.types.ts`, so no consumer changes an import.
+
+3. **A `slot` node, resolved away before printing.** The producer says where the document's children
+   go with `{ kind: 'slot', name }`; `buildElement` replaces it with the child elements it already
+   builds. Printers never see a slot, so the authoring type and the printing type stay distinct.
+
+4. **Classes come from the block's own `cva` call.** The producer imports the block's `.styles.ts` and
+   calls it — the same function the canvas component calls, with the same props. There is nothing to
+   declare and nothing to keep in sync. `codegen.classes` and `generateClasses` are therefore deleted
+   at the end of the migration: the second open escalation closes by dissolving rather than by being
+   filled in seventy-two times.
+
+5. **Scalars are referenced, collections are baked.** A scalar prop that reaches text or an attribute
+   is emitted as `{ kind: 'reference' }`, so `extractProps` can print `{headline}` or substitute the
+   value. An array or object prop is iterated by the producer and emitted as literal markup, because
+   the alternative — a loop node every printer has to print or unroll — buys a data-driven component
+   nobody asked for. Consequence: array props do not appear in the printed props interface.
+
+6. **The producer lives in a registry injected into `buildIR`**, beside the block registry and the
+   preset catalogue (ADR-226), not on the descriptor. The descriptor stays data, which is what
+   ADR-225 asked for and what `registry.node.test.ts` guards; the producer is code, and code lives in
+   a registry beside the components, the way `renderRegistry` does. A parity test asserts the two
+   registries hold the same ids.
+
+### Named prerequisite
+Twenty-two of the catalogue's render files draw icons, and an icon's geometry is JSX inside
+`packages/icons` — unreachable from a React-free producer, and a dependency the exported project must
+not have. So `packages/icons` gains a geometry table as data, consumed by `createIcon` *and* by the
+producers, and the markup emits a real inline `<svg>`. One source of geometry, no new dependency in
+the export. That is prompt 45b, and the icon-bearing blocks wait for it.
+
+### Migration
+Staged, and every stage leaves `main` green. While a block has no producer, `buildElement` behaves as
+it does today — the root element from the descriptor — which is the current behaviour rather than a
+new fallback. When the last block lands, the producer becomes required the way `client` is (ADR-199),
+the fallback is deleted with `generateClasses`, and the golden files are regenerated against real
+interiors.
+
+### Consequences
+- Accepted: 771 elements get written twice — once as a React component for the canvas, once as a
+  producer for the export. The DOM parity test is what makes that safe, and it is the only thing that
+  does. Without it this decision is worse than the declarative one.
+- Accepted: the parity test normalises generated ids (`useId`) to stable tokens in document order, so
+  linkage is asserted and the values are not.
+- The printers, the IR and the dialog are untouched. This is a `blocks` change with a `schema` type
+  move in front of it.
+- `EXPORT_ENGINE.md` § buildIR gains the producer as pass 0; `ARCHITECTURE.md` § Dependency graph
+  records why the markup types sit in `schema`.
