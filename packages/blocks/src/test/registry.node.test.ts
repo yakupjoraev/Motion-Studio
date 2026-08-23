@@ -32,6 +32,8 @@ const ALLOWED_FOR_MARKUP = new Set([
   // exported `<svg>` is drawn from (ADR-250). Neither pulls React, which is the only thing at stake.
   '@motion-studio/tokens',
   '@motion-studio/icons/geometry',
+  // The marquee preset's own module: a class, two custom properties and its keyframes, no React.
+  '@motion-studio/motion/marquee',
 ])
 
 /**

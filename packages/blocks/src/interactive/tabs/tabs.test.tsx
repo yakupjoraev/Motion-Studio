@@ -12,6 +12,17 @@ import { TABS_COUNT_VARIABLE, TABS_INDEX_VARIABLE } from './tabs.styles'
 
 const labels = definition.defaults.items.map((item) => item.label)
 
+/** Every panel is mounted; the open one is the one that says so. */
+const openPanel = (): HTMLElement => {
+  const open = screen
+    .getAllByRole('tabpanel')
+    .filter((panel) => panel.getAttribute('data-state') === 'active')
+
+  expect(open).toHaveLength(1)
+
+  return requireAt(open, 0)
+}
+
 const indexVariable = (): string =>
   screen.getByTestId('tabs-list-frame').style.getPropertyValue(TABS_INDEX_VARIABLE)
 
@@ -41,14 +52,17 @@ describe('Tabs', () => {
       'aria-selected',
       'true',
     )
+    // One panel is open, and the other three are in the document but `hidden` — `forceMount`, so the
+    // exported page contains every panel's text.
     expect(screen.getAllByRole('tabpanel')).toHaveLength(1)
+    expect(document.querySelectorAll('[role="tabpanel"]')).toHaveLength(labels.length)
   })
 
   it('wires each trigger to its own panel in both directions', () => {
     renderBlock(definition, Tabs)
 
     const trigger = screen.getByRole('tab', { name: requireAt(labels, 0) })
-    const panel = screen.getByRole('tabpanel')
+    const panel = openPanel()
 
     expect(trigger.getAttribute('aria-controls')).toBe(panel.id)
     expect(panel.getAttribute('aria-labelledby')).toBe(trigger.id)
@@ -86,7 +100,7 @@ describe('Tabs', () => {
     await userEvent.tab()
     await userEvent.tab()
 
-    expect(screen.getByRole('tabpanel')).toHaveFocus()
+    expect(openPanel()).toHaveFocus()
   })
 
   describe('the indicator', () => {
@@ -157,7 +171,7 @@ describe('Tabs', () => {
     it('render their own text when no child occupies them', () => {
       renderBlock(definition, Tabs)
 
-      expect(screen.getByRole('tabpanel').textContent?.startsWith('A visual editor')).toBe(true)
+      expect(openPanel().textContent?.startsWith('A visual editor')).toBe(true)
     })
 
     it('let a child win over the text, per index', () => {
@@ -166,7 +180,7 @@ describe('Tabs', () => {
       })
 
       expect(screen.getByTestId('dropped')).toBeInTheDocument()
-      expect(screen.getByRole('tabpanel').textContent).toBe('dropped block')
+      expect(openPanel().textContent).toBe('dropped block')
     })
   })
 

@@ -161,3 +161,12 @@ export function featureMatrixRows(plans: readonly Plan[]): readonly string[] {
 export function planIncludes(plan: Plan, label: string): boolean | undefined {
   return plan.features.find((feature) => feature.label === label)?.included
 }
+
+/** What follows a numeric price. A non-numeric one — `Free`, `Custom` — takes neither this nor a currency. */
+export const INTERVAL_SUFFIX = { month: '/month', year: '/year' } as const
+
+/** The two states of the billing toggle, in the order they are shown. */
+export const INTERVAL_OPTIONS: readonly { readonly value: Interval; readonly label: string }[] = [
+  { value: 'month', label: 'Monthly' },
+  { value: 'year', label: 'Yearly' },
+]

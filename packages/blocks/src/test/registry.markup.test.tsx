@@ -42,6 +42,7 @@ describe('markup parity', () => {
     const produced = markupRegistry['heading']?.({
       props: { ...HEADING.previewProps, anchor: 'export-engine' },
       id: NODE_ID,
+      slots: {},
     })
 
     expect(produced?.attributes['id']).toEqual({ kind: 'literal', value: 'export-engine' })
@@ -82,7 +83,10 @@ describe('markup parity', () => {
         await waitFor(() => {
           expect(component.container.firstElementChild).not.toBeNull()
         })
-        const produced = producer?.({ props, id: NODE_ID }) ?? { kind: 'text' as const, value: '' }
+        const produced = producer?.({ props, id: NODE_ID, slots: {} }) ?? {
+          kind: 'text' as const,
+          value: '',
+        }
         const markup = render(renderMarkupNode(produced, props))
 
         expect(normaliseMarkup(markup.container.firstElementChild as Element)).toBe(

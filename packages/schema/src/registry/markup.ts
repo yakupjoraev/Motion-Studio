@@ -66,7 +66,11 @@ export const literal = (value: string | number | boolean): MarkupValue => ({
 })
 
 /** Where the document's children go. Resolved away before any printer sees the tree. */
-export const slot = (name = 'children'): MarkupSlot => ({ kind: 'slot', name })
+export const slot = (name = 'children', index?: number): MarkupSlot => ({
+  kind: 'slot',
+  name,
+  ...(index === undefined ? {} : { index }),
+})
 
 /** A prop reference as a child, which is the common case: an element whose text is one prop. */
 export const refText = (name: string): MarkupExpression => expr(name)

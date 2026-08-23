@@ -92,6 +92,10 @@ export function Tabs({
         <RadixTabs.Content
           className={TABS_PANEL}
           data-testid="tabs-panel"
+          // The panel a reader has not opened is still a paragraph the exported page contains, and
+          // `hidden` is what keeps it out of the tab order and the accessibility tree meanwhile.
+          forceMount
+          hidden={index !== active}
           key={`${item.label}-${index}`}
           value={tabValue(index)}
         >

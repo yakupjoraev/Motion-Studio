@@ -49,4 +49,10 @@ export const ACCORDION_CHEVRON = [
 ].join(' ')
 
 /** No top padding: the gap above the content belongs to the trigger's `py-5`, or the panel opens with a jump. */
-export const ACCORDION_CONTENT = 'pb-5'
+/**
+ * A closed panel stays in the document and is hidden by this class rather than by being unmounted —
+ * `forceMount` in the row, and the reason is the export: a paragraph that is not in the DOM is a
+ * paragraph the exported page does not contain, and the HTML target's disclosure script would have
+ * nothing to reveal. `display: none` keeps it out of the accessibility tree exactly as unmounting did.
+ */
+export const ACCORDION_CONTENT = 'pb-5 data-[state=closed]:hidden'

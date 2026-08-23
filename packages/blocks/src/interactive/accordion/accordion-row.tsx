@@ -55,7 +55,11 @@ export function AccordionRow({ item, value, look, headingLevel, child }: Accordi
         </Heading>
       </RadixAccordion.Header>
 
-      <RadixAccordion.Content className={ACCORDION_CONTENT} data-testid="accordion-content">
+      <RadixAccordion.Content
+        className={ACCORDION_CONTENT}
+        data-testid="accordion-content"
+        forceMount
+      >
         <PanelContent body={item.body} child={child} />
       </RadixAccordion.Content>
     </RadixAccordion.Item>

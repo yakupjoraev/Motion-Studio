@@ -112,7 +112,6 @@ export {
   type BlockCategory,
   type BlockDefinition,
   type BlockRegistry,
-  type ClassRule,
   type ClientBoundary,
   type CodegenDescriptor,
   type ControlDescriptor,

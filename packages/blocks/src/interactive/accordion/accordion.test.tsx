@@ -15,6 +15,17 @@ const second = requireAt(labels, 1)
 
 const trigger = (name: string): HTMLElement => screen.getByRole('button', { name })
 
+/** Every panel is mounted; the open one is the one that says so. */
+const openPanel = (): HTMLElement => {
+  const open = screen
+    .getAllByRole('region')
+    .filter((panel) => panel.getAttribute('data-state') === 'open')
+
+  expect(open).toHaveLength(1)
+
+  return requireAt(open, 0)
+}
+
 describe('the uncontrolled open state', () => {
   it('names the row at the index and nothing outside the list', () => {
     expect(singleOpen(1, 3)).toBe('panel-1')
@@ -49,7 +60,7 @@ describe('Accordion', () => {
     renderBlock(definition, Accordion)
 
     const open = trigger(first)
-    const panel = screen.getByRole('region')
+    const panel = openPanel()
 
     expect(open).toHaveAttribute('aria-expanded', 'true')
     expect(open.getAttribute('aria-controls')).toBe(panel.id)
@@ -62,7 +73,12 @@ describe('Accordion', () => {
     for (const label of labels) {
       expect(trigger(label)).toHaveAttribute('aria-expanded', 'false')
     }
-    expect(screen.queryAllByRole('region')).toHaveLength(0)
+
+    // Every panel stays in the document — `forceMount`, so the export contains them — and every one
+    // of them is closed.
+    for (const panel of screen.getAllByRole('region')) {
+      expect(panel).toHaveAttribute('data-state', 'closed')
+    }
   })
 
   describe('single mode', () => {
@@ -139,9 +155,7 @@ describe('Accordion', () => {
     it('render their own text when nothing was dropped in them', () => {
       renderBlock(definition, Accordion)
 
-      expect(screen.getByRole('region').textContent).toBe(
-        requireAt(definition.defaults.items, 0).body,
-      )
+      expect(openPanel().textContent).toBe(requireAt(definition.defaults.items, 0).body)
     })
 
     it('let a child win over the text, per index', () => {
@@ -150,7 +164,7 @@ describe('Accordion', () => {
       })
 
       expect(screen.getByTestId('dropped')).toBeInTheDocument()
-      expect(screen.getByRole('region').textContent).toBe('dropped block')
+      expect(openPanel().textContent).toBe('dropped block')
     })
   })
 

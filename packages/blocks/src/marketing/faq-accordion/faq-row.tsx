@@ -34,7 +34,7 @@ export function FaqRow({ item, value, headingLevel }: FaqRowProps) {
         </Heading>
       </Accordion.Header>
 
-      <Accordion.Content className={FAQ_CONTENT} data-testid="faq-content">
+      <Accordion.Content className={FAQ_CONTENT} data-testid="faq-content" forceMount>
         <p className={FAQ_ANSWER}>{item.answer}</p>
       </Accordion.Content>
     </Accordion.Item>

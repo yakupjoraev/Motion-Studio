@@ -60,6 +60,8 @@ export interface MarkupElement {
 export interface SlotGate {
   readonly slot: string
   readonly when: 'filled' | 'empty'
+  /** One position in the slot rather than the whole of it: a tab panel holds the nth block. */
+  readonly index?: number
 }
 
 /**
@@ -70,6 +72,8 @@ export interface SlotGate {
 export interface MarkupSlot {
   readonly kind: 'slot'
   readonly name: string
+  /** One child of the slot rather than all of them: a bento cell holds the nth block, by position. */
+  readonly index?: number
 }
 
 export type MarkupChild = MarkupElement | MarkupText | MarkupExpression | MarkupSlot
@@ -87,6 +91,12 @@ export interface MarkupInput<P = UnknownProps> {
   readonly props: P
   /** Unique per node in the document. A producer suffixes it: `${id}-hint`. */
   readonly id: string
+  /**
+   * How many children the document put in each slot. A block that draws one cell per child — the
+   * bento grid — needs the count before it can draw anything, and the canvas gets the same number
+   * from `Children.toArray`.
+   */
+  readonly slots: Readonly<Record<string, number>>
 }
 
 /**

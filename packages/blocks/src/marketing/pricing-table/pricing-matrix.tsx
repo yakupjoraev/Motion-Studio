@@ -63,7 +63,9 @@ export function PricingMatrix({
                   key={`${plan.name}-${index}`}
                   scope="col"
                 >
-                  <span className={index === highlightIndex ? 'text-accent' : ''}>{plan.name}</span>
+                  <span className={index === highlightIndex ? 'text-accent' : undefined}>
+                    {plan.name}
+                  </span>
                   <span className="mt-1 block font-normal text-foreground-muted text-base tabular-nums">
                     {priceIsNumeric(price) ? `${currency}${price}` : price}
                   </span>

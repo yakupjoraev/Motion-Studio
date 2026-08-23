@@ -87,4 +87,9 @@ export const tabsIndicatorStyles = cva(
 )
 
 /** Radix gives the panel `tabindex="0"`, so it is a focus stop and needs the ring drawn on it. */
+/**
+ * A panel nobody has opened stays in the document — `forceMount` in the block, because a paragraph
+ * that is not in the DOM is one the exported page does not contain — and the block hides it with the
+ * `hidden` attribute, which keeps it out of the tab order and the accessibility tree both.
+ */
 export const TABS_PANEL = ['min-w-0 flex-1 rounded-md', INTERACTIVE_FOCUS].join(' ')

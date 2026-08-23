@@ -1,4 +1,4 @@
-import type { Interval } from './pricing-table.schema'
+import { INTERVAL_OPTIONS, type Interval } from './pricing-table.schema'
 import { INTERVAL_TOGGLE_PLATE, intervalButtonStyles } from './pricing-table.styles'
 
 export interface IntervalToggleProps {
@@ -6,11 +6,6 @@ export interface IntervalToggleProps {
   readonly onChange: (next: Interval) => void
   readonly label?: string
 }
-
-const OPTIONS: readonly { readonly value: Interval; readonly label: string }[] = [
-  { value: 'month', label: 'Monthly' },
-  { value: 'year', label: 'Yearly' },
-]
 
 /**
  * Two buttons in a labelled group, with `aria-pressed` carrying which one is on.
@@ -32,7 +27,7 @@ export function IntervalToggle({
       // biome-ignore lint/a11y/useSemanticElements: <fieldset> groups form controls whose value is submitted and needs a <legend> to be named; this changes what the page shows
       role="group"
     >
-      {OPTIONS.map((option) => (
+      {INTERVAL_OPTIONS.map((option) => (
         <button
           aria-pressed={value === option.value}
           className={intervalButtonStyles({ active: value === option.value })}

@@ -27,6 +27,12 @@ export const FAQ_CHEVRON =
  * The answer. `pb-5` and no top padding: the gap above it belongs to the trigger's own `py-5`, and adding
  * one here would open the panel with a visible jump.
  */
-export const FAQ_CONTENT = 'pb-5'
+/**
+ * A closed panel stays in the document and is hidden by this class rather than by being unmounted —
+ * `forceMount` in the row, and the reason is the export: a paragraph that is not in the DOM is a
+ * paragraph the exported page does not contain, and the HTML target's disclosure script would have
+ * nothing to reveal. `display: none` keeps it out of the accessibility tree exactly as unmounting did.
+ */
+export const FAQ_CONTENT = 'pb-5 data-[state=closed]:hidden'
 
 export const FAQ_ANSWER = 'm-0 max-w-prose text-pretty text-foreground-muted'

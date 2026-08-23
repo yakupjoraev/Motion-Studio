@@ -1,4 +1,10 @@
-import { type Interval, type Plan, planPrice, priceIsNumeric } from './pricing-table.schema'
+import {
+  INTERVAL_SUFFIX,
+  type Interval,
+  type Plan,
+  planPrice,
+  priceIsNumeric,
+} from './pricing-table.schema'
 import { PLAN_CURRENCY, PLAN_INTERVAL, PLAN_PRICE, PLAN_PRICE_ROW } from './pricing-table.styles'
 
 export interface PlanPriceProps {
@@ -6,8 +12,6 @@ export interface PlanPriceProps {
   readonly currency: string
   readonly interval: Interval
 }
-
-const SUFFIX = { month: '/month', year: '/year' } as const
 
 /**
  * The price, and it is a `<p>` rather than a heading: prompt 38 says so and the reason is the document
@@ -28,7 +32,7 @@ export function PlanPrice({ plan, currency, interval }: PlanPriceProps) {
         {numeric && currency !== '' && <span className={PLAN_CURRENCY}>{currency}</span>}
         {price}
       </span>
-      {numeric && <span className={PLAN_INTERVAL}>{SUFFIX[interval]}</span>}
+      {numeric && <span className={PLAN_INTERVAL}>{INTERVAL_SUFFIX[interval]}</span>}
     </p>
   )
 }

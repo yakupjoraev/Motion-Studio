@@ -98,3 +98,6 @@ export function cellKind(value: string | undefined): CellKind {
 
   return 'text'
 }
+
+/** What a yes or a no is said with behind the glyph, so a cell announces an answer. */
+export const CELL_WORDS = { yes: 'Yes', no: 'No' } as const

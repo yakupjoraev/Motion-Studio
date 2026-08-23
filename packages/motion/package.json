@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./marquee": "./src/presets/scroll/marquee.ts",
     "./package.json": "./package.json"
   },
   "scripts": {
