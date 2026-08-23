@@ -82,6 +82,54 @@ describe('printMarkup', () => {
     expect(marked.features).toEqual(new Set(['disclosure']))
   })
 
+  /**
+   * An icon reaches the HTML target as a real `<svg>` — ADR-250. Before it did, every one of these
+   * attributes was reported as unsupported and the glyph printed as an empty tag.
+   */
+  it('prints an inline svg, hyphenating the stroke contract on the way out', () => {
+    const marked = context()
+    const source = printMarkup(
+      element({
+        tag: 'svg',
+        attributes: {
+          'aria-hidden': { kind: 'literal', value: true },
+          width: { kind: 'literal', value: 16 },
+          viewBox: { kind: 'literal', value: '0 0 20 20' },
+          fill: { kind: 'literal', value: 'none' },
+          stroke: { kind: 'literal', value: 'currentColor' },
+          strokeWidth: { kind: 'literal', value: 1.5 },
+          strokeLinecap: { kind: 'literal', value: 'round' },
+          focusable: { kind: 'literal', value: 'false' },
+        },
+        children: [
+          element({
+            tag: 'path',
+            attributes: {
+              d: { kind: 'literal', value: 'M10 4v12M4 10h12' },
+              strokeDasharray: { kind: 'literal', value: '1.6 2' },
+            },
+          }),
+          element({
+            tag: 'circle',
+            attributes: {
+              cx: { kind: 'literal', value: 10 },
+              cy: { kind: 'literal', value: 10 },
+              r: { kind: 'literal', value: 7 },
+            },
+          }),
+        ],
+      }),
+      marked,
+    )
+
+    expect(source).toContain(
+      '<svg aria-hidden="true" width="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" focusable="false">',
+    )
+    expect(source).toContain('<path d="M10 4v12M4 10h12" stroke-dasharray="1.6 2"></path>')
+    expect(source).toContain('<circle cx="10" cy="10" r="7"></circle>')
+    expect(marked.warnings).toEqual([])
+  })
+
   it('renames the React spellings HTML gives another word to', () => {
     const source = printMarkup(
       element({ tag: 'label', attributes: { htmlFor: { kind: 'literal', value: 'name' } } }),

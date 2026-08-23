@@ -3,6 +3,14 @@ import type { StructuredDataType } from '@motion-studio/schema'
 import type { IRChild, IRElement, IRValue } from '../../ir/ir.types'
 import { type IRWarning, warning } from '../../warnings'
 
+import {
+  BOOLEAN_ATTRIBUTES,
+  HTML_ATTRIBUTES,
+  MOTION_PROPS,
+  RENAMED,
+  SVG_ATTRIBUTES,
+  VOID_TAGS,
+} from './attribute-names'
 import { FEATURE_ATTRIBUTES, type ScriptFeature } from './print-scripts'
 
 /**
@@ -15,132 +23,6 @@ import { FEATURE_ATTRIBUTES, type ScriptFeature } from './print-scripts'
  * and the file the user opens.
  */
 const INDENT = '  '
-
-/** Elements with no closing tag. `<img>` is the one this export actually produces. */
-const VOID_TAGS = new Set([
-  'area',
-  'base',
-  'br',
-  'col',
-  'embed',
-  'hr',
-  'img',
-  'input',
-  'link',
-  'meta',
-  'source',
-  'track',
-  'wbr',
-])
-
-/**
- * The props pass 4 bakes for `motion.*`. They are dropped in silence: the element's approximation
- * warning already names what happened to the animation, and repeating it per attribute would bury it.
- */
-const MOTION_PROPS = new Set([
-  'animate',
-  'custom',
-  'drag',
-  'exit',
-  'initial',
-  'layout',
-  'layoutId',
-  'transition',
-  'variants',
-  'viewport',
-  'whileDrag',
-  'whileFocus',
-  'whileHover',
-  'whileInView',
-  'whileTap',
-])
-
-/** Attributes an exported document can legitimately carry. `data-*` and `aria-*` pass by prefix. */
-const HTML_ATTRIBUTES = new Set([
-  'alt',
-  'autocomplete',
-  'checked',
-  'cite',
-  'colspan',
-  'content',
-  'controls',
-  'datetime',
-  'decoding',
-  'dir',
-  'disabled',
-  'download',
-  'draggable',
-  'fetchpriority',
-  'for',
-  'height',
-  'hidden',
-  'href',
-  'id',
-  'lang',
-  'loading',
-  'loop',
-  'max',
-  'maxlength',
-  'min',
-  'muted',
-  'name',
-  'open',
-  'placeholder',
-  'playsinline',
-  'poster',
-  'preload',
-  'readonly',
-  'rel',
-  'required',
-  'role',
-  'rowspan',
-  'scope',
-  'sizes',
-  'span',
-  'src',
-  'srcset',
-  'step',
-  'tabindex',
-  'target',
-  'title',
-  'type',
-  'value',
-  'width',
-])
-
-/**
- * The attributes whose presence *is* their value. Everything else — `aria-*` above all — spells a
- * boolean out, because `aria-expanded="false"` and no `aria-expanded` at all say different things.
- */
-const BOOLEAN_ATTRIBUTES = new Set([
-  'checked',
-  'controls',
-  'disabled',
-  'draggable',
-  'hidden',
-  'loop',
-  'muted',
-  'open',
-  'playsinline',
-  'readonly',
-  'required',
-])
-
-/** React spellings that are a different word in HTML. */
-const RENAMED: Readonly<Record<string, string>> = {
-  className: 'class',
-  htmlFor: 'for',
-  tabIndex: 'tabindex',
-  colSpan: 'colspan',
-  rowSpan: 'rowspan',
-  maxLength: 'maxlength',
-  autoComplete: 'autocomplete',
-  readOnly: 'readonly',
-  playsInline: 'playsinline',
-  fetchPriority: 'fetchpriority',
-  srcSet: 'srcset',
-  dateTime: 'datetime',
-}
 
 const escapeText = (value: string): string =>
   value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -192,6 +74,7 @@ function attributesOf(element: IRElement, context: MarkupContext): readonly stri
     const attribute = RENAMED[name] ?? name
     const known =
       HTML_ATTRIBUTES.has(attribute) ||
+      SVG_ATTRIBUTES.has(attribute) ||
       attribute.startsWith('data-') ||
       attribute.startsWith('aria-')
 
