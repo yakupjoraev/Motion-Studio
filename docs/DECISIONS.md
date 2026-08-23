@@ -9906,3 +9906,124 @@ block cannot be added without one.
   declares `always`. A fourth `whenPropEquals` kind would express it, and is not added for one block.
 - `buildIR` no longer throws on a document made from the shipped catalogue, which is what the export
   dialog needs to run at all.
+
+## ADR-244 — The export generates on the main thread, inside a transition
+
+**Date** 2026-08-23 · **Prompt** 45 · **Status** Accepted
+
+### Question
+The export dialog opens in the frame the button is pressed and then generates. Does the generation run
+on the main thread or in a Web Worker?
+
+### Criterion (set before measuring, by the prompt)
+`buildIR` + print + format on the sixty-node fixture, median of nine runs. Under 100 ms → the main
+thread, wrapped in `startTransition`. At or over 100 ms → a worker. 100 ms is where a user reads the
+dialog as blocked rather than as working.
+
+The profile the prompt does not name, named here: the studio's own — `/studio` is a desktop surface,
+so the number is taken unthrottled on the machine the studio runs on, and the sensitivity to a slower
+machine is reported with it rather than assumed away.
+
+### Measurement
+`pnpm measure:export`, which runs the three calls the dialog runs, in order, under node — the same V8,
+and Prettier's string work is the same work in both. The fixture is `export-landing`, sixty nodes of
+the real catalogue, committed. Nine runs after one discarded warm-up, medians in ms:
+
+| Target | Files | `buildIR` | Print | Format | Total |
+| --- | --- | --- | --- | --- | --- |
+| `react` | 20 | 1.5 | 0.3 | 46.4 | **48.1** |
+| `next` | 24 | 1.3 | 0.4 | 43.1 | 45.0 |
+| `html` | 1 | 0.9 | 0.4 | 33.6 | 34.8 |
+| `json` | 1 | — | 0.5 | 1.8 | 2.3 |
+| `tokens` | 4 | — | — | 24.6 | 24.6 |
+
+Two numbers beside it, from the same script: the 200-node stress fixture is 50.5 ms and the 101-node
+motion-heavy one 31.3 ms on `react`. The pipeline does not scale with the node count the way a reader
+would expect, because pass 1 dedupes repeated subtrees into one component — a landing page's twentieth
+band costs the printer nothing.
+
+### Decision
+Main thread, inside `startTransition`. 48.1 ms against a 100 ms threshold.
+
+The sensitivity, since a single number invites a single machine: **format is 46 of the 48 ms.** The IR
+and the printers together are under 2 ms, so the entire measurement is Prettier, and `format: false` —
+a control the dialog already has — is a 20× cut. The margin to the threshold is 2.1×, so a machine
+half this speed still passes and a 4× throttled one would not. A worker would move a 48 ms task off a
+thread that is not painting anything during it, and would cost the structured-clone of the document in
+and the files out, a second module graph, and a fallback path for the browser that fails to start it.
+
+### Consequences
+- Accepted: on hardware around 4× slower than this machine the generation is a long task. It is not a
+  frame budget — nothing animates while it runs, the dialog is already on screen with per-file
+  skeletons, and the transition keeps the shell interactive.
+- Accepted: `startTransition` is what makes this legal rather than the measurement alone. Generation
+  that blocked the render path at 48 ms would drop three frames of whatever the canvas was doing.
+- The threshold and the script are both committed, so the decision can be re-run rather than argued.
+  If a target or a printer grows, `pnpm measure:export` is the check.
+
+## ADR-245 — The code viewer highlights with the catalogue's tokeniser, not Prism
+
+**Date** 2026-08-23 · **Prompt** 45 · **Status** Accepted
+
+### Question
+EXPORT_ENGINE.md § Export dialog specifies "`prism`-lite at runtime for generated code — dynamically
+imported", and PERFORMANCE.md budgets 24 kB gzip for a runtime highlighter. What highlights the
+generated code?
+
+### Criterion
+Contract § 1.10: a new dependency needs a check that an existing one cannot do the job. The job is
+five colours over TypeScript, JSON, CSS, HTML and Markdown, in a panel whose content is generated a
+moment earlier and is never read as a document.
+
+### Measurement
+`packages/blocks/src/content/code-block/highlight.ts` already does exactly this job, for exactly this
+reason: ADR-124 measured `shiki` against it for the `code-block` block and recorded the same argument
+this panel would restate. 168 lines, no dependency, no WASM, and its language list already covers
+`ts`, `tsx`, `json`, `css`, `html` and `bash` — every extension the five targets emit except `.md`,
+which is plain text in a highlighter's terms anyway.
+
+### Decision
+Reuse it. `packages/blocks` gains a `./highlight` subpath export — beside the `./registry` one, and for
+the same reason: the tokeniser is pure TypeScript with no React in it, and the barrel is 59 components.
+The export dialog imports it dynamically, so it lands in its own chunk rather than in the studio's.
+
+EXPORT_ENGINE.md § Export dialog is corrected in its own commit: the document said `prism` before the
+catalogue had a tokeniser of its own, and two highlighters in one product is the defect the sentence
+was trying to prevent.
+
+### Consequences
+- Accepted: the generated code is highlighted to the same fidelity as a `code-block` on a marketing
+  page — five kinds of token, no semantic colouring. In a panel whose text was generated by this
+  repository a moment earlier, a wrong colour cannot mislead anyone about correctness.
+- Accepted: `@motion-studio/blocks` now has a third entry point, and a consumer could import the
+  tokeniser without the registry. That is the point of a subpath.
+- No dependency added, and the 24 kB the budget reserved for a highlighter is not spent.
+
+## ADR-246 — The export orchestrator is a studio hook, because `codegen` may not import the registry
+
+**Date** 2026-08-23 · **Prompt** 45 · **Status** Accepted
+
+### Question
+Prompt 45 writes the Copy React path as `exportDocument(document, { ...defaults, scope: 'selection' })`.
+Where does that function live?
+
+### Criterion
+Already specified. ARCHITECTURE.md § Dependency graph and the contract's directory law: `codegen` may
+depend on `schema` and `utils`, and not on `blocks`, `motion` or `theme`. ADR-226 already applied it —
+`buildIR` takes the registry and the preset catalogue as arguments so that the exporter does not pull
+React into node — and ADR-232 applied it again for the theme.
+
+### Decision
+There is no `exportDocument(document, options)` in `codegen`, because the two arguments are not enough:
+the pipeline needs the block registry, the preset catalogue and the printed theme, and all three are
+the caller's to supply. The orchestrator is `apps/web/src/components/studio/export/run-export.ts`,
+which is the one place that holds all five inputs, and `use-export` and `use-copy-selection` both call
+it — one code path, which is what the prompt's requirement is actually about.
+
+### Consequences
+- Accepted: the signature in the prompt does not exist under that name. What it asks for — one pipeline
+  for the dialog and for the context menu — is what `run-export` is.
+- The orchestrator is where the target-to-printer table lives, which is the switch `print-case.ts`
+  deliberately left to this prompt rather than inventing a second one beside the fixtures.
+- `codegen` keeps exporting parts rather than a façade, so the playground and the docs site can print
+  one file without constructing a whole export.

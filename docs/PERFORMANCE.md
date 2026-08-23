@@ -66,7 +66,7 @@ that proves it.
 | `particles` effect | 22 kB | The block renders |
 | `mesh-gradient` WebGL path | 16 kB | The block renders |
 | `chart-preview` | 34 kB | The block renders |
-| Syntax highlighter (runtime) | 24 kB | Generated code is displayed |
+| `@motion-studio/blocks/highlight` | 4 kB | Generated code is displayed (ADR-245) |
 
 ### Tree-shaking discipline
 

@@ -517,8 +517,9 @@ content prop with no route into the markup would otherwise vanish and print a bl
 
 - Opens instantly; generation streams in with per-file skeletons.
 - Changing an option regenerates only what is affected (memoised on an option hash).
-- Syntax highlighting via `shiki` at build time for the sample, `prism`-lite at runtime for
-  generated code — dynamically imported.
+- Syntax highlighting is the catalogue's own tokeniser — `@motion-studio/blocks/highlight`, the one
+  `code-block` uses — dynamically imported. ADR-245: a second highlighter in the same product is the
+  thing this line was written to prevent, and ADR-124 already measured it against `shiki`.
 - `jszip` loads only on the zip download.
 
 ## Testing
