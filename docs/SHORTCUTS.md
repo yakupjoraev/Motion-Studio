@@ -48,6 +48,7 @@ Notation: `Mod` = `Cmd` on macOS, `Ctrl` elsewhere. Resolved at runtime; never h
 | --- | --- |
 | `Mod+D` | Duplicate |
 | `Mod+C` | Copy |
+| `Mod+Shift+C` | Copy React for the selection (the playground overrides it with Copy CSS) |
 | `Mod+X` | Cut |
 | `Mod+V` | Paste |
 | `Mod+Shift+V` | Paste in place (same parent, same index) |
