@@ -10695,3 +10695,62 @@ the base layer that paints them. Both the Next and the React targets print it.
   breakpoint's width, but a `md:` class resolves against the browser viewport, so a 375-wide artboard
   in a 2160-wide window renders desktop type. Escalated as open data — it belongs to the responsive
   engine, not the export.
+
+## ADR-263 — The transition sandbox scrubs the real transition, paused
+
+**Date** 2026-08-29 · **Prompt** 47 · **Status** Accepted
+
+### Question
+PLAYGROUND.md § Property sandboxes asks the `transition` sandbox for play, loop and a **scrub**. A CSS
+transition is not a timeline anybody can seek — it runs when a property changes. So what does the
+scrub move?
+
+### Criterion (set before measuring)
+The position the scrub shows at *t* is the position the transition is in at *t*. Anything else is a
+picture of a curve we drew rather than the curve the reader wrote.
+
+### Measurement
+Two candidates:
+
+1. **Linear interpolation between the two states.** Cheap, and wrong by exactly the thing under test:
+   at t = 0.5 a `cubic-bezier(0.34, 1.56, 0.64, 1)` is past its end point, and a straight line would
+   show it half way. Every overshoot preset — Springy, Bounce, Overshoot, Anticipate — is invisible.
+2. **The `CSSTransition` animation, paused.** `element.getAnimations()` returns it, `pause()` holds it,
+   and `currentTime` seeks it. Measured on the four overshoot presets: the scrubbed position matches
+   the played position, overshoot included.
+
+### Decision
+The scrub pauses whatever animations the element is running and writes `currentTime`. Play and loop
+toggle the state and let the value under test do the work; nothing here interpolates.
+
+### Consequences
+- The four overshoot presets are readable at rest, which is the reason the scrub exists.
+- Accepted: the scrub needs an animation to seek, so it does nothing until the state has been toggled
+  at least once. The Toggle-state button is beside it for that reason.
+- Under reduced motion the play button is disabled and the scrub is the whole control — ANIMATION_
+  SYSTEM.md's rule that a reduced experience is complete rather than absent.
+
+## ADR-264 — The playground's value check is `apps/web`'s until prompt 48 moves it
+
+**Date** 2026-08-29 · **Prompt** 47 · **Status** Accepted, superseded by prompt 48 by design
+
+### Question
+Prompt 48 puts the CSS validator in `packages/schema`, beside `sanitizeDocument`, because a security
+boundary with two copies has one copy nobody is looking at. Prompt 47 needs a validator now. Where
+does it live in between?
+
+### Escalated
+Not a judgement call: the build plan already made it. Recorded so a reader of `apps/web` who finds a
+validator there knows it is scheduled to leave.
+
+### Decision
+`apps/web/src/components/playground/validate-value.ts` implements layers 1 to 3 — structure, the
+blocklist, `CSS.supports` — with a comment naming prompt 48. Layers 4 and 5, feature detection and the
+compatibility note, are not implemented here: half a feature would be a thing to delete rather than
+move.
+
+### Consequences
+- The playground refuses `@import`, `expression(`, `behavior:`, `-moz-binding`, `javascript:` and any
+  `url()` that is not an inline `data:` image, today.
+- Accepted: `validate-value.test.ts` will move with the code, and its assertions are written against
+  the behaviour rather than the file, so they survive the move.

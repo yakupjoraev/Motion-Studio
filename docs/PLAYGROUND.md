@@ -155,9 +155,19 @@ surface, same size. A/B swap is `Cmd+Shift+S`.
 | --- | --- |
 | Re-parsing on every keystroke | 60 ms debounce; structural check runs immediately for bracket feedback |
 | CodeMirror bundle | Dynamic import with a skeleton at the exact final height |
+| Colour picker | Dynamic import, loaded when a swatch is clicked |
 | Expensive previews (`backdrop-filter`, big blurs) | One target element only; `contain: paint` |
 | Continuous animation previews | Paused when the tab is hidden or the target is off-screen |
 | Reduced motion | Animation sandboxes show static start/end states with a manual scrub |
+
+Measured on this repository, 2026-08-29, production build, Chrome:
+
+| | |
+| --- | --- |
+| `/playground` first-load JS | **175 kB** (route 14.2 kB) — CodeMirror and the colour picker are not in it |
+| Lighthouse | Performance **90**, Accessibility **100**, Best Practices 96, SEO 100 |
+| CLS | **0** — the skeleton reserves the editor's exact height |
+| FCP / Speed Index | 1.1 s / 1.2 s |
 
 ## Accessibility
 
