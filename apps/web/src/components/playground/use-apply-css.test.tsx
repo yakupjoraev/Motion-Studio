@@ -59,6 +59,28 @@ describe('applying', () => {
 
     expect(result.current.applied).toBe('red')
   })
+
+  it('paints the value in the spelling layer 5 gives it', () => {
+    const { element, result } = setup('background', 'red')
+
+    act(() => result.current.setValue('rgba(0,0,0,.4)'))
+    act(() => vi.advanceTimersByTime(APPLY_DEBOUNCE_MS))
+
+    expect(result.current.applied).toBe('rgba(0, 0, 0, .4)')
+    expect(element.style.background).not.toBe('')
+  })
+
+  it('carries the compatibility notes for what the value used', () => {
+    const { result } = setup('background', 'oklch(62% 0.19 285)')
+
+    expect(result.current.features.map((feature) => feature.id)).toEqual(['oklch'])
+  })
+
+  it('has nothing to say about a value that uses nothing recent', () => {
+    const { result } = setup('background', 'red')
+
+    expect(result.current.features).toEqual([])
+  })
 })
 
 describe('an invalid value', () => {
@@ -72,13 +94,33 @@ describe('an invalid value', () => {
     expect(result.current.applied).toBe('red')
   })
 
-  it('says what is wrong and on which line', () => {
+  it('says what is wrong, on which line and at which column', () => {
     const { result } = setup('background', 'red')
 
     act(() => result.current.setValue('linear-gradient(\n  red,\n  blue'))
-    act(() => vi.advanceTimersByTime(APPLY_DEBOUNCE_MS))
 
-    expect(result.current.errors[0]?.message).toContain('Unclosed parenthesis')
+    expect(result.current.errors[0]).toMatchObject({
+      message: "Unclosed '(' — 1 open parens, 0 closing.",
+      line: 1,
+      column: 16,
+    })
+  })
+
+  it('answers a broken bracket without waiting for the debounce — layer 1 is not debounced', () => {
+    const { result } = setup('background', 'red')
+
+    act(() => result.current.setValue('rgb(1, 2'))
+
+    expect(result.current.errors).toHaveLength(1)
+  })
+
+  it('does not apply a structurally broken value once the debounce would have fired', () => {
+    const { element, result } = setup('background', 'red')
+
+    act(() => result.current.setValue('rgb(1, 2'))
+    act(() => vi.advanceTimersByTime(APPLY_DEBOUNCE_MS * 4))
+
+    expect(element.style.background).toBe('red')
   })
 
   it('clears the error once the value parses again', () => {

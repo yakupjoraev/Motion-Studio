@@ -15,9 +15,10 @@ import { EditorState } from '@codemirror/state'
 import { EditorView, keymap, lineNumbers } from '@codemirror/view'
 import { type ReactElement, useEffect, useRef } from 'react'
 
+import type { CssError } from '@motion-studio/schema/css'
+
 import { type ColorHit, colorHitField, colorSwatches } from './color-swatches'
 import { editorHighlight, editorTheme } from './editor-theme'
-import type { ValueError } from './validate-value'
 
 /**
  * The editor — PLAYGROUND.md § Editor. CodeMirror 6 rather than Monaco, for the reason TECH_STACK.md
@@ -32,19 +33,28 @@ export interface CodeEditorProps {
   readonly onChange: (value: string) => void
   /** `Cmd+Enter`, which skips the debounce — § Editor. */
   readonly onApply: () => void
-  readonly errors: readonly ValueError[]
+  readonly errors: readonly CssError[]
   readonly label: string
   readonly onColorClick?: ((hit: ColorHit) => void) | undefined
   /** Fires once the instance is mounted, so the placeholder underneath can be dropped. */
   readonly onReady?: (() => void) | undefined
 }
 
-/** Our errors, in CodeMirror's shape: one line, so an underline lands where the reader is looking. */
-function diagnosticsFor(state: EditorState, errors: readonly ValueError[]): Diagnostic[] {
+/**
+ * Our errors, in CodeMirror's shape. The underline starts at the column the validator names and runs
+ * to the end of the line: the character it points at is the one to look at, and the rest of the line
+ * is the context that makes it readable.
+ */
+function diagnosticsFor(state: EditorState, errors: readonly CssError[]): Diagnostic[] {
   return errors.map((error) => {
     const line = state.doc.line(Math.min(Math.max(error.line, 1), state.doc.lines))
+    // An empty range renders no underline, so the last character of the line is the floor.
+    const from = Math.min(
+      line.from + Math.max(error.column - 1, 0),
+      Math.max(line.to - 1, line.from),
+    )
 
-    return { from: line.from, to: line.to, severity: 'error', message: error.message } as const
+    return { from, to: line.to, severity: error.severity, message: error.message } as const
   })
 }
 

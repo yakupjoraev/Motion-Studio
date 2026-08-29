@@ -50,12 +50,7 @@ export {
   type ControlRendererProps,
   type ListControlProps,
 } from './control-renderer/index'
-export {
-  CssField,
-  validateCss,
-  type CssFieldProps,
-  type CssIssue,
-} from './css-field/index'
+export { CssField, type CssFieldProps } from './css-field/index'
 export {
   CurveEditor,
   CurveHandle,

@@ -2,6 +2,8 @@
  * One payload per row of FILE_FORMAT.md § Security. They are fixtures rather than inline literals so
  * the sanitizer tests and the CSS tests attack the same strings, and so adding a row to the table
  * means adding an entry here that something must then neutralise.
+ *
+ * The CSS row's payloads live beside the validator, in `css/__fixtures__/malicious.ts`.
  */
 export const MALICIOUS_URLS = {
   javascript: 'javascript:alert(1)',
@@ -18,28 +20,6 @@ export const SAFE_URLS = {
   mailto: 'mailto:hi@example.com',
   relative: '/studio',
   fragment: '#features',
-} as const
-
-export const MALICIOUS_CSS = {
-  url: 'background-image: url(https://evil.example.com/x.png)',
-  urlSpaced: 'url ("https://evil.example.com/x.png")',
-  import: '@import url("https://evil.example.com/x.css")',
-  expression: 'width: expression(alert(1))',
-  behavior: 'behavior: url(#default#time2)',
-  mozBinding: '-moz-binding: url(https://evil.example.com/x.xml#xss)',
-  element: 'background: element(#target)',
-  comment: 'red /* url( */',
-  escape: 'u\\rl(https://evil.example.com/x.png)',
-  unbalanced: 'rgb(0, 0, 0',
-  semicolon: 'red; position: fixed',
-  brace: '} body { display: none',
-} as const
-
-export const SAFE_CSS = {
-  colour: 'rgb(12 12 16 / 60%)',
-  shadow: '0 1px 2px rgba(0,0,0,.4), inset 0 0 0 1px rgb(255 255 255 / 6%)',
-  gradient: 'linear-gradient(180deg, #101014 0%, #1a1a22 100%)',
-  clip: 'polygon(0 0, 100% 0, 100% 80%, 0 100%)',
 } as const
 
 export const MALICIOUS_RICH_TEXT = {

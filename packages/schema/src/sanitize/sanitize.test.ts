@@ -4,13 +4,8 @@ import type { Asset, MotionDocument } from '../document/document.types'
 import { assetId, nodeId } from '../ids/ids'
 import { doc, node, resetFactories } from '../test/factories'
 
-import {
-  MALICIOUS_CSS,
-  MALICIOUS_RICH_TEXT,
-  MALICIOUS_URLS,
-  OVERSIZED,
-  SAFE_URLS,
-} from './__fixtures__/malicious'
+import { MALICIOUS_RICH_TEXT, MALICIOUS_URLS, OVERSIZED, SAFE_URLS } from './__fixtures__/malicious'
+import { MALICIOUS_DECLARATIONS, SAFE_DECLARATIONS } from './css/__fixtures__/malicious'
 import { sanitizeRichText } from './rich-text'
 import { MAX_NAME_LENGTH, REMOVAL_KINDS, sanitizeDocument } from './sanitize'
 import { checkImageDataUrl, isSafeUrl } from './urls'
@@ -68,18 +63,49 @@ describe('URLs', () => {
   })
 })
 
+/**
+ * The importer runs the validator in `sanitize/css` — ADR-265 — so these assert the delegation by
+ * shared fixture: what the inspector and the playground refuse is what an import strips.
+ */
 describe('CSS escape hatches', () => {
-  it.each(Object.entries(MALICIOUS_CSS))('drops the %s payload and reports it', (_label, css) => {
-    const outcome = sanitizeDocument(withProps({ customCss: css }))
+  it.each(Object.entries(MALICIOUS_DECLARATIONS))(
+    'drops the %s payload and reports it',
+    (_label, css) => {
+      const outcome = sanitizeDocument(withProps({ customCss: css }))
 
-    expect(outcome.document.nodes[nodeId('node_1')]?.props['customCss']).toBe('')
-    expect(outcome.removed.map((entry) => entry.kind)).toContain(REMOVAL_KINDS.blockedCss)
+      expect(outcome.document.nodes[nodeId('node_1')]?.props['customCss']).toBe('')
+      expect(outcome.removed.map((entry) => entry.kind)).toContain(REMOVAL_KINDS.blockedCss)
+    },
+  )
+
+  it('says which line the payload was on', () => {
+    const outcome = sanitizeDocument(
+      withProps({ customCss: `color: red;\n${MALICIOUS_DECLARATIONS.remoteImage}` }),
+    )
+
+    expect(outcome.removed[0]?.message).toContain('line 2')
   })
 
-  it('keeps a value the validator accepts', () => {
-    const outcome = sanitizeDocument(withProps({ css: '0 1px 2px rgb(0 0 0 / 40%)' }))
+  it.each(Object.entries(SAFE_DECLARATIONS))('keeps the %s fixture', (_label, css) => {
+    const outcome = sanitizeDocument(withProps({ css }))
 
     expect(outcome.removed).toEqual([])
+  })
+
+  it('stores the declaration in the spelling layer 5 gives it', () => {
+    const outcome = sanitizeDocument(withProps({ css: 'box-shadow:0 1px 2px rgb(0 0 0 / 40%);' }))
+
+    expect(outcome.document.nodes[nodeId('node_1')]?.props['css']).toBe(
+      'box-shadow: 0 1px 2px rgb(0 0 0 / 40%)',
+    )
+  })
+
+  it('allows the one url() exception, so an inline mask survives an import', () => {
+    const css = 'mask-image: url("data:image/png;base64,iVBORw0KGgo=")'
+    const outcome = sanitizeDocument(withProps({ css }))
+
+    expect(outcome.removed).toEqual([])
+    expect(outcome.document.nodes[nodeId('node_1')]?.props['css']).toBe(css)
   })
 })
 

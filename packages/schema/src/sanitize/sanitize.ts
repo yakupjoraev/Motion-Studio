@@ -1,7 +1,7 @@
 import type { Asset, MotionDocument, Node } from '../document/document.types'
 import type { NodeId } from '../ids/ids'
 
-import { validateCssValue } from './css/validate-css'
+import { validateCssDeclarations } from './css/validate-css'
 import { sanitizeRichText } from './rich-text'
 import { MAX_BLUR_DATA_URL_BYTES, checkImageDataUrl, isSafeUrl } from './urls'
 
@@ -70,16 +70,18 @@ function sanitizeString(key: string, value: string, path: string, report: Report
   }
 
   if (CSS_KEYS.test(key)) {
-    const validated = validateCssValue(value)
+    // The same validator the playground and the inspector call — ADR-265. A second implementation
+    // here would be the one nobody looks at, and this is the path that runs on untrusted input.
+    const validated = validateCssDeclarations(value)
 
     if (validated.ok) {
-      return validated.value
+      return validated.normalized
     }
 
     report.add(
       REMOVAL_KINDS.blockedCss,
       path,
-      validated.error.map((rejection) => rejection.message).join('; '),
+      validated.errors.map((error) => `line ${error.line}: ${error.message}`).join(' '),
     )
 
     return ''

@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic'
 import { type ReactElement, useCallback, useRef, useState } from 'react'
 
 import type { ColorHit } from './color-swatches'
+import { CompatNotes } from './compat-notes'
 import { EDITOR_HEIGHT, EditorSkeleton } from './editor-skeleton'
 import { PresetPanel } from './preset-panel'
 import { type PlaygroundProperty, propertyDescriptor, styleFor } from './properties'
@@ -38,7 +39,7 @@ export function PlaygroundLayout(): ReactElement {
   const [property, setProperty] = useState<PlaygroundProperty>('background')
   const descriptor = propertyDescriptor(property)
   const target = useRef<HTMLDivElement | null>(null)
-  const { value, setValue, applyNow, applied, errors } = useApplyCss(
+  const { value, setValue, applyNow, applied, errors, features } = useApplyCss(
     property,
     target,
     descriptor.initial,
@@ -121,9 +122,16 @@ export function PlaygroundLayout(): ReactElement {
           they happen; this is the sentence a screen-reader user gets, and it is the last one rather
           than a running commentary.
         */}
-        <output aria-live="polite" className="min-h-5 text-danger text-xs">
-          {errors.length === 0 ? '' : `Line ${errors[0]?.line}: ${errors[0]?.message}`}
+        <output
+          aria-live="polite"
+          data-testid="playground-error"
+          className="min-h-5 text-danger text-xs"
+        >
+          {errors.length === 0
+            ? ''
+            : `Line ${errors[0]?.line}, column ${errors[0]?.column}: ${errors[0]?.message}`}
         </output>
+        <CompatNotes features={features} />
         <output aria-live="polite" className="sr-only">
           {copied ? 'CSS copied to the clipboard.' : ''}
         </output>

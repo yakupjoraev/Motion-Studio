@@ -97,13 +97,22 @@ describe('CssField', () => {
     expect(screen.getByText('Line 1: letter-spacing is not editable here.')).toBeInTheDocument()
   })
 
-  it('lists every bad line', async () => {
+  it('lists every bad declaration, not only the first', async () => {
     const user = userEvent.setup()
 
     render(<Fixture value="" />)
-    await user.type(field(), 'oops{Enter}also oops')
+    await user.type(field(), 'oops;{Enter}also oops')
 
     expect(screen.getAllByRole('listitem')).toHaveLength(2)
+  })
+
+  it('says a declaration is missing its semicolon rather than guessing at the newline', async () => {
+    const user = userEvent.setup()
+
+    render(<Fixture value="" />)
+    await user.type(field(), 'color: red{Enter}opacity: 0.5')
+
+    expect(screen.getByRole('listitem')).toHaveTextContent("end the declaration before it with ';'")
   })
 
   it('validates nothing across a disagreeing selection', () => {

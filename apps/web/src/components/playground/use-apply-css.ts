@@ -1,11 +1,15 @@
 'use client'
 
+import {
+  type CssError,
+  type CssFeature,
+  findStructuralErrors,
+  validateCssValue,
+} from '@motion-studio/schema/css'
 import { type RefObject, useCallback, useEffect, useRef, useState } from 'react'
 
-import { type ValueError, validateValue } from './validate-value'
-
 /**
- * The apply loop — PLAYGROUND.md § Parsing and validation. Three rules, and each one is a decision the
+ * The apply loop — PLAYGROUND.md § Parsing and validation. Four rules, and each one is a decision the
  * document already made:
  *
  * 1. **The last valid value stays rendered.** Blanking the preview on a typo takes away the thing the
@@ -14,6 +18,11 @@ import { type ValueError, validateValue } from './validate-value'
  *    untrusted input and the element's own style is the only surface it can reach.
  * 3. **60 ms debounce**, so a fast typist does not pay for a parse per keystroke. `applyNow` is what
  *    `Cmd+Enter` calls.
+ * 4. **Layer 1 is not debounced.** A missing bracket is answered while the key is still down; the
+ *    layers that cost something — the browser's own check — wait for the pause.
+ *
+ * The check itself is `packages/schema`'s, the one `sanitizeDocument` runs on an imported file. There
+ * is no validator in this app: ADR-265, and prompt 47's stub is gone.
  */
 export const APPLY_DEBOUNCE_MS = 60
 
@@ -24,7 +33,9 @@ export interface ApplyCss {
   applyNow: () => void
   /** What the element is actually painting, which is the last value that validated. */
   readonly applied: string
-  readonly errors: readonly ValueError[]
+  readonly errors: readonly CssError[]
+  /** Layer 4's compatibility notes for the applied value — § Parsing and validation. */
+  readonly features: readonly CssFeature[]
 }
 
 export function useApplyCss(
@@ -34,12 +45,13 @@ export function useApplyCss(
 ): ApplyCss {
   const [value, setValueState] = useState(initial)
   const [applied, setApplied] = useState('')
-  const [errors, setErrors] = useState<readonly ValueError[]>([])
+  const [errors, setErrors] = useState<readonly CssError[]>([])
+  const [features, setFeatures] = useState<readonly CssFeature[]>([])
   const pending = useRef<number | undefined>(undefined)
 
   const apply = useCallback(
     (next: string) => {
-      const checked = validateValue(property, next)
+      const checked = validateCssValue(property, next)
 
       if (!checked.ok) {
         setErrors(checked.errors)
@@ -48,8 +60,9 @@ export function useApplyCss(
       }
 
       setErrors([])
-      setApplied(checked.value)
-      target.current?.style.setProperty(property, checked.value)
+      setFeatures(checked.features)
+      setApplied(checked.normalized)
+      target.current?.style.setProperty(property, checked.normalized)
     },
     [property, target],
   )
@@ -67,6 +80,21 @@ export function useApplyCss(
   const setValue = useCallback(
     (next: string) => {
       setValueState(next)
+
+      const structural = findStructuralErrors(next)
+
+      /*
+       * A structural error is final — no later layer can rescue it — so it is reported now and the
+       * apply is not scheduled. A clean structure says nothing yet about the rest, so the errors on
+       * screen stay until the debounced pass answers.
+       */
+      if (structural.length > 0) {
+        window.clearTimeout(pending.current)
+        setErrors(structural)
+
+        return
+      }
+
       schedule(next)
     },
     [schedule],
@@ -91,5 +119,5 @@ export function useApplyCss(
     }
   }, [initial, apply])
 
-  return { value, setValue, applyNow, applied, errors }
+  return { value, setValue, applyNow, applied, errors, features }
 }

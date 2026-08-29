@@ -10940,3 +10940,111 @@ passes through normalization untouched.
 - `content: "\201C"`, `font-family: "My\\Font"` and quoted data URLs keep working in the escape hatch.
 - The evasion the original rule was written for is still refused, and the fixture `u\rl(...)` still
   fails at the structural layer.
+
+## ADR-271 — A top-level colon in a value is an error, and it names the missing semicolon
+
+**Date** 2026-08-29 · **Prompt** 48 · **Status** Accepted
+
+### Question
+`validateCssDeclarations` splits on `;` because that is what separates declarations in CSS. A person
+typing into the inspector's three-row textarea writes one declaration per **line** and often leaves
+the semicolons out. `color: red\nopacity: 0.5` is then one declaration whose value is
+`red\nopacity: 0.5`. What happens to it?
+
+The validator that shipped before this one split on newlines, so it reported two bad lines. That is
+friendlier and it is not CSS: a browser reading the same text drops the whole declaration.
+
+### Criterion (set before deciding)
+The splitter agrees with CSS, and no malformed value reaches a document unreported. Two rules to check
+against: a newline must not change what a declaration means, and every value the splitter produces
+must be one a browser would accept.
+
+### Measurement
+Splitting on newlines fails the first rule: `box-shadow: 0 1px 2px red,\n  0 8px 24px blue` is one
+declaration to CSS and two to the splitter, and the second half is not a declaration at all.
+
+Splitting on `;` only fails the second rule under `node`, where `CSS.supports` is unavailable
+(ADR-268): the malformed value passes layers 1, 2 and 5 and is stored.
+
+A third rule closes the gap. Surveying where a colon can appear in a CSS value: inside a string
+(`content: "a:b"`), inside a call (`url(data:…)`, `image-set(…)`), and nowhere else. Checked against
+all 63 valid fixtures: every colon in them is inside a call or a string, and there is no top-level one.
+
+### Decision
+Split on `;`, and make a **top-level colon inside a value** a structural error reading
+`Unexpected ':' — write a value here, or end the declaration before it with ';'.`
+
+### Consequences
+- `color: red\nopacity: 0.5` is reported at line 2, column 8 — the colon that gave it away — with a
+  message naming the fix. Better than the line-splitting validator, which reported two vaguer errors.
+- The playground's value box gets the same rule, and there it reads as "this box takes a value": a
+  reader who pastes `background: red` into it is told so at the colon.
+- Accepted: a value that legitimately carries a top-level colon would be refused. None exists in CSS
+  today; a future one would be a change to this rule, with a fixture.
+
+## ADR-272 — A bare `javascript:` is not on the blocklist, because `url()` already is
+
+**Date** 2026-08-29 · **Prompt** 48 · **Status** Accepted
+
+### Question
+Both validators this one replaces refused any value containing `javascript:`. Prompt 48's blocklist
+does not list it. Does the rule survive the merge?
+
+### Criterion (set before deciding)
+A rule earns its place if it blocks a vector no other rule blocks. A rule that only blocks strings
+which are already inert is noise, and noise in a blocklist is what makes people stop reading it.
+
+### Measurement
+Where `javascript:` can do anything in CSS, it is a URL, and every URL path is already refused:
+`url(javascript:alert(1))` fails the `url()` rule (ADR-266), `behavior:` and `-moz-binding` are
+refused as properties and as constructs. Outside a URL — `background: javascript:x` — the token is a
+malformed value: no engine resolves it, and the declaration is dropped.
+
+Against the cost: the blocklist patterns are not string-aware, so a `javascript:` rule would also
+refuse `content: "javascript: a language"`, which is text.
+
+### Decision
+No `javascript:` entry. The six constructs prompt 48 lists are the blocklist.
+
+### Consequences
+- `background: javascript:x` is now accepted where there is no browser to reject it, and refused by
+  layer 3 where there is. It is inert either way.
+- Accepted: a reader diffing this against the old playground validator sees a rule disappear. This
+  entry is why it did.
+
+## ADR-273 — The validator has its own entry point, `@motion-studio/schema/css`
+
+**Date** 2026-08-29 · **Prompt** 48 · **Status** Accepted
+
+### Question
+`/playground` needs `validateCssValue`. Importing it from `@motion-studio/schema` imports the package
+barrel, which builds the Zod document schemas at module scope. Does that reach the page bundle?
+
+### Criterion (set before measuring)
+Measure `/playground` first-load JS before and after. Under 5 kB of growth for the validator: import
+from the barrel and keep one door. Over that: give the validator its own export.
+
+### Measurement
+`pnpm --filter web build`, first-load JS for `/playground`:
+
+| Import path | First load |
+| --- | --- |
+| Prompt 47, no validator imported from a package | 175 kB |
+| `@motion-studio/schema` (the barrel) | **203 kB** |
+| `@motion-studio/schema/css` (a declared subpath) | **179 kB** |
+
+28 kB for a value check, of which 24 kB is the document parser the page never calls. Zod schema
+modules run at import, so nothing tree-shakes them away.
+
+### Decision
+`packages/schema/package.json` declares `"./css": "./src/sanitize/css/index.ts"`. The package barrel
+re-exports the same symbols, so both doors reach one module and neither is a deep import — the ban in
+ENGINEERING_CONTRACT.md § 3 is on reaching past a package's declared exports, and this is a declared
+export.
+
+### Consequences
+- `/playground` is 179 kB: 4 kB for the validator and the compatibility notes, and nothing else.
+- `apps/web` and `CssField` both import from `/css`. The barrel stays correct for anything already
+  importing the package whole — `/studio` first-load is unchanged at 355 kB.
+- Accepted: a second entry point is a second thing to keep exported. The subpath barrel re-exports
+  from the same files the package barrel does, so a symbol can only go missing from both at once.

@@ -205,13 +205,24 @@ export {
   isSafeUrl,
   type DataUrlCheck,
 } from './sanitize/urls'
+// Also `@motion-studio/schema/css`, which is the door a page takes when it wants the validator
+// without the document schemas behind it — ADR-273.
 export {
-  validateCssDeclaration,
+  BLOCKED_PROPERTIES,
+  CSS_BLOCKLIST,
+  MAX_VALUE_LENGTH,
+  findBlockedConstructs,
+  findStructuralErrors,
+  normalizeCssValue,
+  validateCssDeclarations,
   validateCssValue,
-  type CssDeclaration,
-  type CssRejection,
-} from './sanitize/css/validate-css'
-export { CSS_BLOCKLIST, findBlockedConstructs, type BlocklistEntry } from './sanitize/css/blocklist'
+  type BlocklistEntry,
+  type CssError,
+  type CssFeature,
+  type CssLayer,
+  type CssValidation,
+  type DeclarationOptions,
+} from './sanitize/css/index'
 
 export {
   CURRENT_VERSION,

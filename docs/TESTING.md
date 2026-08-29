@@ -227,6 +227,8 @@ e2e/
 │   ├── responsive.spec.ts
 │   ├── theme.spec.ts
 │   └── persistence.spec.ts
+├── playground/
+│   └── validation.spec.ts        the layers that need a real `CSS.supports`
 ├── export/
 │   ├── react.spec.ts
 │   ├── next.spec.ts

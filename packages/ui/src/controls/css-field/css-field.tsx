@@ -1,15 +1,19 @@
+import { validateCssDeclarations } from '@motion-studio/schema/css'
 import { cn } from '@motion-studio/utils'
 import { type ReactElement, memo, useEffect, useId, useState } from 'react'
 
 import { Textarea } from '../../textarea/index'
 import { controlLabelProps } from '../control-row/index'
-import { validateCss } from './css-validate'
 
 import type { CssFieldProps } from './css-field.types'
 
 /**
  * The escape hatch. It validates as you type and commits on blur, so a half-written declaration never
  * reaches the document — and the reasons are rendered, not implied by a border colour.
+ *
+ * The check is `packages/schema`'s, the same one `sanitizeDocument` runs on an imported file (ADR-265).
+ * What this field refuses is exactly what an import would strip, which is the only way the two can be
+ * relied on to agree.
  *
  * Feedback goes in a polite live region: `ACCESSIBILITY.md` § Playground sets that pattern for the CSS
  * editor, and this is the same job in a smaller box.
@@ -36,7 +40,8 @@ function CssFieldImpl({
     setDraft(mixed ? '' : value)
   }, [value, mixed])
 
-  const issues = mixed ? [] : validateCss(draft, properties)
+  const checked = mixed ? undefined : validateCssDeclarations(draft, { properties })
+  const issues = checked === undefined || checked.ok ? [] : checked.errors
   const issuesId = issues.length === 0 ? undefined : `${fieldId}-issues`
   const described = [describedBy, issuesId].filter((part) => part !== undefined)
 
@@ -58,9 +63,10 @@ function CssFieldImpl({
           onChange(event.target.value)
         }}
         onBlur={() => {
-          // A committed value is one that parsed. An invalid draft stays in the field to be fixed.
-          if (draft !== value && validateCss(draft, properties).length === 0) {
-            onCommit(draft)
+          // A committed value is one that parsed, in the spelling layer 5 gives it: the field and a
+          // re-imported file then hold the same bytes. An invalid draft stays here to be fixed.
+          if (draft !== value && checked?.ok === true) {
+            onCommit(checked.normalized)
           }
         }}
         {...controlLabelProps(label, labelledBy)}
