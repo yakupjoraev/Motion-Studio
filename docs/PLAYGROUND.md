@@ -68,34 +68,52 @@ Configuration:
 
 Input is untrusted, and applying it means writing to a live style. So it is parsed, not trusted.
 
+The validator lives in `packages/schema/src/sanitize/css/`, not here. `sanitizeDocument` is the
+security boundary for an imported `.motion` file and it must call the same code the playground calls;
+a copy in `apps/web` would let the interactive path and the security path drift, and the one that
+matters for safety is the one nobody is looking at.
+
 ```ts
 export function validateCssValue(property: string, value: string): CssValidation
 
+/** A `css` escape-hatch prop and the inspector's field: `property: value;` lines. */
+export function validateCssDeclarations(input: string, options?: DeclarationOptions): CssValidation
+
 export type CssValidation =
-  | { ok: true; normalized: string; usedFeatures: CssFeature[] }
+  | { ok: true; normalized: string; features: CssFeature[]; unverified: boolean }
   | { ok: false; errors: CssError[] }
 
 export interface CssError {
   message: string        // "Unexpected ')' — 3 open parens, 4 closing"
-  line: number
-  column: number
+  line: number           // 1-based
+  column: number         // 1-based
   severity: 'error' | 'warning'
+  layer: 'structural' | 'blocklist' | 'native' | 'feature'
 }
 ```
 
 Layered approach:
 
 1. **Structural check** — balanced parens, brackets, quotes; no `;` outside a declaration list;
-   length cap 8 kB.
+   length cap 8 kB. Runs **undebounced** on every keystroke, so bracket feedback is instant, and
+   reports the line and column of the first imbalance.
 2. **Blocklist** — `url(` (unless a data URL that passes the asset sanitizer), `@import`,
-   `expression(`, `behavior:`, `-moz-binding`. These are the CSS injection vectors and there is no
-   legitimate use for them here.
+   `expression(`, `behavior:`, `-moz-binding`, `element(`. These are the CSS injection vectors and
+   there is no legitimate use for them here.
 3. **Native validation** — `CSS.supports(property, value)`. The browser is the authority on
-   whether a value is valid, and it is free.
+   whether a value is valid, and it is free. Where there is no `CSS` — a `node` test run, an import
+   on the server — the result carries `unverified: true` rather than failing: layers 1, 2 and 5 are
+   the security-relevant ones and they still ran.
 4. **Feature detection** — which modern features the value uses (`oklch`, `color-mix`,
    `@supports`-worthy properties), surfaced as a compatibility note: "`oklch()` — Safari 15.4+".
-5. **Apply** — set the property on the target element only, never on a stylesheet, never
-   `innerHTML`.
+   A value this browser rejects that uses one of them is attributed to the `feature` layer, so the
+   message names the feature rather than blaming the value.
+5. **Normalize** — re-serialised to one spelling: collapsed whitespace, one space after a comma,
+   lowercase function names and hex. Colour notation is preserved; `oklch` chosen by the author stays
+   `oklch`. `normalize(normalize(x)) === normalize(x)`.
+
+**Apply** — the normalized value is set on the target element only, never on a stylesheet, never
+`innerHTML`.
 
 On failure: **the last valid value stays rendered**, the error underlines in the editor, and the
 target gets a subtle red outline. Blanking the preview on a typo is hostile — you lose the thing
@@ -184,7 +202,8 @@ Measured on this repository, 2026-08-29, production build, Chrome:
 ## Testing
 
 **Unit** — `validateCssValue`: balanced-delimiter cases, every blocklist entry, `CSS.supports`
-pass/fail, normalization stability (`validate(validate(x)) === validate(x)`), the 8 kB cap.
+pass/fail, normalization stability (`validate(validate(x)) === validate(x)`), the 8 kB cap. It never
+throws, over the malicious fixtures and 1000 fuzzed strings.
 
 **Unit** — permalink encode/decode round-trip, including the length cap.
 

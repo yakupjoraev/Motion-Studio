@@ -241,7 +241,7 @@ rendered content.
 | Rich text | Parsed to a restricted AST (bold/italic/link/code only); anything else dropped |
 | URLs (`href`, `src`) | Scheme allowlist: `https:`, `http:`, `mailto:`, `/`, `#`. `javascript:` and `data:` rejected |
 | Image `data:` URLs | Allowed up to 2 MB, MIME allowlist `image/png|jpeg|webp|avif|gif` |
-| CSS escape-hatch props | Parsed and re-serialised; `url()`, `expression()`, `@import`, and `behavior` stripped |
+| CSS escape-hatch props | Parsed and re-serialised by `validateCssDeclarations`; `expression()`, `@import`, `behavior`, `-moz-binding`, `element()` and every `url()` but an inline `data:image/*` that passes the asset sanitizer are rejected. Cap 8 kB |
 | `blurDataUrl` | Must be `data:image/*;base64,`, max 4 kB |
 | Block ids | Must match the registry or render a placeholder — never used to resolve a module path |
 | Node names | Rendered as text; length-capped |

@@ -10754,3 +10754,189 @@ move.
   `url()` that is not an inline `data:` image, today.
 - Accepted: `validate-value.test.ts` will move with the code, and its assertions are written against
   the behaviour rather than the file, so they survive the move.
+
+## ADR-265 — The CSS validator has one entry per input shape, in one module
+
+**Date** 2026-08-29 · **Prompt** 48 · **Status** Accepted
+
+### Question
+Prompt 48 says one validator, three consumers, and a second implementation anywhere is a defect. But
+the three consumers do not hand it the same string. The playground edits **a value** under a property
+it already knows (`background`, the eight sandboxes). `CssField` and a `css` escape-hatch prop in a
+`.motion` file hold **a declaration list** — `letter-spacing: -0.01em;`, possibly several lines. A
+single function taking `(property, value)` cannot read the second; a single function taking a
+declaration list cannot check the first, because there is no property in the string to give
+`CSS.supports`.
+
+### Escalated
+Not a measurement. PLAYGROUND.md already specifies `validateCssValue(property, value)` and
+COMPONENT_LIBRARY.md § Control kinds already specifies that the `css` control takes declarations with
+a `properties` allow-list. Both are specified; what was open is how they share code.
+
+### Decision
+`validate-css.ts` exports two entries and holds one implementation:
+
+- `validateCssValue(property, value)` — the five layers.
+- `validateCssDeclarations(input, options)` — splits on top-level `;`, then calls
+  `validateCssValue` once per declaration and merges the results, offsetting each error's line and
+  column back to the caller's text.
+
+The splitter is the only thing the second entry adds, and it lives in `structural.ts` with the rest of
+the delimiter scanning, because "where does this `;` end a declaration" is the same question as
+"is this paren balanced" and it is answered by the same walk.
+
+### Consequences
+- The three call sites contain no validation logic of their own: `sanitizeDocument` and `CssField`
+  call `validateCssDeclarations`, `useApplyCss` calls `validateCssValue`.
+- Fixes a live defect: `sanitizeDocument` called the value entry on a declaration list, so any `css`
+  prop carrying a `;` — which is every one the inspector writes — was rejected and blanked on import.
+- Accepted: a declaration list is validated per declaration, so a value that is only valid in
+  combination with another property is not checked as a pair. `CSS.supports` has no API for that.
+
+## ADR-266 — `url()` is refused except for an inline `data:image/*` the asset sanitizer vouches for
+
+**Date** 2026-08-29 · **Prompt** 48 · **Status** Accepted, supersedes the CSS row of FILE_FORMAT.md § Security as written before this entry
+
+### Question
+Two documents disagreed. FILE_FORMAT.md § Security said `url()` is stripped from CSS escape-hatch
+props, full stop. PLAYGROUND.md § Parsing and validation said `url(` is blocked "unless a data URL
+that passes the asset sanitizer". `mask-image` and `background` are two of the eight sandboxes and
+neither is usable without `url()`.
+
+### Criterion (set before deciding)
+An exception is allowed only if the exempted form cannot reach the network, cannot carry script, and
+is already checked by code that exists. Anything else stays blocked.
+
+### Measurement
+`checkImageDataUrl` (`sanitize/urls.ts`) accepts `data:<type>;base64,<payload>` for five image MIME
+types up to 2 MB and nothing else. Applied to the exception: `data:text/html,<script>` fails on type,
+`data:image/svg+xml` — the one image type that can carry script — is not in `ALLOWED_IMAGE_TYPES` and
+fails, a remote `https:` URL fails as not a data URL, and `url(javascript:alert(1))` fails the same
+way. The form is inert and the check already ships.
+
+### Decision
+`url()` is blocked, with exactly one exception: every argument of every `url()` in the value must be a
+`data:` URL that `checkImageDataUrl` accepts. FILE_FORMAT.md § Security is updated to say so, and the
+playground's earlier allow-pattern — which let `data:image/svg+xml` through — is dropped.
+
+### Consequences
+- `mask-image` and `background` are usable in the playground and in the escape hatch with an inline
+  image, which is what those sandboxes are for.
+- SVG data URLs are refused even though they are images: an SVG is a document and can carry a script
+  element. A reader who wants an SVG mask converts it to PNG, which is a real cost and the right one.
+- An inline image is capped by the 8 kB value cap (ADR-267) long before the sanitizer's 2 MB, so the
+  exception is for small masks and gradients, not for embedding photographs in a style.
+
+## ADR-267 — The value cap is 8 kB, not 2 kB
+
+**Date** 2026-08-29 · **Prompt** 48 · **Status** Accepted, supersedes `MAX_VALUE_LENGTH = 2000` from prompt 12
+
+### Question
+The structural stub written in prompt 12 capped a value at 2000 characters. PLAYGROUND.md § Parsing
+and validation, and prompt 48, both say 8 kB. Which one holds?
+
+### Escalated
+Specified, not judged: the number is in the document, and the stub predates the document being
+implemented. Recorded because the stub's own comment argued for the smaller number, so a reader
+finding the change needs the reason it lost.
+
+### Decision
+`MAX_VALUE_LENGTH = 8 * 1024`, matching the document.
+
+### Consequences
+- Measured against what ships: the longest of the 40 presets in `playground/presets.ts` is 111
+  characters, and the longest sandbox starting value is 205. Neither cap binds a value anyone writes
+  by hand, so this is not a capability change — it is the two numbers agreeing.
+- The cap that does bind is on an inline `data:image/*` (ADR-266): 8 kB of base64 is roughly a 6 kB
+  image, which is a small mask and not a photograph. That is the number this cap actually decides,
+  and it is why the larger of the two is the right one.
+- Accepted: the cap is a denial-of-service guard, not a taste guard. 8 kB of CSS in one prop is
+  absurd and still allowed.
+
+## ADR-268 — A missing `CSS.supports` is `unverified`, never a rejection
+
+**Date** 2026-08-29 · **Prompt** 48 · **Status** Accepted
+
+### Question
+Layer 3 asks the browser whether a value is valid. `sanitizeDocument` runs where there is no browser:
+the `node` test suite, and any server-side import. What does layer 3 return there?
+
+### Escalated
+Prompt 48 decided it. Recorded because both wrong answers are tempting and each fails silently in a
+different direction.
+
+### Decision
+`supportsDeclaration` returns `{ ok: true, unverified: true }` when `CSS.supports` is unavailable, and
+`validateCssValue` propagates `unverified` on the success branch.
+
+Rejecting would make every `.motion` import fail under `node`, which is where the security tests run.
+Returning a plain `ok` would claim a check that did not happen, and the caller could not tell.
+
+### Consequences
+- Layers 1, 2 and 5 — the security-relevant ones — always run, so a value that reached the document
+  is always structurally sound and free of blocked constructs, browser or no browser.
+- `unverified: true` is visible to callers. Nothing renders it today; the playground always has a
+  browser, so it is always `false` there.
+- Accepted: a `.motion` file imported on a server can carry a value no browser accepts. It is inert —
+  an unsupported declaration is dropped by the engine that paints it.
+
+## ADR-269 — Normalization lowercases function names and hex, and nothing else
+
+**Date** 2026-08-29 · **Prompt** 48 · **Status** Accepted
+
+### Question
+Layer 5 asks for "consistent spacing, lowercase keywords". Which identifiers is it safe to lowercase?
+
+### Criterion (set before deciding)
+An identifier may be lowercased only if CSS treats it case-insensitively **and** no author-chosen
+name can appear in that position. Anything failing either test is left byte-for-byte.
+
+### Measurement
+Applied to the identifier positions a value can hold:
+- Function names (`RGB(`, `linear-Gradient(`) — case-insensitive, never author-named. Safe.
+- Hex colours (`#FFF`) — case-insensitive, never author-named. Safe.
+- Custom property names (`var(--brandBlue)`) — **case-sensitive**. Lowercasing breaks the reference.
+- Font family names (`Helvetica Neue`) — case-insensitive by spec, but author-chosen and read by a
+  human in the value. Fails the second test.
+- Anything inside a quoted string — content, not an identifier. Fails both.
+
+### Decision
+Lowercase function names (excluding `--` custom names) and hex colours. Collapse runs of whitespace to
+one space, drop the space before `,` and `)`, emit exactly one space after every `,`. Leave every
+other identifier and every quoted string alone. Colour notation is never converted: `oklch` stays
+`oklch`.
+
+### Consequences
+- `rgba(0,0,0,.4)` and `rgba(0, 0, 0, .4)` serialise identically, so a re-saved document diffs
+  cleanly — the same property byte-stability has elsewhere in the format.
+- `normalize(normalize(x)) === normalize(x)` holds by construction and is asserted as a property over
+  the valid fixtures.
+- Accepted: `10PX` stays `10PX`. Units sit against a number rather than in an identifier position, and
+  distinguishing `10PX` from `Neue` reliably is a lexer this layer is not.
+
+## ADR-270 — A backslash is refused outside a string and allowed inside one
+
+**Date** 2026-08-29 · **Prompt** 48 · **Status** Accepted, supersedes the blanket escape rule from prompt 12
+
+### Question
+The prompt-12 stub refused any value containing a backslash, because `u\rl(` reads as `url(` to a
+browser and as noise to the blocklist's regex. That is true, and it also refuses `content: "\201C"`,
+which is how a curly quote is written.
+
+### Criterion (set before deciding)
+Refuse a backslash exactly where it can spell a construct the blocklist is looking for.
+
+### Measurement
+The blocklist matches function names and property names: `url(`, `expression(`, `element(`,
+`@import`, `behavior:`, `-moz-binding`. All six are identifier positions, and CSS identifier escapes
+are only recognised outside a string — inside quotes the text is a string value, and `"url("` is a
+string, not a call. So an escape inside quotes cannot spell any of the six.
+
+### Decision
+A backslash outside a quoted string is a structural error. Inside a quoted string it is allowed and
+passes through normalization untouched.
+
+### Consequences
+- `content: "\201C"`, `font-family: "My\\Font"` and quoted data URLs keep working in the escape hatch.
+- The evasion the original rule was written for is still refused, and the fixture `u\rl(...)` still
+  fails at the structural layer.
