@@ -18,6 +18,21 @@ export class StudioPage {
     await this.page.waitForSelector('[data-testid="canvas-root"] [data-node-id]')
   }
 
+  /**
+   * The document's undo, through the key that runs it. The modifier is read off the same
+   * `navigator` the shortcut registry normalises against rather than assumed from the host: a WebKit
+   * run on Windows presents a macOS platform, and Playwright's own ControlOrMeta reads the host.
+   */
+  async undo(): Promise<void> {
+    const modifier = await this.page.evaluate(() =>
+      /mac|iphone|ipad|ipod/i.test(`${navigator.platform} ${navigator.userAgent}`)
+        ? 'Meta'
+        : 'Control',
+    )
+
+    await this.page.keyboard.press(`${modifier}+z`)
+  }
+
   /** 4× CPU throttling — PERFORMANCE.md § Measurement: the profile every number here is taken at. */
   async throttleCpu(rate = 4): Promise<CDPSession> {
     const client = await this.page.context().newCDPSession(this.page)

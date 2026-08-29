@@ -2,6 +2,7 @@ import { blockId } from '@motion-studio/schema'
 
 import { defineBlock } from '../../define-block'
 import { MAX_ACTIONS } from '../../marketing/marketing.schema'
+import { GLASS_ESCAPE_HATCH } from '../../scales'
 import {
   ACTIVE_HREF_CONTROL,
   NAV_ACTION_ITEM_CONTROLS,
@@ -75,6 +76,7 @@ export const navbarFloatingDefinition = defineBlock({
     fullWidth: true,
     // A glass pill over a flat page is a grey pill. The inspector says so before the user sees it.
     requiresBackdrop: true,
+    escapeHatch: GLASS_ESCAPE_HATCH,
     supportsMotion: ['entrance'],
     costClass: 'cheap',
   },

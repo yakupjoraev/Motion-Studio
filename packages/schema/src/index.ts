@@ -126,6 +126,15 @@ export {
   type UnknownProps,
 } from './registry/registry.types'
 export {
+  ESCAPE_HATCH_PROP,
+  ESCAPE_HATCH_PROPERTIES,
+  acceptsEscapeHatch,
+  escapeHatchProperties,
+  escapeHatchStyle,
+  withDeclaration,
+  type EscapeHatchProperty,
+} from './registry/escape-hatch'
+export {
   children,
   classList,
   defineMarkup,
@@ -214,6 +223,7 @@ export {
   findBlockedConstructs,
   findStructuralErrors,
   normalizeCssValue,
+  splitDeclarations,
   validateCssDeclarations,
   validateCssValue,
   type BlocklistEntry,
@@ -222,6 +232,8 @@ export {
   type CssLayer,
   type CssValidation,
   type DeclarationOptions,
+  type DeclarationSplit,
+  type RawDeclaration,
 } from './sanitize/css/index'
 
 export {

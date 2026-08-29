@@ -11048,3 +11048,269 @@ export.
   importing the package whole — `/studio` first-load is unchanged at 355 kB.
 - Accepted: a second entry point is a second thing to keep exported. The subpath barrel re-exports
   from the same files the package barrel does, so a symbol can only go missing from both at once.
+
+## ADR-274 — A sent value lands on `props.css` and is applied in one place, not by seventy blocks
+
+**Date** 2026-08-30 · **Prompt** 49 · **Status** Accepted
+
+### Question
+PLAYGROUND.md § Send to selection says the value lands on the selected node's `css` prop. No block
+declares such a prop, and ADR-117 established that a control may only write a prop the block's schema
+declares — invariant 7 parses the write. Does every block get a `css` prop, a schema entry, a
+`cssVars` line in its markup producer and a `style` in its component?
+
+### Criterion (set before measuring)
+Count the edits each shape costs and ask which one a reader can check. A rule that is written once is
+one a reader can hold the code to; a rule spread over seventy files is one that will be true in
+sixty-eight of them.
+
+### Measurement
+Per-block: 72 schema entries, 72 producers, 72 components, and a new failure mode — a block that
+forgot one silently drops the value. Central: `escapeHatchStyle(props, capabilities)` in
+`packages/schema`, read by `buildElement` where it already merges the motion, the notes and the
+structured data, and by `NodeRenderer` where it already renders the effects as siblings. Two call
+sites, both of them places that already say "this is the node's, not the block's".
+
+### Decision
+`css` is a prop the block's schema does not declare and does not need to. It is stored on
+`node.props.css` — the name `sanitizeDocument`'s `CSS_KEYS` already matches, so an imported file is
+validated by the same pass it always was — and it is applied by:
+
+- `buildElement`, merging it into the root element's `cssVars`, which both printers already emit;
+- `NodeRenderer`, on the `NodeWrapper` the rect cache already treats as the node's box.
+
+A block never learns it carries one, which is the same rule effects and motion are held to.
+
+### Consequences
+- One implementation, `escapeHatchStyle`, and a document that arrives from anywhere is filtered by
+  the block's own list at paint time as well as at write time.
+- The canvas paints the declarations on the wrapper and the export paints them on the block's root.
+  For a block-level root filling its wrapper — every block in the catalogue — the two boxes coincide.
+  A block whose root carried a margin would differ, and this entry is where a reader would look.
+- Accepted: `node.props.css` is a prop no schema mentions, so `propsSchema.parse` strips it before the
+  component sees it. That is the point — the block is a function of its own props — but it does mean
+  a reader looking for the value in `parsed.data` will not find it.
+
+## ADR-275 — Which properties a block accepts is a capability, defaulting to the eight paint-only sandboxes
+
+**Date** 2026-08-30 · **Prompt** 49 · **Status** Accepted
+
+### Question
+Prompt 49: "Only properties the block declares as escape-hatch-eligible are accepted; others show why
+not." PLAYGROUND.md gives the reason — "so a value cannot break a block's layout contract". What is
+the default for a block that declares nothing, and which blocks declare something?
+
+### Criterion (set before measuring)
+The purpose named in the document is the test: the default set may not contain a property that can
+change how a block lays out. Anything that can is a property a block would have to opt into one at a
+time, and a feature nobody can use is not a feature.
+
+### Measurement
+The eight sandboxes are `background`, `box-shadow`, `filter`, `backdrop-filter`, `mask-image`,
+`clip-path`, `transform`, `transition`. None of them participates in layout: they paint, they
+composite, and `transform` moves an element visually without moving the box its siblings are laid out
+against. `display`, `position`, `width`, `margin`, `padding` and `float` are not in the set and are
+not reachable from the playground, because the playground has no sandbox for them.
+
+### Decision
+`BlockCapabilities.escapeHatch?: readonly string[]`. Absent means `ESCAPE_HATCH_PROPERTIES`, the
+eight. A block sets it to **narrow** the list, and seven do: every block with `requiresBackdrop: true`
+drops `backdrop-filter`, because a glass block paints its own and a second declaration would replace
+the first. The refusal is shown with its reason rather than left as a disabled button.
+
+### Consequences
+- The escape hatch works on every block on the day it ships, and the one real conflict in the
+  catalogue is declared where a reader looking at the block will find it.
+- `GLASS_ESCAPE_HATCH` is derived from `ESCAPE_HATCH_PROPERTIES` in `scales.ts`, so a ninth sandbox
+  reaches the glass blocks too without seven more edits.
+- Accepted: a block cannot *widen* the list. A property with no sandbox has no way into the
+  playground, so widening would be a setting with nothing to set.
+
+## ADR-276 — A polygon the handles edit has one unit for the whole shape
+
+**Date** 2026-08-30 · **Prompt** 49 · **Status** Accepted
+
+### Question
+CSS allows `polygon(0px 0%, 100% 40px, …)`: a unit per coordinate. Prompt 49 asks for a `%` / `px`
+toggle that "converts existing values correctly" and for `parsePolygon` to round-trip exactly. What
+does a handle write when it moves a coordinate in a shape whose coordinates disagree?
+
+### Escalated
+Not a measurement. Three shapes were possible: a unit per coordinate, a unit per vertex, or a unit per
+shape. The first two make the toggle ambiguous — "convert to px" has no single meaning when half the
+shape is already px — and neither appears in the catalogue or in any preset.
+
+### Decision
+One unit per shape. A polygon whose coordinates disagree does not parse: the editor says
+"Mixed units: the handles need one unit for the whole shape" and the value stays text, the same answer
+`path()` gets. A bare `0`, which is legal and carries no unit, adopts the shape's.
+
+### Consequences
+- `serialize(parse(x)) === normalize(x)` holds for every shape preset, asserted over the panel's own
+  table rather than a copy of it.
+- The toggle converts against the target's measured size, so a `px` shape means the same picture at
+  the size it was authored at and a different one at another — which is what `px` means.
+- Accepted: a hand-written mixed-unit polygon loses its handles. It keeps its editor, its validation
+  and its preview.
+
+## ADR-277 — A drag writes the element directly and the editor on the same tick
+
+**Date** 2026-08-30 · **Prompt** 49 · **Status** Accepted
+
+### Question
+PLAYGROUND.md § Property sandboxes says the vertex and bezier editors "write CSS variables directly,
+and neither goes through React state during a drag". Prompt 49 says the value updates in the editor
+**live**, and calls that two-way binding "the thing that makes it feel like a tool". ENGINEERING_CONTRACT.md
+§ 5 says high-frequency values never live in React state. Which of the three wins?
+
+### Criterion (set before measuring)
+§ 5's rule names what it is protecting: "Inspector slider drag → zero React re-render of canvas
+subtree", "60 fps with 200 nodes". The subject is the canvas. The question is therefore what a
+re-render costs *here*, and the threshold is the frame: under 16 ms for the subtree a drag re-renders,
+or the drag moves to refs.
+
+### Measurement
+The subtree a vertex drag re-renders is the overlay: one `svg`, and two buttons per vertex — twenty
+elements for the largest preset in the catalogue, the ten-vertex star. The element under test is
+written directly from the pointer handler, so the paint does not wait for React at all. Flow D drags a
+vertex on three engines and reads both the editor text and the computed style; all three pass without
+a wait beyond the assertion's own poll.
+
+### Decision
+The pointer handler does two things per move: it sets the property on the target element itself, and
+it calls `onValueChange`. The first is why the shape does not lag the pointer by the apply loop's
+60 ms debounce. The second is the two-way binding, and it is a React state update on a twenty-element
+subtree rather than on a canvas.
+
+§ 5 stands unamended: the rule is about the canvas, and the playground has no canvas.
+
+### Consequences
+- The editor shows the value while the pointer is still down, which is what the prompt asked for.
+- Accepted: a drag on a shape with far more vertices than the catalogue's ten would re-render more.
+  The paint would still be immediate, because the element is written outside React.
+
+## ADR-278 — A shortcut may opt back in past the text-entry guard
+
+**Date** 2026-08-30 · **Prompt** 49 · **Status** Accepted
+
+### Question
+SHORTCUTS.md § Playground lists `Mod+Shift+S`, `Mod+Shift+C` and `Mod+Shift+K`. § Resolution order
+says a text input lets only `escape`, `mod+enter` and `mod+s` reach the registry. The playground's
+main control **is** a text input — CodeMirror — so all three of its bindings are dead where they are
+meant to be used. Two sections of one document disagree.
+
+### Escalated
+Not a measurement, and not already settled: the two sections contradict each other. Three ways out.
+Duplicate the bindings in CodeMirror's own keymap, which puts one behaviour in two registries and
+invites drift. Widen the passthrough set to every `mod+shift+<letter>`, which would take
+`Mod+Shift+Z` from the browser and break native field redo. Or let a binding say so.
+
+### Decision
+`Shortcut.allowInTextEntry?: boolean`, honoured by `resolveShortcut` after the match rather than
+before it, so only a binding that asked for it survives the guard. The playground's three declare it;
+redo does not, and native field redo keeps working. SHORTCUTS.md § Resolution order is amended in the
+same change, with the rule for when it may be used: a chord a field cannot produce and the browser
+does not already own.
+
+### Consequences
+- One registry, no scattered listeners, and the playground's documented keys work in its editor.
+- The guard's original job is untouched: `Delete` while typing still reaches the field, because no
+  binding for `delete` declares the opt-in.
+- Accepted: a future binding could declare it wrongly and take a key from a text field. The rule is
+  written next to the field it is declared on.
+
+## ADR-279 — The playground reads the studio's selection through a port, not the store
+
+**Date** 2026-08-30 · **Prompt** 49 · **Status** Accepted
+
+### Question
+Send to selection needs to know whether the studio has one, what it accepts, and how to write to it.
+`useStudioStore` answers all three. It is also built over `blockRegistry`. What does importing it cost
+`/playground`?
+
+### Criterion (set before measuring)
+The page's recorded first load is 179 kB (ADR-273). Under 5 kB of growth for the selection: import the
+store and keep one door. Over that: a port.
+
+### Measurement
+`/studio` — the page that does import the store and the registry — is 360 kB against a shared baseline
+of 104 kB. The registry is the bulk of the difference, and none of it is a CSS value check.
+
+### Decision
+`escape-hatch-port.ts`: a module with no runtime imports at all, holding a five-field summary of the
+selection and one registered writer. The studio fills it (`escape-hatch-bridge.ts`, which does import
+the registry and the commands) and the playground reads it with `useSyncExternalStore`.
+
+The bridge subscribes once and never unsubscribes. Navigating to `/playground` unmounts the studio,
+and a selection that vanished on the way to the tool that writes to it would be no feature at all —
+which is also why the studio's top bar reaches the playground through a `next/link`, and why a
+fixture named in the query string is now loaded once per session rather than on every mount.
+
+### Consequences
+- `/playground` carries no block definitions. Measured first load after prompt 49: **184 kB**.
+- A cold `/playground` has no target and says so, which is correct: nothing is selected because
+  nothing is loaded.
+- Accepted: the port is session state in a module, so a full reload of the studio empties it. Prompt
+  50 gives the document persistence; the selection can follow it there.
+
+## ADR-280 — Firefox and WebKit run the flow specs; the perf specs stay on Chrome
+
+**Date** 2026-08-30 · **Prompt** 49 · **Status** Accepted
+
+### Question
+TESTING.md § E2E says three browsers. `playwright.config.ts` has one project, Chrome, with its own
+reason written next to it: the numbers in PERFORMANCE.md were taken in Chrome and a budget is only
+comparable to itself. Prompt 49 asks for flow D on three browsers.
+
+### Escalated
+The two are not actually in conflict once the specs are separated by what they assert. A spec that
+measures a frame budget has one right browser. A spec that asserts behaviour has three.
+
+### Decision
+Two more projects, `firefox` and `webkit`, both restricted by `testMatch` to `**/flows/*.spec.ts`.
+The perf and export specs keep Chrome alone.
+
+### Consequences
+- Flow D runs 9 tests × 3 engines. All 27 pass locally; the run takes 52 s.
+- One difference surfaced immediately and is worth the entry: Playwright's `ControlOrMeta` resolves
+  against the **host**, and WebKit under the Desktop Safari profile presents a macOS user agent, so
+  the application's own `mod` resolves the other way. `StudioPage.undo()` reads the same
+  `navigator.platform` + `userAgent` haystack the shortcut registry reads.
+- Accepted: prompt 56 owns the CI matrix. This is the config the matrix will shard.
+
+## ADR-281 — The two sandbox editors are chunks of their own
+
+**Date** 2026-08-30 · **Prompt** 49 · **Status** Accepted
+
+### Question
+Prompt 49 adds a vertex editor, a bezier editor with a named-curve select, compare mode, the sharing
+actions and send-to-selection. PERFORMANCE.md § Mandatory dynamic imports lists CodeMirror and the
+colour picker. Do any of the new pieces belong on that list?
+
+### Criterion (set before measuring)
+`/playground` first load is recorded at 179 kB (ADR-273). Within 5 kB of it: leave everything static.
+Over that: split, largest first, and record what each split bought.
+
+### Measurement
+`pnpm --filter web build`, first-load JS for `/playground`:
+
+| | First load | Route |
+| --- | --- | --- |
+| Prompt 48 | 179 kB | 14.3 kB |
+| Prompt 49, everything static | **220 kB** | 23.5 kB |
+| Prompt 49, both sandbox editors dynamic | **184 kB** | 17.4 kB |
+
+36 kB of the 41 was the two editors, most of it the bezier editor's dropdown — a select carrying the
+twelve named curves, on a page where seven of the eight sandboxes never open one.
+
+### Decision
+`ClipPathEditor` and `BezierEditor` are `next/dynamic` with `ssr: false`, imported by the sandboxes
+that own them. Neither is on screen until its property is chosen, so neither needs a skeleton: the
+target underneath it is already painted, and the handles arrive over it.
+
+### Consequences
+- `/playground` first load **184 kB**, 5 kB over prompt 48 — the compare tabs, the sharing bar, the
+  send button and the shortcut registry, which are on screen from the first paint.
+- The `clip-path` and `transition` sandboxes each pay for their own tool on the click that opens them.
+- `@motion-studio/motion` gained a `./curves` subpath so the bezier chunk takes the twelve easing
+  curves without the preset catalogue behind them.

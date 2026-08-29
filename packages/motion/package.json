@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./curves": "./src/curves/easings.ts",
     "./marquee": "./src/presets/scroll/marquee.ts",
     "./package.json": "./package.json"
   },

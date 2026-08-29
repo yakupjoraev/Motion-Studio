@@ -143,13 +143,21 @@ the property is layerable (`background`, `box-shadow`, `mask-image`, `filter`).
 Playground → validate → wrap as a CSS escape-hatch prop → setProp command → canvas
 ```
 
-- Enabled only when the studio has a selection (the playground reads the same store).
-- The value lands on the selected node's `css` prop for that property. Blocks declare which
-  properties accept an escape hatch, so a value cannot break a block's layout contract.
+- Enabled only when the studio has a selection. The playground does **not** import the editor store:
+  the studio publishes a five-field summary of the selection over a port and reads the write back from
+  it, so the page does not carry the block registry to find out whether something is selected
+  (ADR-279). The studio's top bar reaches the playground through a client-side link, which is what
+  keeps the selection alive across the route.
+- The value lands on the selected node's `css` prop for that property, applied by `buildElement` and
+  by the canvas rather than by each block (ADR-274). `capabilities.escapeHatch` says which properties
+  a block accepts; absent means the eight sandboxes, every one of them paint-only, so a value cannot
+  break a block's layout contract. A glass block drops `backdrop-filter`, because it paints its own,
+  and the refusal is shown with its reason (ADR-275).
 - It is a command, so it is undoable, and it appears in the inspector's Effects section as a
   `Custom CSS` chip with an edit action that reopens the playground with the value loaded.
-- Codegen emits it as an inline `style` for one-off values or a CSS variable plus a rule when the
-  value is shared — the export never contains an unexplained magic string.
+- Codegen emits it as an inline `style` on the node's root element. Where the node also carries a
+  breakpoint override, the responsive pass moves the declarations into a generated rule, which is the
+  same path a responsive `cssVars` already takes.
 
 ## Compare mode
 
@@ -173,18 +181,20 @@ surface, same size. A/B swap is `Cmd+Shift+S`.
 | --- | --- |
 | Re-parsing on every keystroke | 60 ms debounce; structural check runs immediately for bracket feedback |
 | CodeMirror bundle | Dynamic import with a skeleton at the exact final height |
+| Vertex and bezier editors | Dynamic import, loaded with the sandbox that owns them — ADR-281 |
 | Colour picker | Dynamic import, loaded when a swatch is clicked |
 | Expensive previews (`backdrop-filter`, big blurs) | One target element only; `contain: paint` |
 | Continuous animation previews | Paused when the tab is hidden or the target is off-screen |
 | Reduced motion | Animation sandboxes show static start/end states with a manual scrub |
 
-Measured on this repository, 2026-08-29, production build, Chrome:
+Measured on this repository, 2026-08-30, production build, Chrome:
 
 | | |
 | --- | --- |
-| `/playground` first-load JS | **175 kB** (route 14.2 kB) — CodeMirror and the colour picker are not in it |
-| Lighthouse | Performance **90**, Accessibility **100**, Best Practices 96, SEO 100 |
-| CLS | **0** — the skeleton reserves the editor's exact height |
+| `/playground` first-load JS | **184 kB** (route 17.4 kB) — CodeMirror, the colour picker, the vertex editor and the bezier editor are not in it (ADR-281) |
+| Lighthouse (mobile) | Performance **95**, Accessibility **100**, Best Practices 96, SEO 100 |
+| LCP / TBT | 2.6 s / 160 ms — the two sandbox editors no longer land in the first chunk |
+| CLS | **0.02**, at the budget. Nothing is attributed to an element; the skeleton still reserves the editor's exact height |
 | FCP / Speed Index | 1.1 s / 1.2 s |
 
 ## Accessibility
@@ -192,7 +202,9 @@ Measured on this repository, 2026-08-29, production build, Chrome:
 - The editor is a real CodeMirror instance, which is screen-reader operable; the property list is
   a `role="radiogroup"` with arrow navigation.
 - Vertex handles in the `clip-path` editor are focusable buttons; arrows move a vertex by 1 %
-  (`Shift` = 5 %), and each announces its coordinates.
+  (`Shift` = 5 %), `Enter` opens exact fields, `Delete` removes down to a minimum of three, and each
+  announces its coordinates.
+- Every edge has its own button too, so splitting one is a tab stop rather than a click on a `div`.
 - The bezier editor's control points are focusable with the same arrow behaviour, announcing the
   four bezier values.
 - Errors are in an `aria-live="polite"` region, debounced so a live-typing user is not spammed.

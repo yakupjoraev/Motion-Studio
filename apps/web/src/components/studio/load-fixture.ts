@@ -39,6 +39,15 @@ export function loadFixtureFromQuery(signal: AbortSignal): void {
     return
   }
 
+  /*
+   * Once per session. Returning to the studio from another route re-mounts the shell, and reloading
+   * the fixture there would throw away everything done to the document since — including a value
+   * just sent from the playground, which is the trip this has to survive.
+   */
+  if (document.documentElement.dataset['fixture'] === name) {
+    return
+  }
+
   loadFixture(name, signal).catch((error: unknown) => {
     if (error instanceof DOMException && error.name === 'AbortError') {
       return

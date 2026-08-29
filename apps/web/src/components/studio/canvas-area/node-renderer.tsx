@@ -3,8 +3,22 @@
 import { EffectStack, blockRegistry, renderRegistry } from '@motion-studio/blocks'
 import { NodeWrapper } from '@motion-studio/canvas'
 import { selectors } from '@motion-studio/editor'
-import { type BreakpointId, type NodeId, type UnknownProps, blockId } from '@motion-studio/schema'
-import { type ComponentType, type ReactNode, Suspense, memo, useCallback, useMemo } from 'react'
+import {
+  type BreakpointId,
+  type NodeId,
+  type UnknownProps,
+  blockId,
+  escapeHatchStyle,
+} from '@motion-studio/schema'
+import {
+  type CSSProperties,
+  type ComponentType,
+  type ReactNode,
+  Suspense,
+  memo,
+  useCallback,
+  useMemo,
+} from 'react'
 
 import { useStudioStore } from '../../../store/editor-store'
 
@@ -67,12 +81,16 @@ export const NodeRenderer = memo(function NodeRenderer({ id, breakpoint }: NodeR
   // inspector and the exporter all resolve a prop the same way.
   const parsed = definition.propsSchema.safeParse(node.props)
 
+  // ADR-274: the escape hatch is the node's, so it rides the wrapper the rect cache already calls
+  // this node's box, and the block stays a function of its own props.
+  const escapeHatch: CSSProperties = { ...escapeHatchStyle(node.props, definition.capabilities) }
+
   const children: ReactNode = node.children.map((child) => (
     <NodeRenderer breakpoint={breakpoint} id={child} key={child} />
   ))
 
   return (
-    <NodeWrapper dropRef={zone.ref} id={id}>
+    <NodeWrapper dropRef={zone.ref} id={id} style={escapeHatch}>
       {/* The node's effects are siblings of its markup, never a wrapper around it: a block must not
           learn that it has any, which is what keeps its export honest. */}
       <EffectStack effects={node.effects} registry={blockRegistry} />

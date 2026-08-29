@@ -1,7 +1,7 @@
 import { blockId } from '@motion-studio/schema'
 
 import { defineBlock } from '../../define-block'
-import { optionsFrom } from '../../scales'
+import { GLASS_ESCAPE_HATCH, optionsFrom } from '../../scales'
 import {
   ALT_MAX_LENGTH,
   CARD_TREATMENTS,
@@ -110,6 +110,7 @@ export const testimonialCardDefinition = defineBlock({
     resizable: false,
     fullWidth: false,
     requiresBackdrop: true,
+    escapeHatch: GLASS_ESCAPE_HATCH,
     supportsMotion: ['entrance', 'hover', 'scroll'],
     costClass: 'cheap',
     containerQuery: true,

@@ -118,6 +118,11 @@ export interface BlockCapabilities {
    * blocks that need it should pay (ADR-167 deferred the field here for its first real caller).
    */
   readonly containerQuery?: boolean | undefined
+  /**
+   * ADR-275. Which CSS properties this block accepts on its `css` prop. Absent means
+   * `ESCAPE_HATCH_PROPERTIES`; a block narrows the list for a property it owns itself.
+   */
+  readonly escapeHatch?: readonly string[] | undefined
 }
 
 export interface ImportSpec {

@@ -1,140 +1,111 @@
 'use client'
 
-import dynamic from 'next/dynamic'
-import { type ReactElement, useCallback, useRef, useState } from 'react'
+import { useShortcuts } from '@motion-studio/hooks'
+import { type ReactElement, useMemo } from 'react'
 
-import type { ColorHit } from './color-swatches'
-import { CompatNotes } from './compat-notes'
-import { EDITOR_HEIGHT, EditorSkeleton } from './editor-skeleton'
+import { CompareTabs } from './compare-mode/compare-tabs'
+import { CompareTarget } from './compare-mode/compare-target'
+import { EditorPane } from './editor-pane'
+import { type PlaygroundShortcutContext, playgroundShortcuts } from './playground-shortcuts'
 import { PresetPanel } from './preset-panel'
-import { type PlaygroundProperty, propertyDescriptor, styleFor } from './properties'
+import { propertyDescriptor, styleFor } from './properties'
 import { PropertyList } from './property-list'
+import { SendToSelection, useSendToSelection } from './send-to-selection'
+import { CopyActionsBar, useCopyActions } from './sharing/copy-actions'
 import { TargetFrame } from './target-frame'
 import { PropertyTarget } from './targets/property-target'
-import { useApplyCss } from './use-apply-css'
+import { usePlaygroundState } from './use-playground-state'
 
 /**
- * PLAYGROUND.md § Layout: properties on the left, the target in the middle, presets on the right, the
- * editor along the bottom.
- *
- * The editor is `next/dynamic` with `ssr: false` and a skeleton at its exact height — PERFORMANCE.md
- * § Mandatory dynamic imports puts CodeMirror at ~110 kB, and a page that shipped it in the first
- * chunk would be paying for an editor before anyone had chosen a property.
+ * PLAYGROUND.md § Layout: properties on the left, the target in the middle, presets and the sharing
+ * actions on the right, the editor along the bottom.
  */
-const CodeEditorIsland = dynamic(
-  () => import('./code-editor').then((module) => module.CodeEditor),
-  { ssr: false },
-)
-
-/**
- * PERFORMANCE.md § Mandatory dynamic imports lists the colour picker at ~18 kB, "loads when a colour
- * control opens". A swatch is that control, and a reader who never clicks one should not pay for it.
- */
-const SwatchPickerIsland = dynamic(
-  () => import('./swatch-picker').then((module) => module.SwatchPicker),
-  { ssr: false },
-)
-
 export function PlaygroundLayout(): ReactElement {
-  const [property, setProperty] = useState<PlaygroundProperty>('background')
+  const state = usePlaygroundState()
+  const { property, compare, side, a, b, active } = state
   const descriptor = propertyDescriptor(property)
-  const target = useRef<HTMLDivElement | null>(null)
-  const { value, setValue, applyNow, applied, errors, features } = useApplyCss(
-    property,
-    target,
-    descriptor.initial,
+  const copy = useCopyActions(property, active.applied)
+  const send = useSendToSelection(property, active.applied)
+
+  const context = useMemo<PlaygroundShortcutContext>(
+    () => ({
+      swap: state.swap,
+      copyCss: copy.copyCss,
+      send: send.send,
+      comparing: compare,
+      canSend: send.accepted,
+    }),
+    [compare, copy.copyCss, send.accepted, send.send, state.swap],
   )
-  const [copied, setCopied] = useState(false)
-  const [colorHit, setColorHit] = useState<ColorHit | undefined>(undefined)
-  const [editorReady, setEditorReady] = useState(false)
-  const onEditorReady = useCallback(() => setEditorReady(true), [])
 
-  const onCopy = useCallback(() => {
-    void navigator.clipboard?.writeText(`${property}: ${value};`).then(() => setCopied(true))
-  }, [property, value])
+  useShortcuts({ registry: playgroundShortcuts, context })
 
-  /** The swatch decorated a range of the value, so a new colour is a splice rather than a re-parse. */
-  const onColorChange = useCallback(
-    (color: string) => {
-      setColorHit((hit) => {
-        if (hit === undefined) {
-          return undefined
-        }
-
-        setValue(`${value.slice(0, hit.from)}${color}${value.slice(hit.to)}`)
-
-        return { ...hit, value: color, to: hit.from + color.length }
-      })
-    },
-    [setValue, value],
+  const initialStyle = styleFor(property, descriptor.initial)
+  const targetA = (
+    <PropertyTarget
+      property={property}
+      targetRef={state.targetA}
+      applied={a.applied}
+      initialStyle={initialStyle}
+      value={a.value}
+      onValueChange={a.setValue}
+    />
   )
 
   return (
     <div className="grid h-full grid-rows-[1fr_auto] gap-4 p-4">
-      <div className="grid min-h-0 grid-cols-1 gap-4 lg:grid-cols-[16rem_1fr_14rem]">
+      <div className="grid min-h-0 grid-cols-1 gap-4 lg:grid-cols-[16rem_1fr_16rem]">
         <aside aria-label="Properties" className="min-h-0 overflow-y-auto">
-          <PropertyList value={property} onValueChange={setProperty} />
+          <PropertyList value={property} onValueChange={state.setProperty} />
         </aside>
         <div className="grid min-h-0 place-items-center overflow-auto">
           <TargetFrame>
-            <PropertyTarget
-              property={property}
-              targetRef={target}
-              applied={applied}
-              initialStyle={styleFor(property, descriptor.initial)}
-            />
+            {compare ? (
+              <CompareTarget
+                a={targetA}
+                b={
+                  <PropertyTarget
+                    property={property}
+                    targetRef={state.targetB}
+                    applied={b.applied}
+                    initialStyle={initialStyle}
+                    value={b.value}
+                    onValueChange={b.setValue}
+                  />
+                }
+              />
+            ) : (
+              targetA
+            )}
           </TargetFrame>
         </div>
-        <aside aria-label="Presets" className="min-h-0">
-          <PresetPanel property={property} value={value} onValueChange={setValue} onCopy={onCopy} />
+        <aside aria-label="Presets and sharing" className="flex min-h-0 flex-col gap-4">
+          <PresetPanel property={property} value={active.value} onValueChange={active.setValue} />
+          <CopyActionsBar actions={copy} />
+          <SendToSelection action={send} disabled={active.applied === ''} />
         </aside>
       </div>
       <div className="flex flex-col gap-2">
-        {/*
-          The placeholder sits under the editor at the same height rather than beside it: the reader
-          sees the value immediately, and nothing moves when CodeMirror lands on top of it.
-        */}
-        <div className="relative" style={{ minHeight: EDITOR_HEIGHT }}>
-          {!editorReady && (
-            <div className="absolute inset-0">
-              <EditorSkeleton value={value} />
-            </div>
-          )}
-          <CodeEditorIsland
-            value={value}
-            onChange={setValue}
-            onApply={applyNow}
-            errors={errors}
-            label={`${descriptor.label} value`}
-            onColorClick={setColorHit}
-            onReady={onEditorReady}
-          />
-        </div>
-        {colorHit !== undefined && (
-          <SwatchPickerIsland
-            hit={colorHit}
-            onChange={onColorChange}
-            onClose={() => setColorHit(undefined)}
-          />
+        <CompareTabs
+          enabled={compare}
+          onEnabledChange={state.setCompare}
+          side={side}
+          onSideChange={state.setSide}
+          onSwap={state.swap}
+        />
+        <EditorPane
+          label={`${descriptor.label} value${compare ? `, ${side === 'a' ? 'A' : 'B'}` : ''}`}
+          value={active.value}
+          onValueChange={active.setValue}
+          onApply={active.applyNow}
+          errors={active.errors}
+          features={active.features}
+        />
+        {state.linkError !== '' && (
+          <p className="m-0 text-danger text-xs" data-testid="permalink-error">
+            {state.linkError}
+          </p>
         )}
-        {/*
-          ACCESSIBILITY.md § Playground: diagnostics in a polite region. The editor underlines them as
-          they happen; this is the sentence a screen-reader user gets, and it is the last one rather
-          than a running commentary.
-        */}
-        <output
-          aria-live="polite"
-          data-testid="playground-error"
-          className="min-h-5 text-danger text-xs"
-        >
-          {errors.length === 0
-            ? ''
-            : `Line ${errors[0]?.line}, column ${errors[0]?.column}: ${errors[0]?.message}`}
-        </output>
-        <CompatNotes features={features} />
-        <output aria-live="polite" className="sr-only">
-          {copied ? 'CSS copied to the clipboard.' : ''}
-        </output>
       </div>
     </div>
   )

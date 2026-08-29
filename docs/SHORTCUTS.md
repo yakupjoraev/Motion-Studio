@@ -215,7 +215,8 @@ Why a registry rather than handlers:
 keydown
    │
    ├─ Is the target a text input / textarea / contenteditable?
-   │     └─ Yes → only `escape`, `mod+enter` and `mod+s` reach the registry.
+   │     └─ Yes → only `escape`, `mod+enter`, `mod+s` and bindings that declare
+   │              `allowInTextEntry` reach the registry (ADR-278).
    │              `mod+z` is left to the browser, which is what makes it a native
    │              field undo rather than a document undo (ADR-148). Everything
    │              else is dropped without preventDefault.
@@ -234,6 +235,11 @@ keydown
 
 The text-input guard is the rule that prevents the classic bug of `Delete` removing a node while
 the user is editing a text prop.
+
+`allowInTextEntry` is the exception, and it is narrow: a chord a text field cannot produce and the
+browser does not already own. The playground's three bindings declare it, because the surface they
+belong to is a code editor and a binding that dies when the editor has focus is not a binding. Redo
+does not, because `Mod+Shift+Z` is the browser's own field redo.
 
 ### Platform normalization
 

@@ -314,3 +314,50 @@ describe('a block that does not declare its client boundary', () => {
     }
   })
 })
+
+describe('the css escape hatch', () => {
+  const withCss = (css: string): CodegenIR =>
+    build(
+      document({
+        id: 'node_root',
+        block: 'page',
+        name: 'Page',
+        children: [{ id: 'node_hero', block: 'hero', name: 'Hero', props: { css } }],
+      }),
+    )
+
+  const hero = (ir: CodegenIR): IRElement | undefined => {
+    for (const entry of ir.components) {
+      const found = find(entry.root, 'section')
+
+      if (found !== undefined) {
+        return found
+      }
+    }
+
+    return undefined
+  }
+
+  it('reaches the node’s root element as an inline style — ADR-274', () => {
+    expect(hero(withCss('box-shadow: 0 8px 24px black'))?.cssVars).toEqual({
+      boxShadow: '0 8px 24px black',
+    })
+  })
+
+  it('carries every declaration the block accepts', () => {
+    expect(hero(withCss('box-shadow: none;\nclip-path: circle(40%)'))?.cssVars).toEqual({
+      boxShadow: 'none',
+      clipPath: 'circle(40%)',
+    })
+  })
+
+  it('leaves out a property that is not in the escape hatch', () => {
+    expect(hero(withCss('display: none;\nbox-shadow: none'))?.cssVars).toEqual({
+      boxShadow: 'none',
+    })
+  })
+
+  it('adds nothing to a node that has no escape hatch', () => {
+    expect(hero(build(singleHero()))?.cssVars).toBeUndefined()
+  })
+})

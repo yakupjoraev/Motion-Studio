@@ -10,6 +10,7 @@ import { EditMenu } from './edit-menu'
 import { ExportButton } from './export-button'
 import { FileMenu } from './file-menu'
 import { HistoryButtons } from './history-buttons'
+import { PlaygroundLink } from './playground-link'
 import { ZoomControl } from './zoom-control'
 
 export interface TopBarProps {
@@ -62,6 +63,7 @@ export function TopBar({ leftOpen, rightOpen, onTogglePanel }: TopBarProps) {
         <PanelRightIcon size={20} />
       </Button>
 
+      <PlaygroundLink />
       <ExportButton />
     </header>
   )

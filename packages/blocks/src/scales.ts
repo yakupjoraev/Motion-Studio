@@ -1,3 +1,4 @@
+import { ESCAPE_HATCH_PROPERTIES } from '@motion-studio/schema'
 import { z } from 'zod'
 
 /**
@@ -69,3 +70,11 @@ export const optionsFrom = (
   values: readonly string[],
 ): readonly { readonly value: string; readonly label: string }[] =>
   values.map((value) => ({ value, label: value }))
+
+/**
+ * ADR-275. A glass block paints its own `backdrop-filter`, so the escape hatch may not write one:
+ * the second declaration would replace the first and the block would stop being glass.
+ */
+export const GLASS_ESCAPE_HATCH: readonly string[] = ESCAPE_HATCH_PROPERTIES.filter(
+  (property) => property !== 'backdrop-filter',
+)

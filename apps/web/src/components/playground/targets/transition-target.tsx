@@ -1,7 +1,18 @@
 'use client'
 
 import { Button, Slider, Switch } from '@motion-studio/ui'
-import { type ReactElement, useCallback, useEffect, useRef, useState } from 'react'
+import dynamic from 'next/dynamic'
+import { type ReactElement, useCallback, useEffect, useState } from 'react'
+
+/**
+ * The curve editor is a chunk of its own: it carries a select, a preview and the twelve named
+ * curves, and seven of the eight sandboxes never open it — PERFORMANCE.md § Mandatory dynamic
+ * imports.
+ */
+const BezierEditor = dynamic(
+  () => import('../bezier-editor/bezier-editor').then((module) => module.BezierEditor),
+  { ssr: false },
+)
 
 import type { TargetProps } from './target.types'
 
@@ -31,27 +42,17 @@ const durationOf = (animation: Animation): number => {
   return typeof duration === 'number' ? duration + (timing?.delay ?? 0) : 0
 }
 
-export function TransitionTarget({ targetRef, initialStyle }: TargetProps): ReactElement {
-  const element = useRef<HTMLDivElement | null>(null)
+export function TransitionTarget({
+  targetRef,
+  initialStyle,
+  value,
+  onValueChange,
+}: TargetProps): ReactElement {
   const [at, setAt] = useState<'from' | 'to'>('from')
   const [playing, setPlaying] = useState(false)
   const [loop, setLoop] = useState(false)
   const [progress, setProgress] = useState(100)
   const reduced = useReducedMotionPreference()
-
-  const attach = useCallback(
-    (node: HTMLDivElement | null) => {
-      element.current = node
-
-      if (typeof targetRef === 'function') {
-        targetRef(node)
-      } else if (targetRef !== null) {
-        // biome-ignore lint/style/noParameterAssign: a ref object is written, which is what it is for
-        ;(targetRef as { current: HTMLDivElement | null }).current = node
-      }
-    },
-    [targetRef],
-  )
 
   /** Play toggles the state and lets the value under test do the work. */
   const toggle = useCallback(() => {
@@ -94,20 +95,23 @@ export function TransitionTarget({ targetRef, initialStyle }: TargetProps): Reac
     setPlaying(false)
   }, [loop, playing, toggle])
 
-  const scrub = useCallback((next: number) => {
-    setProgress(next)
+  const scrub = useCallback(
+    (next: number) => {
+      setProgress(next)
 
-    for (const animation of animationsOf(element.current)) {
-      animation.pause()
-      animation.currentTime = (durationOf(animation) * next) / 100
-    }
-  }, [])
+      for (const animation of animationsOf(targetRef.current)) {
+        animation.pause()
+        animation.currentTime = (durationOf(animation) * next) / 100
+      }
+    },
+    [targetRef],
+  )
 
   return (
-    <div className="grid h-full w-full grid-rows-[1fr_auto] gap-4 rounded-md bg-surface-2 p-6 [contain:paint]">
+    <div className="grid h-full w-full grid-rows-[1fr_auto_auto] gap-4 overflow-auto rounded-md bg-surface-2 p-6 [contain:paint]">
       <div className="flex items-center">
         <div
-          ref={attach}
+          ref={targetRef}
           data-testid="playground-target"
           onTransitionEnd={onTransitionEnd}
           style={{ ...initialStyle, transform: at === 'from' ? FROM : TO }}
@@ -145,6 +149,7 @@ export function TransitionTarget({ targetRef, initialStyle }: TargetProps): Reac
           />
         </div>
       </div>
+      <BezierEditor value={value} onValueChange={onValueChange} reduced={reduced} />
       {reduced && (
         <p className="m-0 text-foreground-subtle text-xs">
           Reduced motion is on, so nothing plays by itself. Toggle the state and scrub to compare

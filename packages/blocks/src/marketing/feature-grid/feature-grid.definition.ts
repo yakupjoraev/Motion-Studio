@@ -1,7 +1,7 @@
 import { blockId } from '@motion-studio/schema'
 
 import { defineBlock } from '../../define-block'
-import { optionsFrom } from '../../scales'
+import { GLASS_ESCAPE_HATCH, optionsFrom } from '../../scales'
 import { SECTION_FRAME_CONTROLS, sectionCopyGroup } from '../marketing.controls'
 import { BODY_MAX_LENGTH, CARD_TREATMENTS, TITLE_MAX_LENGTH } from '../marketing.schema'
 
@@ -92,6 +92,7 @@ export const featureGridDefinition = defineBlock({
     resizable: false,
     fullWidth: true,
     requiresBackdrop: true,
+    escapeHatch: GLASS_ESCAPE_HATCH,
     supportsMotion: ['entrance', 'scroll'],
     costClass: 'cheap',
     containerQuery: true,

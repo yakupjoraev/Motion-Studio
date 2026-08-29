@@ -21,6 +21,10 @@ export const PLAYGROUND_PROPERTIES = [
 
 export type PlaygroundProperty = (typeof PLAYGROUND_PROPERTIES)[number]
 
+/** A string from a URL or a document is not a sandbox until this says so. */
+export const isPlaygroundProperty = (value: string): value is PlaygroundProperty =>
+  (PLAYGROUND_PROPERTIES as readonly string[]).includes(value)
+
 export interface PropertyDescriptor {
   readonly id: PlaygroundProperty
   readonly label: string

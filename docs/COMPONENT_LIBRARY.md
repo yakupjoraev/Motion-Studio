@@ -65,6 +65,10 @@ export interface BlockCapabilities {
   readonly minWidth?: number
   readonly requiresFlexParent?: boolean    // ADR-115
   readonly containerQuery?: boolean        // RESPONSIVE_ENGINE.md § Container queries
+  /** Which CSS properties the `css` escape hatch may write — ADR-275. Absent means the eight
+      paint-only sandboxes in PLAYGROUND.md; a block narrows the list for a property it paints
+      itself, which is what every glass block does with `backdrop-filter`. */
+  readonly escapeHatch?: readonly string[]
 }
 ```
 

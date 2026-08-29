@@ -1,7 +1,7 @@
 import { blockId } from '@motion-studio/schema'
 
 import { defineBlock } from '../../define-block'
-import { optionsFrom } from '../../scales'
+import { GLASS_ESCAPE_HATCH, optionsFrom } from '../../scales'
 import { SECTION_FRAME_CONTROLS, sectionCopyGroup } from '../marketing.controls'
 import { BODY_MAX_LENGTH, LABEL_MAX_LENGTH, TITLE_MAX_LENGTH } from '../marketing.schema'
 
@@ -168,6 +168,7 @@ export const pricingTableDefinition = defineBlock({
     resizable: false,
     fullWidth: true,
     requiresBackdrop: true,
+    escapeHatch: GLASS_ESCAPE_HATCH,
     supportsMotion: ['entrance', 'scroll'],
     costClass: 'cheap',
   },

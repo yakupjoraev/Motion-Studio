@@ -211,6 +211,10 @@ Rules:
 
 Playwright. Chromium, Firefox, WebKit. `e2e/`.
 
+The three engines run the **flows**, whose subject is behaviour. The performance and export-smoke
+specs run in Chrome alone: their subject is a number, the budgets in PERFORMANCE.md were measured
+there, and a budget is only comparable to itself — ADR-280.
+
 ```
 e2e/
 ├── flows/

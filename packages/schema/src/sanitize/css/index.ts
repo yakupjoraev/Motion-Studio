@@ -12,7 +12,13 @@ export {
   type DeclarationOptions,
 } from './validate-css'
 export type { CssError, CssFeature, CssLayer, CssValidation, Position } from './css.types'
-export { MAX_VALUE_LENGTH, findStructuralErrors } from './structural'
+export {
+  MAX_VALUE_LENGTH,
+  findStructuralErrors,
+  splitDeclarations,
+  type DeclarationSplit,
+  type RawDeclaration,
+} from './structural'
 export {
   BLOCKED_PROPERTIES,
   CSS_BLOCKLIST,

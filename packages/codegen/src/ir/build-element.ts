@@ -6,6 +6,7 @@ import {
   type MotionDocument,
   type Node,
   type NodeId,
+  escapeHatchStyle,
   resolveResponsiveProps,
 } from '@motion-studio/schema'
 import { MotionStudioError, getPath } from '@motion-studio/utils'
@@ -21,6 +22,7 @@ import type { Boundaries, ComponentUnit } from './passes/detect-components'
 import type { AssetCollector } from './passes/handle-assets'
 import { liftProps } from './passes/lift-props'
 import { applyResponsive } from './passes/responsive-classes'
+import { literal, referenceElement } from './reference-element'
 import { mergeAndSort } from './tailwind/merge-classes'
 
 /**
@@ -63,16 +65,6 @@ export const accumulator = (): Accumulator => ({
   clientReasons: [],
   undeclared: [],
 })
-
-const literal = (value: unknown): IRValue | undefined => {
-  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-    return { kind: 'literal', value }
-  }
-
-  return value === undefined || value === null
-    ? undefined
-    : { kind: 'expression', code: JSON.stringify(value) }
-}
 
 export function buildElement(
   nodeId: NodeId,
@@ -200,6 +192,9 @@ export function buildElement(
    */
   const ownsElement = applied.root.tag === definition.codegen.tag
 
+  // ADR-274: the `css` escape hatch is the node's, applied here beside the motion and the notes.
+  const hatch = escapeHatchStyle(props, definition.capabilities)
+
   return {
     ...responsive.root,
     tag: `${motion.tagPrefix ?? ''}${(ownsElement ? media.tag : undefined) ?? responsive.root.tag}`,
@@ -209,6 +204,7 @@ export function buildElement(
       ...(ownsElement ? attributes : {}),
       ...motion.attributes,
     },
+    ...cssVarsOf(responsive.root.cssVars, hatch),
     ...extras,
   }
 }
@@ -267,39 +263,12 @@ function childEntries(
   return entries
 }
 
-/**
- * `<PlanCard plan={…} />`: the boundary's name, and the props this instance differs in.
- *
- * No `key`. Three siblings written out in JSX are not a mapped array, and the only value available was
- * the node's id — the first editor artifact EXPORT_ENGINE.md § React's rule table bans (ADR-234).
- */
-function referenceElement(
-  nodeId: NodeId,
-  unit: ComponentUnit,
-  context: ElementContext,
-): IRElement | undefined {
-  const name = context.nameOf.get(unit.source)
-  const node = context.document.nodes[nodeId]
+/** Absent rather than empty: an element with no declarations prints no `style` at all. */
+function cssVarsOf(
+  base: Readonly<Record<string, string>> | undefined,
+  hatch: Readonly<Record<string, string>>,
+): { cssVars?: Readonly<Record<string, string>> } {
+  const cssVars = { ...base, ...hatch }
 
-  if (name === undefined || node === undefined) {
-    return undefined
-  }
-
-  const attributes: Record<string, IRValue> = {}
-
-  for (const prop of unit.propNames) {
-    const value = literal(node.props[prop])
-
-    if (value !== undefined) {
-      attributes[prop] = value
-    }
-  }
-
-  return {
-    kind: 'element',
-    tag: name,
-    classNames: [],
-    attributes,
-    children: [],
-  }
+  return Object.keys(cssVars).length === 0 ? {} : { cssVars }
 }

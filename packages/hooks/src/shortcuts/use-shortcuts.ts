@@ -109,13 +109,18 @@ export function resolveShortcut<Ctx>(
     return { keys, scope, shortcut: undefined, blockedByTextEntry: false }
   }
 
-  if (isTextEntry(event.target) && !TEXT_ENTRY_PASSTHROUGH.has(keys)) {
-    return { keys, scope, shortcut: undefined, blockedByTextEntry: true }
-  }
-
+  const typing = isTextEntry(event.target) && !TEXT_ENTRY_PASSTHROUGH.has(keys)
   const shortcut = registry
     .match(keys, scope)
     .find((candidate) => candidate.when === undefined || candidate.when(context))
+
+  /*
+   * ADR-278: a binding may opt back in. The guard protects typing, and `mod+shift+s` is not typing —
+   * without the opt-in the playground's own keys would be dead in the editor they are written for.
+   */
+  if (typing && shortcut?.allowInTextEntry !== true) {
+    return { keys, scope, shortcut: undefined, blockedByTextEntry: true }
+  }
 
   return { keys, scope, shortcut, blockedByTextEntry: false }
 }

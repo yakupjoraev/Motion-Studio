@@ -1,7 +1,7 @@
 import { blockId } from '@motion-studio/schema'
 
 import { defineBlock } from '../../define-block'
-import { ALIGNMENTS, optionsFrom } from '../../scales'
+import { ALIGNMENTS, GLASS_ESCAPE_HATCH, optionsFrom } from '../../scales'
 import {
   ACTION_VARIANTS,
   DESCRIPTION_MAX_LENGTH,
@@ -118,6 +118,7 @@ export const ctaBannerDefinition = defineBlock({
     resizable: false,
     fullWidth: true,
     requiresBackdrop: true,
+    escapeHatch: GLASS_ESCAPE_HATCH,
     supportsMotion: ['entrance', 'scroll'],
     costClass: 'cheap',
   },

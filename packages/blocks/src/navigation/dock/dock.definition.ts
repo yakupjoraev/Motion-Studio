@@ -1,6 +1,7 @@
 import { blockId } from '@motion-studio/schema'
 
 import { defineBlock } from '../../define-block'
+import { GLASS_ESCAPE_HATCH } from '../../scales'
 import {
   ACTIVE_HREF_CONTROL,
   NAV_FRAME_CONTROLS,
@@ -82,6 +83,7 @@ export const dockDefinition = defineBlock({
     fullWidth: false,
     // The tray is glass, so it needs something behind it to blur.
     requiresBackdrop: true,
+    escapeHatch: GLASS_ESCAPE_HATCH,
     supportsMotion: ['entrance'],
     costClass: 'cheap',
   },

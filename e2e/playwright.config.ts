@@ -34,6 +34,21 @@ export default defineConfig({
       name: 'chrome',
       use: { ...devices['Desktop Chrome'], channel: 'chrome' },
     },
+    /*
+     * TESTING.md § E2E asks for three browsers; the perf specs are Chrome-only because the budgets in
+     * PERFORMANCE.md were measured there and a budget is only comparable to itself. So the other two
+     * run the flows, which are the specs whose subject is behaviour rather than timing — ADR-280.
+     */
+    {
+      name: 'firefox',
+      testMatch: '**/flows/*.spec.ts',
+      use: { ...devices['Desktop Firefox'] },
+    },
+    {
+      name: 'webkit',
+      testMatch: '**/flows/*.spec.ts',
+      use: { ...devices['Desktop Safari'] },
+    },
   ],
 
   webServer: {

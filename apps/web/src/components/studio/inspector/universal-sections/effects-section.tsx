@@ -3,6 +3,7 @@
 import type { NodeId } from '@motion-studio/schema'
 
 import { useStudioStore } from '../../../../store/editor-store'
+import { CustomCssChips } from '../../effects/custom-css-chips'
 import { EffectStackEditor } from '../../effects/effect-stack-editor'
 import { ControlGroup } from '../control-group'
 
@@ -36,6 +37,8 @@ export function EffectsSection({ nodeIds }: EffectsSectionProps) {
   return (
     <ControlGroup id="effects" label="Effects">
       <EffectStackEditor nodeId={nodeId} />
+      {/* A value sent from the playground is a node-level layer too — PLAYGROUND.md § Send to selection. */}
+      <CustomCssChips nodeId={nodeId} />
     </ControlGroup>
   )
 }

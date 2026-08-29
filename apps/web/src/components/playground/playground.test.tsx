@@ -57,14 +57,7 @@ describe('the preset panel', () => {
     const user = userEvent.setup()
     const onValueChange = vi.fn()
 
-    render(
-      <PresetPanel
-        property="box-shadow"
-        value="0 0 0 red"
-        onValueChange={onValueChange}
-        onCopy={vi.fn()}
-      />,
-    )
+    render(<PresetPanel property="box-shadow" value="0 0 0 red" onValueChange={onValueChange} />)
     await user.click(screen.getByRole('button', { name: 'Soft lift' }))
 
     expect(onValueChange).toHaveBeenCalledWith(PRESETS['box-shadow'][0]?.value)
@@ -74,14 +67,7 @@ describe('the preset panel', () => {
     const user = userEvent.setup()
     const onValueChange = vi.fn()
 
-    render(
-      <PresetPanel
-        property="box-shadow"
-        value="0 0 0 red"
-        onValueChange={onValueChange}
-        onCopy={vi.fn()}
-      />,
-    )
+    render(<PresetPanel property="box-shadow" value="0 0 0 red" onValueChange={onValueChange} />)
     await user.keyboard('{Alt>}')
     await user.click(screen.getByRole('button', { name: 'Soft lift' }))
     await user.keyboard('{/Alt}')
@@ -93,14 +79,7 @@ describe('the preset panel', () => {
     const user = userEvent.setup()
     const onValueChange = vi.fn()
 
-    render(
-      <PresetPanel
-        property="clip-path"
-        value="circle(40%)"
-        onValueChange={onValueChange}
-        onCopy={vi.fn()}
-      />,
-    )
+    render(<PresetPanel property="clip-path" value="circle(40%)" onValueChange={onValueChange} />)
     await user.keyboard('{Alt>}')
     await user.click(screen.getByRole('button', { name: 'Hexagon' }))
     await user.keyboard('{/Alt}')
@@ -109,7 +88,7 @@ describe('the preset panel', () => {
   })
 
   it('hides the swatch from the accessible name', () => {
-    render(<PresetPanel property="background" value="" onValueChange={vi.fn()} onCopy={vi.fn()} />)
+    render(<PresetPanel property="background" value="" onValueChange={vi.fn()} />)
 
     for (const swatch of screen.getAllByTestId('preset-swatch')) {
       expect(swatch).toHaveAttribute('aria-hidden', 'true')
@@ -203,6 +182,8 @@ describe('every sandbox', () => {
         targetRef={{ current: null }}
         applied=""
         initialStyle={{}}
+        value=""
+        onValueChange={vi.fn()}
       />,
     )
 
@@ -218,6 +199,8 @@ describe('every sandbox', () => {
         targetRef={{ current: null }}
         applied="linear-gradient(black, transparent)"
         initialStyle={{}}
+        value="linear-gradient(black, transparent)"
+        onValueChange={vi.fn()}
       />,
     )
     await user.click(screen.getByRole('radio', { name: 'Both' }))

@@ -1,6 +1,5 @@
 'use client'
 
-import { Button } from '@motion-studio/ui'
 import type { MouseEvent, ReactElement } from 'react'
 
 import { PRESETS, type Preset } from './presets'
@@ -17,19 +16,13 @@ export interface PresetPanelProps {
   readonly property: PlaygroundProperty
   readonly value: string
   readonly onValueChange: (value: string) => void
-  readonly onCopy: () => void
 }
 
 /** The layer separator the CSS list forms take: a comma, and a newline so the result stays readable. */
 export const appendLayer = (value: string, layer: string): string =>
   value.trim() === '' ? layer : `${value.trimEnd().replace(/,$/, '')},\n  ${layer}`
 
-export function PresetPanel({
-  property,
-  value,
-  onValueChange,
-  onCopy,
-}: PresetPanelProps): ReactElement {
+export function PresetPanel({ property, value, onValueChange }: PresetPanelProps): ReactElement {
   const { layerable } = propertyDescriptor(property)
   const presets = PRESETS[property]
 
@@ -40,7 +33,7 @@ export function PresetPanel({
   }
 
   return (
-    <div className="flex h-full flex-col gap-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
       <div className="flex flex-col gap-1">
         <h2 className="m-0 font-medium text-foreground text-sm">Presets</h2>
         <p className="m-0 text-foreground-muted text-xs">
@@ -49,7 +42,7 @@ export function PresetPanel({
             : 'Click to replace the value.'}
         </p>
       </div>
-      <ul className="m-0 flex list-none flex-col gap-1 overflow-y-auto p-0">
+      <ul className="m-0 flex min-h-0 flex-1 list-none flex-col gap-1 overflow-y-auto p-0">
         {presets.map((preset) => (
           <li key={preset.name}>
             <button
@@ -68,9 +61,6 @@ export function PresetPanel({
           </li>
         ))}
       </ul>
-      <Button variant="secondary" size="sm" onClick={onCopy} className="mt-auto">
-        Copy CSS
-      </Button>
     </div>
   )
 }
