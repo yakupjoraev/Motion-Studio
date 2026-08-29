@@ -141,7 +141,12 @@ describe('what the row says about where its value came from', () => {
     act(() => state().select([section]))
     render(<Inspector />)
 
-    return screen.findByRole('combobox', { name: 'Padding' })
+    /*
+     * A longer budget than the one-second default: the first render in this file mounts the whole
+     * inspector, and a role query with a name computes an accessible name for every candidate. On the
+     * CI runner that has taken over a second since 22 August, which made a real assertion look flaky.
+     */
+    return screen.findByRole('combobox', { name: 'Padding' }, { timeout: 8_000 })
   }
 
   it('marks nothing at base', async () => {

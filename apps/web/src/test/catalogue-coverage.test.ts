@@ -3,7 +3,6 @@ import { join } from 'node:path'
 
 import { blockRegistry } from '@motion-studio/blocks/registry'
 import { presetRegistry } from '@motion-studio/motion'
-import { documentSchema } from '@motion-studio/schema'
 import { describe, expect, it } from 'vitest'
 
 /**
@@ -16,14 +15,30 @@ import { describe, expect, it } from 'vitest'
  */
 const DOCUMENTS = join(process.cwd(), '..', '..', 'e2e', 'fixtures', 'documents')
 
+/**
+ * Read, not parsed: `documentSchema.parse` over the two-hundred-node stress fixture costs seconds in a
+ * worker this app shares with its component tests, and the three fields below are the whole audit.
+ * `golden.test.ts` is where a fixture's schema conformance is asserted.
+ */
+interface FixtureNode {
+  readonly blockId: string
+  readonly effects: readonly { readonly effectId: string }[]
+  readonly motion: Readonly<Record<string, { readonly presetId: string } | undefined>>
+}
+
 const documents = readdirSync(DOCUMENTS)
   .filter((name) => name.endsWith('.motion.json'))
-  .map((name) => documentSchema.parse(JSON.parse(readFileSync(join(DOCUMENTS, name), 'utf8'))))
+  .map(
+    (name) =>
+      JSON.parse(readFileSync(join(DOCUMENTS, name), 'utf8')) as {
+        nodes: Record<string, FixtureNode>
+      },
+  )
 
 const nodes = documents.flatMap((document) => Object.values(document.nodes))
-const placedBlocks = new Set(nodes.map((node) => String(node.blockId)))
+const placedBlocks = new Set(nodes.map((node) => node.blockId))
 const placedEffects = new Set(
-  nodes.flatMap((node) => node.effects.map((instance) => String(instance.effectId))),
+  nodes.flatMap((node) => node.effects.map((instance) => instance.effectId)),
 )
 const placedPresets = new Set(
   nodes.flatMap((node) =>

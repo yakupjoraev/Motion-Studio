@@ -70,9 +70,13 @@ describe('Navbar', () => {
     await user.click(trigger)
     await user.keyboard('{Escape}')
 
-    await waitFor(() => {
-      expect(trigger).toHaveAttribute('aria-expanded', 'false')
-    })
+    // Radix closes on the next frame, and a frame on the CI runner is not the frame on a laptop.
+    await waitFor(
+      () => {
+        expect(trigger).toHaveAttribute('aria-expanded', 'false')
+      },
+      { timeout: 5_000 },
+    )
   })
 
   it('moves along the bar with the arrow keys', async () => {
