@@ -164,6 +164,16 @@ export const FIXTURE_BLOCKS: readonly BlockDefinition[] = [
       passthroughProps: ['src', 'alt', 'width', 'height', 'sizes'],
     },
   }),
+  /** The real `image` block's shape: the descriptor names the `<img>`, the producer frames it — ADR-257. */
+  define('framed-image', {
+    name: 'Framed image',
+    category: 'content',
+    codegen: {
+      tag: 'img',
+      client: NEVER,
+      passthroughProps: ['src', 'alt'],
+    },
+  }),
   define('faq', {
     name: 'FAQ',
     category: 'content',

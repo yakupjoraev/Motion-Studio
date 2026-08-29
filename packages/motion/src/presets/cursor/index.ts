@@ -47,12 +47,12 @@ export const spotlight = definePreset({
   resolveReduced: () => DISABLED,
   codegen: (params) => ({
     imports: [{ from: 'react', named: ['useRef'] }],
-    hooks: ['const spotlightRef = useRef<HTMLDivElement>(null)'],
+    classNames: ['ms-spotlight'],
+    hooks: ['const spotlightRef = useRef<HTMLElement | null>(null)'],
     wrapper: {
       tag: 'div',
       props: {
-        ref: '{spotlightRef}',
-        className: '"ms-spotlight"',
+        ref: '{(node) => { spotlightRef.current = node }}',
         onPointerMove: `{(event) => {
   const element = spotlightRef.current
   if (element === null) return

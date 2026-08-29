@@ -22,6 +22,7 @@ import { createMotionCollector } from './passes/collect-motion'
 import { type ComponentUnit, detectComponents } from './passes/detect-components'
 import { createAssetCollector } from './passes/handle-assets'
 import { fileNameFor, toComponentName, uniqueName } from './passes/name-components'
+import { pruneDependencies, pruneImports, referencedNames } from './passes/prune-imports'
 
 /**
  * `buildIR` — EXPORT_ENGINE.md § buildIR. Six passes, orchestrated here, and nothing decided twice:
@@ -205,20 +206,32 @@ export function buildIR(input: BuildIRInput): CodegenIR {
     }
   }
 
-  const shared = new Set([...usage].filter(([, count]) => count > 1).map(([name]) => name))
   const hoistOf = (name: string): HoistedConst =>
     motion.hoisted.get(name) ?? { name, code: `const ${name} = {}` }
+
+  /*
+   * ADR-259: a fragment may hoist a statement rather than a declaration — `gsap.registerPlugin(...)`
+   * is the case, and it registers a plugin rather than naming a value. There is nothing to export and
+   * nothing to import, so it stays in every file that needs it, which is where a person would put it.
+   */
+  const declares = (name: string): boolean => hoistOf(name).code.startsWith('const ')
+  const shared = new Set(
+    [...usage].filter(([name, count]) => count > 1 && declares(name)).map(([name]) => name),
+  )
 
   const components: IRComponent[] = drafts.map((draft) => {
     const own = [...new Set(draft.into.hoisted)].filter((name) => !shared.has(name))
     const fromModule = [...new Set(draft.into.hoisted)].filter((name) => shared.has(name))
+    const hooks = [...new Set(draft.into.hooks)]
+    const hoisted = own.sort().map(hoistOf)
+    // ADR-256: what the file names, not what the descriptor declared.
+    const referenced = referencedNames({ element: draft.element, hooks, hoisted })
     const imports = collectImports([
-      ...draft.into.imports,
+      ...pruneImports(draft.into.imports, referenced),
       ...(fromModule.length > 0
         ? [{ from: motionSpecifier(options), named: fromModule.sort() }]
         : []),
     ])
-    const hooks = [...new Set(draft.into.hooks)]
     const reasons = [...new Set(draft.into.clientReasons)]
     const name = nameOf.get(draft.unit.source) ?? 'Section'
 
@@ -227,7 +240,7 @@ export function buildIR(input: BuildIRInput): CodegenIR {
       fileName: fileNameFor(name, options.language),
       props: propsFor(draft.unit, document),
       imports,
-      hoisted: own.sort().map(hoistOf),
+      hoisted,
       hooks,
       client: clientFor(reasons, hooks),
       root: draft.element,
@@ -283,7 +296,10 @@ export function buildIR(input: BuildIRInput): CodegenIR {
     assets: assets.assets,
     stylesheet: { rules: [...rules.values()], keyframes: motion.keyframes },
     modules: [...modules.values()],
-    dependencies,
+    dependencies: pruneDependencies(
+      dependencies,
+      components.flatMap((component) => component.imports.map((spec) => spec.from)),
+    ),
     warnings,
   }
 }

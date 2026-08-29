@@ -1,0 +1,6001 @@
+{
+  "version": 1,
+  "meta": {
+    "id": "doc_coveragecatalogue",
+    "name": "Coverage — catalogue",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "generator": "motion-studio@0.0.0",
+    "canvas": {
+      "background": "surface-0",
+      "width": 1440
+    }
+  },
+  "theme": {
+    "colorMode": "dark",
+    "elevationStyle": "soft",
+    "id": "studio-dark",
+    "motionScale": 1,
+    "name": "Studio Dark",
+    "palette": {
+      "accent": "oklch(70.00% 0.1560 285.00)",
+      "accentHueShift": 0,
+      "neutral": "slate",
+      "repairContrast": true,
+      "saturation": 1
+    },
+    "radiusScale": 1,
+    "spacingScale": 1,
+    "surface": {
+      "borderStyle": "hairline",
+      "glassLevel": "subtle",
+      "noiseLevel": "none"
+    },
+    "typography": {
+      "baseSize": 14,
+      "pairing": "geist",
+      "scaleRatio": 1.2
+    }
+  },
+  "rootId": "node_f001",
+  "nodes": {
+    "node_f001": {
+      "id": "node_f001",
+      "blockId": "container",
+      "name": "Container",
+      "parentId": null,
+      "slot": "root",
+      "children": [
+        "node_f002",
+        "node_f004",
+        "node_f006",
+        "node_f008",
+        "node_f010",
+        "node_f013",
+        "node_f014",
+        "node_f015",
+        "node_f016",
+        "node_f018",
+        "node_f019",
+        "node_f020",
+        "node_f021",
+        "node_f022",
+        "node_f023",
+        "node_f024",
+        "node_f025",
+        "node_f026",
+        "node_f027",
+        "node_f028",
+        "node_f029",
+        "node_f030",
+        "node_f031",
+        "node_f032",
+        "node_f033",
+        "node_f035",
+        "node_f036",
+        "node_f037",
+        "node_f038",
+        "node_f039",
+        "node_f040",
+        "node_f041",
+        "node_f042",
+        "node_f043",
+        "node_f044",
+        "node_f045",
+        "node_f046",
+        "node_f047",
+        "node_f049",
+        "node_f050",
+        "node_f051",
+        "node_f052",
+        "node_f053",
+        "node_f055",
+        "node_f057",
+        "node_f059",
+        "node_f061",
+        "node_f062",
+        "node_f063",
+        "node_f064",
+        "node_f065",
+        "node_f066",
+        "node_f067",
+        "node_f069",
+        "node_f070",
+        "node_f071",
+        "node_f072",
+        "node_f073",
+        "node_f074",
+        "node_f075",
+        "node_f076",
+        "node_f077",
+        "node_f078",
+        "node_f079",
+        "node_f080",
+        "node_f081",
+        "node_f082",
+        "node_f083",
+        "node_f084",
+        "node_f085",
+        "node_f086",
+        "node_f087",
+        "node_f088",
+        "node_f089",
+        "node_f090",
+        "node_f091",
+        "node_f092",
+        "node_f093",
+        "node_f094",
+        "node_f095",
+        "node_f096",
+        "node_f097"
+      ],
+      "props": {
+        "align": "stretch",
+        "columns": 2,
+        "direction": "column",
+        "divide": false,
+        "gap": "md",
+        "hidden": false,
+        "justify": "start",
+        "maxWidth": "full",
+        "mode": "flex",
+        "padding": "none",
+        "wrap": false
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f002": {
+      "id": "node_f002",
+      "blockId": "section",
+      "name": "Section",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": ["node_f003"],
+      "props": {
+        "align": "start",
+        "background": "transparent",
+        "fullBleed": true,
+        "hidden": false,
+        "maxWidth": "lg",
+        "minHeight": "auto",
+        "overflow": "visible",
+        "padding": "lg",
+        "sticky": false
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 24,
+            "duration": 500
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 60,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.2,
+            "kind": "inView",
+            "margin": "0px 0px -10% 0px",
+            "once": true
+          }
+        },
+        "scroll": {
+          "channel": "scroll",
+          "params": {
+            "axis": "y",
+            "clamp": true,
+            "speed": 0.3
+          },
+          "presetId": "parallax",
+          "trigger": {
+            "end": "bottom top",
+            "kind": "scrollProgress",
+            "start": "top bottom"
+          }
+        }
+      },
+      "effects": [
+        {
+          "id": "fx_cover0",
+          "effectId": "aurora-background",
+          "params": {
+            "blur": 80,
+            "grain": true,
+            "intensity": 0.45,
+            "scrim": true,
+            "secondaryTint": "info",
+            "speed": 1,
+            "tint": "accent"
+          },
+          "layer": "behind",
+          "blendMode": "normal",
+          "opacity": 1
+        }
+      ],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f003": {
+      "id": "node_f003",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f002",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "default",
+        "size": "md",
+        "text": "A paragraph is the unit a reader actually consumes. Keep it to one idea, keep the measure inside the readable range, and the page reads as though somebody meant it.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f004": {
+      "id": "node_f004",
+      "blockId": "container",
+      "name": "Container",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": ["node_f005"],
+      "props": {
+        "align": "stretch",
+        "columns": 2,
+        "direction": "column",
+        "divide": false,
+        "gap": "md",
+        "hidden": false,
+        "justify": "start",
+        "maxWidth": "full",
+        "mode": "flex",
+        "padding": "none",
+        "wrap": false
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "delay": 0,
+            "distance": 24,
+            "duration": 600,
+            "easing": "expoOut"
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        },
+        "scroll": {
+          "channel": "scroll",
+          "params": {
+            "end": 0.4,
+            "start": 0
+          },
+          "presetId": "scroll-fade",
+          "trigger": {
+            "end": "bottom top",
+            "kind": "scrollProgress",
+            "start": "top bottom"
+          }
+        }
+      },
+      "effects": [
+        {
+          "id": "fx_cover1",
+          "effectId": "mesh-gradient",
+          "params": {
+            "blur": 40,
+            "intensity": 0.55,
+            "scrim": true,
+            "secondaryTint": "info",
+            "speed": 0.6,
+            "spread": 55,
+            "tertiaryTint": "success",
+            "tint": "accent"
+          },
+          "layer": "behind",
+          "blendMode": "normal",
+          "opacity": 1
+        }
+      ],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f005": {
+      "id": "node_f005",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f004",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "default",
+        "size": "md",
+        "text": "A paragraph is the unit a reader actually consumes. Keep it to one idea, keep the measure inside the readable range, and the page reads as though somebody meant it.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f006": {
+      "id": "node_f006",
+      "blockId": "stack",
+      "name": "Stack",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": ["node_f007"],
+      "props": {
+        "align": "stretch",
+        "direction": "vertical",
+        "divider": false,
+        "gap": "md",
+        "hidden": false,
+        "justify": "start"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "delay": 0,
+            "distance": 24,
+            "duration": 600,
+            "easing": "expoOut"
+          },
+          "presetId": "fade-down",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        },
+        "scroll": {
+          "channel": "scroll",
+          "params": {
+            "from": 0.9,
+            "to": 1
+          },
+          "presetId": "scroll-scale",
+          "trigger": {
+            "end": "bottom top",
+            "kind": "scrollProgress",
+            "start": "top bottom"
+          }
+        }
+      },
+      "effects": [
+        {
+          "id": "fx_cover2",
+          "effectId": "noise-overlay",
+          "params": {
+            "blend": "overlay",
+            "intensity": 0.12,
+            "scale": 180
+          },
+          "layer": "behind",
+          "blendMode": "normal",
+          "opacity": 1
+        }
+      ],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f007": {
+      "id": "node_f007",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f006",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "default",
+        "size": "md",
+        "text": "A paragraph is the unit a reader actually consumes. Keep it to one idea, keep the measure inside the readable range, and the page reads as though somebody meant it.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f008": {
+      "id": "node_f008",
+      "blockId": "grid",
+      "name": "Grid",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": ["node_f009"],
+      "props": {
+        "columns": 3,
+        "dense": false,
+        "gapX": "md",
+        "gapY": "md",
+        "hidden": false,
+        "minItemWidth": "md",
+        "mode": "explicit"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "delay": 0,
+            "distance": 24,
+            "duration": 600,
+            "easing": "expoOut"
+          },
+          "presetId": "fade-left",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        },
+        "scroll": {
+          "channel": "scroll",
+          "params": {
+            "degrees": 24
+          },
+          "presetId": "scroll-rotate",
+          "trigger": {
+            "end": "bottom top",
+            "kind": "scrollProgress",
+            "start": "top bottom"
+          }
+        }
+      },
+      "effects": [
+        {
+          "id": "fx_cover3",
+          "effectId": "grain-overlay",
+          "params": {
+            "blend": "overlay",
+            "intensity": 0.18,
+            "scale": 160,
+            "speed": 1
+          },
+          "layer": "behind",
+          "blendMode": "normal",
+          "opacity": 1
+        }
+      ],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f009": {
+      "id": "node_f009",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f008",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "default",
+        "size": "md",
+        "text": "A paragraph is the unit a reader actually consumes. Keep it to one idea, keep the measure inside the readable range, and the page reads as though somebody meant it.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f010": {
+      "id": "node_f010",
+      "blockId": "columns",
+      "name": "Columns",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": ["node_f011", "node_f012"],
+      "props": {
+        "align": "stretch",
+        "gap": "lg",
+        "hidden": false,
+        "reverseOnMobile": false,
+        "split": "1-1"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "delay": 0,
+            "distance": 24,
+            "duration": 600,
+            "easing": "expoOut"
+          },
+          "presetId": "fade-right",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        },
+        "scroll": {
+          "channel": "scroll",
+          "params": {
+            "offset": 24,
+            "scaleStep": 0.04
+          },
+          "presetId": "sticky-stack",
+          "trigger": {
+            "end": "bottom top",
+            "kind": "scrollProgress",
+            "start": "top bottom"
+          }
+        }
+      },
+      "effects": [
+        {
+          "id": "fx_cover4",
+          "effectId": "dot-grid",
+          "params": {
+            "dotSize": 1.5,
+            "fade": true,
+            "intensity": 0.12,
+            "spacing": 24,
+            "tint": "foreground"
+          },
+          "layer": "behind",
+          "blendMode": "normal",
+          "opacity": 1
+        }
+      ],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f011": {
+      "id": "node_f011",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f010",
+      "slot": "left",
+      "children": [],
+      "props": {
+        "align": "start",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "default",
+        "size": "md",
+        "text": "A paragraph is the unit a reader actually consumes. Keep it to one idea, keep the measure inside the readable range, and the page reads as though somebody meant it.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f012": {
+      "id": "node_f012",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f010",
+      "slot": "right",
+      "children": [],
+      "props": {
+        "align": "start",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "default",
+        "size": "md",
+        "text": "A paragraph is the unit a reader actually consumes. Keep it to one idea, keep the measure inside the readable range, and the page reads as though somebody meant it.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f013": {
+      "id": "node_f013",
+      "blockId": "spacer",
+      "name": "Spacer",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "height": "md",
+        "hidden": false,
+        "mode": "fixed"
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [
+        {
+          "id": "fx_cover5",
+          "effectId": "grid-lines",
+          "params": {
+            "axis": "both",
+            "fade": true,
+            "intensity": 0.1,
+            "lineWidth": 1,
+            "spacing": 48,
+            "tint": "foreground"
+          },
+          "layer": "behind",
+          "blendMode": "normal",
+          "opacity": 1
+        }
+      ],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f014": {
+      "id": "node_f014",
+      "blockId": "divider",
+      "name": "Divider",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "fade": false,
+        "hidden": false,
+        "label": "",
+        "lineStyle": "solid",
+        "orientation": "horizontal",
+        "spacing": "md"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "delay": 0,
+            "from": 0.92,
+            "spring": "snappy"
+          },
+          "presetId": "scale-in",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [
+        {
+          "id": "fx_cover6",
+          "effectId": "spotlight",
+          "params": {
+            "followPointer": true,
+            "intensity": 0.3,
+            "reach": 40,
+            "tint": "accent"
+          },
+          "layer": "behind",
+          "blendMode": "normal",
+          "opacity": 1
+        }
+      ],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f015": {
+      "id": "node_f015",
+      "blockId": "hero-centered",
+      "name": "Hero — centred",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "actions": [
+          {
+            "href": "#",
+            "label": "Start building",
+            "variant": "primary"
+          },
+          {
+            "href": "#",
+            "label": "See the gallery",
+            "variant": "secondary"
+          }
+        ],
+        "align": "center",
+        "background": "transparent",
+        "eyebrow": "Now in public beta",
+        "eyebrowStyle": "pill",
+        "glow": true,
+        "headline": "Design interfaces that already know how to move",
+        "hidden": false,
+        "maxWidth": "xl",
+        "minHeight": "three-quarters",
+        "padding": "xl",
+        "subtitle": "A visual editor for React that exports the component you actually shipped — tokens, motion and all.",
+        "trust": [
+          {
+            "label": "MIT licensed"
+          },
+          {
+            "label": "No account needed"
+          },
+          {
+            "label": "Exports real code"
+          }
+        ]
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 28,
+            "duration": 600
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 80,
+            "from": "first"
+          },
+          "trigger": {
+            "kind": "mount"
+          }
+        },
+        "scroll": {
+          "channel": "scroll",
+          "params": {
+            "axis": "x"
+          },
+          "presetId": "progress-bar",
+          "trigger": {
+            "end": "bottom top",
+            "kind": "scrollProgress",
+            "start": "top bottom"
+          }
+        }
+      },
+      "effects": [
+        {
+          "id": "fx_cover7",
+          "effectId": "beams",
+          "params": {
+            "angle": -18,
+            "count": 3,
+            "intensity": 0.35,
+            "speed": 0.8,
+            "tint": "accent",
+            "width": 64
+          },
+          "layer": "behind",
+          "blendMode": "normal",
+          "opacity": 1
+        }
+      ],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f016": {
+      "id": "node_f016",
+      "blockId": "hero-split",
+      "name": "Hero — split",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": ["node_f017"],
+      "props": {
+        "actions": [
+          {
+            "href": "#",
+            "label": "Open the studio",
+            "variant": "primary"
+          },
+          {
+            "href": "#",
+            "label": "Read the docs",
+            "variant": "secondary"
+          }
+        ],
+        "align": "start",
+        "background": "transparent",
+        "eyebrow": "Visual editing",
+        "eyebrowStyle": "pill",
+        "headline": "Every property, one panel, no guessing",
+        "hidden": false,
+        "maxWidth": "xl",
+        "mediaAspect": "video",
+        "mediaFrame": true,
+        "minHeight": "three-quarters",
+        "padding": "xl",
+        "ratio": "even",
+        "reverse": false,
+        "subtitle": "Drop a block, tune it in the inspector, and read the source it will export before you commit to it."
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 28,
+            "duration": 600
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 80,
+            "from": "first"
+          },
+          "trigger": {
+            "kind": "mount"
+          }
+        },
+        "scroll": {
+          "channel": "scroll",
+          "params": {
+            "distance": 1600,
+            "snap": false
+          },
+          "presetId": "horizontal-scroll",
+          "trigger": {
+            "end": "bottom top",
+            "kind": "scrollProgress",
+            "start": "top bottom"
+          }
+        }
+      },
+      "effects": [
+        {
+          "id": "fx_cover8",
+          "effectId": "glow",
+          "params": {
+            "blur": 96,
+            "breathe": false,
+            "intensity": 0.4,
+            "origin": "bottom",
+            "speed": 0.5,
+            "tint": "accent"
+          },
+          "layer": "behind",
+          "blendMode": "normal",
+          "opacity": 1
+        }
+      ],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f017": {
+      "id": "node_f017",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f016",
+      "slot": "media",
+      "children": [],
+      "props": {
+        "align": "start",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "default",
+        "size": "md",
+        "text": "A paragraph is the unit a reader actually consumes. Keep it to one idea, keep the measure inside the readable range, and the page reads as though somebody meant it.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f018": {
+      "id": "node_f018",
+      "blockId": "hero-aurora",
+      "name": "Hero — aurora",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "actions": [
+          {
+            "href": "#",
+            "label": "Start building",
+            "variant": "primary"
+          },
+          {
+            "href": "#",
+            "label": "Watch the tour",
+            "variant": "secondary"
+          }
+        ],
+        "align": "center",
+        "drift": true,
+        "eyebrow": "Motion Studio",
+        "eyebrowStyle": "pill",
+        "headline": "Build the thing you keep sketching",
+        "hidden": false,
+        "intensity": "medium",
+        "maxWidth": "xl",
+        "minHeight": "three-quarters",
+        "noise": "subtle",
+        "padding": "xl",
+        "palette": "spectrum",
+        "subtitle": "An infinite canvas, a real component registry, and an export that reads like it was written by hand.",
+        "trust": [
+          {
+            "label": "Open source"
+          },
+          {
+            "label": "Reduced-motion correct"
+          },
+          {
+            "label": "Exports as CSS"
+          }
+        ]
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 28,
+            "duration": 600
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 80,
+            "from": "first"
+          },
+          "trigger": {
+            "kind": "mount"
+          }
+        },
+        "scroll": {
+          "channel": "scroll",
+          "params": {
+            "keyframes": "0:opacity=0|0.5:opacity=1|1:y=-40",
+            "scrub": 1
+          },
+          "presetId": "scroll-timeline",
+          "trigger": {
+            "end": "bottom top",
+            "kind": "scrollProgress",
+            "start": "top bottom"
+          }
+        }
+      },
+      "effects": [
+        {
+          "id": "fx_cover9",
+          "effectId": "border-beam",
+          "params": {
+            "arc": 40,
+            "borderWidth": 1.5,
+            "intensity": 0.9,
+            "speed": 1,
+            "tint": "accent"
+          },
+          "layer": "behind",
+          "blendMode": "normal",
+          "opacity": 1
+        }
+      ],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f019": {
+      "id": "node_f019",
+      "blockId": "hero-video",
+      "name": "Hero — video",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "actions": [
+          {
+            "href": "#",
+            "label": "Open the studio",
+            "variant": "primary"
+          },
+          {
+            "href": "#",
+            "label": "Read the docs",
+            "variant": "ghost"
+          }
+        ],
+        "align": "center",
+        "captions": "",
+        "decorative": true,
+        "eyebrow": "See it work",
+        "eyebrowStyle": "pill",
+        "headline": "Ninety seconds from empty canvas to shipped page",
+        "hidden": false,
+        "maxWidth": "xl",
+        "minHeight": "three-quarters",
+        "padding": "xl",
+        "poster": "",
+        "scrim": "strong",
+        "src": "",
+        "subtitle": "No slides. The whole flow, in one take."
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 28,
+            "duration": 600
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 80,
+            "from": "first"
+          },
+          "trigger": {
+            "kind": "mount"
+          }
+        },
+        "scroll": {
+          "channel": "scroll",
+          "params": {
+            "direction": "left",
+            "duration": 18000,
+            "pauseOnHover": true
+          },
+          "presetId": "marquee",
+          "trigger": {
+            "end": "bottom top",
+            "kind": "scrollProgress",
+            "start": "top bottom"
+          }
+        }
+      },
+      "effects": [
+        {
+          "id": "fx_cover10",
+          "effectId": "shine",
+          "params": {
+            "angle": 20,
+            "intensity": 0.25,
+            "speed": 1,
+            "tint": "foreground",
+            "width": 40
+          },
+          "layer": "behind",
+          "blendMode": "normal",
+          "opacity": 1
+        }
+      ],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f020": {
+      "id": "node_f020",
+      "blockId": "hero-terminal",
+      "name": "Hero — terminal",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "actions": [
+          {
+            "href": "#",
+            "label": "Install the CLI",
+            "variant": "primary"
+          },
+          {
+            "href": "#",
+            "label": "Read the export docs",
+            "variant": "secondary"
+          }
+        ],
+        "align": "start",
+        "background": "transparent",
+        "caret": true,
+        "chrome": "both",
+        "eyebrow": "For engineers",
+        "eyebrowStyle": "pill",
+        "headline": "It ends in a pull request, not a screenshot",
+        "hidden": false,
+        "lines": [
+          {
+            "kind": "prompt",
+            "text": "npx motion-studio export --target next"
+          },
+          {
+            "kind": "output",
+            "text": "Reading document … 24 nodes, 3 breakpoints"
+          },
+          {
+            "kind": "output",
+            "text": "Wrote 12 components · 4 routes · 1 theme"
+          },
+          {
+            "kind": "output",
+            "text": "tsc --noEmit … 0 errors"
+          },
+          {
+            "kind": "output",
+            "text": "Done in 1.8s"
+          }
+        ],
+        "maxWidth": "xl",
+        "minHeight": "three-quarters",
+        "padding": "xl",
+        "subtitle": "Export straight into the repository you already have — one command, and a diff your team can review.",
+        "title": "motion-studio — export"
+      },
+      "responsive": {},
+      "motion": {
+        "continuous": {
+          "channel": "continuous",
+          "params": {
+            "caret": true,
+            "speed": 26
+          },
+          "presetId": "typewriter",
+          "trigger": {
+            "amount": 0.4,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        },
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 28,
+            "duration": 600
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 80,
+            "from": "first"
+          },
+          "trigger": {
+            "kind": "mount"
+          }
+        }
+      },
+      "effects": [
+        {
+          "id": "fx_cover11",
+          "effectId": "particles",
+          "params": {
+            "count": 28,
+            "intensity": 0.5,
+            "seed": 7,
+            "size": 2,
+            "speed": 0.6,
+            "tint": "accent"
+          },
+          "layer": "behind",
+          "blendMode": "normal",
+          "opacity": 1
+        }
+      ],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f021": {
+      "id": "node_f021",
+      "blockId": "hero-app-preview",
+      "name": "Hero — app preview",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "actions": [
+          {
+            "href": "#",
+            "label": "Open the studio",
+            "variant": "primary"
+          },
+          {
+            "href": "#",
+            "label": "See the gallery",
+            "variant": "secondary"
+          }
+        ],
+        "align": "start",
+        "background": "transparent",
+        "eyebrow": "The studio",
+        "eyebrowStyle": "pill",
+        "glow": true,
+        "headline": "The editor is the product, not a demo of one",
+        "hidden": false,
+        "image": {
+          "alt": "",
+          "src": ""
+        },
+        "imageHeight": 900,
+        "imageWidth": 1440,
+        "maxWidth": "xl",
+        "minHeight": "three-quarters",
+        "padding": "xl",
+        "perspective": 1400,
+        "subtitle": "Canvas, inspector, layers and export in one window — the same window this page was built in.",
+        "tiltX": 8,
+        "tiltY": -12
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 28,
+            "duration": 600
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 80,
+            "from": "first"
+          },
+          "trigger": {
+            "kind": "mount"
+          }
+        },
+        "hover": {
+          "channel": "hover",
+          "params": {
+            "distance": 4,
+            "duration": 180,
+            "easing": "standard",
+            "shadow": 12
+          },
+          "presetId": "lift",
+          "trigger": {
+            "kind": "hover"
+          }
+        }
+      },
+      "effects": [
+        {
+          "id": "fx_cover12",
+          "effectId": "scanlines",
+          "params": {
+            "drift": false,
+            "intensity": 0.08,
+            "lineWidth": 1,
+            "spacing": 4,
+            "speed": 0.5,
+            "tint": "foreground"
+          },
+          "layer": "behind",
+          "blendMode": "normal",
+          "opacity": 1
+        }
+      ],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f022": {
+      "id": "node_f022",
+      "blockId": "heading",
+      "name": "Heading",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "anchor": "",
+        "balance": true,
+        "gradient": false,
+        "level": 2,
+        "size": "xl",
+        "text": "Heading",
+        "tracking": "tight",
+        "weight": "semibold"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        },
+        "hover": {
+          "channel": "hover",
+          "params": {
+            "scale": 1.04,
+            "spring": "snappy"
+          },
+          "presetId": "scale-hover",
+          "trigger": {
+            "kind": "hover"
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f023": {
+      "id": "node_f023",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "default",
+        "size": "md",
+        "text": "A paragraph is the unit a reader actually consumes. Keep it to one idea, keep the measure inside the readable range, and the page reads as though somebody meant it.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f024": {
+      "id": "node_f024",
+      "blockId": "rich-text",
+      "name": "Rich text",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "content": [
+          {
+            "children": [
+              {
+                "kind": "run",
+                "run": {
+                  "marks": [],
+                  "text": "The editor stores a "
+                }
+              },
+              {
+                "kind": "run",
+                "run": {
+                  "marks": ["strong"],
+                  "text": "restricted tree"
+                }
+              },
+              {
+                "kind": "run",
+                "run": {
+                  "marks": [],
+                  "text": ", not markup. Bold, italic, "
+                }
+              },
+              {
+                "kind": "run",
+                "run": {
+                  "marks": ["code"],
+                  "text": "inline code"
+                }
+              },
+              {
+                "kind": "run",
+                "run": {
+                  "marks": [],
+                  "text": ", a "
+                }
+              },
+              {
+                "kind": "link",
+                "link": {
+                  "href": "/docs",
+                  "runs": [
+                    {
+                      "marks": [],
+                      "text": "link"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "run",
+                "run": {
+                  "marks": [],
+                  "text": ", and lists survive a paste — everything else keeps its text and loses its tags."
+                }
+              }
+            ],
+            "kind": "paragraph"
+          }
+        ],
+        "hidden": false,
+        "measure": "default",
+        "size": "md"
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f025": {
+      "id": "node_f025",
+      "blockId": "image",
+      "name": "Image",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "alt": "",
+        "aspect": "auto",
+        "caption": "",
+        "fit": "cover",
+        "height": 1000,
+        "hidden": false,
+        "priority": false,
+        "radius": "lg",
+        "sizes": "100vw",
+        "src": "",
+        "width": 1600
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {},
+          "presetId": "blur-in",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        },
+        "hover": {
+          "channel": "hover",
+          "params": {
+            "radius": 180,
+            "spring": "gentle",
+            "strength": 0.35
+          },
+          "presetId": "magnetic",
+          "trigger": {
+            "kind": "hover"
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f026": {
+      "id": "node_f026",
+      "blockId": "video",
+      "name": "Video",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "aspect": "video",
+        "autoplay": false,
+        "caption": "",
+        "captions": "",
+        "controls": true,
+        "decorative": false,
+        "hidden": false,
+        "loop": false,
+        "muted": true,
+        "poster": "",
+        "radius": "lg",
+        "src": ""
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f027": {
+      "id": "node_f027",
+      "blockId": "code-block",
+      "name": "Code block",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "code": "import { HeroAurora } from '@/components/hero-aurora'\n\nexport default function Page() {\n  return <HeroAurora headline=\"Build the thing you keep sketching\" />\n}",
+        "filename": "app/page.tsx",
+        "hidden": false,
+        "highlightLines": "",
+        "language": "tsx",
+        "showCopyButton": true,
+        "showLineNumbers": true,
+        "wrap": false
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {},
+          "presetId": "fade",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f028": {
+      "id": "node_f028",
+      "blockId": "quote",
+      "name": "Quote",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "author": "Priya Raman",
+        "avatar": "",
+        "hidden": false,
+        "mark": "rule",
+        "quote": "It exports the component I would have written, which is the only test that matters.",
+        "role": "Staff engineer, Northwind",
+        "size": "lg"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {},
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f029": {
+      "id": "node_f029",
+      "blockId": "stat",
+      "name": "Stat",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "delta": "−32%",
+        "deltaDirection": "down-is-good",
+        "deltaRose": false,
+        "hidden": false,
+        "label": "Median export time",
+        "series": [8, 7, 9, 6, 5, 6, 4, 3, 3, 2],
+        "showSparkline": true,
+        "size": "lg",
+        "value": "1.8s"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {},
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f030": {
+      "id": "node_f030",
+      "blockId": "badge",
+      "name": "Badge",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "dot": false,
+        "hidden": false,
+        "icon": "",
+        "label": "New",
+        "size": "md",
+        "variant": "accent"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {},
+          "presetId": "scale-in",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        },
+        "hover": {
+          "channel": "hover",
+          "params": {
+            "glare": false,
+            "maxTilt": 10,
+            "perspective": 800,
+            "spring": "gentle"
+          },
+          "presetId": "tilt-3d",
+          "trigger": {
+            "kind": "hover"
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f031": {
+      "id": "node_f031",
+      "blockId": "feature-grid",
+      "name": "Feature grid",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "columns": 3,
+        "description": "Twelve marketing blocks, each one a real component with a schema, controls and an export.",
+        "eyebrow": "What you get",
+        "heading": "Everything a landing page needs, already built",
+        "headingAlign": "center",
+        "headingLevel": 2,
+        "hidden": false,
+        "items": [
+          {
+            "body": "Every block is a production React component, not a picture of one.",
+            "icon": "zap",
+            "title": "Real components"
+          },
+          {
+            "body": "Fifty-one presets, six channels, and a curve editor that draws the spring.",
+            "icon": "curve",
+            "title": "Motion you can tune"
+          },
+          {
+            "body": "React, Next, or plain HTML — typed, formatted, and yours to keep.",
+            "icon": "export",
+            "title": "Export that compiles"
+          },
+          {
+            "body": "One control takes a document from sharp to soft, light to dark.",
+            "icon": "palette",
+            "title": "Themes that carry"
+          },
+          {
+            "body": "Six breakpoints, overrides that show where they came from.",
+            "icon": "radius",
+            "title": "Responsive by default"
+          },
+          {
+            "body": "Keyboard paths, focus rings and reduced motion are not a later phase.",
+            "icon": "success",
+            "title": "Accessible on arrival"
+          }
+        ],
+        "showIcons": true,
+        "treatment": "card"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 20,
+            "duration": 520
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 70,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.25,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f032": {
+      "id": "node_f032",
+      "blockId": "feature-split",
+      "name": "Feature split",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "alternate": true,
+        "description": "",
+        "eyebrow": "",
+        "heading": "Two halves, one decision at a time",
+        "headingAlign": "center",
+        "headingLevel": 2,
+        "hidden": false,
+        "rows": [
+          {
+            "body": "Drop a block and you are looking at the component that ships. Props are typed, motion is live, and the export is the same tree you just arranged.",
+            "eyebrow": "Canvas",
+            "media": {
+              "alt": "",
+              "height": 1000,
+              "sizes": "(min-width: 1024px) 50vw, 100vw",
+              "src": "",
+              "width": 1600
+            },
+            "reversed": false,
+            "title": "Edit the real component, not a mock of it"
+          },
+          {
+            "body": "Fifty-one presets across six channels, a spring the inspector draws by integrating it, and one reduced-motion policy every one of them honours.",
+            "eyebrow": "Motion",
+            "media": {
+              "alt": "",
+              "height": 1000,
+              "sizes": "(min-width: 1024px) 50vw, 100vw",
+              "src": "",
+              "width": 1600
+            },
+            "reversed": false,
+            "title": "Timing you can feel before you ship it"
+          }
+        ]
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 24,
+            "duration": 520
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 70,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.25,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f033": {
+      "id": "node_f033",
+      "blockId": "bento-grid",
+      "name": "Bento grid",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": ["node_f034"],
+      "props": {
+        "cellHeight": "md",
+        "cells": [
+          {
+            "colSpan": 2,
+            "rowSpan": 2
+          },
+          {
+            "colSpan": 2,
+            "rowSpan": 1
+          },
+          {
+            "colSpan": 1,
+            "rowSpan": 1
+          },
+          {
+            "colSpan": 1,
+            "rowSpan": 1
+          },
+          {
+            "colSpan": 2,
+            "rowSpan": 1
+          },
+          {
+            "colSpan": 2,
+            "rowSpan": 1
+          }
+        ],
+        "description": "",
+        "eyebrow": "",
+        "gapless": false,
+        "heading": "Everything in one view",
+        "headingAlign": "center",
+        "headingLevel": 2,
+        "hidden": false
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 20,
+            "duration": 520
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 70,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.25,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f034": {
+      "id": "node_f034",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f033",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "default",
+        "size": "md",
+        "text": "A paragraph is the unit a reader actually consumes. Keep it to one idea, keep the measure inside the readable range, and the page reads as though somebody meant it.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f035": {
+      "id": "node_f035",
+      "blockId": "pricing-table",
+      "name": "Pricing table",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "currency": "$",
+        "description": "Yearly is two months off. Change plans or leave whenever you like.",
+        "eyebrow": "Pricing",
+        "glass": false,
+        "heading": "One price, every block",
+        "headingAlign": "center",
+        "headingLevel": 2,
+        "hidden": false,
+        "highlightIndex": 1,
+        "interval": "month",
+        "layout": "cards",
+        "plans": [
+          {
+            "badge": "",
+            "ctaHref": "#",
+            "ctaLabel": "Start free",
+            "description": "Everything you need to try it properly.",
+            "features": [
+              {
+                "included": true,
+                "label": "Three documents"
+              },
+              {
+                "included": true,
+                "label": "The full block registry"
+              },
+              {
+                "included": true,
+                "label": "React and HTML export"
+              },
+              {
+                "included": false,
+                "label": "Custom themes"
+              },
+              {
+                "included": false,
+                "label": "Team libraries"
+              }
+            ],
+            "name": "Free",
+            "priceMonthly": "0",
+            "priceYearly": "0"
+          },
+          {
+            "badge": "Most popular",
+            "ctaHref": "#",
+            "ctaLabel": "Get Studio",
+            "description": "For the work that ships.",
+            "features": [
+              {
+                "included": true,
+                "label": "Unlimited documents"
+              },
+              {
+                "included": true,
+                "label": "The full block registry"
+              },
+              {
+                "included": true,
+                "label": "Every export target"
+              },
+              {
+                "included": true,
+                "label": "Custom themes"
+              },
+              {
+                "included": false,
+                "label": "Team libraries"
+              }
+            ],
+            "name": "Studio",
+            "priceMonthly": "19",
+            "priceYearly": "190"
+          },
+          {
+            "badge": "",
+            "ctaHref": "#",
+            "ctaLabel": "Talk to us",
+            "description": "Shared libraries and review.",
+            "features": [
+              {
+                "included": true,
+                "label": "Unlimited documents"
+              },
+              {
+                "included": true,
+                "label": "The full block registry"
+              },
+              {
+                "included": true,
+                "label": "Every export target"
+              },
+              {
+                "included": true,
+                "label": "Custom themes"
+              },
+              {
+                "included": true,
+                "label": "Team libraries"
+              }
+            ],
+            "name": "Team",
+            "priceMonthly": "49",
+            "priceYearly": "490"
+          }
+        ],
+        "showToggle": true
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 20,
+            "duration": 520
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 70,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.25,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f036": {
+      "id": "node_f036",
+      "blockId": "testimonial-card",
+      "name": "Testimonial card",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "author": "Priya Raman",
+        "avatar": "",
+        "company": "Northwind",
+        "eyebrow": "",
+        "hidden": false,
+        "logo": "",
+        "logoAlt": "",
+        "quote": "It exports the component I would have written by hand, which is the only test that matters.",
+        "role": "Staff engineer",
+        "treatment": "card"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 20,
+            "duration": 520
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 70,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.25,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        },
+        "hover": {
+          "channel": "hover",
+          "params": {
+            "distance": 4,
+            "duration": 180,
+            "shadow": 12
+          },
+          "presetId": "lift",
+          "trigger": {
+            "kind": "hover"
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f037": {
+      "id": "node_f037",
+      "blockId": "testimonial-marquee",
+      "name": "Testimonial marquee",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "description": "",
+        "duration": 32000,
+        "eyebrow": "Social proof",
+        "fadeEdges": true,
+        "heading": "What people do with it",
+        "headingAlign": "center",
+        "headingLevel": 2,
+        "hidden": false,
+        "items": [
+          {
+            "author": "Priya Raman",
+            "avatar": "",
+            "company": "Northwind",
+            "quote": "The export is the component I would have written by hand.",
+            "role": "Staff engineer"
+          },
+          {
+            "author": "Tomas Lind",
+            "avatar": "",
+            "company": "Kestrel",
+            "quote": "Our designers ship the motion now. That used to be a ticket.",
+            "role": "Design lead"
+          },
+          {
+            "author": "Amara Osei",
+            "avatar": "",
+            "company": "Vellum",
+            "quote": "Reduced motion works everywhere, which I checked, because it never does.",
+            "role": "Accessibility engineer"
+          },
+          {
+            "author": "Jonas Weber",
+            "avatar": "",
+            "company": "Halden",
+            "quote": "Six breakpoints and I can see which value came from where.",
+            "role": "Front-end lead"
+          },
+          {
+            "author": "Mei Chen",
+            "avatar": "",
+            "company": "Lantern",
+            "quote": "It is a tool, not a demo. That is rare.",
+            "role": "Product designer"
+          },
+          {
+            "author": "Rosa Delgado",
+            "avatar": "",
+            "company": "Corvid",
+            "quote": "The pricing table alone saved us a week of fighting a CMS.",
+            "role": "Marketing engineer"
+          }
+        ],
+        "pauseOnHover": true,
+        "rows": 2
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16,
+            "duration": 520
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 70,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.25,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f038": {
+      "id": "node_f038",
+      "blockId": "logo-cloud",
+      "name": "Logo cloud",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "columns": 6,
+        "description": "",
+        "duration": 30000,
+        "eyebrow": "",
+        "fadeEdges": true,
+        "grayscale": true,
+        "heading": "Teams shipping with it",
+        "headingAlign": "center",
+        "headingLevel": 2,
+        "hidden": false,
+        "logos": [
+          {
+            "alt": "",
+            "label": "Northwind",
+            "src": ""
+          },
+          {
+            "alt": "",
+            "label": "Kestrel",
+            "src": ""
+          },
+          {
+            "alt": "",
+            "label": "Vellum",
+            "src": ""
+          },
+          {
+            "alt": "",
+            "label": "Halden",
+            "src": ""
+          },
+          {
+            "alt": "",
+            "label": "Lantern",
+            "src": ""
+          },
+          {
+            "alt": "",
+            "label": "Corvid",
+            "src": ""
+          }
+        ],
+        "mode": "grid",
+        "pauseOnHover": true
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 12,
+            "duration": 420
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 70,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.25,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f039": {
+      "id": "node_f039",
+      "blockId": "cta-banner",
+      "name": "CTA banner",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "actions": [
+          {
+            "href": "#",
+            "label": "Start building",
+            "variant": "primary"
+          },
+          {
+            "href": "#",
+            "label": "Read the docs",
+            "variant": "secondary"
+          }
+        ],
+        "align": "center",
+        "description": "Every block exports as the component you would have written by hand.",
+        "eyebrow": "",
+        "heading": "Build the page, keep the code",
+        "headingLevel": 2,
+        "hidden": false,
+        "surface": "gradient"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 18,
+            "duration": 520
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 70,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.25,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f040": {
+      "id": "node_f040",
+      "blockId": "cta-split",
+      "name": "CTA split",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "actions": [
+          {
+            "href": "#",
+            "label": "Start building",
+            "variant": "primary"
+          },
+          {
+            "href": "#",
+            "label": "Read the docs",
+            "variant": "secondary"
+          }
+        ],
+        "description": "Three documents, the whole registry, and every export target. No card.",
+        "errorMessage": "That did not go through. Try again in a moment.",
+        "eyebrow": "Get started",
+        "heading": "Start with the free plan",
+        "headingLevel": 2,
+        "hidden": false,
+        "invalidMessage": "Enter an email address like you@company.com.",
+        "label": "Email address",
+        "note": "One email a month. Unsubscribe in one click.",
+        "placeholder": "you@company.com",
+        "showLabel": true,
+        "side": "form",
+        "submitLabel": "Subscribe",
+        "successMessage": "Check your inbox to confirm.",
+        "surface": "surface"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16,
+            "duration": 460
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 70,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.25,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f041": {
+      "id": "node_f041",
+      "blockId": "faq-accordion",
+      "name": "FAQ accordion",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "defaultOpen": 0,
+        "description": "",
+        "eyebrow": "",
+        "heading": "Questions people ask first",
+        "headingAlign": "center",
+        "headingLevel": 2,
+        "hidden": false,
+        "items": [
+          {
+            "answer": "Yes. Every block is a typed React component, and the export emits the same tree with its imports, its classes and its motion. There is no runtime of ours in the output.",
+            "question": "Does the export really compile?"
+          },
+          {
+            "answer": "They come with you. A preset exports as variants and a transition, or as a keyframe block for the CSS-engine ones, and the reduced-motion handling comes with it.",
+            "question": "What happens to my animations outside the studio?"
+          },
+          {
+            "answer": "The theme engine is the token layer. Export the tokens as CSS variables, Tailwind config or JSON, and the blocks read them wherever they run.",
+            "question": "Can I use my own design tokens?"
+          },
+          {
+            "answer": "Keyboard paths, focus management and reduced motion are build gates rather than a later phase. Every block ships with its own accessibility notes.",
+            "question": "Is it accessible?"
+          }
+        ],
+        "jsonLd": false,
+        "mode": "single"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 20,
+            "duration": 520
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 70,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.25,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f042": {
+      "id": "node_f042",
+      "blockId": "comparison-table",
+      "name": "Comparison table",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "columns": [
+          {
+            "highlighted": true,
+            "label": "Motion Studio"
+          },
+          {
+            "highlighted": false,
+            "label": "Design tool"
+          },
+          {
+            "highlighted": false,
+            "label": "Page builder"
+          }
+        ],
+        "description": "",
+        "eyebrow": "",
+        "heading": "How it compares",
+        "headingAlign": "center",
+        "headingLevel": 2,
+        "hidden": false,
+        "regionLabel": "Feature comparison",
+        "rows": [
+          {
+            "label": "Exports real components",
+            "values": ["yes", "no", "no"]
+          },
+          {
+            "label": "Motion presets",
+            "values": ["51", "Hand-built", "A few"]
+          },
+          {
+            "label": "Reduced motion honoured",
+            "values": ["yes", "no", "no"]
+          },
+          {
+            "label": "Owns your markup",
+            "values": ["no", "no", "yes"]
+          },
+          {
+            "label": "Runs in the browser",
+            "values": ["yes", "no", "yes"]
+          },
+          {
+            "label": "Typed props",
+            "values": ["yes", "no", "no"]
+          }
+        ]
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 14,
+            "duration": 440
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 70,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.25,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f043": {
+      "id": "node_f043",
+      "blockId": "newsletter-form",
+      "name": "Newsletter form",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "description": "What changed, what broke, and what we learned. No drip campaign.",
+        "errorMessage": "That did not go through. Try again in a moment.",
+        "heading": "Ship notes, once a month",
+        "headingLevel": 2,
+        "hidden": false,
+        "invalidMessage": "Enter an email address like you@company.com.",
+        "label": "Email address",
+        "note": "One email a month. Unsubscribe in one click.",
+        "placeholder": "you@company.com",
+        "showLabel": true,
+        "submitLabel": "Subscribe",
+        "successMessage": "Check your inbox to confirm."
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 12,
+            "duration": 400
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 70,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.25,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f044": {
+      "id": "node_f044",
+      "blockId": "navbar",
+      "name": "Navbar",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "actions": [
+          {
+            "href": "#signin",
+            "label": "Sign in",
+            "variant": "ghost"
+          },
+          {
+            "href": "#start",
+            "label": "Start building",
+            "variant": "primary"
+          }
+        ],
+        "activeHref": "",
+        "ariaLabel": "Main",
+        "brandHref": "/",
+        "brandLabel": "Motion Studio",
+        "hidden": false,
+        "links": [
+          {
+            "children": [],
+            "href": "#product",
+            "label": "Product"
+          },
+          {
+            "children": [
+              {
+                "description": "Install, open the studio, place a block.",
+                "href": "#start",
+                "label": "Getting started"
+              },
+              {
+                "description": "The registry, prop by prop.",
+                "href": "#blocks",
+                "label": "Blocks"
+              },
+              {
+                "description": "React, Next, HTML and what each one emits.",
+                "href": "#export",
+                "label": "Export"
+              }
+            ],
+            "href": "",
+            "label": "Docs"
+          },
+          {
+            "children": [],
+            "href": "#pricing",
+            "label": "Pricing"
+          },
+          {
+            "children": [],
+            "href": "#changelog",
+            "label": "Changelog"
+          }
+        ],
+        "skipLink": true,
+        "skipLinkTarget": "#main",
+        "sticky": true
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 12,
+            "duration": 420
+          },
+          "presetId": "fade-down",
+          "trigger": {
+            "kind": "mount"
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f045": {
+      "id": "node_f045",
+      "blockId": "navbar-floating",
+      "name": "Floating navbar",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "actions": [
+          {
+            "href": "#start",
+            "label": "Start building",
+            "variant": "primary"
+          }
+        ],
+        "activeHref": "",
+        "ariaLabel": "Main",
+        "brandHref": "/",
+        "brandLabel": "Motion Studio",
+        "hidden": false,
+        "links": [
+          {
+            "href": "#product",
+            "label": "Product"
+          },
+          {
+            "href": "#docs",
+            "label": "Docs"
+          },
+          {
+            "href": "#pricing",
+            "label": "Pricing"
+          }
+        ]
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16,
+            "duration": 460
+          },
+          "presetId": "fade-down",
+          "trigger": {
+            "kind": "mount"
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f046": {
+      "id": "node_f046",
+      "blockId": "sidebar-nav",
+      "name": "Sidebar nav",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "activeHref": "",
+        "ariaLabel": "Documentation",
+        "collapsed": false,
+        "groups": [
+          {
+            "collapsible": false,
+            "items": [
+              {
+                "href": "#overview",
+                "icon": "file",
+                "label": "Overview"
+              },
+              {
+                "href": "#install",
+                "icon": "download",
+                "label": "Install"
+              },
+              {
+                "href": "#first",
+                "icon": "hero",
+                "label": "First document"
+              }
+            ],
+            "title": "Getting started"
+          },
+          {
+            "collapsible": true,
+            "items": [
+              {
+                "href": "#registry",
+                "icon": "grid",
+                "label": "Registry"
+              },
+              {
+                "href": "#layout",
+                "icon": "layout-rows",
+                "label": "Layout"
+              },
+              {
+                "href": "#marketing",
+                "icon": "card",
+                "label": "Marketing"
+              },
+              {
+                "href": "#navigation",
+                "icon": "navbar",
+                "label": "Navigation"
+              }
+            ],
+            "title": "Blocks"
+          },
+          {
+            "collapsible": true,
+            "items": [
+              {
+                "href": "#react",
+                "icon": "code",
+                "label": "React"
+              },
+              {
+                "href": "#next",
+                "icon": "file",
+                "label": "Next"
+              },
+              {
+                "href": "#html",
+                "icon": "export",
+                "label": "HTML"
+              }
+            ],
+            "title": "Export"
+          }
+        ],
+        "headingLevel": 2,
+        "hidden": false
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f047": {
+      "id": "node_f047",
+      "blockId": "footer",
+      "name": "Footer",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": ["node_f048"],
+      "props": {
+        "activeHref": "",
+        "ariaLabel": "Footer",
+        "brandHref": "/",
+        "brandLabel": "Motion Studio",
+        "columns": [
+          {
+            "links": [
+              {
+                "href": "#studio",
+                "label": "Studio"
+              },
+              {
+                "href": "#blocks",
+                "label": "Blocks"
+              },
+              {
+                "href": "#export",
+                "label": "Export"
+              },
+              {
+                "href": "#changelog",
+                "label": "Changelog"
+              }
+            ],
+            "title": "Product"
+          },
+          {
+            "links": [
+              {
+                "href": "#start",
+                "label": "Getting started"
+              },
+              {
+                "href": "#motion",
+                "label": "Motion"
+              },
+              {
+                "href": "#theming",
+                "label": "Theming"
+              }
+            ],
+            "title": "Docs"
+          },
+          {
+            "links": [
+              {
+                "href": "#about",
+                "label": "About"
+              },
+              {
+                "href": "#contact",
+                "label": "Contact"
+              }
+            ],
+            "title": "Company"
+          }
+        ],
+        "copyright": "© Motion Studio",
+        "headingLevel": 2,
+        "hidden": false,
+        "legal": [
+          {
+            "href": "#privacy",
+            "label": "Privacy"
+          },
+          {
+            "href": "#terms",
+            "label": "Terms"
+          }
+        ],
+        "showNewsletter": true,
+        "socials": [
+          {
+            "href": "#github",
+            "icon": "code",
+            "network": "GitHub"
+          },
+          {
+            "href": "#x",
+            "icon": "external-link",
+            "network": "X"
+          },
+          {
+            "href": "#youtube",
+            "icon": "video",
+            "network": "YouTube"
+          }
+        ],
+        "tagline": "A visual editor for modern React interfaces. The export is the product."
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16,
+            "duration": 480
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.15,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f048": {
+      "id": "node_f048",
+      "blockId": "newsletter-form",
+      "name": "Newsletter form",
+      "parentId": "node_f047",
+      "slot": "newsletter",
+      "children": [],
+      "props": {
+        "description": "What changed, what broke, and what we learned. No drip campaign.",
+        "errorMessage": "That did not go through. Try again in a moment.",
+        "heading": "Ship notes, once a month",
+        "headingLevel": 2,
+        "hidden": false,
+        "invalidMessage": "Enter an email address like you@company.com.",
+        "label": "Email address",
+        "note": "One email a month. Unsubscribe in one click.",
+        "placeholder": "you@company.com",
+        "showLabel": true,
+        "submitLabel": "Subscribe",
+        "successMessage": "Check your inbox to confirm."
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 12,
+            "duration": 400
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 70,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.25,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f049": {
+      "id": "node_f049",
+      "blockId": "breadcrumbs",
+      "name": "Breadcrumbs",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "ariaLabel": "Breadcrumb",
+        "hidden": false,
+        "items": [
+          {
+            "href": "#docs",
+            "label": "Docs"
+          },
+          {
+            "href": "#blocks",
+            "label": "Blocks"
+          },
+          {
+            "href": "#navigation",
+            "label": "Navigation"
+          },
+          {
+            "href": "#breadcrumbs",
+            "label": "Breadcrumbs"
+          }
+        ],
+        "jsonLd": false,
+        "maxVisible": 4,
+        "separator": "chevron"
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f050": {
+      "id": "node_f050",
+      "blockId": "dock",
+      "name": "Dock",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "activeHref": "",
+        "ariaLabel": "Shortcuts",
+        "hidden": false,
+        "items": [
+          {
+            "href": "#canvas",
+            "icon": "hero",
+            "label": "Canvas"
+          },
+          {
+            "href": "#blocks",
+            "icon": "grid",
+            "label": "Blocks"
+          },
+          {
+            "href": "#layers",
+            "icon": "layout-rows",
+            "label": "Layers"
+          },
+          {
+            "href": "#motion",
+            "icon": "timeline",
+            "label": "Motion"
+          },
+          {
+            "href": "#theme",
+            "icon": "palette",
+            "label": "Theme"
+          },
+          {
+            "href": "#export",
+            "icon": "export",
+            "label": "Export"
+          }
+        ],
+        "magnification": 1.55,
+        "reach": 140
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 14,
+            "duration": 440
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "kind": "mount"
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f051": {
+      "id": "node_f051",
+      "blockId": "button",
+      "name": "Button",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "fullWidth": false,
+        "hidden": false,
+        "href": "",
+        "label": "Get started",
+        "leadingIcon": "",
+        "loading": false,
+        "loadingLabel": "Loading",
+        "size": "md",
+        "trailingIcon": "",
+        "variant": "primary"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 12,
+            "duration": 420
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        },
+        "hover": {
+          "channel": "hover",
+          "params": {
+            "distance": 2,
+            "duration": 160,
+            "shadow": 10
+          },
+          "presetId": "lift",
+          "trigger": {
+            "kind": "hover"
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f052": {
+      "id": "node_f052",
+      "blockId": "button-group",
+      "name": "Button group",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "ariaLabel": "View",
+        "defaultSelected": 0,
+        "hidden": false,
+        "items": [
+          {
+            "icon": "",
+            "label": "Monthly"
+          },
+          {
+            "icon": "",
+            "label": "Yearly"
+          }
+        ],
+        "look": "joined",
+        "mode": "single",
+        "size": "md"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 12,
+            "duration": 420
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f053": {
+      "id": "node_f053",
+      "blockId": "tabs",
+      "name": "Tabs",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": ["node_f054"],
+      "props": {
+        "align": "start",
+        "ariaLabel": "Sections",
+        "defaultTab": 0,
+        "hidden": false,
+        "items": [
+          {
+            "body": "A visual editor for React interfaces: an infinite canvas, a registry of production blocks, and a code generator that emits what you see.",
+            "icon": "",
+            "label": "Overview"
+          },
+          {
+            "body": "Presets per channel — entrance, hover, scroll, exit — composed rather than stacked, and every one of them honours reduced motion.",
+            "icon": "",
+            "label": "Motion"
+          },
+          {
+            "body": "React, Next, or plain HTML, with Tailwind classes and no editor artifacts left in the markup.",
+            "icon": "",
+            "label": "Export"
+          },
+          {
+            "body": "One theme drives colour, radius, spacing, elevation and motion, and the export carries the same variables.",
+            "icon": "",
+            "label": "Tokens"
+          }
+        ],
+        "orientation": "horizontal"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 12,
+            "duration": 420
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f054": {
+      "id": "node_f054",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f053",
+      "slot": "panels",
+      "children": [],
+      "props": {
+        "align": "start",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "default",
+        "size": "md",
+        "text": "A paragraph is the unit a reader actually consumes. Keep it to one idea, keep the measure inside the readable range, and the page reads as though somebody meant it.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f055": {
+      "id": "node_f055",
+      "blockId": "accordion",
+      "name": "Accordion",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": ["node_f056"],
+      "props": {
+        "ariaLabel": "Details",
+        "defaultOpen": 0,
+        "headingLevel": 3,
+        "hidden": false,
+        "items": [
+          {
+            "body": "An infinite artboard with real blocks on it: zoom, pan, snap and guides, and every node is the component it will export as.",
+            "icon": "",
+            "label": "What the canvas is"
+          },
+          {
+            "body": "A node holds one spec per channel — a preset id, a trigger and its params — so an animation is data the inspector edits rather than code a block hides.",
+            "icon": "",
+            "label": "How motion is stored"
+          },
+          {
+            "body": "The same tree, with Tailwind classes, hoisted variants, and no editor artifacts left in the markup.",
+            "icon": "",
+            "label": "What the export contains"
+          }
+        ],
+        "look": "list",
+        "mode": "single"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 12,
+            "duration": 420
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f056": {
+      "id": "node_f056",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f055",
+      "slot": "panels",
+      "children": [],
+      "props": {
+        "align": "start",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "default",
+        "size": "md",
+        "text": "A paragraph is the unit a reader actually consumes. Keep it to one idea, keep the measure inside the readable range, and the page reads as though somebody meant it.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f057": {
+      "id": "node_f057",
+      "blockId": "carousel",
+      "name": "Carousel",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": ["node_f058"],
+      "props": {
+        "ariaLabel": "Highlights",
+        "arrows": true,
+        "autoplay": false,
+        "autoplayInterval": 5000,
+        "dots": true,
+        "headingLevel": 3,
+        "hidden": false,
+        "perView": 2,
+        "slides": [
+          {
+            "body": "An infinite artboard with real components on it, at any zoom.",
+            "icon": "grid",
+            "label": "Canvas"
+          },
+          {
+            "body": "Generated from each block’s own schema, so a new prop is a new control.",
+            "icon": "settings",
+            "label": "Inspector"
+          },
+          {
+            "body": "Presets per channel, composed rather than stacked, reduced-motion correct.",
+            "icon": "zap",
+            "label": "Motion"
+          },
+          {
+            "body": "React, Next, or plain HTML — the same tree, with Tailwind classes.",
+            "icon": "export",
+            "label": "Export"
+          }
+        ]
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 8,
+            "duration": 420
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f058": {
+      "id": "node_f058",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f057",
+      "slot": "slides",
+      "children": [],
+      "props": {
+        "align": "start",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "default",
+        "size": "md",
+        "text": "A paragraph is the unit a reader actually consumes. Keep it to one idea, keep the measure inside the readable range, and the page reads as though somebody meant it.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f059": {
+      "id": "node_f059",
+      "blockId": "modal-trigger",
+      "name": "Modal trigger",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": ["node_f060"],
+      "props": {
+        "body": "Drop a form, a list, or anything else into this slot.",
+        "closeLabel": "Close",
+        "defaultOpen": false,
+        "description": "They will get an email with a link that expires in seven days.",
+        "hidden": false,
+        "size": "md",
+        "title": "Invite your team",
+        "triggerLabel": "Open the dialog",
+        "triggerSize": "md",
+        "triggerVariant": "secondary"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 12,
+            "duration": 420
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f060": {
+      "id": "node_f060",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f059",
+      "slot": "content",
+      "children": [],
+      "props": {
+        "align": "start",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "default",
+        "size": "md",
+        "text": "A paragraph is the unit a reader actually consumes. Keep it to one idea, keep the measure inside the readable range, and the page reads as though somebody meant it.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f061": {
+      "id": "node_f061",
+      "blockId": "tooltip-target",
+      "name": "Tooltip",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "content": "Everyone with the link will see the current version.",
+        "delay": 200,
+        "hidden": false,
+        "icon": "",
+        "label": "Publish",
+        "side": "top",
+        "size": "md",
+        "variant": "secondary"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 12,
+            "duration": 420
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f062": {
+      "id": "node_f062",
+      "blockId": "command-menu-preview",
+      "name": "Command menu",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "alt": "A command palette listing editor, motion and project commands with their shortcuts.",
+        "commands": [
+          {
+            "group": "Editor",
+            "hint": "B",
+            "icon": "plus",
+            "label": "Insert block"
+          },
+          {
+            "group": "Editor",
+            "hint": "⌥L",
+            "icon": "layout-rows",
+            "label": "Toggle layers"
+          },
+          {
+            "group": "Motion",
+            "hint": "Space",
+            "icon": "play",
+            "label": "Play motion"
+          },
+          {
+            "group": "Motion",
+            "hint": "",
+            "icon": "curve",
+            "label": "Edit curve"
+          },
+          {
+            "group": "Project",
+            "hint": "⌘E",
+            "icon": "export",
+            "label": "Export project"
+          },
+          {
+            "group": "Project",
+            "hint": "⌘T",
+            "icon": "palette",
+            "label": "Theme builder"
+          }
+        ],
+        "glass": false,
+        "hidden": false,
+        "placeholder": "Search commands…"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16,
+            "duration": 480
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f063": {
+      "id": "node_f063",
+      "blockId": "theme-toggle",
+      "name": "Theme toggle",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "ariaLabel": "Colour mode",
+        "darkLabel": "Dark",
+        "hidden": false,
+        "includeSystem": true,
+        "lightLabel": "Light",
+        "size": "sm",
+        "systemLabel": "System",
+        "variant": "segmented"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 12,
+            "duration": 420
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f064": {
+      "id": "node_f064",
+      "blockId": "table",
+      "name": "Table",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "caption": "Export runs, last seven days",
+        "columns": [
+          {
+            "align": "start",
+            "label": "Document",
+            "sortable": true
+          },
+          {
+            "align": "start",
+            "label": "Target",
+            "sortable": true
+          },
+          {
+            "align": "end",
+            "label": "Nodes",
+            "sortable": true
+          },
+          {
+            "align": "end",
+            "label": "Duration",
+            "sortable": true
+          },
+          {
+            "align": "start",
+            "label": "Result",
+            "sortable": false
+          }
+        ],
+        "density": "default",
+        "emptyMessage": "No exports yet.",
+        "hidden": false,
+        "regionLabel": "Export runs",
+        "rows": [
+          {
+            "cells": ["landing-page.motion", "React", "18", "1.4s", "Complete"]
+          },
+          {
+            "cells": ["pricing-grid.motion", "Next.js", "24", "2.1s", "Complete"]
+          },
+          {
+            "cells": ["docs-shell.motion", "HTML", "9", "0.6s", "Complete"]
+          },
+          {
+            "cells": ["changelog.motion", "React", "31", "2.8s", "Failed"]
+          },
+          {
+            "cells": ["brand-kit.motion", "JSON", "4", "0.2s", "Complete"]
+          }
+        ],
+        "showCaption": false,
+        "stickyHeader": true,
+        "zebra": true
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 14,
+            "duration": 440
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f065": {
+      "id": "node_f065",
+      "blockId": "stat-grid",
+      "name": "Stat grid",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "columns": 4,
+        "dividers": true,
+        "hidden": false,
+        "items": [
+          {
+            "delta": "+10",
+            "deltaDirection": "up-is-good",
+            "deltaRose": true,
+            "label": "Blocks in the registry",
+            "value": "62"
+          },
+          {
+            "delta": "−32%",
+            "deltaDirection": "down-is-good",
+            "deltaRose": false,
+            "label": "Median export time",
+            "value": "1.8s"
+          },
+          {
+            "delta": "+6",
+            "deltaDirection": "up-is-good",
+            "deltaRose": true,
+            "label": "Motion presets",
+            "value": "51"
+          },
+          {
+            "delta": "",
+            "deltaDirection": "neutral",
+            "deltaRose": false,
+            "label": "Axe violations",
+            "value": "0"
+          }
+        ],
+        "size": "lg"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 12,
+            "duration": 420
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f066": {
+      "id": "node_f066",
+      "blockId": "progress-ring",
+      "name": "Progress ring",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "caption": "Blocks migrated",
+        "hidden": false,
+        "label": "Migration progress",
+        "max": 100,
+        "min": 0,
+        "showValue": true,
+        "size": "md",
+        "value": 68,
+        "valueText": "",
+        "valueUnit": "%",
+        "weight": "regular"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 12,
+            "duration": 420
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f067": {
+      "id": "node_f067",
+      "blockId": "timeline",
+      "name": "Timeline",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": ["node_f068"],
+      "props": {
+        "hidden": false,
+        "items": [
+          {
+            "body": "A normalised tree, patches for history, and a file format with migrations.",
+            "date": "2026-01",
+            "dateLabel": "January",
+            "icon": "file",
+            "title": "The document model"
+          },
+          {
+            "body": "Zoom, pan, snapping and overlays, with every node the component it will export as.",
+            "date": "2026-03",
+            "dateLabel": "March",
+            "icon": "layout-grid",
+            "title": "The canvas"
+          },
+          {
+            "body": "Fifty-one presets on six channels, and one reduced-motion path through all of them.",
+            "date": "2026-05",
+            "dateLabel": "May",
+            "icon": "zap",
+            "title": "Motion"
+          },
+          {
+            "body": "Sixty-two blocks, each with a schema, controls, codegen and accessibility notes.",
+            "date": "2026-08",
+            "dateLabel": "August",
+            "icon": "grid",
+            "title": "The registry"
+          }
+        ],
+        "marker": "dot",
+        "orientation": "vertical",
+        "regionLabel": "Timeline"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 12,
+            "duration": 420
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f068": {
+      "id": "node_f068",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f067",
+      "slot": "steps",
+      "children": [],
+      "props": {
+        "align": "start",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "default",
+        "size": "md",
+        "text": "A paragraph is the unit a reader actually consumes. Keep it to one idea, keep the measure inside the readable range, and the page reads as though somebody meant it.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f069": {
+      "id": "node_f069",
+      "blockId": "chart-preview",
+      "name": "Chart preview",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "caption": "",
+        "height": "md",
+        "hidden": false,
+        "kind": "area",
+        "labels": ["Mar", "Apr", "May", "Jun", "Jul", "Aug"],
+        "plate": false,
+        "series": [12, 28, 24, 46, 62, 84],
+        "seriesLabel": "Exports per week",
+        "showGrid": true,
+        "showPointLabels": true,
+        "showTable": true,
+        "summary": "",
+        "tone": "accent"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 12,
+            "duration": 420
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f070": {
+      "id": "node_f070",
+      "blockId": "input-field",
+      "name": "Input field",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "autoComplete": "email",
+        "disabled": false,
+        "error": "",
+        "hidden": false,
+        "hint": "We’ll only use it to reply to you.",
+        "label": "Email address",
+        "multiline": false,
+        "name": "email",
+        "placeholder": "you@company.com",
+        "required": false,
+        "rows": 4,
+        "type": "email"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 12,
+            "duration": 420
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f071": {
+      "id": "node_f071",
+      "blockId": "select-field",
+      "name": "Select field",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "defaultValue": "",
+        "disabled": false,
+        "error": "",
+        "hidden": false,
+        "hint": "You can change this later in the export dialog.",
+        "label": "Export target",
+        "name": "target",
+        "options": [
+          {
+            "label": "React",
+            "value": "react"
+          },
+          {
+            "label": "Next.js",
+            "value": "next"
+          },
+          {
+            "label": "Static HTML",
+            "value": "html"
+          },
+          {
+            "label": "JSON only",
+            "value": "json"
+          }
+        ],
+        "placeholder": "Choose a target",
+        "required": false
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 12,
+            "duration": 420
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f072": {
+      "id": "node_f072",
+      "blockId": "checkbox-field",
+      "name": "Choice group",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "choices": [
+          {
+            "checked": true,
+            "disabled": false,
+            "hint": "What shipped, once a month.",
+            "label": "Release notes",
+            "value": "release-notes"
+          },
+          {
+            "checked": false,
+            "disabled": false,
+            "hint": "",
+            "label": "Engineering deep dives",
+            "value": "deep-dives"
+          },
+          {
+            "checked": false,
+            "disabled": false,
+            "hint": "",
+            "label": "Events and workshops",
+            "value": "events"
+          }
+        ],
+        "disabled": false,
+        "error": "",
+        "hidden": false,
+        "hint": "Pick as many as you like.",
+        "label": "What should we send you?",
+        "layout": "stack",
+        "mode": "checkbox",
+        "name": "topics",
+        "required": false
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 12,
+            "duration": 420
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f073": {
+      "id": "node_f073",
+      "blockId": "contact-form",
+      "name": "Contact form",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "description": "We read everything and reply within a working day.",
+        "email": {
+          "error": "Enter a valid email address.",
+          "hint": "We’ll reply to this address.",
+          "label": "Email address",
+          "placeholder": "you@company.com"
+        },
+        "failureMessage": "That did not go through. Try again in a moment.",
+        "heading": "Tell us what you’re building",
+        "headingLevel": 2,
+        "hidden": false,
+        "message": {
+          "error": "Write at least a sentence so we know what to reply to.",
+          "hint": "A sentence or two is plenty.",
+          "label": "What can we help with?",
+          "placeholder": "A landing page for a docs site we launch in March."
+        },
+        "name": {
+          "error": "Enter your name.",
+          "hint": "",
+          "label": "Your name",
+          "placeholder": "Ada Lovelace"
+        },
+        "note": "",
+        "submitLabel": "Send message",
+        "submittingLabel": "Sending",
+        "successBody": "We’ll reply to the address you gave us within a working day.",
+        "successTitle": "Message sent"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 14,
+            "duration": 440
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f074": {
+      "id": "node_f074",
+      "blockId": "waitlist-form",
+      "name": "Waitlist form",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "failureMessage": "That did not go through. Try again in a moment.",
+        "hidden": false,
+        "hint": "",
+        "invalidMessage": "Enter a valid email address.",
+        "label": "Email address",
+        "note": "One email when we launch. Nothing else.",
+        "placeholder": "you@company.com",
+        "showLabel": false,
+        "submitLabel": "Join the waitlist",
+        "submittingLabel": "Joining",
+        "successBody": "We’ll write when there’s something to try.",
+        "successTitle": "You’re on the list"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 12,
+            "duration": 420
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f075": {
+      "id": "node_f075",
+      "blockId": "section",
+      "name": "Section",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "background": "transparent",
+        "fullBleed": true,
+        "hidden": false,
+        "maxWidth": "lg",
+        "minHeight": "auto",
+        "overflow": "visible",
+        "padding": "lg",
+        "sticky": false
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "delay": 0,
+            "duration": 600,
+            "easing": "expoOut"
+          },
+          "presetId": "fade",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f076": {
+      "id": "node_f076",
+      "blockId": "hero-centered",
+      "name": "Hero — centred",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "actions": [
+          {
+            "href": "#",
+            "label": "Start building",
+            "variant": "primary"
+          },
+          {
+            "href": "#",
+            "label": "See the gallery",
+            "variant": "secondary"
+          }
+        ],
+        "align": "center",
+        "background": "transparent",
+        "eyebrow": "Now in public beta",
+        "eyebrowStyle": "pill",
+        "glow": true,
+        "headline": "Design interfaces that already know how to move",
+        "hidden": false,
+        "maxWidth": "xl",
+        "minHeight": "three-quarters",
+        "padding": "xl",
+        "subtitle": "A visual editor for React that exports the component you actually shipped — tokens, motion and all.",
+        "trust": [
+          {
+            "label": "MIT licensed"
+          },
+          {
+            "label": "No account needed"
+          },
+          {
+            "label": "Exports real code"
+          }
+        ]
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "blur": 12,
+            "delay": 0,
+            "duration": 700,
+            "easing": "expoOut"
+          },
+          "presetId": "blur-in",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f077": {
+      "id": "node_f077",
+      "blockId": "hero-split",
+      "name": "Hero — split",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "actions": [
+          {
+            "href": "#",
+            "label": "Open the studio",
+            "variant": "primary"
+          },
+          {
+            "href": "#",
+            "label": "Read the docs",
+            "variant": "secondary"
+          }
+        ],
+        "align": "start",
+        "background": "transparent",
+        "eyebrow": "Visual editing",
+        "eyebrowStyle": "pill",
+        "headline": "Every property, one panel, no guessing",
+        "hidden": false,
+        "maxWidth": "xl",
+        "mediaAspect": "video",
+        "mediaFrame": true,
+        "minHeight": "three-quarters",
+        "padding": "xl",
+        "ratio": "even",
+        "reverse": false,
+        "subtitle": "Drop a block, tune it in the inspector, and read the source it will export before you commit to it."
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "delay": 0,
+            "direction": "up",
+            "duration": 720,
+            "easing": "emphasizedDecelerate"
+          },
+          "presetId": "clip-reveal",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f078": {
+      "id": "node_f078",
+      "blockId": "hero-aurora",
+      "name": "Hero — aurora",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "actions": [
+          {
+            "href": "#",
+            "label": "Start building",
+            "variant": "primary"
+          },
+          {
+            "href": "#",
+            "label": "Watch the tour",
+            "variant": "secondary"
+          }
+        ],
+        "align": "center",
+        "drift": true,
+        "eyebrow": "Motion Studio",
+        "eyebrowStyle": "pill",
+        "headline": "Build the thing you keep sketching",
+        "hidden": false,
+        "intensity": "medium",
+        "maxWidth": "xl",
+        "minHeight": "three-quarters",
+        "noise": "subtle",
+        "padding": "xl",
+        "palette": "spectrum",
+        "subtitle": "An infinite canvas, a real component registry, and an export that reads like it was written by hand.",
+        "trust": [
+          {
+            "label": "Open source"
+          },
+          {
+            "label": "Reduced-motion correct"
+          },
+          {
+            "label": "Exports as CSS"
+          }
+        ]
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "by": "line",
+            "duration": 700,
+            "stagger": 60
+          },
+          "presetId": "text-reveal",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f079": {
+      "id": "node_f079",
+      "blockId": "hero-video",
+      "name": "Hero — video",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "actions": [
+          {
+            "href": "#",
+            "label": "Open the studio",
+            "variant": "primary"
+          },
+          {
+            "href": "#",
+            "label": "Read the docs",
+            "variant": "ghost"
+          }
+        ],
+        "align": "center",
+        "captions": "",
+        "decorative": true,
+        "eyebrow": "See it work",
+        "eyebrowStyle": "pill",
+        "headline": "Ninety seconds from empty canvas to shipped page",
+        "hidden": false,
+        "maxWidth": "xl",
+        "minHeight": "three-quarters",
+        "padding": "xl",
+        "poster": "",
+        "scrim": "strong",
+        "src": "",
+        "subtitle": "No slides. The whole flow, in one take."
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "angle": -24,
+            "delay": 0,
+            "perspective": 800,
+            "spring": "smooth"
+          },
+          "presetId": "flip-in",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f080": {
+      "id": "node_f080",
+      "blockId": "hero-terminal",
+      "name": "Hero — terminal",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "actions": [
+          {
+            "href": "#",
+            "label": "Install the CLI",
+            "variant": "primary"
+          },
+          {
+            "href": "#",
+            "label": "Read the export docs",
+            "variant": "secondary"
+          }
+        ],
+        "align": "start",
+        "background": "transparent",
+        "caret": true,
+        "chrome": "both",
+        "eyebrow": "For engineers",
+        "eyebrowStyle": "pill",
+        "headline": "It ends in a pull request, not a screenshot",
+        "hidden": false,
+        "lines": [
+          {
+            "kind": "prompt",
+            "text": "npx motion-studio export --target next"
+          },
+          {
+            "kind": "output",
+            "text": "Reading document … 24 nodes, 3 breakpoints"
+          },
+          {
+            "kind": "output",
+            "text": "Wrote 12 components · 4 routes · 1 theme"
+          },
+          {
+            "kind": "output",
+            "text": "tsc --noEmit … 0 errors"
+          },
+          {
+            "kind": "output",
+            "text": "Done in 1.8s"
+          }
+        ],
+        "maxWidth": "xl",
+        "minHeight": "three-quarters",
+        "padding": "xl",
+        "subtitle": "Export straight into the repository you already have — one command, and a diff your team can review.",
+        "title": "motion-studio — export"
+      },
+      "responsive": {},
+      "motion": {
+        "continuous": {
+          "channel": "continuous",
+          "params": {
+            "caret": true,
+            "speed": 26
+          },
+          "presetId": "typewriter",
+          "trigger": {
+            "amount": 0.4,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        },
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "childPreset": "fade-up",
+            "delay": 0,
+            "each": 60,
+            "from": "first"
+          },
+          "presetId": "stagger-children",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f081": {
+      "id": "node_f081",
+      "blockId": "hero-app-preview",
+      "name": "Hero — app preview",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "actions": [
+          {
+            "href": "#",
+            "label": "Open the studio",
+            "variant": "primary"
+          },
+          {
+            "href": "#",
+            "label": "See the gallery",
+            "variant": "secondary"
+          }
+        ],
+        "align": "start",
+        "background": "transparent",
+        "eyebrow": "The studio",
+        "eyebrowStyle": "pill",
+        "glow": true,
+        "headline": "The editor is the product, not a demo of one",
+        "hidden": false,
+        "image": {
+          "alt": "",
+          "src": ""
+        },
+        "imageHeight": 900,
+        "imageWidth": 1440,
+        "maxWidth": "xl",
+        "minHeight": "three-quarters",
+        "padding": "xl",
+        "perspective": 1400,
+        "subtitle": "Canvas, inspector, layers and export in one window — the same window this page was built in.",
+        "tiltX": 8,
+        "tiltY": -12
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "delay": 0,
+            "duration": 900,
+            "easing": "circOut"
+          },
+          "presetId": "draw-line",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f082": {
+      "id": "node_f082",
+      "blockId": "heading",
+      "name": "Heading",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "anchor": "",
+        "balance": true,
+        "gradient": false,
+        "level": 2,
+        "size": "xl",
+        "text": "Heading",
+        "tracking": "tight",
+        "weight": "semibold"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "duration": 1200,
+            "easing": "expoOut",
+            "format": "decimal",
+            "from": 0,
+            "to": 100
+          },
+          "presetId": "counter",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f083": {
+      "id": "node_f083",
+      "blockId": "testimonial-card",
+      "name": "Testimonial card",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "author": "Priya Raman",
+        "avatar": "",
+        "company": "Northwind",
+        "eyebrow": "",
+        "hidden": false,
+        "logo": "",
+        "logoAlt": "",
+        "quote": "It exports the component I would have written by hand, which is the only test that matters.",
+        "role": "Staff engineer",
+        "treatment": "card"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 20,
+            "duration": 520
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 70,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.25,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        },
+        "hover": {
+          "channel": "hover",
+          "params": {
+            "intensity": 0.5,
+            "spring": "wobbly"
+          },
+          "presetId": "liquid",
+          "trigger": {
+            "kind": "hover"
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f084": {
+      "id": "node_f084",
+      "blockId": "button",
+      "name": "Button",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "fullWidth": false,
+        "hidden": false,
+        "href": "",
+        "label": "Get started",
+        "leadingIcon": "",
+        "loading": false,
+        "loadingLabel": "Loading",
+        "size": "md",
+        "trailingIcon": "",
+        "variant": "primary"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 12,
+            "duration": 420
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        },
+        "hover": {
+          "channel": "hover",
+          "params": {
+            "color": "var(--ms-color-accent)",
+            "duration": 200,
+            "easing": "standard",
+            "intensity": 0.45,
+            "size": 28
+          },
+          "presetId": "glow-hover",
+          "trigger": {
+            "kind": "hover"
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f085": {
+      "id": "node_f085",
+      "blockId": "hero-app-preview",
+      "name": "Hero — app preview",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "actions": [
+          {
+            "href": "#",
+            "label": "Open the studio",
+            "variant": "primary"
+          },
+          {
+            "href": "#",
+            "label": "See the gallery",
+            "variant": "secondary"
+          }
+        ],
+        "align": "start",
+        "background": "transparent",
+        "eyebrow": "The studio",
+        "eyebrowStyle": "pill",
+        "glow": true,
+        "headline": "The editor is the product, not a demo of one",
+        "hidden": false,
+        "image": {
+          "alt": "",
+          "src": ""
+        },
+        "imageHeight": 900,
+        "imageWidth": 1440,
+        "maxWidth": "xl",
+        "minHeight": "three-quarters",
+        "padding": "xl",
+        "perspective": 1400,
+        "subtitle": "Canvas, inspector, layers and export in one window — the same window this page was built in.",
+        "tiltX": 8,
+        "tiltY": -12
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 28,
+            "duration": 600
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 80,
+            "from": "first"
+          },
+          "trigger": {
+            "kind": "mount"
+          }
+        },
+        "hover": {
+          "channel": "hover",
+          "params": {
+            "color": "var(--ms-color-accent)",
+            "duration": 2400,
+            "width": 2
+          },
+          "presetId": "border-beam",
+          "trigger": {
+            "kind": "hover"
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f086": {
+      "id": "node_f086",
+      "blockId": "heading",
+      "name": "Heading",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "anchor": "",
+        "balance": true,
+        "gradient": false,
+        "level": 2,
+        "size": "xl",
+        "text": "Heading",
+        "tracking": "tight",
+        "weight": "semibold"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        },
+        "hover": {
+          "channel": "hover",
+          "params": {
+            "angle": 105,
+            "duration": 700
+          },
+          "presetId": "shine",
+          "trigger": {
+            "kind": "hover"
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f087": {
+      "id": "node_f087",
+      "blockId": "image",
+      "name": "Image",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "alt": "",
+        "aspect": "auto",
+        "caption": "",
+        "fit": "cover",
+        "height": 1000,
+        "hidden": false,
+        "priority": false,
+        "radius": "lg",
+        "sizes": "100vw",
+        "src": "",
+        "width": 1600
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {},
+          "presetId": "blur-in",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        },
+        "hover": {
+          "channel": "hover",
+          "params": {
+            "duration": 200,
+            "origin": "left",
+            "thickness": 2
+          },
+          "presetId": "underline-grow",
+          "trigger": {
+            "kind": "hover"
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f088": {
+      "id": "node_f088",
+      "blockId": "badge",
+      "name": "Badge",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "dot": false,
+        "hidden": false,
+        "icon": "",
+        "label": "New",
+        "size": "md",
+        "variant": "accent"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {},
+          "presetId": "scale-in",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        },
+        "hover": {
+          "channel": "hover",
+          "params": {
+            "direction": "up",
+            "distance": 16,
+            "spring": "snappy"
+          },
+          "presetId": "icon-swap",
+          "trigger": {
+            "kind": "hover"
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f089": {
+      "id": "node_f089",
+      "blockId": "testimonial-card",
+      "name": "Testimonial card",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "author": "Priya Raman",
+        "avatar": "",
+        "company": "Northwind",
+        "eyebrow": "",
+        "hidden": false,
+        "logo": "",
+        "logoAlt": "",
+        "quote": "It exports the component I would have written by hand, which is the only test that matters.",
+        "role": "Staff engineer",
+        "treatment": "card"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 20,
+            "duration": 520
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 70,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.25,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        },
+        "hover": {
+          "channel": "hover",
+          "params": {
+            "charset": "!<>-_\\/[]{}—=+*^?#",
+            "speed": 40
+          },
+          "presetId": "text-scramble",
+          "trigger": {
+            "kind": "hover"
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f090": {
+      "id": "node_f090",
+      "blockId": "hero-terminal",
+      "name": "Hero — terminal",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "actions": [
+          {
+            "href": "#",
+            "label": "Install the CLI",
+            "variant": "primary"
+          },
+          {
+            "href": "#",
+            "label": "Read the export docs",
+            "variant": "secondary"
+          }
+        ],
+        "align": "start",
+        "background": "transparent",
+        "caret": true,
+        "chrome": "both",
+        "eyebrow": "For engineers",
+        "eyebrowStyle": "pill",
+        "headline": "It ends in a pull request, not a screenshot",
+        "hidden": false,
+        "lines": [
+          {
+            "kind": "prompt",
+            "text": "npx motion-studio export --target next"
+          },
+          {
+            "kind": "output",
+            "text": "Reading document … 24 nodes, 3 breakpoints"
+          },
+          {
+            "kind": "output",
+            "text": "Wrote 12 components · 4 routes · 1 theme"
+          },
+          {
+            "kind": "output",
+            "text": "tsc --noEmit … 0 errors"
+          },
+          {
+            "kind": "output",
+            "text": "Done in 1.8s"
+          }
+        ],
+        "maxWidth": "xl",
+        "minHeight": "three-quarters",
+        "padding": "xl",
+        "subtitle": "Export straight into the repository you already have — one command, and a diff your team can review.",
+        "title": "motion-studio — export"
+      },
+      "responsive": {},
+      "motion": {
+        "continuous": {
+          "channel": "continuous",
+          "params": {
+            "distance": 10,
+            "duration": 4000
+          },
+          "presetId": "float",
+          "trigger": {
+            "kind": "always"
+          }
+        },
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 28,
+            "duration": 600
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 80,
+            "from": "first"
+          },
+          "trigger": {
+            "kind": "mount"
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f091": {
+      "id": "node_f091",
+      "blockId": "hero-terminal",
+      "name": "Hero — terminal",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "actions": [
+          {
+            "href": "#",
+            "label": "Install the CLI",
+            "variant": "primary"
+          },
+          {
+            "href": "#",
+            "label": "Read the export docs",
+            "variant": "secondary"
+          }
+        ],
+        "align": "start",
+        "background": "transparent",
+        "caret": true,
+        "chrome": "both",
+        "eyebrow": "For engineers",
+        "eyebrowStyle": "pill",
+        "headline": "It ends in a pull request, not a screenshot",
+        "hidden": false,
+        "lines": [
+          {
+            "kind": "prompt",
+            "text": "npx motion-studio export --target next"
+          },
+          {
+            "kind": "output",
+            "text": "Reading document … 24 nodes, 3 breakpoints"
+          },
+          {
+            "kind": "output",
+            "text": "Wrote 12 components · 4 routes · 1 theme"
+          },
+          {
+            "kind": "output",
+            "text": "tsc --noEmit … 0 errors"
+          },
+          {
+            "kind": "output",
+            "text": "Done in 1.8s"
+          }
+        ],
+        "maxWidth": "xl",
+        "minHeight": "three-quarters",
+        "padding": "xl",
+        "subtitle": "Export straight into the repository you already have — one command, and a diff your team can review.",
+        "title": "motion-studio — export"
+      },
+      "responsive": {},
+      "motion": {
+        "continuous": {
+          "channel": "continuous",
+          "params": {
+            "duration": 2400,
+            "scale": 1.06
+          },
+          "presetId": "pulse",
+          "trigger": {
+            "kind": "always"
+          }
+        },
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 28,
+            "duration": 600
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 80,
+            "from": "first"
+          },
+          "trigger": {
+            "kind": "mount"
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f092": {
+      "id": "node_f092",
+      "blockId": "hero-terminal",
+      "name": "Hero — terminal",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "actions": [
+          {
+            "href": "#",
+            "label": "Install the CLI",
+            "variant": "primary"
+          },
+          {
+            "href": "#",
+            "label": "Read the export docs",
+            "variant": "secondary"
+          }
+        ],
+        "align": "start",
+        "background": "transparent",
+        "caret": true,
+        "chrome": "both",
+        "eyebrow": "For engineers",
+        "eyebrowStyle": "pill",
+        "headline": "It ends in a pull request, not a screenshot",
+        "hidden": false,
+        "lines": [
+          {
+            "kind": "prompt",
+            "text": "npx motion-studio export --target next"
+          },
+          {
+            "kind": "output",
+            "text": "Reading document … 24 nodes, 3 breakpoints"
+          },
+          {
+            "kind": "output",
+            "text": "Wrote 12 components · 4 routes · 1 theme"
+          },
+          {
+            "kind": "output",
+            "text": "tsc --noEmit … 0 errors"
+          },
+          {
+            "kind": "output",
+            "text": "Done in 1.8s"
+          }
+        ],
+        "maxWidth": "xl",
+        "minHeight": "three-quarters",
+        "padding": "xl",
+        "subtitle": "Export straight into the repository you already have — one command, and a diff your team can review.",
+        "title": "motion-studio — export"
+      },
+      "responsive": {},
+      "motion": {
+        "continuous": {
+          "channel": "continuous",
+          "params": {
+            "blur": 80,
+            "color": "var(--ms-color-accent)",
+            "speed": 27000
+          },
+          "presetId": "aurora",
+          "trigger": {
+            "kind": "always"
+          }
+        },
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 28,
+            "duration": 600
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 80,
+            "from": "first"
+          },
+          "trigger": {
+            "kind": "mount"
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f093": {
+      "id": "node_f093",
+      "blockId": "hero-terminal",
+      "name": "Hero — terminal",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "actions": [
+          {
+            "href": "#",
+            "label": "Install the CLI",
+            "variant": "primary"
+          },
+          {
+            "href": "#",
+            "label": "Read the export docs",
+            "variant": "secondary"
+          }
+        ],
+        "align": "start",
+        "background": "transparent",
+        "caret": true,
+        "chrome": "both",
+        "eyebrow": "For engineers",
+        "eyebrowStyle": "pill",
+        "headline": "It ends in a pull request, not a screenshot",
+        "hidden": false,
+        "lines": [
+          {
+            "kind": "prompt",
+            "text": "npx motion-studio export --target next"
+          },
+          {
+            "kind": "output",
+            "text": "Reading document … 24 nodes, 3 breakpoints"
+          },
+          {
+            "kind": "output",
+            "text": "Wrote 12 components · 4 routes · 1 theme"
+          },
+          {
+            "kind": "output",
+            "text": "tsc --noEmit … 0 errors"
+          },
+          {
+            "kind": "output",
+            "text": "Done in 1.8s"
+          }
+        ],
+        "maxWidth": "xl",
+        "minHeight": "three-quarters",
+        "padding": "xl",
+        "subtitle": "Export straight into the repository you already have — one command, and a diff your team can review.",
+        "title": "motion-studio — export"
+      },
+      "responsive": {},
+      "motion": {
+        "continuous": {
+          "channel": "continuous",
+          "params": {
+            "angle": 120,
+            "duration": 8000
+          },
+          "presetId": "gradient-shift",
+          "trigger": {
+            "kind": "always"
+          }
+        },
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 28,
+            "duration": 600
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 80,
+            "from": "first"
+          },
+          "trigger": {
+            "kind": "mount"
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f094": {
+      "id": "node_f094",
+      "blockId": "hero-terminal",
+      "name": "Hero — terminal",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "actions": [
+          {
+            "href": "#",
+            "label": "Install the CLI",
+            "variant": "primary"
+          },
+          {
+            "href": "#",
+            "label": "Read the export docs",
+            "variant": "secondary"
+          }
+        ],
+        "align": "start",
+        "background": "transparent",
+        "caret": true,
+        "chrome": "both",
+        "eyebrow": "For engineers",
+        "eyebrowStyle": "pill",
+        "headline": "It ends in a pull request, not a screenshot",
+        "hidden": false,
+        "lines": [
+          {
+            "kind": "prompt",
+            "text": "npx motion-studio export --target next"
+          },
+          {
+            "kind": "output",
+            "text": "Reading document … 24 nodes, 3 breakpoints"
+          },
+          {
+            "kind": "output",
+            "text": "Wrote 12 components · 4 routes · 1 theme"
+          },
+          {
+            "kind": "output",
+            "text": "tsc --noEmit … 0 errors"
+          },
+          {
+            "kind": "output",
+            "text": "Done in 1.8s"
+          }
+        ],
+        "maxWidth": "xl",
+        "minHeight": "three-quarters",
+        "padding": "xl",
+        "subtitle": "Export straight into the repository you already have — one command, and a diff your team can review.",
+        "title": "motion-studio — export"
+      },
+      "responsive": {},
+      "motion": {
+        "continuous": {
+          "channel": "continuous",
+          "params": {
+            "count": 3,
+            "duration": 14000,
+            "radius": 120
+          },
+          "presetId": "orbit",
+          "trigger": {
+            "kind": "always"
+          }
+        },
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 28,
+            "duration": 600
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 80,
+            "from": "first"
+          },
+          "trigger": {
+            "kind": "mount"
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f095": {
+      "id": "node_f095",
+      "blockId": "hero-terminal",
+      "name": "Hero — terminal",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "actions": [
+          {
+            "href": "#",
+            "label": "Install the CLI",
+            "variant": "primary"
+          },
+          {
+            "href": "#",
+            "label": "Read the export docs",
+            "variant": "secondary"
+          }
+        ],
+        "align": "start",
+        "background": "transparent",
+        "caret": true,
+        "chrome": "both",
+        "eyebrow": "For engineers",
+        "eyebrowStyle": "pill",
+        "headline": "It ends in a pull request, not a screenshot",
+        "hidden": false,
+        "lines": [
+          {
+            "kind": "prompt",
+            "text": "npx motion-studio export --target next"
+          },
+          {
+            "kind": "output",
+            "text": "Reading document … 24 nodes, 3 breakpoints"
+          },
+          {
+            "kind": "output",
+            "text": "Wrote 12 components · 4 routes · 1 theme"
+          },
+          {
+            "kind": "output",
+            "text": "tsc --noEmit … 0 errors"
+          },
+          {
+            "kind": "output",
+            "text": "Done in 1.8s"
+          }
+        ],
+        "maxWidth": "xl",
+        "minHeight": "three-quarters",
+        "padding": "xl",
+        "subtitle": "Export straight into the repository you already have — one command, and a diff your team can review.",
+        "title": "motion-studio — export"
+      },
+      "responsive": {},
+      "motion": {
+        "continuous": {
+          "channel": "continuous",
+          "params": {
+            "amount": 0.35,
+            "speed": 1600
+          },
+          "presetId": "noise-shift",
+          "trigger": {
+            "kind": "always"
+          }
+        },
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 28,
+            "duration": 600
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 80,
+            "from": "first"
+          },
+          "trigger": {
+            "kind": "mount"
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f096": {
+      "id": "node_f096",
+      "blockId": "hero-terminal",
+      "name": "Hero — terminal",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "actions": [
+          {
+            "href": "#",
+            "label": "Install the CLI",
+            "variant": "primary"
+          },
+          {
+            "href": "#",
+            "label": "Read the export docs",
+            "variant": "secondary"
+          }
+        ],
+        "align": "start",
+        "background": "transparent",
+        "caret": true,
+        "chrome": "both",
+        "eyebrow": "For engineers",
+        "eyebrowStyle": "pill",
+        "headline": "It ends in a pull request, not a screenshot",
+        "hidden": false,
+        "lines": [
+          {
+            "kind": "prompt",
+            "text": "npx motion-studio export --target next"
+          },
+          {
+            "kind": "output",
+            "text": "Reading document … 24 nodes, 3 breakpoints"
+          },
+          {
+            "kind": "output",
+            "text": "Wrote 12 components · 4 routes · 1 theme"
+          },
+          {
+            "kind": "output",
+            "text": "tsc --noEmit … 0 errors"
+          },
+          {
+            "kind": "output",
+            "text": "Done in 1.8s"
+          }
+        ],
+        "maxWidth": "xl",
+        "minHeight": "three-quarters",
+        "padding": "xl",
+        "subtitle": "Export straight into the repository you already have — one command, and a diff your team can review.",
+        "title": "motion-studio — export"
+      },
+      "responsive": {},
+      "motion": {
+        "continuous": {
+          "channel": "continuous",
+          "params": {
+            "angle": 115,
+            "duration": 3200,
+            "width": 18
+          },
+          "presetId": "beam",
+          "trigger": {
+            "kind": "always"
+          }
+        },
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 28,
+            "duration": 600
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 80,
+            "from": "first"
+          },
+          "trigger": {
+            "kind": "mount"
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f097": {
+      "id": "node_f097",
+      "blockId": "hero-terminal",
+      "name": "Hero — terminal",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "actions": [
+          {
+            "href": "#",
+            "label": "Install the CLI",
+            "variant": "primary"
+          },
+          {
+            "href": "#",
+            "label": "Read the export docs",
+            "variant": "secondary"
+          }
+        ],
+        "align": "start",
+        "background": "transparent",
+        "caret": true,
+        "chrome": "both",
+        "eyebrow": "For engineers",
+        "eyebrowStyle": "pill",
+        "headline": "It ends in a pull request, not a screenshot",
+        "hidden": false,
+        "lines": [
+          {
+            "kind": "prompt",
+            "text": "npx motion-studio export --target next"
+          },
+          {
+            "kind": "output",
+            "text": "Reading document … 24 nodes, 3 breakpoints"
+          },
+          {
+            "kind": "output",
+            "text": "Wrote 12 components · 4 routes · 1 theme"
+          },
+          {
+            "kind": "output",
+            "text": "tsc --noEmit … 0 errors"
+          },
+          {
+            "kind": "output",
+            "text": "Done in 1.8s"
+          }
+        ],
+        "maxWidth": "xl",
+        "minHeight": "three-quarters",
+        "padding": "xl",
+        "subtitle": "Export straight into the repository you already have — one command, and a diff your team can review.",
+        "title": "motion-studio — export"
+      },
+      "responsive": {},
+      "motion": {
+        "continuous": {
+          "channel": "continuous",
+          "params": {
+            "caret": true,
+            "phrases": "Design it.|Ship it.",
+            "speed": 70
+          },
+          "presetId": "typewriter",
+          "trigger": {
+            "kind": "always"
+          }
+        },
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 28,
+            "duration": 600
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 80,
+            "from": "first"
+          },
+          "trigger": {
+            "kind": "mount"
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    }
+  },
+  "assets": {}
+}

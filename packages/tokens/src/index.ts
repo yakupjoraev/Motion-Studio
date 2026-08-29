@@ -64,3 +64,5 @@ export type {
   SemanticColorToken,
   SemanticColors,
 } from './semantic/semantic.types'
+/** The `@theme` block, so an export can hand Tailwind the same utility namespaces the studio uses. */
+export { toTailwind } from './build/to-tailwind'

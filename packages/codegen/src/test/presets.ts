@@ -1,5 +1,6 @@
 import type { MotionCodegenFragment, MotionPresetRegistry } from '@motion-studio/motion'
 import type { MotionSpec } from '@motion-studio/schema'
+import { z } from 'zod'
 
 /**
  * The injected catalogue — ADR-226. `codegen` takes the preset registry as an argument precisely so it
@@ -69,17 +70,29 @@ const PRESETS: readonly FixturePreset[] = [
   {
     id: 'scroll-parallax',
     engine: 'gsap',
+    /** The GSAP shape: a plugin registration, which is a statement rather than a declaration. */
     fragment: () => ({
-      imports: [{ from: 'gsap', named: ['gsap'] }],
+      imports: [{ from: 'gsap', named: ['gsap', 'ScrollTrigger'] }],
       hooks: ['useGsapParallax(ref)'],
+      helpers: [{ name: 'registerScrollTrigger', source: 'gsap.registerPlugin(ScrollTrigger)' }],
     }),
   },
 ]
 
 /**
- * `MotionPreset` asks for `resolve`, `resolveReduced`, a params schema and controls, none of which the
- * export reads. They are declared as throwing stubs rather than as plausible implementations: a fixture
- * that quietly answers a question the export never asks is a fixture that hides a missing call.
+ * The params a fixture preset declares, with the defaults `codegen` reads when a document stores none
+ * — ADR-255. A real catalogue entry parses before it prints, and a fixture whose schema threw would
+ * assert that it does not.
+ */
+const FIXTURE_PARAMS = z.object({
+  distance: z.number().default(32),
+  duration: z.number().default(0.6),
+})
+
+/**
+ * `MotionPreset` asks for `resolve`, `resolveReduced` and controls, none of which the export reads.
+ * They are declared as throwing stubs rather than as plausible implementations: a fixture that quietly
+ * answers a question the export never asks is a fixture that hides a missing call.
  */
 export function fixturePresets(): MotionPresetRegistry {
   const unreachable = (): never => {
@@ -91,8 +104,8 @@ export function fixturePresets(): MotionPresetRegistry {
     name: preset.id,
     channel: 'entrance' as const,
     engine: preset.engine,
-    paramsSchema: { parse: unreachable } as never,
-    defaults: {},
+    paramsSchema: FIXTURE_PARAMS,
+    defaults: { distance: 32, duration: 0.6 },
     controls: [],
     capabilities: { composableWith: [], cost: 'cheap' as const },
     resolve: unreachable,

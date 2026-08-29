@@ -69,7 +69,7 @@ export const counter = definePreset({
   codegen: (params) => ({
     imports: [
       { from: 'motion/react', named: ['animate', 'useInView'] },
-      { from: 'react', named: ['useEffect', 'useRef', 'useState'] },
+      { from: 'react', named: ['useEffect', 'useRef'] },
     ],
     helpers: [
       helper(
@@ -80,18 +80,20 @@ export const counter = definePreset({
       ),
     ],
     hooks: [
-      'const counterRef = useRef<HTMLSpanElement>(null)',
+      'const counterRef = useRef<HTMLElement | null>(null)',
       'const counterInView = useInView(counterRef, { once: true, amount: 0.3 })',
-      `const [counterValue, setCounterValue] = useState(${params.from})`,
       `useEffect(() => {
-  if (!counterInView) return
+  const element = counterRef.current
+  if (element === null || !counterInView) return
   const controls = animate(${params.from}, ${params.to}, {
     duration: ${params.duration / 1000},
-    onUpdate: (value) => setCounterValue(value),
+    onUpdate: (value) => {
+      element.textContent = formatCounter.format(value)
+    },
   })
   return () => controls.stop()
 }, [counterInView])`,
     ],
-    wrapper: { tag: 'span', props: { ref: '{counterRef}' } },
+    wrapper: { tag: 'span', props: { ref: '{(node) => { counterRef.current = node }}' } },
   }),
 })

@@ -30,7 +30,7 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test:coverage
-      # `pnpm test:codegen` — added by prompt 46 (export verification), which creates the goldens.
+      - run: pnpm test:codegen # the golden comparisons, which `test:coverage` does not run
       - uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -47,6 +47,17 @@ jobs:
       # Presence and consistency only: proving a thumbnail still matches what its block renders needs
       # a browser, so that stays in `pnpm generate:thumbnails --verify`.
       - run: pnpm check:registry
+
+  # Every golden export and every committed document exported from the shipped catalogue, through
+  # `tsc`. It runs on every pull request because a codegen change can break compilation without
+  # breaking a golden comparison: the output changes, the golden updates, and the result no longer
+  # compiles.
+  compile-exports:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: pnpm test:compile
 
   build:
     runs-on: ubuntu-latest
@@ -68,7 +79,6 @@ jobs:
       - uses: ./.github/actions/setup
       - run: pnpm build:storybook
 # Jobs still to come, each with the prompt that creates what it tests:
-#   compile-exports — prompt 46, tsc over every golden export
 #   e2e             — prompt 56, Playwright sharded ×3 across three browsers
 #   a11y            — prompt 55, zero axe violations
 #   lighthouse      — prompt 54, its own workflow with the perf and a11y budgets

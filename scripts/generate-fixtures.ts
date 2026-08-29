@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 import { type MotionDocument, serializeDocument, validateDocument } from '@motion-studio/schema'
 
 import { type Builder, builder as builderOf, document, effect, push } from './fixtures/builder'
+import { coverageDocument } from './fixtures/coverage-catalogue'
 import { exportLanding } from './fixtures/export-landing'
 
 /**
@@ -148,6 +149,7 @@ const FIXTURES: Readonly<Record<string, () => MotionDocument>> = {
   'stress-glass': stressGlass,
   'responsive-grid': responsiveGrid,
   'export-landing': exportLanding,
+  'coverage-catalogue': coverageDocument,
 }
 
 mkdirSync(OUT_DIR, { recursive: true })

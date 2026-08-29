@@ -10423,3 +10423,275 @@ the fallback the export already had for Prettier failing to load.
   silent fallback would hide a bug in this repository behind a slow-looking export.
 - `measure:export` still measures the whole pipeline, which is the honest number for "how long until
   the last file is formatted". Where that work runs is what this entry changed.
+
+## ADR-254 — The compile harness checks the shipped catalogue, not only the goldens
+
+**Date** 2026-08-29 · **Prompt** 46 · **Status** Accepted
+
+### Question
+`test:compile` type-checked the golden exports, which the export engine's **fixture** catalogue
+produced. `codegen` may not import `packages/blocks` (ARCHITECTURE.md § Dependency graph), so no
+golden can carry a shipped block's markup. Does type-checking the goldens establish the claim that
+an export compiles?
+
+### Criterion (set before measuring)
+Export the committed fixture documents from the shipped catalogue and run `tsc --noEmit` over the
+result. If the goldens are a sufficient proxy, the count of new errors is zero.
+
+### Measurement
+`export-landing` and `coverage-catalogue` (all 72 entries, all 51 reachable presets), React and Next:
+**11 type errors and 2 syntax errors** on the first run, in five distinct defects — ADR-255 to
+ADR-260. The golden set had zero, and still has zero.
+
+### Decision
+`scripts/verify-export-compile.mjs` checks both kinds of project: every golden, and the shipped
+catalogue exported at run time from `e2e/fixtures/documents`. The host projects are
+`e2e/fixtures/compile/{react,next}`, workspace members, so `pnpm install` installs what an exported
+`package.json` declares — and the harness asserts that every declared dependency is one of them,
+because a dependency the host has not installed is a `tsc` run against no types at all.
+
+The generator moved to `scripts/generate-export-fixture.ts` for the same reason: at the repository
+root it may import `blocks`, so what it writes is the page a user gets.
+
+### Consequences
+- The job runs an export of 97 nodes and two of 60 on every pull request: 20 projects, ~35 s locally.
+- Accepted: two catalogues are now exercised rather than one, and the fixture catalogue is still the
+  golden set's, because a golden has to be a file a human reads in a diff.
+- A block whose markup does not compile now fails a pull request instead of a user's build.
+
+## ADR-255 — A preset's params are parsed before they are printed
+
+**Date** 2026-08-29 · **Prompt** 46 · **Status** Accepted
+
+### Question
+`collect-motion` passed `spec.params` to `preset.codegen` unparsed, while the canvas passes them
+through `paramsSchema` first (ADR-139). A document stores what the inspector changed, so a partial
+set is the normal case. What does the export print for a param the document never stored?
+
+### Criterion (set before measuring)
+The exported project type-checks against Motion's `Transition`.
+
+### Measurement
+`undefined / 1000` is `NaN`, and `JSON.stringify(NaN)` is `null`: the export wrote
+`{ duration: null, delay: null }` and `{ opacity: 0, y: null }`. `next build` fails with
+*Type 'null' is not assignable to type 'number | undefined'*.
+
+### Decision
+The export applies ADR-139's rule at its own call site: parse with the preset's schema, fall back to
+the preset's defaults. The rule is re-stated rather than imported because `codegen` takes only types
+from `@motion-studio/motion` — `no-react.test.ts` — and the preset object carries its own schema.
+
+### Consequences
+- Accepted: two implementations of a four-line rule, one in `resolve.ts` and one in
+  `collect-motion.ts`, each with a test naming this entry.
+- The fixture presets now declare a real schema; a fixture whose schema threw was a fixture asserting
+  that the export never parses.
+
+## ADR-256 — An import survives when the printed file names it
+
+**Date** 2026-08-29 · **Prompt** 46 · **Status** Accepted
+
+### Question
+A block descriptor declares the imports a hand-written implementation would need. Since ADR-249 the
+markup producers emit elements instead of component references, so most of those bindings never
+appear in the file. Should the export print them anyway?
+
+### Criterion (set before measuring)
+The exported project type-checks, and its `package.json` installs nothing the page does not load.
+
+### Measurement
+`import Accordion from '@radix-ui/react-accordion'` — *has no default export* — plus three unused
+Radix dependencies in the emitted `package.json` of a 60-node landing page.
+
+### Decision
+`passes/prune-imports.ts`: an import survives when the file names its binding, a named binding
+survives on its own, and a dependency survives when a surviving import comes from its package.
+
+### Consequences
+- The declared-but-unused Radix imports and dependencies are gone from every export.
+- Accepted: the descriptors still declare them. What they document — the library a hand-written
+  version of the block would use — is now escalated as open data rather than silently printed.
+- A future export that does emit Radix components needs no change here: usage is the rule.
+
+## ADR-257 — The descriptor's element-level extras go to the element it names
+
+**Date** 2026-08-29 · **Prompt** 46 · **Status** Accepted
+
+### Question
+`passthroughProps` and the asset collector's tag and attributes were applied to whatever the markup
+producer returned as its root. `image` declares `tag: 'img'` and its producer returns a `<figure>`
+wrapping the `<img>`. Where do the element-level extras belong?
+
+### Criterion (set before measuring)
+The exported project type-checks.
+
+### Measurement
+`<motion.figure src="" alt="" width={1600} …>` — *Property 'src' does not exist on type
+HTMLMotionProps<"figure">*. With a real asset the same path would have renamed the `<figure>` to
+`<Image>`.
+
+### Decision
+They are applied when the produced root is the element the descriptor names, and skipped when it is
+not: a producer that frames its element wrote those attributes onto the right element itself, which
+the DOM-parity test already asserts. Motion is unaffected — it animates whatever the root turned out
+to be.
+
+### Consequences
+- Accepted: `imageComponent: 'next-image'` no longer reaches the shipped `image` block, because the
+  `<img>` it would replace is inside the producer's tree. Escalated: making the asset pass find that
+  element is a change to the pass, not to this rule, and it is not prompt 46's to make.
+- The fixture catalogue grew a `framed-image` entry so the rule has a test.
+
+## ADR-258 — The coverage audit is a test over the committed documents
+
+**Date** 2026-08-29 · **Prompt** 46 · **Status** Accepted
+
+### Question
+Prompt 46 asks for an audit that every block, preset and effect appears in a golden document, written
+as a test rather than a checklist. The goldens are built from the fixture catalogue, which has 18
+entries against the catalogue's 72. What is the audit over?
+
+### Criterion (set before measuring)
+Every catalogue entry is exported and type-checked on every pull request, and a block added without
+coverage fails CI.
+
+### Measurement
+`coverage-catalogue.motion.json` — 97 nodes: 58 blocks, 15 slot children, 14 effects and every preset
+a block will take. `apps/web/src/test/catalogue-coverage.test.ts` reports 0 uncovered blocks, 0
+uncovered effects, 0 uncovered reachable presets, and 18 presets on channels no block offers.
+
+### Decision
+The audit is over `e2e/fixtures/documents`, which is what `verify-export-compile` exports and
+type-checks. It lives in `apps/web` because it needs both registries and the documents, and that app
+already reads the same directory to serve fixtures to the studio.
+
+### Consequences
+- A new block fails the audit until a fixture places it, and fails `test:compile` if its markup does
+  not compile.
+- Accepted: the audit and the goldens are two mechanisms. The goldens assert *what* the export writes,
+  byte for byte, on a catalogue small enough to read in a diff; the audit asserts *that* every
+  catalogue entry goes through it.
+- 18 presets — every `cursor` and `exit` preset — cannot be placed in any document, because no block
+  declares those channels and `apply-preset.ts` refuses them. The test names that set and fails when
+  it changes. Escalated as open data.
+
+## ADR-259 — A hoisted statement stays in the file that needs it
+
+**Date** 2026-08-29 · **Prompt** 46 · **Status** Accepted
+
+### Question
+A fragment may hoist a statement rather than a declaration: `gsap.registerPlugin(ScrollTrigger)`
+registers a plugin and names no value. Two components using it made it a shared module constant.
+
+### Criterion (set before measuring)
+The exported project parses.
+
+### Measurement
+`export gsap.registerPlugin(ScrollTrigger)` in `lib/motion.ts` — *Declaration or statement expected*.
+
+### Decision
+Only a declaration is shared. A hoisted statement is written into every component that needs it,
+which is where a person would put a plugin registration, and it is neither exported nor imported.
+
+### Consequences
+- Accepted: two components using a GSAP preset each carry the registration line. Registering a GSAP
+  plugin twice is a no-op.
+
+## ADR-260 — A preset that animates text writes through a ref
+
+**Date** 2026-08-29 · **Prompt** 46 · **Status** Accepted
+
+### Question
+`typewriter` and `text-scramble` emitted `useState(text)` — a variable no component declares — and
+never rendered the state. `counter` animated a value nothing displayed. What can a fragment do about
+an element's text, given that it may add props to the element a block produced and nothing else?
+
+### Criterion (set before measuring)
+The exported project type-checks, and the animation the preset promises is visible in the page.
+
+### Measurement
+Four `Cannot find name 'text'` errors and two implicit `any` parameters across `hero-aurora`,
+`testimonial-card` and `container`; plus a ref typed `HTMLSpanElement` handed to an `<h2>` —
+*Property 'align' is missing*.
+
+### Decision
+Text-animating fragments take a callback ref typed `HTMLElement | null` and write through it:
+`element.textContent = …` for the typewriter and the counter, `element.dataset` plus a restored label
+for the scramble, and `aria-label` read off the element for the split reveal. A callback ref is what
+makes one fragment fit an `<h2>`, a `<span>` and a `<div>`, which is the whole problem with a typed
+`useRef` in generated code.
+
+### Consequences
+- The exported typewriter, counter, scramble and split reveal now do what the canvas does.
+- Accepted: writing `textContent` from an effect is not how a person would write a React component
+  that owns its text. It is how one writes a component that decorates text it did not author, which
+  is what a preset is.
+- Four presets moved their class from `wrapper.props.className` — where it printed a second
+  `className` attribute on an element that already had one — to the fragment's `classNames`.
+
+## ADR-261 — The exported colour-mode toggle is inert, and the smoke test says so
+
+**Date** 2026-08-29 · **Prompt** 46 · **Status** Escalated, open
+
+### Question
+Prompt 46 asks the smoke test to assert "a working theme toggle that persists across reload". The
+`theme-toggle` block exports its markup and `lib/color-mode.ts` beside it. Does the exported page
+switch mode?
+
+### Criterion (set before measuring)
+Clicking the exported control sets `data-color-mode` on `<html>` and the choice survives a reload.
+
+### Measurement
+It does neither. The producer emits three buttons with `aria-pressed` and no handler, because a
+markup producer emits elements and a handler is not an element. `setColorMode` is exported by the
+emitted module and called by nothing.
+
+### Decision
+Not fixed here. Wiring a producer's element to a handler is a change to the markup vocabulary shared
+by `schema`, `blocks` and `codegen` — a feature, and prompt 46 adds none. The spec is written and
+marked `fixme`, so the gap has a name, a test and a failing run to un-skip.
+
+### Consequences
+- The smoke suite reports one known-broken assertion rather than passing on a page whose toggle does
+  nothing.
+- Escalated: the same gap covers every block whose behaviour is a handler — the HTML target has a
+  vanilla script for these (`data-ms-*`), and the React and Next targets have nothing.
+
+## ADR-262 — The exported theme carries its namespaces and the layer that paints them
+
+**Date** 2026-08-29 · **Prompt** 46 · **Status** Accepted
+
+### Question
+The export wrote the theme's `--ms-*` variables into `app/globals.css` and `theme.css`. Prompt 46 asks
+whether the exported page looks like the canvas. Does it?
+
+### Criterion (set before measuring)
+Screenshot the canvas and the exported page at the same viewport width and compare by eye — the
+prompt's own check, and DESIGN_REFERENCES.md's rule for visual work.
+
+### Measurement
+It did not look like the canvas; it looked like an unstyled document. White background, browser
+default type, no colour. Two things were missing from the emitted stylesheet, and both are visible in
+one `grep`: **no `@theme` block** (0 occurrences of `--color-` in `globals.css`) and **no base layer**.
+
+Tailwind v4 generates a utility from a `@theme` entry, so with the block missing, every class the
+export printed — `bg-surface-1`, `text-display-2`, `border-border` — named nothing. Adding the block
+brought the colours and the type scale back and left the page on a white background, because nothing
+painted `--ms-color-surface-0` onto the body.
+
+### Decision
+`printers/theme-css.ts` emits the theme as three parts: `@theme` from `@motion-studio/tokens`'
+`toTailwind()` — the same generator the studio's stylesheet is built from — then the variables, then
+the base layer that paints them. Both the Next and the React targets print it.
+
+### Consequences
+- Measured after the fix, same document, same machine: Lighthouse **98 / 97 / 96 / 100**, axe 0
+  violations, and a page that matches the canvas at equal width.
+- The emitted stylesheet grows by 133 lines (the `@theme` block) plus the base layer.
+- Accepted: a React export pasted into a project that already has a `@theme` block declares the
+  namespaces twice. Tailwind merges them, and the alternative — shipping classes the host cannot
+  resolve — is the failure this entry is about.
+- The canvas and the exported page still differ in one way this does not fix: the artboard is the
+  breakpoint's width, but a `md:` class resolves against the browser viewport, so a 375-wide artboard
+  in a 2160-wide window renders desktop type. Escalated as open data — it belongs to the responsive
+  engine, not the export.

@@ -263,17 +263,25 @@ on a shared CI runner is not a measurement.
 
 ## Export smoke test
 
-Weekly, and on any change to `packages/codegen`:
+Weekly, and on any change to `packages/codegen`, `packages/blocks` or `packages/motion` — those three
+decide what the exported page contains:
 
 ```yaml
 # .github/workflows/export-smoke.yml
-- run: pnpm generate:export-fixture --document full-landing --target next --out /tmp/exported
-- run: cd /tmp/exported && npm install && npm run build
-- run: cd /tmp/exported && npx lighthouse http://localhost:3000 --budget-path=budget.json
+- run: pnpm generate:export-fixture --document export-landing --target next --out /tmp/exported
+- run: npm install && npm run build && npm start -- --port 3100 &   # in /tmp/exported
+- run: npx lighthouse http://localhost:3100 --output=json --output-path=./lh.json
+- run: node scripts/assert-lighthouse.mjs ./lh.json --performance 90 --accessibility 95
+- run: pnpm test:e2e:export     # axe, reduced motion, section count, a clean console
 ```
 
+`npm`, not `pnpm`, inside the exported project: most users are on npm and the export must work there.
+The document is `export-landing` — the shipped catalogue, sixty nodes, the shape of a page somebody
+would ship.
+
 The exported page must itself score ≥ 90 Performance and ≥ 95 Accessibility. If our generator
-produces a slow or inaccessible page, the feature is broken regardless of whether it compiles.
+produces a slow or inaccessible page, the feature is broken regardless of whether it compiles. The
+scores it reaches are recorded in `docs/EXPORT_ENGINE.md` § Testing, with the date they were measured.
 
 ## Releases
 

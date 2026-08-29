@@ -563,17 +563,60 @@ Each `(document × target × option-set)` pair has an expected output asserted e
 golden file requires reading the diff — that is the review gate on generated code quality, and it
 is the mechanism that keeps the output from slowly degrading.
 
-**Compilation tests.** For every golden React and Next output, run `tsc --noEmit` against it in a
-fixture project with the declared dependencies installed. A generated file that does not
-type-check fails CI. This is the test that makes "compiles with zero edits" a fact rather than an
-aspiration.
+**Compilation tests.** `pnpm test:compile` — `scripts/verify-export-compile.mjs`. Every golden React
+and Next output, and every committed fixture document exported from the **shipped** catalogue, are
+copied into `e2e/fixtures/compile/{react,next}` and run through `tsc --noEmit`. Both halves are
+needed and ADR-254 says why: `codegen` may not import `packages/blocks`, so no golden can carry a
+shipped block's markup, and the goldens type-checked clean while five defects sat in the catalogue's.
 
-**Unit tests.** `toComponentName` (30 cases), `generateClasses` (ordering, redundancy, arbitrary
-fallback), import merging, subtree dedupe detection, motion hoisting, asset handling.
+Measured on this repository, 2026-08-29:
+
+| | Projects | Result |
+| --- | --- | --- |
+| Golden exports | 16 (5 skipped: HTML, JSON, tokens emit no TypeScript) | all type-check |
+| Shipped catalogue | 4 — `export-landing` and `coverage-catalogue`, React and Next | all type-check |
+| Wall clock | — | ~35 s, including both exports |
+
+The host projects install what an exported `package.json` declares, and the harness fails when the
+export declares a dependency they have not installed: `tsc` against a missing package checks nothing.
+
+**Coverage audit.** `apps/web/src/test/catalogue-coverage.test.ts` — ADR-258. Every one of the 72
+catalogue entries (58 blocks, 14 effects) and every preset a block will take appears in a committed
+fixture document, which is what `verify-export-compile` exports. A block added without coverage fails
+CI. The 18 `cursor` and `exit` presets are named as uncovered, because no block declares those
+channels and the studio will not apply them.
+
+`golden.test.ts` holds the other half: every field of `ExportOptions` appears at a non-default value
+in some golden case, except the two `golden-cases.ts` exempts with a reason.
+
+**Unit tests.** `toComponentName` (41 cases), class ordering, import merging and pruning, subtree
+dedupe detection, motion hoisting, asset handling, params parsing.
 
 **E2E.** Export each target from the studio, assert the file list and that the clipboard contains
 the expected first line.
 
-**Smoke.** A weekly CI job scaffolds a fresh `create-next-app`, drops in the Next export of
-`full-landing`, installs, builds, and runs Lighthouse on it. The exported page must itself score
-≥ 90. Our export producing a slow page would be the deepest kind of failure.
+**Smoke.** `.github/workflows/export-smoke.yml`, weekly and on any change to `codegen`, `blocks` or
+`motion`: export `export-landing` as a Next project, `npm install`, `npm run build`, `npm start`,
+Lighthouse, then `e2e/export-smoke/` over the running page. **npm**, not pnpm — most users are on
+npm and the export must work there.
+
+Measured on this repository, 2026-08-29 (Chrome, desktop, exported `export-landing`, 60 nodes):
+
+| Lighthouse | Score | Gate |
+| --- | --- | --- |
+| Performance | **98** | ≥ 90 |
+| Accessibility | **97** | ≥ 95 |
+| Best Practices | 96 | — |
+| SEO | 100 | — |
+
+| Assertion | Result |
+| --- | --- |
+| `npm install` on the emitted `package.json` | 82 packages, no edits |
+| `npm run build` | clean, `/` at 45.4 kB, 148 kB first load |
+| axe (WCAG 2.1 A + AA) | 0 violations |
+| Console errors and warnings | 0 |
+| Sections rendered | 19 of 19 |
+| Entrance animations running | yes |
+| `prefers-reduced-motion: reduce` | every section visible, nothing at opacity 0 |
+| Colour-mode toggle | **inert** — ADR-261, spec written and skipped |
+| Visual match with the canvas | yes at equal viewport width, after ADR-262 |

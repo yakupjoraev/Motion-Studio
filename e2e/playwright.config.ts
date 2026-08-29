@@ -12,6 +12,8 @@ const CI = process.env['CI'] === 'true' || process.env['CI'] === '1'
  */
 export default defineConfig({
   testDir: '.',
+  // The exported page has its own config and its own server — `export-smoke.config.ts`.
+  testIgnore: ['export-smoke/**'],
   fullyParallel: false,
   forbidOnly: CI,
   retries: CI ? 2 : 0,

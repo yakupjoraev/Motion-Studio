@@ -5,7 +5,7 @@ import type { ExportOptions } from '../options.types'
 import { fixtureRegistry } from '../test/blocks'
 import { document, eightFadeUp, fullLanding, singleHero } from '../test/documents'
 import { fixtureMarkup } from '../test/markup'
-import { fixturePresets } from '../test/presets'
+import { fixturePresets, spec } from '../test/presets'
 import { CODEGEN_ERROR_CODES, MOTION_MODULE_PATH, buildIR } from './build-ir'
 import type { CodegenIR, IRChild, IRElement } from './ir.types'
 
@@ -144,6 +144,61 @@ describe('the IR of the full-landing fixture', () => {
     // unaccounted for. A producer reads whichever props it likes and prints them, so there is no
     // second list to be short against, and the count on this fixture is the report.
     expect(ir.warnings.filter((entry) => entry.code === 'unsupported')).toEqual([])
+  })
+})
+
+/**
+ * ADR-257. The descriptor's element-level extras — the passthrough props, and the tag and attributes
+ * the asset collector decides — belong to the element the descriptor names. When the producer's root
+ * is a different element, repeating them on the wrapper prints `src` on a `<figure>`.
+ */
+describe('a producer that frames the element its descriptor names', () => {
+  const framed = build(
+    document({
+      id: 'node_root',
+      block: 'page',
+      children: [{ id: 'node_image', block: 'framed-image', name: 'Framed' }],
+    }),
+  )
+  const root = component(framed, 'Page')?.root as IRElement
+  const figure = find(root, 'figure')
+
+  it('leaves the passthrough props off the wrapper', () => {
+    expect(Object.keys(figure?.attributes ?? {})).toEqual([])
+  })
+
+  it('keeps the attributes the producer put on the element itself', () => {
+    expect(find(root, 'img')?.attributes['src']).toEqual({ kind: 'literal', value: '/framed.png' })
+  })
+})
+
+/**
+ * ADR-259. A GSAP preset hoists `gsap.registerPlugin(ScrollTrigger)`, which declares nothing: the
+ * shared module would have printed `export gsap.registerPlugin(ScrollTrigger)`.
+ */
+describe('a hoisted statement', () => {
+  const statement = spec('scroll-parallax')
+  const withStatement = build(
+    document({
+      id: 'node_root',
+      block: 'page',
+      children: [
+        { id: 'node_a', block: 'hero', name: 'One', motion: { entrance: statement } },
+        { id: 'node_b', block: 'section', name: 'Two', motion: { entrance: statement } },
+      ],
+    }),
+  )
+
+  it('stays out of the shared module however many components need it', () => {
+    expect(withStatement.modules.map((module) => module.path)).not.toContain(MOTION_MODULE_PATH)
+  })
+
+  it('is written into every component that needs it', () => {
+    const codes = withStatement.components.flatMap((entry) =>
+      entry.hoisted.map((constant) => constant.code),
+    )
+
+    expect(codes.filter((code) => code === 'gsap.registerPlugin(ScrollTrigger)')).toHaveLength(2)
   })
 })
 

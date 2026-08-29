@@ -2,6 +2,9 @@ packages:
   - apps/*
   - packages/*
   - e2e
+  # The host projects `scripts/verify-export-compile.mjs` type-checks an export inside. They are
+  # workspace members so one `pnpm install` installs what the exported `package.json` declares.
+  - e2e/fixtures/compile/*
 
 # Both of these resolve a platform-specific native binary in an install script, so without an entry
 # here pnpm skips that script and prints an approval warning on every install.

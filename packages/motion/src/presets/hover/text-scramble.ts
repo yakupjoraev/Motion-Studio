@@ -42,32 +42,44 @@ export const textScramble = definePreset({
   }),
   /** Text that rewrites itself is motion in the strictest sense; reduced motion gets the label. */
   resolveReduced: () => ({ engine: 'motion' }),
+  /**
+   * ADR-260: the label is read off the element and written back to it, because a fragment adds props
+   * to the element a block produced and cannot replace its children. The original text is kept on the
+   * node and restored, so the churn is never what a copy of the page ends up containing.
+   */
   codegen: (params) => ({
-    imports: [{ from: 'react', named: ['useRef', 'useState'] }],
+    imports: [{ from: 'react', named: ['useRef'] }],
     hooks: [
-      'const scrambleRef = useRef<number | null>(null)',
-      'const [scrambled, setScrambled] = useState(text)',
+      'const scrambleRef = useRef<HTMLElement | null>(null)',
+      'const scrambleTimer = useRef<number | null>(null)',
       `const startScramble = () => {
+  const element = scrambleRef.current
+  if (element === null) return
+  const label = element.dataset.scrambleLabel ?? element.textContent ?? ''
+  element.dataset.scrambleLabel = label
+  element.setAttribute('aria-label', label)
   const charset = ${JSON.stringify(params.charset)}
   let frame = 0
   const run = () => {
-    setScrambled(
-      text
-        .split('')
-        .map((character, index) =>
-          index < frame ? character : charset[Math.floor(Math.random() * charset.length)],
-        )
-        .join(''),
-    )
+    element.textContent = label
+      .split('')
+      .map((character, index) =>
+        index < frame ? character : (charset[Math.floor(Math.random() * charset.length)] ?? character),
+      )
+      .join('')
     frame += 0.5
-    if (frame <= text.length) scrambleRef.current = window.setTimeout(run, ${params.speed})
+    if (frame <= label.length) scrambleTimer.current = window.setTimeout(run, ${params.speed})
   }
+  if (scrambleTimer.current !== null) window.clearTimeout(scrambleTimer.current)
   run()
 }`,
     ],
     wrapper: {
       tag: 'span',
-      props: { onPointerEnter: '{startScramble}', 'aria-label': '{text}' },
+      props: {
+        ref: '{(node) => { scrambleRef.current = node }}',
+        onPointerEnter: '{startScramble}',
+      },
     },
   }),
 })

@@ -50,8 +50,9 @@ export const magnetic = definePreset({
   resolveReduced: () => ({ engine: 'css' }),
   codegen: (params) => ({
     imports: [{ from: 'react', named: ['useEffect', 'useRef'] }],
+    classNames: ['ms-magnetic'],
     hooks: [
-      'const magneticRef = useRef<HTMLDivElement>(null)',
+      'const magneticRef = useRef<HTMLElement | null>(null)',
       `useEffect(() => {
   const element = magneticRef.current
   if (element === null) return
@@ -68,7 +69,7 @@ export const magnetic = definePreset({
   return () => document.removeEventListener('pointermove', onMove)
 }, [])`,
     ],
-    wrapper: { tag: 'div', props: { ref: '{magneticRef}', className: `"ms-magnetic"` } },
+    wrapper: { tag: 'div', props: { ref: '{(node) => { magneticRef.current = node }}' } },
     css: '.ms-magnetic { transform: translate3d(var(--ms-magnetic-x, 0), var(--ms-magnetic-y, 0), 0) }',
   }),
 })

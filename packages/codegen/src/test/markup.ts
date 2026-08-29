@@ -1,4 +1,4 @@
-import { type MarkupRegistry, defineMarkup, el, slot, txt } from '@motion-studio/schema'
+import { type MarkupRegistry, defineMarkup, el, literal, slot, txt } from '@motion-studio/schema'
 
 /**
  * The fixture catalogue's producers — ADR-252. They stand where the descriptors' class rules used to,
@@ -129,6 +129,18 @@ export const fixtureMarkup: MarkupRegistry = {
   ),
 
   image: defineMarkup(() => el('img', { classNames: ['w-full', 'rounded-lg', 'object-cover'] })),
+
+  'framed-image': defineMarkup(() =>
+    el('figure', {
+      classNames: ['m-0'],
+      children: [
+        el('img', {
+          classNames: ['w-full'],
+          attributes: { alt: literal('A framed image'), src: literal('/framed.png') },
+        }),
+      ],
+    }),
+  ),
 
   faq: container('section', ['flex', 'flex-col', 'gap-2']),
 

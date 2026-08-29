@@ -177,6 +177,26 @@ describe("{' '} whitespace", () => {
 
     expect(printed).toBe(`<p>\n  Read\n  {' '}\n  <a />\n  {' '}\n  now\n</p>`)
   })
+
+  /** A syntax-highlighted code line: the space between two tokens is a token of its own. */
+  it('keeps a whitespace-only child that is the whole content of its element', () => {
+    expect(printElement(element({ tag: 'span', children: [text(' ')] }), 0)).toBe(
+      `<span>{' '}</span>`,
+    )
+  })
+
+  it('escapes a newline rather than breaking the string literal it travels in', () => {
+    expect(printElement(element({ tag: 'span', children: [text('\n')] }), 0)).toBe(
+      `<span>{'\\n'}</span>`,
+    )
+  })
+
+  it('escapes the newlines inside a multi-line string expression', () => {
+    const css = '.a { color: red }\n.b { color: blue }'
+    const printed = printElement(element({ tag: 'style', children: [text(css)] }), 0)
+
+    expect(printed).toBe(`<style>{'.a { color: red }\\n.b { color: blue }'}</style>`)
+  })
 })
 
 describe('notes and structured data', () => {

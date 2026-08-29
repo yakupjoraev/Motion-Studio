@@ -1,6 +1,7 @@
 import type { CodegenIR } from '../../ir/ir.types'
 import { isEmpty, printStylesheet } from '../print-stylesheet'
 import type { PrintedTheme } from '../printer.types'
+import { themeStylesheet } from '../theme-css'
 
 import { type FontPlan, fontPlan } from './fonts'
 
@@ -43,7 +44,8 @@ export function printGlobalsCss(input: GlobalsInput): string {
 
   return [
     TAILWIND_IMPORT,
-    ...(theme === undefined ? [] : [theme.css.trim()]),
+    // ADR-262: the namespaces, the variables and the base layer that paints them.
+    ...(theme === undefined ? [] : [themeStylesheet(theme.css)]),
     ...(aliases === undefined ? [] : [aliases]),
     ...(isEmpty(ir.stylesheet) ? [] : [printStylesheet(ir.stylesheet)]),
   ]

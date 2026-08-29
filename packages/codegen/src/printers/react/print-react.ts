@@ -10,6 +10,7 @@ import {
   moduleExtension,
   withoutExtension,
 } from '../printer.types'
+import { themeStylesheet } from '../theme-css'
 
 import { printComponent } from './print-component'
 import { printModule } from './print-hoisted'
@@ -81,7 +82,9 @@ export function printReact(input: PrintInput): ExportResult {
   const missingTheme = options.includeTheme && theme === undefined
 
   if (options.includeTheme && theme !== undefined) {
-    files.push({ path: THEME_FILE, contents: `${theme.css.trimEnd()}\n` })
+    // ADR-262: the namespaces and the base layer travel with the variables, or the theme is a file
+    // the user's project never applies.
+    files.push({ path: THEME_FILE, contents: `${themeStylesheet(theme.css)}\n` })
   }
 
   return {

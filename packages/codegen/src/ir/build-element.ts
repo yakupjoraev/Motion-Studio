@@ -132,7 +132,7 @@ export function buildElement(
     delete attributes[name]
   }
 
-  Object.assign(attributes, media.attributes, motion.attributes)
+  Object.assign(attributes, media.attributes)
 
   into.imports.push(
     ...(definition.codegen.imports ?? []).filter((spec) => spec.from !== 'next/image'),
@@ -192,11 +192,23 @@ export function buildElement(
   into.warnings.push(...responsive.warnings)
   into.classes.push(...applied.classes, ...classNames, ...responsive.root.classNames)
 
+  /*
+   * ADR-257: the passthrough props and everything the asset collector decides belong to the element
+   * the descriptor names. A producer whose root is a different element — `image` wraps its `<img>` in
+   * a `<figure>` — wrote them onto the right element itself, and repeating them on the wrapper prints
+   * `src` on a `<figure>`. Motion is not element-level: it animates whatever the root turned out to be.
+   */
+  const ownsElement = applied.root.tag === definition.codegen.tag
+
   return {
     ...responsive.root,
-    tag: `${motion.tagPrefix ?? ''}${media.tag ?? responsive.root.tag}`,
+    tag: `${motion.tagPrefix ?? ''}${(ownsElement ? media.tag : undefined) ?? responsive.root.tag}`,
     classNames: mergeAndSort([...responsive.root.classNames, ...classNames]),
-    attributes: { ...responsive.root.attributes, ...attributes },
+    attributes: {
+      ...responsive.root.attributes,
+      ...(ownsElement ? attributes : {}),
+      ...motion.attributes,
+    },
     ...extras,
   }
 }

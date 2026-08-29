@@ -11,10 +11,8 @@
   "scripts": {
     "lint": "biome check .",
     "test": "vitest run --passWithNoTests",
-    "test:compile": "node scripts/compile-golden.mjs",
     "typecheck": "tsc --noEmit",
-    "golden:update": "tsx scripts/generate-golden.mts",
-    "export-fixture": "tsx scripts/generate-export-fixture.mts"
+    "golden:update": "tsx scripts/generate-golden.mts"
   },
   "devDependencies": {
     "@motion-studio/config": "workspace:*",

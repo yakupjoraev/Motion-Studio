@@ -20,10 +20,23 @@ export const STYLE_TYPE = 'CSSProperties'
 
 export const REACT_TYPE_IMPORT = { from: 'react', named: [STYLE_TYPE], typeOnly: true } as const
 
-const quote = (value: string): string => `'${value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`
+/** A newline ends a JavaScript string literal, so a value carrying one is escaped, not embedded. */
+const quote = (value: string): string =>
+  `'${value
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/\r/g, '\\r')
+    .replace(/\n/g, '\\n')}'`
 
 /** `{`, `}`, `<` and `>` end a JSX text run, so a value carrying one travels as a string expression. */
 const text = (value: string): string => (/[<>{}]/.test(value) ? `{${quote(value)}}` : value)
+
+/**
+ * A whitespace-only child that is an element's whole content is content rather than layout: a code
+ * token that is a space renders a space, and a blank code line renders a newline. JSX collapses both
+ * to nothing, so they travel verbatim as a string expression.
+ */
+const onlyWhitespace = (value: string): string => `{${quote(value)}}`
 
 function attribute(name: string, value: IRValue): string {
   switch (value.kind) {
@@ -132,7 +145,9 @@ function childLines(children: readonly IRChild[], depth: number): readonly strin
     const after = index < children.length - 1 && /\s$/.test(child.value)
 
     if (trimmed === '') {
-      if (before && after) {
+      if (children.length === 1 && child.value !== '') {
+        lines.push(`${pad}${onlyWhitespace(child.value)}`)
+      } else if (before && after) {
         lines.push(`${pad}${SPACE}`)
       }
 
@@ -168,7 +183,11 @@ export function printElement(element: IRElement, depth: number): string {
     }
 
     if (children.length === 1 && only?.kind === 'text') {
-      const inline = `${single}${text(only.value.trim())}</${element.tag}>`
+      const body =
+        only.value.trim() === '' && only.value !== ''
+          ? onlyWhitespace(only.value)
+          : text(only.value.trim())
+      const inline = `${single}${body}</${element.tag}>`
 
       if (inline.length <= PRINT_WIDTH) {
         return inline

@@ -1,0 +1,86 @@
+# The export, exercised the way a user exercises it — DEVOPS.md § Export smoke test.
+#
+# Weekly, and on any change under `packages/codegen`, `packages/blocks` or `packages/motion`: those
+# three decide what the exported page contains, and a change to any of them can make it slow, broken
+# or inaccessible without changing a single golden file.
+#
+# `npm`, not `pnpm`, inside the exported project. Most users are on npm and the export must work there.
+name: Export smoke
+
+on:
+  schedule:
+    - cron: '0 5 * * 1'
+  push:
+    branches: [main]
+    paths:
+      - 'packages/codegen/**'
+      - 'packages/blocks/**'
+      - 'packages/motion/**'
+      - 'scripts/generate-export-fixture.ts'
+      - 'e2e/export-smoke/**'
+      - '.github/workflows/export-smoke.yml'
+  pull_request:
+    paths:
+      - 'packages/codegen/**'
+      - 'packages/blocks/**'
+      - 'packages/motion/**'
+      - 'scripts/generate-export-fixture.ts'
+      - 'e2e/export-smoke/**'
+  workflow_dispatch:
+
+concurrency:
+  group: export-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+
+      - name: Export the landing document as a Next project
+        run: pnpm generate:export-fixture --document export-landing --target next --out /tmp/exported
+
+      # Nothing is added by hand between here and `npm run build`: that is the claim under test.
+      - name: Install it with npm
+        run: npm install --no-audit --no-fund
+        working-directory: /tmp/exported
+
+      - name: Build it
+        run: npm run build
+        working-directory: /tmp/exported
+
+      - name: Install the browser Playwright and Lighthouse drive
+        run: pnpm --filter e2e exec playwright install --with-deps chrome
+
+      # Detached, with its output on disk: the step has to end, and a failing start has to be readable.
+      - name: Start it
+        run: npm start -- --port 3100 > /tmp/exported-server.log 2>&1 &
+        working-directory: /tmp/exported
+
+      - run: npx --yes wait-on http://localhost:3100 --timeout 120000
+
+      - name: Lighthouse
+        run: >
+          npx --yes lighthouse http://localhost:3100
+          --output=json --output-path=./lh.json
+          --chrome-flags="--headless=new --no-sandbox"
+          --only-categories=performance,accessibility,best-practices,seo
+
+      - name: Assert the scores the export claims
+        run: node scripts/assert-lighthouse.mjs ./lh.json --performance 90 --accessibility 95
+
+      # axe, reduced motion, the section count and a clean console — `e2e/export-smoke/`.
+      - name: Playwright over the exported page
+        run: pnpm test:e2e:export
+        env:
+          EXPORT_DIR: /tmp/exported
+          EXPORT_PORT: 3100
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: export-smoke-lighthouse
+          path: lh.json
+          if-no-files-found: warn

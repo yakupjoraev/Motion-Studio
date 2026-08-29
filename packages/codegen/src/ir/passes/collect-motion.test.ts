@@ -83,6 +83,29 @@ describe('hoisting', () => {
   })
 })
 
+/**
+ * ADR-255. A document stores what the inspector changed, so half a param set is the normal case; the
+ * arithmetic a preset does on a missing one produces `NaN`, which prints as `null` and fails to
+ * compile against Motion's `Transition`.
+ */
+describe('preset params', () => {
+  it('fills a param the document never stored with the preset default', () => {
+    const collect = collector()
+
+    collect.collect(node('node_a', { entrance: spec('fade-up', { params: { distance: 64 } }) }))
+
+    expect(collect.hoisted.get('fadeUpTransition')?.code).toContain('duration: 0.6')
+  })
+
+  it('falls back to the whole default set when the params do not parse', () => {
+    const collect = collector()
+
+    collect.collect(node('node_a', { entrance: spec('fade-up', { params: { distance: 'wide' } }) }))
+
+    expect(collect.hoisted.get('fadeUpVariants')?.code).toContain('y: 32')
+  })
+})
+
 describe('reduced motion', () => {
   it('is emitted unconditionally for a Motion-engine preset', () => {
     const result = collector().collect(node('node_a', { entrance: fadeUp() }))

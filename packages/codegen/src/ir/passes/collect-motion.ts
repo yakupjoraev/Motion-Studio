@@ -1,4 +1,8 @@
-import type { MotionCodegenFragment, MotionPresetRegistry } from '@motion-studio/motion'
+import type {
+  MotionCodegenFragment,
+  MotionPreset,
+  MotionPresetRegistry,
+} from '@motion-studio/motion'
 import type { ImportSpec, MotionSpec, Node } from '@motion-studio/schema'
 
 import { hash } from '../../hash'
@@ -60,6 +64,20 @@ export interface MotionCollectorInput {
   readonly presets: MotionPresetRegistry
   readonly theme: IRTheme
   readonly options: ExportOptions
+}
+
+/**
+ * ADR-139's rule, applied at the export's own call site — ADR-255. A document stores what the inspector
+ * changed, so a partial param set is the normal case, and the arithmetic a preset does on a missing one
+ * produces `NaN`: it prints as `null` and fails to type-check against Motion's `Transition`.
+ *
+ * The rule is re-stated rather than imported because the export engine takes only types from
+ * `@motion-studio/motion` — `no-react.test.ts` — and the preset carries its own schema.
+ */
+function parseParams(preset: MotionPreset, params: MotionSpec['params']): MotionSpec['params'] {
+  const parsed = preset.paramsSchema.safeParse(params)
+
+  return parsed.success ? parsed.data : preset.defaults
 }
 
 export function createMotionCollector(input: MotionCollectorInput): MotionCollector {
@@ -134,7 +152,7 @@ export function createMotionCollector(input: MotionCollectorInput): MotionCollec
       )
     }
 
-    return preset.codegen(spec.params, {
+    return preset.codegen(parseParams(preset, spec.params), {
       nodeName: node.name,
       scale: theme.motionScale,
       reduced: true,

@@ -63,10 +63,12 @@ export const textReveal = definePreset({
     ],
     helpers: [helper('registerSplitText', 'gsap.registerPlugin(SplitText)')],
     hooks: [
-      'const splitRef = useRef<HTMLDivElement>(null)',
+      'const splitRef = useRef<HTMLElement | null>(null)',
       `useEffect(() => {
   const element = splitRef.current
   if (element === null) return
+  // The split replaces the text with per-${params.by} spans, so the label is read off it first.
+  element.setAttribute('aria-label', element.textContent ?? '')
   const split = new SplitText(element, { type: '${params.by}s', ${params.by}sClass: 'ms-split' })
   const tween = gsap.from(split.${params.by}s, {
     yPercent: 110,
@@ -78,8 +80,7 @@ export const textReveal = definePreset({
   return () => { tween.kill(); split.revert() }
 }, [])`,
     ],
-    // The accessible copy is the wrapper's own label; the split spans below it are hidden.
-    wrapper: { tag: 'div', props: { ref: '{splitRef}', 'aria-label': '{text}' } },
+    wrapper: { tag: 'div', props: { ref: '{(node) => { splitRef.current = node }}' } },
     css: '.ms-split { display: inline-block; overflow: hidden }',
   }),
 })

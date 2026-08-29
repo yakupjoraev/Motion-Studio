@@ -52,11 +52,12 @@ export const tilt3d = definePreset({
   resolveReduced: () => ({ engine: 'css' }),
   codegen: (params) => ({
     imports: [{ from: 'react', named: ['useRef'] }],
-    hooks: ['const tiltRef = useRef<HTMLDivElement>(null)'],
+    classNames: ['ms-tilt-scene'],
+    hooks: ['const tiltRef = useRef<HTMLElement | null>(null)'],
     wrapper: {
       tag: 'div',
       props: {
-        className: `"ms-tilt-scene"`,
+        ref: '{(node) => { tiltRef.current = node }}',
         onPointerMove: `{(event) => {
   const element = tiltRef.current
   if (element === null) return

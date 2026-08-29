@@ -217,14 +217,16 @@ exports[`counter > emits a codegen fragment that names its imports 1`] = `
     },
   ],
   "hooks": [
-    "const counterRef = useRef<HTMLSpanElement>(null)",
+    "const counterRef = useRef<HTMLElement | null>(null)",
     "const counterInView = useInView(counterRef, { once: true, amount: 0.3 })",
-    "const [counterValue, setCounterValue] = useState(0)",
     "useEffect(() => {
-  if (!counterInView) return
+  const element = counterRef.current
+  if (element === null || !counterInView) return
   const controls = animate(0, 100, {
     duration: 1.2,
-    onUpdate: (value) => setCounterValue(value),
+    onUpdate: (value) => {
+      element.textContent = formatCounter.format(value)
+    },
   })
   return () => controls.stop()
 }, [counterInView])",
@@ -242,13 +244,12 @@ exports[`counter > emits a codegen fragment that names its imports 1`] = `
       "named": [
         "useEffect",
         "useRef",
-        "useState",
       ],
     },
   ],
   "wrapper": {
     "props": {
-      "ref": "{counterRef}",
+      "ref": "{(node) => { counterRef.current = node }}",
     },
     "tag": "span",
   },
@@ -684,7 +685,7 @@ exports[`horizontal-scroll > emits a codegen fragment that names its imports 1`]
     },
   ],
   "hooks": [
-    "const trackRef = useRef<HTMLDivElement>(null)",
+    "const trackRef = useRef<HTMLElement | null>(null)",
     "useEffect(() => {
   const track = trackRef.current
   if (track === null) return
@@ -722,7 +723,7 @@ exports[`horizontal-scroll > emits a codegen fragment that names its imports 1`]
   ],
   "wrapper": {
     "props": {
-      "ref": "{trackRef}",
+      "ref": "{(node) => { trackRef.current = node }}",
     },
     "tag": "div",
   },
@@ -780,9 +781,12 @@ exports[`liquid > emits a codegen fragment that names its imports 1`] = `
 
 exports[`magnetic > emits a codegen fragment that names its imports 1`] = `
 {
+  "classNames": [
+    "ms-magnetic",
+  ],
   "css": ".ms-magnetic { transform: translate3d(var(--ms-magnetic-x, 0), var(--ms-magnetic-y, 0), 0) }",
   "hooks": [
-    "const magneticRef = useRef<HTMLDivElement>(null)",
+    "const magneticRef = useRef<HTMLElement | null>(null)",
     "useEffect(() => {
   const element = magneticRef.current
   if (element === null) return
@@ -810,8 +814,7 @@ exports[`magnetic > emits a codegen fragment that names its imports 1`] = `
   ],
   "wrapper": {
     "props": {
-      "className": ""ms-magnetic"",
-      "ref": "{magneticRef}",
+      "ref": "{(node) => { magneticRef.current = node }}",
     },
     "tag": "div",
   },
@@ -1116,7 +1119,7 @@ exports[`scroll-timeline > emits a codegen fragment that names its imports 1`] =
     },
   ],
   "hooks": [
-    "const timelineRef = useRef<HTMLDivElement>(null)",
+    "const timelineRef = useRef<HTMLElement | null>(null)",
     "useEffect(() => {
   const element = timelineRef.current
   if (element === null) return
@@ -1150,7 +1153,7 @@ exports[`scroll-timeline > emits a codegen fragment that names its imports 1`] =
   ],
   "wrapper": {
     "props": {
-      "ref": "{timelineRef}",
+      "ref": "{(node) => { timelineRef.current = node }}",
     },
     "tag": "div",
   },
@@ -1213,9 +1216,12 @@ exports[`slide-out > emits a codegen fragment that names its imports 1`] = `
 
 exports[`spotlight > emits a codegen fragment that names its imports 1`] = `
 {
+  "classNames": [
+    "ms-spotlight",
+  ],
   "css": ".ms-spotlight { background-image: radial-gradient(240px circle at var(--ms-cursor-x, 50%) var(--ms-cursor-y, 50%), color-mix(in oklab, var(--ms-color-accent) 35%, transparent), transparent 70%) }",
   "hooks": [
-    "const spotlightRef = useRef<HTMLDivElement>(null)",
+    "const spotlightRef = useRef<HTMLElement | null>(null)",
   ],
   "imports": [
     {
@@ -1227,7 +1233,6 @@ exports[`spotlight > emits a codegen fragment that names its imports 1`] = `
   ],
   "wrapper": {
     "props": {
-      "className": ""ms-spotlight"",
       "onPointerMove": "{(event) => {
   const element = spotlightRef.current
   if (element === null) return
@@ -1235,7 +1240,7 @@ exports[`spotlight > emits a codegen fragment that names its imports 1`] = `
   element.style.setProperty('--ms-cursor-x', \`\${event.clientX - box.left}px\`)
   element.style.setProperty('--ms-cursor-y', \`\${event.clientY - box.top}px\`)
 }}",
-      "ref": "{spotlightRef}",
+      "ref": "{(node) => { spotlightRef.current = node }}",
     },
     "tag": "div",
   },
@@ -1301,10 +1306,12 @@ exports[`text-reveal > emits a codegen fragment that names its imports 1`] = `
     },
   ],
   "hooks": [
-    "const splitRef = useRef<HTMLDivElement>(null)",
+    "const splitRef = useRef<HTMLElement | null>(null)",
     "useEffect(() => {
   const element = splitRef.current
   if (element === null) return
+  // The split replaces the text with per-line spans, so the label is read off it first.
+  element.setAttribute('aria-label', element.textContent ?? '')
   const split = new SplitText(element, { type: 'lines', linesClass: 'ms-split' })
   const tween = gsap.from(split.lines, {
     yPercent: 110,
@@ -1337,8 +1344,7 @@ exports[`text-reveal > emits a codegen fragment that names its imports 1`] = `
   ],
   "wrapper": {
     "props": {
-      "aria-label": "{text}",
-      "ref": "{splitRef}",
+      "ref": "{(node) => { splitRef.current = node }}",
     },
     "tag": "div",
   },
@@ -1348,23 +1354,27 @@ exports[`text-reveal > emits a codegen fragment that names its imports 1`] = `
 exports[`text-scramble > emits a codegen fragment that names its imports 1`] = `
 {
   "hooks": [
-    "const scrambleRef = useRef<number | null>(null)",
-    "const [scrambled, setScrambled] = useState(text)",
+    "const scrambleRef = useRef<HTMLElement | null>(null)",
+    "const scrambleTimer = useRef<number | null>(null)",
     "const startScramble = () => {
+  const element = scrambleRef.current
+  if (element === null) return
+  const label = element.dataset.scrambleLabel ?? element.textContent ?? ''
+  element.dataset.scrambleLabel = label
+  element.setAttribute('aria-label', label)
   const charset = "!<>-_\\\\/[]{}—=+*^?#"
   let frame = 0
   const run = () => {
-    setScrambled(
-      text
-        .split('')
-        .map((character, index) =>
-          index < frame ? character : charset[Math.floor(Math.random() * charset.length)],
-        )
-        .join(''),
-    )
+    element.textContent = label
+      .split('')
+      .map((character, index) =>
+        index < frame ? character : (charset[Math.floor(Math.random() * charset.length)] ?? character),
+      )
+      .join('')
     frame += 0.5
-    if (frame <= text.length) scrambleRef.current = window.setTimeout(run, 40)
+    if (frame <= label.length) scrambleTimer.current = window.setTimeout(run, 40)
   }
+  if (scrambleTimer.current !== null) window.clearTimeout(scrambleTimer.current)
   run()
 }",
   ],
@@ -1373,14 +1383,13 @@ exports[`text-scramble > emits a codegen fragment that names its imports 1`] = `
       "from": "react",
       "named": [
         "useRef",
-        "useState",
       ],
     },
   ],
   "wrapper": {
     "props": {
-      "aria-label": "{text}",
       "onPointerEnter": "{startScramble}",
+      "ref": "{(node) => { scrambleRef.current = node }}",
     },
     "tag": "span",
   },
@@ -1389,10 +1398,13 @@ exports[`text-scramble > emits a codegen fragment that names its imports 1`] = `
 
 exports[`tilt-3d > emits a codegen fragment that names its imports 1`] = `
 {
+  "classNames": [
+    "ms-tilt-scene",
+  ],
   "css": ".ms-tilt-scene { perspective: 800px }
 .ms-tilt { transform: rotateX(var(--ms-tilt-x, 0deg)) rotateY(var(--ms-tilt-y, 0deg)) }",
   "hooks": [
-    "const tiltRef = useRef<HTMLDivElement>(null)",
+    "const tiltRef = useRef<HTMLElement | null>(null)",
   ],
   "imports": [
     {
@@ -1404,7 +1416,6 @@ exports[`tilt-3d > emits a codegen fragment that names its imports 1`] = `
   ],
   "wrapper": {
     "props": {
-      "className": ""ms-tilt-scene"",
       "onPointerMove": "{(event) => {
   const element = tiltRef.current
   if (element === null) return
@@ -1414,6 +1425,7 @@ exports[`tilt-3d > emits a codegen fragment that names its imports 1`] = `
   element.style.setProperty('--ms-tilt-y', \`\${px * 10}deg\`)
   element.style.setProperty('--ms-tilt-x', \`\${-py * 10}deg\`)
 }}",
+      "ref": "{(node) => { tiltRef.current = node }}",
     },
     "tag": "div",
   },
@@ -1422,19 +1434,24 @@ exports[`tilt-3d > emits a codegen fragment that names its imports 1`] = `
 
 exports[`typewriter > emits a codegen fragment that names its imports 1`] = `
 {
+  "classNames": [
+    "ms-typewriter",
+  ],
   "css": "@keyframes ms-caret { 50% { opacity: 0 } }
 .ms-typewriter::after { content: '|'; animation: ms-caret 1000ms steps(1, end) infinite }",
   "hooks": [
-    "const phrases = ["Design it.","Ship it."]",
-    "const [typed, setTyped] = useState(phrases[0] ?? "")",
+    "const typewriterRef = useRef<HTMLElement | null>(null)",
     "useEffect(() => {
+  const element = typewriterRef.current
+  if (element === null) return
+  const phrases = ["Design it.","Ship it."]
   let phrase = 0
   let letter = 0
   const timer = window.setInterval(() => {
     const current = phrases[phrase] ?? ''
     letter = letter < current.length ? letter + 1 : 0
     if (letter === 0) phrase = (phrase + 1) % phrases.length
-    setTyped(current.slice(0, letter))
+    element.textContent = current.slice(0, letter)
   }, 70)
   return () => window.clearInterval(timer)
 }, [])",
@@ -1444,13 +1461,13 @@ exports[`typewriter > emits a codegen fragment that names its imports 1`] = `
       "from": "react",
       "named": [
         "useEffect",
-        "useState",
+        "useRef",
       ],
     },
   ],
   "wrapper": {
     "props": {
-      "className": ""ms-typewriter"",
+      "ref": "{(node) => { typewriterRef.current = node }}",
     },
     "tag": "span",
   },

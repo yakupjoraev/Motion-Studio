@@ -45,24 +45,32 @@ export const typewriter = definePreset({
 .ms-typewriter-caret::after { content: '|'; animation: ms-caret 1000ms steps(1, end) infinite }`,
   }),
   resolveReduced: () => DISABLED,
+  /**
+   * ADR-260: the phrases are written into the element the preset is on, through a ref. A fragment may
+   * add props to that element and nothing else — it cannot replace the children a block produced — so
+   * state holding the typed text would be state nothing renders.
+   */
   codegen: (params) => ({
-    imports: [{ from: 'react', named: ['useEffect', 'useState'] }],
+    imports: [{ from: 'react', named: ['useEffect', 'useRef'] }],
+    classNames: ['ms-typewriter'],
     hooks: [
-      `const phrases = ${JSON.stringify(params.phrases.split('|'))}`,
-      'const [typed, setTyped] = useState(phrases[0] ?? "")',
+      'const typewriterRef = useRef<HTMLElement | null>(null)',
       `useEffect(() => {
+  const element = typewriterRef.current
+  if (element === null) return
+  const phrases = ${JSON.stringify(params.phrases.split('|'))}
   let phrase = 0
   let letter = 0
   const timer = window.setInterval(() => {
     const current = phrases[phrase] ?? ''
     letter = letter < current.length ? letter + 1 : 0
     if (letter === 0) phrase = (phrase + 1) % phrases.length
-    setTyped(current.slice(0, letter))
+    element.textContent = current.slice(0, letter)
   }, ${params.speed})
   return () => window.clearInterval(timer)
 }, [])`,
     ],
-    wrapper: { tag: 'span', props: { className: '"ms-typewriter"' } },
+    wrapper: { tag: 'span', props: { ref: '{(node) => { typewriterRef.current = node }}' } },
     css: `@keyframes ms-caret { 50% { opacity: 0 } }
 .ms-typewriter::after { content: '|'; animation: ms-caret 1000ms steps(1, end) infinite }`,
   }),

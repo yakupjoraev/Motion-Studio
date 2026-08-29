@@ -49,7 +49,7 @@ export const horizontalScroll = definePreset({
     ],
     helpers: [helper('registerScrollTrigger', 'gsap.registerPlugin(ScrollTrigger)')],
     hooks: [
-      'const trackRef = useRef<HTMLDivElement>(null)',
+      'const trackRef = useRef<HTMLElement | null>(null)',
       `useEffect(() => {
   const track = trackRef.current
   if (track === null) return
@@ -66,7 +66,7 @@ export const horizontalScroll = definePreset({
   return () => { tween.scrollTrigger?.kill(); tween.kill() }
 }, [])`,
     ],
-    wrapper: { tag: 'div', props: { ref: '{trackRef}' } },
+    wrapper: { tag: 'div', props: { ref: '{(node) => { trackRef.current = node }}' } },
   }),
 })
 
@@ -122,7 +122,7 @@ export const scrollTimeline = definePreset({
     ],
     helpers: [helper('registerScrollTrigger', 'gsap.registerPlugin(ScrollTrigger)')],
     hooks: [
-      'const timelineRef = useRef<HTMLDivElement>(null)',
+      'const timelineRef = useRef<HTMLElement | null>(null)',
       `useEffect(() => {
   const element = timelineRef.current
   if (element === null) return
@@ -133,7 +133,7 @@ ${keyframeSteps(params.keyframes)}
   return () => { timeline.scrollTrigger?.kill(); timeline.kill() }
 }, [])`,
     ],
-    wrapper: { tag: 'div', props: { ref: '{timelineRef}' } },
+    wrapper: { tag: 'div', props: { ref: '{(node) => { timelineRef.current = node }}' } },
   }),
 })
 

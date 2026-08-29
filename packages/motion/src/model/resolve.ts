@@ -78,7 +78,10 @@ function build(preset: MotionPreset, spec: MotionSpec, ctx: ResolveContext): Res
   return scaleMotion(withStagger(policed, spec.stagger), ctx.scale)
 }
 
-/** ADR-139: params that do not parse fall back to the preset's own defaults. */
+/**
+ * ADR-139: params that do not parse fall back to the preset's own defaults. The export engine applies
+ * the same rule at its own call site — ADR-255 — because it may take no value import from this package.
+ */
 function parseParams(preset: MotionPreset, params: PresetParams): PresetParams {
   const parsed = preset.paramsSchema.safeParse(params)
 

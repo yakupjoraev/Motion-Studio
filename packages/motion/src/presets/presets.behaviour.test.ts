@@ -108,6 +108,7 @@ describe('counter', () => {
 })
 
 describe('text-reveal', () => {
+  /** ADR-260: the string the label carries is read off the element, because that is where it is. */
   it('keeps the whole string readable: the label carries it and the spans are hidden', () => {
     const fragment = textReveal.codegen(textReveal.defaults, {
       nodeName: 'Node',
@@ -115,7 +116,9 @@ describe('text-reveal', () => {
       reduced: false,
     })
 
-    expect(fragment.wrapper?.props['aria-label']).toBe('{text}')
+    expect(fragment.hooks?.join(' ')).toContain(
+      "element.setAttribute('aria-label', element.textContent ?? '')",
+    )
     expect(fragment.css).toContain('.ms-split')
   })
 })
