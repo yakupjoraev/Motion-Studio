@@ -23,6 +23,13 @@ import {
   resetResponsiveHint,
 } from './use-responsive-edit'
 
+/**
+ * The inspector renders in full for the rows below, and the role queries that find a control compute
+ * an accessible name for every candidate. On the CI runner that has taken over the five-second default
+ * since 22 August — the same reason `use-export.test.tsx` sets one.
+ */
+vi.setConfig({ testTimeout: 20_000 })
+
 let counter = 0
 
 const nextId = (): NodeId => {
