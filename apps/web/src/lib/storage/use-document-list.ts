@@ -17,7 +17,14 @@ import {
   upsertEntry,
   writeLastOpenId,
 } from './document-index'
-import { deleteDocument, listDocumentIds, loadDocument, saveDocument } from './document-store'
+import {
+  type SnapshotRecord,
+  deleteDocument,
+  listDocumentIds,
+  loadDocument,
+  restoreSnapshots,
+  saveDocument,
+} from './document-store'
 
 export interface DocumentList {
   readonly entries: readonly DocumentEntry[]
@@ -104,20 +111,28 @@ export function useDocumentList(): DocumentList {
         return
       }
 
-      const restore = (document: MotionDocument, savedAt: number): void => {
-        void saveDocument(document, savedAt).then(() => {
-          setEntries(upsertEntry(entryOf(document, savedAt)))
-        })
+      /** Both halves come back, or the undo is not one — the version history is part of the document. */
+      const restore = (
+        document: MotionDocument,
+        savedAt: number,
+        snapshots: readonly SnapshotRecord[],
+      ): void => {
+        void Promise.all([saveDocument(document, savedAt), restoreSnapshots(snapshots)]).then(
+          () => {
+            setEntries(upsertEntry(entryOf(document, savedAt)))
+          },
+        )
       }
 
-      await deleteDocument(id)
+      const snapshots = await deleteDocument(id)
+
       setEntries(removeEntry(id))
 
       publish({
         title: `Deleted ${stored.document.meta.name}`,
         action: {
           label: 'Undo',
-          onClick: () => restore(stored.document, stored.savedAt),
+          onClick: () => restore(stored.document, stored.savedAt, snapshots),
         },
       })
     },

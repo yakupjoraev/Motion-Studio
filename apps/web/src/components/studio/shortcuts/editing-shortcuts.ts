@@ -3,6 +3,8 @@ import { commands } from '@motion-studio/editor'
 
 import { menuAvailability, runMenuAction } from '../canvas-area/menu-actions'
 
+import { tryPasteDocument } from '../documents/document-paste-port'
+
 import { type StudioShortcut, type StudioShortcutContext, hasSelection } from './shortcut.types'
 
 /** The canvas menu and the keyboard run the same function, so the two can never drift apart. */
@@ -71,7 +73,19 @@ export const EDITING_SHORTCUTS: readonly StudioShortcut[] = [
     label: 'Paste',
     group: 'Editing',
     scope: 'global',
-    ...menu('paste'),
+    when: menu('paste').when,
+    /*
+     * A `.motion` document on the system clipboard wins over blocks in the store's — ADR-291. The
+     * store's clipboard is a cache of an earlier copy; the system clipboard is what the user copied
+     * last, and the last copy is what a paste means.
+     */
+    run: (context) => {
+      void tryPasteDocument().then((handled) => {
+        if (!handled) {
+          menu('paste').run(context)
+        }
+      })
+    },
   },
   {
     id: 'paste-in-place',

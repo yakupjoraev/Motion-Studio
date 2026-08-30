@@ -4,18 +4,8 @@ import { useEffect } from 'react'
 
 import { useStudioStore } from '../../../store/editor-store'
 
+import { PASTED_FILE_NAME, connectDocumentPaste, looksLikeDocument } from './document-paste-port'
 import { useDocuments } from './documents-context'
-
-/**
- * A cheap shape test, run before the pipeline: the two required fields of the envelope. It is not
- * validation — `importDocument` does that, and reports what it found. This only answers "is this
- * paste meant for us, or is it someone's prose".
- */
-export const looksLikeDocument = (text: string): boolean => {
-  const trimmed = text.trimStart()
-
-  return trimmed.startsWith('{') && trimmed.includes('"version"') && trimmed.includes('"nodes"')
-}
 
 const isTextEntry = (target: EventTarget | null): boolean =>
   target instanceof HTMLElement &&
@@ -27,16 +17,21 @@ const isTextEntry = (target: EventTarget | null): boolean =>
  * The two sources that are not the file picker — FILE_FORMAT.md § Import: a drop on the canvas and a
  * paste with nothing selected.
  *
- * The paste rides the **native** event rather than the shortcut registry. `Mod+V` is bound only when
- * the store's clipboard holds blocks (`menuAvailability`), so with an empty clipboard the binding
- * stands aside, the browser's own paste fires, and this listener sees it. When blocks *are* on the
- * clipboard the block paste wins, which is the right answer for that keystroke.
+ * A paste arrives by one of two routes, because `Mod+V` is bound only when the store's clipboard
+ * holds blocks. With an empty clipboard the binding stands aside and the browser's own paste event
+ * fires, which the listener below takes. With blocks on the clipboard the shortcut runs, and it asks
+ * the port first — ADR-291. Both routes end in the same `read`.
  */
 export function useDocumentIntake(): void {
   const { read } = useDocuments()
   const setActiveDialog = useStudioStore((state) => state.setActiveDialog)
 
   useEffect(() => {
+    const take = (text: string, fileName: string): void => {
+      read(text, fileName)
+      setActiveDialog('import')
+    }
+
     const onPaste = (event: ClipboardEvent): void => {
       if (isTextEntry(event.target) || useStudioStore.getState().selection.ids.length > 0) {
         return
@@ -49,8 +44,7 @@ export function useDocumentIntake(): void {
       }
 
       event.preventDefault()
-      read(text, 'Pasted document.motion.json')
-      setActiveDialog('import')
+      take(text, PASTED_FILE_NAME)
     }
 
     const onDragOver = (event: DragEvent): void => {
@@ -67,17 +61,16 @@ export function useDocumentIntake(): void {
       }
 
       event.preventDefault()
-      void file.text().then((text) => {
-        read(text, file.name)
-        setActiveDialog('import')
-      })
+      void file.text().then((text) => take(text, file.name))
     }
 
+    connectDocumentPaste(take)
     document.addEventListener('paste', onPaste)
     window.addEventListener('dragover', onDragOver)
     window.addEventListener('drop', onDrop)
 
     return () => {
+      connectDocumentPaste(undefined)
       document.removeEventListener('paste', onPaste)
       window.removeEventListener('dragover', onDragOver)
       window.removeEventListener('drop', onDrop)

@@ -4,7 +4,13 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { entryOf, readIndex, upsertEntry } from '../../../lib/storage/document-index'
-import { listDocumentIds, loadDocument, saveDocument } from '../../../lib/storage/document-store'
+import {
+  listDocumentIds,
+  listSnapshots,
+  loadDocument,
+  saveDocument,
+  takeSnapshot,
+} from '../../../lib/storage/document-store'
 import { useStudioStore } from '../../../store/editor-store'
 
 import { DocumentListDialog } from './document-list-dialog'
@@ -132,6 +138,39 @@ describe('the document list', () => {
 
     await waitFor(async () => {
       expect((await loadDocument(id))?.document.meta.name).toBe('Doomed')
+    })
+  })
+
+  it('brings the version history back with the document', async () => {
+    const id = await seed('Versioned', 1000)
+    const stored = await loadDocument(id)
+
+    if (stored === undefined) {
+      throw new Error('the seed did not store')
+    }
+
+    await takeSnapshot(stored.document, 900)
+    await takeSnapshot(stored.document, 950)
+
+    renderWithDocuments(<DocumentListDialog />)
+
+    const target = await screen.findByRole('button', { name: 'Delete Versioned' })
+
+    await act(async () => {
+      target.click()
+    })
+
+    await waitFor(async () => {
+      expect(await listSnapshots(id)).toHaveLength(0)
+    })
+
+    await act(async () => {
+      screen.getByRole('button', { name: 'Undo' }).click()
+    })
+
+    // An undo that returned the document without its history would be an undo that lost something.
+    await waitFor(async () => {
+      expect((await listSnapshots(id)).map((snapshot) => snapshot.createdAt)).toEqual([950, 900])
     })
   })
 })

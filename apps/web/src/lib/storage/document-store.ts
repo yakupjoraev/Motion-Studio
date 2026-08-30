@@ -19,7 +19,7 @@ export interface SnapshotMeta {
   readonly nodeCount: number
 }
 
-interface SnapshotRecord extends SnapshotMeta {
+export interface SnapshotRecord extends SnapshotMeta {
   readonly document: MotionDocument
 }
 
@@ -58,14 +58,44 @@ export function listDocumentIds(): Promise<readonly string[]> {
   return keys(STORES.documents)
 }
 
-/** Deletes the snapshots with the document: a ring buffer with no document is unreachable storage. */
-export async function deleteDocument(id: string): Promise<void> {
-  const stale = (await keys(STORES.snapshots)).filter((key) => key.startsWith(`${id}${SEPARATOR}`))
+/**
+ * Deletes the snapshots with the document: a ring buffer with no document is unreachable storage.
+ *
+ * It returns them, which is what makes the delete undoable *whole*. A `Deleted "Landing"` toast whose
+ * undo brought the document back without its version history would be an undo that quietly lost
+ * something — the failure this subsystem exists to prevent, one level up.
+ */
+export async function deleteDocument(id: string): Promise<readonly SnapshotRecord[]> {
+  const held = await readSnapshots(id)
 
   await Promise.all([
     remove(STORES.documents, id),
-    ...stale.map((key) => remove(STORES.snapshots, key)),
+    ...held.map((record) => remove(STORES.snapshots, record.key)),
   ])
+
+  return held
+}
+
+/** The full records, documents included — `listSnapshots` returns the metadata a list can draw. */
+export async function readSnapshots(documentId: string): Promise<readonly SnapshotRecord[]> {
+  const found = await readSnapshotKeys(documentId)
+  const records = await Promise.all(found.map((key) => get<SnapshotRecord>(STORES.snapshots, key)))
+
+  return records.flatMap((record, index) => {
+    const key = found[index]
+    const document = parseDocument(record?.document)
+
+    if (record === undefined || key === undefined || document === undefined) {
+      return []
+    }
+
+    return [{ ...record, key, document }]
+  })
+}
+
+/** Puts records back under the keys they had, which is what keeps their timestamps and their order. */
+export async function restoreSnapshots(records: readonly SnapshotRecord[]): Promise<void> {
+  await Promise.all(records.map((record) => put(STORES.snapshots, record.key, record)))
 }
 
 const readSnapshotKeys = async (documentId: string): Promise<readonly string[]> =>
@@ -75,18 +105,12 @@ const readSnapshotKeys = async (documentId: string): Promise<readonly string[]> 
 const createdAtOf = (key: string): number => Number(key.split(SEPARATOR)[1] ?? 0)
 
 export async function listSnapshots(documentId: string): Promise<readonly SnapshotMeta[]> {
-  const found = await readSnapshotKeys(documentId)
-  const records = await Promise.all(found.map((key) => get<SnapshotRecord>(STORES.snapshots, key)))
-
-  const listed = records.flatMap((record, index) => {
-    const key = found[index]
-
-    if (record === undefined || key === undefined) {
-      return []
-    }
-
-    return [{ key, documentId, createdAt: record.createdAt, nodeCount: record.nodeCount }]
-  })
+  const listed = (await readSnapshots(documentId)).map(({ key, createdAt, nodeCount }) => ({
+    key,
+    documentId,
+    createdAt,
+    nodeCount,
+  }))
 
   return [...listed].sort((left, right) => right.createdAt - left.createdAt)
 }

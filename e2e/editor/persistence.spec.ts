@@ -57,6 +57,62 @@ const chooseFile = async (page: Page, name: string, contents: string): Promise<v
   })
 }
 
+/**
+ * The largest run of vertical space on the artboard where nothing is painted — no text leaf, no
+ * border, no image. Two stacked sections add their paddings, and that is how a template acquires a
+ * hole: it is invisible in the definition and obvious on the page.
+ */
+const largestEmptyRun = (page: Page): Promise<number> =>
+  page.evaluate(() => {
+    const root = document.querySelector('[data-node-id]')
+
+    if (root === null) {
+      return 0
+    }
+
+    const scale = root.getBoundingClientRect().width / 1280
+    const origin = root.getBoundingClientRect().top
+
+    const spans = [...root.querySelectorAll('*')]
+      .filter((element) => {
+        const box = element.getBoundingClientRect()
+
+        if (box.height < 1 || box.width < 1) {
+          return false
+        }
+
+        const style = getComputedStyle(element)
+
+        if (style.visibility === 'hidden' || style.opacity === '0') {
+          return false
+        }
+
+        return (
+          (element.children.length === 0 && (element.textContent ?? '').trim().length > 0) ||
+          style.borderTopWidth !== '0px' ||
+          style.borderBottomWidth !== '0px' ||
+          element instanceof HTMLImageElement ||
+          element instanceof SVGElement
+        )
+      })
+      .map((element) => {
+        const box = element.getBoundingClientRect()
+
+        return { top: (box.top - origin) / scale, bottom: (box.bottom - origin) / scale }
+      })
+      .sort((left, right) => left.top - right.top)
+
+    let reach = 0
+    let worst = 0
+
+    for (const span of spans) {
+      worst = Math.max(worst, span.top - reach)
+      reach = Math.max(reach, span.bottom)
+    }
+
+    return Math.round(worst)
+  })
+
 test.describe('persistence', () => {
   test('a debounced autosave survives a reload', async ({ page }) => {
     await openStudio(page)
@@ -167,8 +223,17 @@ test.describe('persistence', () => {
     await expect(page.locator('[data-node-id]')).toHaveCount(expected)
   })
 
-  test('every shipped template opens and can be edited', async ({ page }) => {
+  /**
+   * 400 px, set before the measurement and after one real defect: the pricing page shipped a 400 px
+   * void between its promise and its plans, which is what this number is drawn from. Measured across
+   * the eight at 1280 px, the largest honest gap is 324 px — a hero handing over to the next section,
+   * which is where a page should breathe most.
+   */
+  const MAX_EMPTY_RUN = 400
+
+  test('every shipped template opens, reads as a page, and can be edited', async ({ page }) => {
     await openStudio(page)
+    await page.getByRole('radio', { name: 'XL — 1280 px' }).click()
 
     for (const slug of templateSlugs()) {
       await openFileMenu(page)
@@ -181,6 +246,8 @@ test.describe('persistence', () => {
 
       await node.click()
       await expect(page.getByTestId('selection-chip'), `${slug} is editable`).toBeVisible()
+
+      expect(await largestEmptyRun(page), `${slug} has a hole in it`).toBeLessThan(MAX_EMPTY_RUN)
     }
   })
 })

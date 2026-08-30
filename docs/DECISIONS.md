@@ -11593,3 +11593,89 @@ before the first edit and the session restore before the first paint.
 - `/studio` is **371 kB** against a 250 kB budget. It was 360 before this prompt and the gap is
   prompt 54's to close; this records what prompt 50 added and why none of it is deferrable.
 - The four modules PERFORMANCE.md names are still the four that are split. This adds none.
+
+## ADR-291 — A document on the system clipboard outranks blocks in the store's
+
+**Date** 2026-08-30 · **Prompt** 50 · **Status** Accepted
+
+### Question
+`Mod+V` is bound only while the store's clipboard holds blocks, so a paste of a `.motion` document
+reached the import path *only* with an empty store clipboard. Copy a block, then copy a document from
+a file, then press `Mod+V`: the editor pasted the block.
+
+### Why that is wrong rather than merely surprising
+The store's clipboard is a cache of an earlier copy. The system clipboard is what the user copied
+**last**, and the last copy is what a paste means everywhere else in every application. The old
+behaviour silently ignored the more recent of the two.
+
+### Decision
+The `paste` shortcut asks `tryPasteDocument()` first and falls through to the block paste when the
+answer is no. The seam is a module port — the same shape as the escape-hatch port (ADR-279), because
+a module-level shortcut registry has no React context in scope and the handler lives in a provider.
+
+`when` is unchanged: it still reports whether the *block* paste is available, which is what the
+command palette and the canvas menu grey out.
+
+### Consequences
+- Accepted: the shortcut's `run` is now asynchronous, so a paste costs one clipboard read before it
+  decides. `navigator.clipboard.readText()` on a focused document resolves in under a millisecond,
+  and a refusal — a dismissed permission prompt — is treated as "not a document" rather than as an
+  error, so the block paste still happens.
+- With an empty store clipboard the binding still stands aside and the browser's native paste event
+  carries the document, which is the route the E2E spec exercises.
+
+## ADR-292 — `pnpm analyze` exists, and the studio's first load is attributed
+
+**Date** 2026-08-30 · **Prompt** 50 · **Status** Accepted
+
+### Question
+`/studio` is 370 kB gzip against a 250 kB budget. PERFORMANCE.md § Mandatory dynamic imports says
+"`pnpm analyze` produces the treemap that proves it" — and there was no such script, so every
+statement about what is in that chunk had been reasoning rather than measurement.
+
+### What was tried first, and what it cost
+Two plausible causes were tested by changing the code and rebuilding. Both were **wrong**, and both
+are recorded because the next person will think of them too:
+
+| Hypothesis | Change | Result |
+| --- | --- | --- |
+| The store pulls React block components through the barrel | 13 imports moved to `@motion-studio/blocks/registry` | 370 kB → 370 kB |
+| The effects panel pulls all 72 components through `renderRegistry` | effect card given `blocks/effects` directly | 370 kB → 370 kB |
+
+Both were reverted. Webpack already splits the component maps; the string matches that suggested
+otherwise (`react-hook-form`, `HeroAurora`) are **data** — the `ImportSpec` and `componentName` fields
+of the codegen descriptors, which are strings in the definitions.
+
+### Decision
+`@next/bundle-analyzer` as a devDependency of `web`, a two-line `next.config.ts` that enables it on
+`ANALYZE=true`, and `scripts/analyze.mjs` behind `pnpm analyze` — a script rather than an inline
+environment variable because the two shells this repository is built on set one differently, and a
+gate that works on one machine is not a gate.
+
+### Measurement
+`pnpm analyze`, gzip, the chunk `/studio` loads for itself (112.7 kB of the 370 kB; the rest is the
+104 kB shared React and Next runtime plus the shared vendor chunks):
+
+| | gzip |
+| --- | --- |
+| `packages/blocks/src/registry.ts` + 200 modules | **44.5 kB** |
+| `app/studio` — the shell, panels, inspector, canvas host | 19.6 kB |
+| `packages/editor/src` | 11.7 kB |
+| `packages/schema/src` | 8.9 kB |
+| `packages/dnd/src` | 6.5 kB |
+| `packages/ui/src` | 5.5 kB |
+| the remaining block category metadata | 10.1 kB |
+| `packages/icons/src` | 3.2 kB |
+
+**The block definitions are the largest single item in the studio's first load**, at 44.5 kB — a Zod
+schema, a control list, defaults, a codegen descriptor and a markup producer, seventy-two times.
+
+### Consequences
+- The gap is 120 kB and the biggest single item is 44.5 kB, so **no one split closes it**. Splitting
+  the definitions into a catalogue half and an export half is the largest available move and it
+  touches all seventy-two blocks — that is prompt 54's pass, and it now starts from this table
+  instead of from a guess.
+- Prompt 50's own contribution is 10 kB and is measured in ADR-290. Nothing here is deferrable:
+  autosave listens before the first edit and the session restore runs before the first paint.
+- `pnpm analyze` writes `apps/web/.next/analyze/client.html`. An ordinary `pnpm build` is unchanged —
+  the analyzer is off unless the variable is set.

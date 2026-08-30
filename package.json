@@ -13,6 +13,7 @@
     "dev:storybook": "turbo dev --filter=workshop",
     "build": "turbo build",
     "build:storybook": "turbo build --filter=workshop",
+    "analyze": "node scripts/analyze.mjs",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
     "test": "turbo test",

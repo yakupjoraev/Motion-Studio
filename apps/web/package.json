@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "analyze": "next build",
     "start": "next start",
     "lint": "biome check .",
     "test": "vitest run --passWithNoTests",
@@ -42,6 +43,7 @@
   },
   "devDependencies": {
     "@motion-studio/config": "workspace:*",
+    "@next/bundle-analyzer": "^16.3.3",
     "@tailwindcss/postcss": "^4.1.14",
     "@testing-library/jest-dom": "^7.0.0",
     "@testing-library/react": "^16.3.2",

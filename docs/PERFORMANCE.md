@@ -53,7 +53,10 @@ module.exports = [
 ### Mandatory dynamic imports
 
 Anything here appearing in an initial chunk is a CI failure. `pnpm analyze` produces the treemap
-that proves it.
+that proves it, in `apps/web/.next/analyze/client.html`.
+
+The studio's own chunk, attributed — ADR-292 has the table and the date. The block definitions are
+its largest single item at 44.5 kB gzip, which is what a first-load pass should go after first.
 
 | Module | ~Size gzip | Loads when |
 | --- | --- | --- |
