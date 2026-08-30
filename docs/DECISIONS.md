@@ -12028,3 +12028,87 @@ expected result and the reason the defect survived four Lighthouse passes.
   time will now be dropped silently. None does — they export functions, components and constants —
   and a package that needs to break the promise has to list its exceptions like `blocks` and `ui`
   already do.
+
+## ADR-301 — Five of the six effect tiles were below 3:1, and the first measurement of them was wrong
+
+**Date** 2026-08-30 · **Prompt** 51 · **Status** Accepted
+
+### Question
+`prompts/51` asks for a judgement on "the finish on the effect grid". Four of the six tiles looked
+like empty rectangles at 1×. Do they, or is that an impression?
+
+### The first attempt measured the wrong thing, twice
+
+Recorded because both failures are easy to repeat and the second one is a property of the tool.
+
+1. **Wrong property.** The first metric was the 5th-to-95th-percentile luminance spread of the tile,
+   with a threshold of 12/255. It reported a spread of 0 for the border beam, the dot grid and the
+   particles. That is arithmetically true and says nothing: a 2 px arc covers about 1 % of a
+   310 × 128 tile, so 95 % of its pixels are the bare surface whether the arc is black or white. A
+   metric that fails every thin-line and sparse-point effect by construction is not measuring
+   legibility.
+2. **Wrong sample.** Playwright's `locator.screenshot()` rewinds every CSS animation to its first
+   frame before capturing. Every rerun therefore photographed phase zero — where a travelling beam
+   has not travelled and a particle field has not risen — which is why the numbers never moved.
+
+Two further attempts to sample real phases failed and are recorded so nobody repeats them:
+`screenshot({ animations: 'allow' })` waits for the element to hold still, which a continuous effect
+never does; and CDP `Page.captureScreenshot` needs a document-relative clip, so a `boundingBox()`
+passed to it straight returns a blank capture.
+
+**Between the broken metric and a look at a 3× screenshot, the tiles were called fine. That was the
+banned fourth way and it was also the wrong answer.**
+
+### Criterion (set before the second measurement)
+On a card whose entire subject is the effect, the effect is the content, not decoration. So it is
+held to what ACCESSIBILITY.md asks of any non-text carrier of meaning:
+
+1. **Contrast ≥ 3:1** between the effect's lit peak — the 99.9th percentile, not the maximum, so one
+   antialiased sub-pixel is not a feature — and the tile's own painted surface, read from its darkest
+   corner rather than from a declared token. WCAG relative luminance, linearised.
+2. **Lit area ≥ 0.5 %** of the tile, counted at least halfway from surface to peak. A 1 px line across
+   a 310 px tile is 0.78 % of it, so 0.5 % sits under the thinnest feature these effects legitimately
+   draw and over the level at which stray pixels pass.
+
+Two states, both defined rather than caught: the **first frame**, which is what the tool can capture
+and is also the frame a visitor sees as the grid scrolls in, and **reduced motion**, which is static
+by definition and is therefore its own steady state.
+
+### Measurement
+
+| Tile | First frame, before | Reduced, before | First frame, after | Reduced, after |
+| --- | --- | --- | --- | --- |
+| Aurora | 2.97 · 78.6 % | 3.00 · 69.6 % | **3.83** · 82.1 % | **3.86** · 73.3 % |
+| Spotlight | **1.52** · 7.5 % | **1.52** · 7.5 % | 3.67 · 10.4 % | 3.67 · 10.4 % |
+| Border beam | 5.34 · 0.55 % | 5.32 · 0.55 % | 5.14 · 0.53 % | 5.32 · 0.55 % |
+| Dot grid | **2.84** · 0.66 % | **2.84** · 0.66 % | 10.58 · 2.44 % | 10.58 · 2.44 % |
+| Beams | **2.90** · 10.3 % | **1.71** · 26.6 % | 6.42 · 19.2 % | 3.92 · 23.9 % |
+| Particles | 4.69 · **0.22 %** | 7.15 · **0.41 %** | 6.97 · 0.78 % | 7.15 · 1.48 % |
+
+**Five of six failed, in one state or both.** Only the border beam — the one that looked emptiest and
+that the first metric scored 0 — was already correct. The impression and the first metric were both
+wrong, in opposite directions.
+
+### Decision
+The landing tiles set every effect's props for a 128 px card instead of inheriting catalogue defaults
+tuned for a full-width section. The components are untouched: what changed is how this page presents
+them, which is what an inspector is for.
+
+- Spotlight `intensity` 0.45 → 1, `reach` 55 → 70. It follows the pointer, and a visitor who has not
+  moved one was seeing the unlit default.
+- Dot grid `intensity` 0.35 → 0.75, `dotSize` 1.5 → 2, `spacing` 16 → 14.
+- Beams `intensity` 0.5 → 1. Its reduced-motion state was the worst cell in the table at 1.71.
+- Aurora `intensity` 0.75 → 0.95, from 2.97 — under the line by 0.03, and under it is under it.
+- Particles `count` 44 → 130, `size` 2 → 2.5. Its contrast was never the problem; 44 points of 2 px
+  in a 310 × 128 tile is 0.2 % of it.
+
+### Consequences
+- The grid is louder than it was. That is the correction, not a side effect: it was the deficit the
+  side-by-side against the reference found first, and four tiles reading as black rectangles is an
+  argument against a page whose claim is that these are real components.
+- The dot grid is now the loudest tile at 10.58:1. It is texture rather than a figure, so it can carry
+  it, and dropping it back to the threshold would put it one measurement away from failing again.
+- The threshold is a judgement about this card, not a general rule: an aurora behind a hero is
+  decoration and 3:1 would be wrong for it. Here the effect is the subject of the card.
+- Not enforced in CI. The measurement wants a rasterised page, which is the visual-regression pass in
+  prompt 57; this entry is the number it should be given.
