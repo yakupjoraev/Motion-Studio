@@ -1,3 +1,5 @@
+import { downloadDocument } from '../../../lib/documents/download'
+
 import { type StudioShortcut, hasPanels } from './shortcut.types'
 
 /** SHORTCUTS.md § Global, transcribed. Every row of that table is one entry here. */
@@ -46,17 +48,18 @@ export const GLOBAL_SHORTCUTS: readonly StudioShortcut[] = [
       store.getState().redo()
     },
   },
-  // Persistence is prompt 50 and the export dialog is prompt 45. The bindings are declared now
-  // rather than later because a half-populated registry is what makes a later prompt add an ad-hoc
-  // listener — `when` says the truth in the meantime and the sheet greys them out.
+  // Autosave owns the writing (FILE_FORMAT.md § Autosave), so `Mod+S` is what SHORTCUTS.md § Global
+  // says it is: the file in the user's hands.
   {
     id: 'save-document',
     keys: 'mod+s',
     label: 'Save (download .motion)',
     group: 'Global',
     scope: 'global',
-    when: () => false,
-    run: () => undefined,
+    keywords: ['download', 'file', 'motion'],
+    run: ({ store }) => {
+      downloadDocument(store.getState().document)
+    },
   },
   {
     id: 'open-document',
@@ -64,8 +67,10 @@ export const GLOBAL_SHORTCUTS: readonly StudioShortcut[] = [
     label: 'Open .motion',
     group: 'Global',
     scope: 'global',
-    when: () => false,
-    run: () => undefined,
+    keywords: ['documents', 'recent', 'library'],
+    run: ({ store }) => {
+      store.getState().setActiveDialog('documents')
+    },
   },
   {
     id: 'export-dialog',

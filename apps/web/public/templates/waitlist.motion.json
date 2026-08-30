@@ -1,0 +1,599 @@
+{
+  "version": 1,
+  "meta": {
+    "id": "doc_waitlist",
+    "name": "Waitlist",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "generator": "motion-studio@0.0.0",
+    "canvas": {
+      "background": "surface-0",
+      "width": 1440
+    },
+    "template": true
+  },
+  "theme": {
+    "colorMode": "dark",
+    "elevationStyle": "soft",
+    "id": "studio-dark",
+    "motionScale": 1,
+    "name": "Studio Dark",
+    "palette": {
+      "accent": "oklch(70.00% 0.1560 285.00)",
+      "accentHueShift": 0,
+      "neutral": "slate",
+      "repairContrast": true,
+      "saturation": 1
+    },
+    "radiusScale": 1,
+    "spacingScale": 1,
+    "surface": {
+      "borderStyle": "hairline",
+      "glassLevel": "subtle",
+      "noiseLevel": "none"
+    },
+    "typography": {
+      "baseSize": 14,
+      "pairing": "geist",
+      "scaleRatio": 1.2
+    }
+  },
+  "rootId": "node_f001",
+  "nodes": {
+    "node_f001": {
+      "id": "node_f001",
+      "blockId": "container",
+      "name": "Container",
+      "parentId": null,
+      "slot": "root",
+      "children": [
+        "node_f002",
+        "node_f003",
+        "node_f004",
+        "node_f007",
+        "node_f008",
+        "node_f012"
+      ],
+      "props": {
+        "align": "stretch",
+        "columns": 2,
+        "direction": "column",
+        "divide": false,
+        "gap": "md",
+        "hidden": false,
+        "justify": "start",
+        "maxWidth": "full",
+        "mode": "flex",
+        "padding": "none",
+        "wrap": false
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f002": {
+      "id": "node_f002",
+      "blockId": "navbar-floating",
+      "name": "Floating navbar",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "actions": [
+          {
+            "href": "#join",
+            "label": "Join the waitlist",
+            "variant": "primary"
+          }
+        ],
+        "activeHref": "",
+        "ariaLabel": "Main",
+        "brandHref": "/",
+        "brandLabel": "Motion Studio",
+        "hidden": false,
+        "links": [
+          {
+            "href": "#about",
+            "label": "What it is"
+          }
+        ]
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16,
+            "duration": 460
+          },
+          "presetId": "fade-down",
+          "trigger": {
+            "kind": "mount"
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f003": {
+      "id": "node_f003",
+      "blockId": "hero-centered",
+      "name": "Hero — centred",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "actions": [],
+        "align": "center",
+        "background": "transparent",
+        "eyebrow": "Opening in spring",
+        "eyebrowStyle": "pill",
+        "glow": true,
+        "headline": "Something better than a spreadsheet is coming",
+        "hidden": false,
+        "maxWidth": "xl",
+        "minHeight": "half",
+        "padding": "xl",
+        "subtitle": "We are building the planning tool the four of us kept rebuilding by hand. Leave an address and we will write once, when there is something to try.",
+        "trust": [
+          {
+            "label": "One email, ever"
+          },
+          {
+            "label": "No account needed"
+          }
+        ]
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 28,
+            "duration": 600
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 80,
+            "from": "first"
+          },
+          "trigger": {
+            "kind": "mount"
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f004": {
+      "id": "node_f004",
+      "blockId": "section",
+      "name": "Section",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [
+        "node_f005"
+      ],
+      "props": {
+        "align": "center",
+        "background": "transparent",
+        "fullBleed": true,
+        "hidden": false,
+        "maxWidth": "lg",
+        "minHeight": "auto",
+        "overflow": "visible",
+        "padding": "md",
+        "sticky": false
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 24,
+            "duration": 500
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 60,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.2,
+            "kind": "inView",
+            "margin": "0px 0px -10% 0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f005": {
+      "id": "node_f005",
+      "blockId": "container",
+      "name": "Container",
+      "parentId": "node_f004",
+      "slot": "children",
+      "children": [
+        "node_f006"
+      ],
+      "props": {
+        "align": "stretch",
+        "columns": 2,
+        "direction": "column",
+        "divide": false,
+        "gap": "md",
+        "hidden": false,
+        "justify": "start",
+        "maxWidth": "full",
+        "mode": "flex",
+        "padding": "none",
+        "wrap": false
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f006": {
+      "id": "node_f006",
+      "blockId": "waitlist-form",
+      "name": "Waitlist form",
+      "parentId": "node_f005",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "failureMessage": "That did not go through. Try again in a moment.",
+        "hidden": false,
+        "hint": "",
+        "invalidMessage": "Enter a valid email address.",
+        "label": "Email address",
+        "note": "One email when we launch. Nothing else.",
+        "placeholder": "you@company.com",
+        "showLabel": false,
+        "submitLabel": "Join the waitlist",
+        "submittingLabel": "Joining",
+        "successBody": "We’ll write when there’s something to try.",
+        "successTitle": "You’re on the list"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 12,
+            "duration": 420
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f007": {
+      "id": "node_f007",
+      "blockId": "logo-cloud",
+      "name": "Logo cloud",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "columns": 6,
+        "description": "",
+        "duration": 30000,
+        "eyebrow": "",
+        "fadeEdges": true,
+        "grayscale": true,
+        "heading": "Being built with feedback from",
+        "headingAlign": "center",
+        "headingLevel": 2,
+        "hidden": false,
+        "logos": [
+          {
+            "alt": "",
+            "label": "Northwind",
+            "src": ""
+          },
+          {
+            "alt": "",
+            "label": "Kestrel",
+            "src": ""
+          },
+          {
+            "alt": "",
+            "label": "Vellum",
+            "src": ""
+          },
+          {
+            "alt": "",
+            "label": "Halden",
+            "src": ""
+          },
+          {
+            "alt": "",
+            "label": "Lantern",
+            "src": ""
+          },
+          {
+            "alt": "",
+            "label": "Corvid",
+            "src": ""
+          }
+        ],
+        "mode": "grid",
+        "pauseOnHover": true
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 12,
+            "duration": 420
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 70,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.25,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f008": {
+      "id": "node_f008",
+      "blockId": "section",
+      "name": "Section",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [
+        "node_f009"
+      ],
+      "props": {
+        "align": "start",
+        "background": "transparent",
+        "fullBleed": true,
+        "hidden": false,
+        "maxWidth": "lg",
+        "minHeight": "auto",
+        "overflow": "visible",
+        "padding": "lg",
+        "sticky": false
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 24,
+            "duration": 500
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 60,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.2,
+            "kind": "inView",
+            "margin": "0px 0px -10% 0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f009": {
+      "id": "node_f009",
+      "blockId": "container",
+      "name": "Container",
+      "parentId": "node_f008",
+      "slot": "children",
+      "children": [
+        "node_f010",
+        "node_f011"
+      ],
+      "props": {
+        "align": "stretch",
+        "columns": 2,
+        "direction": "column",
+        "divide": false,
+        "gap": "md",
+        "hidden": false,
+        "justify": "start",
+        "maxWidth": "full",
+        "mode": "flex",
+        "padding": "none",
+        "wrap": false
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f010": {
+      "id": "node_f010",
+      "blockId": "heading",
+      "name": "Heading",
+      "parentId": "node_f009",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "center",
+        "anchor": "",
+        "balance": true,
+        "gradient": false,
+        "level": 2,
+        "size": "lg",
+        "text": "What you are joining",
+        "tracking": "tight",
+        "weight": "semibold"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f011": {
+      "id": "node_f011",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f009",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "center",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "narrow",
+        "size": "md",
+        "text": "A closed beta of about two hundred people, opening in batches. You will get one email with a link, and nothing else until you use it.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f012": {
+      "id": "node_f012",
+      "blockId": "footer",
+      "name": "Footer",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "activeHref": "",
+        "ariaLabel": "Footer",
+        "brandHref": "/",
+        "brandLabel": "Motion Studio",
+        "columns": [
+          {
+            "links": [
+              {
+                "href": "#about",
+                "label": "About"
+              },
+              {
+                "href": "#contact",
+                "label": "Contact"
+              }
+            ],
+            "title": "Company"
+          }
+        ],
+        "copyright": "© Motion Studio",
+        "headingLevel": 2,
+        "hidden": false,
+        "legal": [
+          {
+            "href": "#privacy",
+            "label": "Privacy"
+          },
+          {
+            "href": "#terms",
+            "label": "Terms"
+          }
+        ],
+        "showNewsletter": false,
+        "socials": [
+          {
+            "href": "#github",
+            "icon": "code",
+            "network": "GitHub"
+          },
+          {
+            "href": "#x",
+            "icon": "external-link",
+            "network": "X"
+          },
+          {
+            "href": "#youtube",
+            "icon": "video",
+            "network": "YouTube"
+          }
+        ],
+        "tagline": "A planning tool for small teams. In private beta."
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16,
+            "duration": 480
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.15,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    }
+  },
+  "assets": {}
+}
+

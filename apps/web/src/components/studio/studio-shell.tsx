@@ -10,6 +10,8 @@ import { usePanelLayout } from '../../hooks/use-panel-layout'
 import { useViewportGuard } from '../../hooks/use-viewport-guard'
 
 import { DndHost } from './dnd-host'
+import { DocumentsProvider } from './documents/documents-context'
+import { DocumentsHost } from './documents/documents-host'
 import { ExportDialog } from './export/export-dialog'
 import { Inspector } from './inspector/inspector'
 import { LeftPanel } from './left-panel/left-panel'
@@ -113,89 +115,97 @@ export function StudioShell({ canvas }: StudioShellProps) {
 
   return (
     <ToastProvider>
-      {/* ADR-179: one drag context over the palette, the canvas and the layers tree. */}
-      <DndHost>
-        {/* Below 1024 px the chrome is present but unusable, so it is also unreachable — ADR-050. */}
-        <div className="ms-studio" inert={mode === 'narrow'}>
-          <TopBar
-            leftOpen={isOpen('left')}
-            onTogglePanel={togglePanel}
-            rightOpen={isOpen('right')}
-          />
+      {/* The File menu and the five document dialogs share one set of actions, and the top bar is
+          inside the provider because it is the surface that starts most of them. */}
+      <DocumentsProvider>
+        {/* ADR-179: one drag context over the palette, the canvas and the layers tree. */}
+        <DndHost>
+          {/* Below 1024 px the chrome is present but unusable, so it is also unreachable — ADR-050. */}
+          <div className="ms-studio" inert={mode === 'narrow'}>
+            <TopBar
+              leftOpen={isOpen('left')}
+              onTogglePanel={togglePanel}
+              rightOpen={isOpen('right')}
+            />
 
-          <aside
-            aria-label="Left panel"
-            className={cn(REGION_CLASS, PANEL_CLASS, 'border-border border-r')}
-            data-open={String(isOpen('left'))}
-            data-shortcut-scope="left"
-            data-side="left"
-            inert={!isOpen('left')}
-            tabIndex={-1}
-          >
-            <div className="h-full overflow-hidden">
-              <LeftPanel />
-            </div>
-            {isOpen('left') ? (
-              <PanelResizer
-                aria-label="Left panel width"
-                onWidthChange={(width) => setWidth('left', width)}
-                side="left"
-                width={layout.left}
-              />
-            ) : null}
-          </aside>
+            <aside
+              aria-label="Left panel"
+              className={cn(REGION_CLASS, PANEL_CLASS, 'border-border border-r')}
+              data-open={String(isOpen('left'))}
+              data-shortcut-scope="left"
+              data-side="left"
+              inert={!isOpen('left')}
+              tabIndex={-1}
+            >
+              <div className="h-full overflow-hidden">
+                <LeftPanel />
+              </div>
+              {isOpen('left') ? (
+                <PanelResizer
+                  aria-label="Left panel width"
+                  onWidthChange={(width) => setWidth('left', width)}
+                  side="left"
+                  width={layout.left}
+                />
+              ) : null}
+            </aside>
 
-          <main
-            aria-label="Canvas"
-            className={cn(REGION_CLASS, 'overflow-hidden')}
-            data-shortcut-scope="canvas"
-            tabIndex={-1}
-          >
-            {canvas}
-          </main>
+            <main
+              aria-label="Canvas"
+              className={cn(REGION_CLASS, 'overflow-hidden')}
+              data-shortcut-scope="canvas"
+              tabIndex={-1}
+            >
+              {canvas}
+            </main>
 
-          <aside
-            aria-label="Inspector"
-            className={cn(REGION_CLASS, PANEL_CLASS, 'border-border border-l')}
-            data-open={String(isOpen('right'))}
-            data-shortcut-scope="inspector"
-            data-side="right"
-            inert={!isOpen('right')}
-            tabIndex={-1}
-          >
-            <div className="h-full overflow-hidden">
-              <Inspector />
-            </div>
-            {isOpen('right') ? (
-              <PanelResizer
-                aria-label="Inspector width"
-                onWidthChange={(width) => setWidth('right', width)}
-                side="right"
-                width={layout.right}
-              />
-            ) : null}
-          </aside>
+            <aside
+              aria-label="Inspector"
+              className={cn(REGION_CLASS, PANEL_CLASS, 'border-border border-l')}
+              data-open={String(isOpen('right'))}
+              data-shortcut-scope="inspector"
+              data-side="right"
+              inert={!isOpen('right')}
+              tabIndex={-1}
+            >
+              <div className="h-full overflow-hidden">
+                <Inspector />
+              </div>
+              {isOpen('right') ? (
+                <PanelResizer
+                  aria-label="Inspector width"
+                  onWidthChange={(width) => setWidth('right', width)}
+                  side="right"
+                  width={layout.right}
+                />
+              ) : null}
+            </aside>
 
-          <StatusBar />
-        </div>
-      </DndHost>
+            <StatusBar />
+          </div>
+        </DndHost>
 
-      <ShortcutHost panels={panels} />
+        <ShortcutHost panels={panels} />
 
-      {/* Mounted always, open on a flag: "visible in the frame the button is pressed" is what the
+        {/* Mounted always, open on a flag: "visible in the frame the button is pressed" is what the
           export dialog is judged on, and a chunk fetched on the click cannot promise it. The four
           heavy modules it needs are behind dynamic imports of their own. */}
-      <ExportDialog />
+        <ExportDialog />
 
-      {/* Renders nothing: it holds the subscription that puts `document.theme` on the root — ADR-172. */}
-      <ThemeHost />
+        {/* Renders nothing itself: autosave, the session restore and the import intake, plus the five
+          dialogs each behind its own flag. */}
+        <DocumentsHost />
 
-      <div className="ms-studio-notice h-dvh place-content-center gap-3 px-6 text-center">
-        <p className="text-sm">Motion Studio needs a wider screen.</p>
-        <a className="text-accent text-sm underline underline-offset-4" href="/blocks">
-          Browse the block gallery instead →
-        </a>
-      </div>
+        {/* Renders nothing: it holds the subscription that puts `document.theme` on the root — ADR-172. */}
+        <ThemeHost />
+
+        <div className="ms-studio-notice h-dvh place-content-center gap-3 px-6 text-center">
+          <p className="text-sm">Motion Studio needs a wider screen.</p>
+          <a className="text-accent text-sm underline underline-offset-4" href="/blocks">
+            Browse the block gallery instead →
+          </a>
+        </div>
+      </DocumentsProvider>
     </ToastProvider>
   )
 }

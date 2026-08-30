@@ -1,0 +1,794 @@
+{
+  "version": 1,
+  "meta": {
+    "id": "doc_pricingpage",
+    "name": "Pricing page",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "generator": "motion-studio@0.0.0",
+    "canvas": {
+      "background": "surface-0",
+      "width": 1440
+    },
+    "template": true
+  },
+  "theme": {
+    "colorMode": "dark",
+    "elevationStyle": "soft",
+    "id": "studio-dark",
+    "motionScale": 1,
+    "name": "Studio Dark",
+    "palette": {
+      "accent": "oklch(70.00% 0.1560 285.00)",
+      "accentHueShift": 0,
+      "neutral": "slate",
+      "repairContrast": true,
+      "saturation": 1
+    },
+    "radiusScale": 1,
+    "spacingScale": 1,
+    "surface": {
+      "borderStyle": "hairline",
+      "glassLevel": "subtle",
+      "noiseLevel": "none"
+    },
+    "typography": {
+      "baseSize": 14,
+      "pairing": "geist",
+      "scaleRatio": 1.2
+    }
+  },
+  "rootId": "node_f001",
+  "nodes": {
+    "node_f001": {
+      "id": "node_f001",
+      "blockId": "container",
+      "name": "Container",
+      "parentId": null,
+      "slot": "root",
+      "children": [
+        "node_f002",
+        "node_f003",
+        "node_f007",
+        "node_f008",
+        "node_f009",
+        "node_f010",
+        "node_f011"
+      ],
+      "props": {
+        "align": "stretch",
+        "columns": 2,
+        "direction": "column",
+        "divide": false,
+        "gap": "md",
+        "hidden": false,
+        "justify": "start",
+        "maxWidth": "full",
+        "mode": "flex",
+        "padding": "none",
+        "wrap": false
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f002": {
+      "id": "node_f002",
+      "blockId": "navbar",
+      "name": "Navbar",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "actions": [
+          {
+            "href": "#signin",
+            "label": "Sign in",
+            "variant": "ghost"
+          },
+          {
+            "href": "#start",
+            "label": "Start building",
+            "variant": "primary"
+          }
+        ],
+        "activeHref": "#pricing",
+        "ariaLabel": "Main",
+        "brandHref": "/",
+        "brandLabel": "Motion Studio",
+        "hidden": false,
+        "links": [
+          {
+            "children": [],
+            "href": "#product",
+            "label": "Product"
+          },
+          {
+            "children": [
+              {
+                "description": "Install, open the studio, place a block.",
+                "href": "#start",
+                "label": "Getting started"
+              },
+              {
+                "description": "The registry, prop by prop.",
+                "href": "#blocks",
+                "label": "Blocks"
+              },
+              {
+                "description": "React, Next, HTML and what each one emits.",
+                "href": "#export",
+                "label": "Export"
+              }
+            ],
+            "href": "",
+            "label": "Docs"
+          },
+          {
+            "children": [],
+            "href": "#pricing",
+            "label": "Pricing"
+          },
+          {
+            "children": [],
+            "href": "#changelog",
+            "label": "Changelog"
+          }
+        ],
+        "skipLink": true,
+        "skipLinkTarget": "#main",
+        "sticky": true
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 12,
+            "duration": 420
+          },
+          "presetId": "fade-down",
+          "trigger": {
+            "kind": "mount"
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f003": {
+      "id": "node_f003",
+      "blockId": "section",
+      "name": "Section",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [
+        "node_f004"
+      ],
+      "props": {
+        "align": "center",
+        "background": "transparent",
+        "fullBleed": true,
+        "hidden": false,
+        "maxWidth": "lg",
+        "minHeight": "auto",
+        "overflow": "visible",
+        "padding": "sm",
+        "sticky": false
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 24,
+            "duration": 500
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 60,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.2,
+            "kind": "inView",
+            "margin": "0px 0px -10% 0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f004": {
+      "id": "node_f004",
+      "blockId": "container",
+      "name": "Container",
+      "parentId": "node_f003",
+      "slot": "children",
+      "children": [
+        "node_f005",
+        "node_f006"
+      ],
+      "props": {
+        "align": "stretch",
+        "columns": 2,
+        "direction": "column",
+        "divide": false,
+        "gap": "md",
+        "hidden": false,
+        "justify": "start",
+        "maxWidth": "full",
+        "mode": "flex",
+        "padding": "none",
+        "wrap": false
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f005": {
+      "id": "node_f005",
+      "blockId": "heading",
+      "name": "Heading",
+      "parentId": "node_f004",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "center",
+        "anchor": "",
+        "balance": true,
+        "gradient": false,
+        "level": 1,
+        "size": "2xl",
+        "text": "Priced so the free plan is actually useful",
+        "tracking": "tight",
+        "weight": "semibold"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f006": {
+      "id": "node_f006",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f004",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "center",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "narrow",
+        "size": "md",
+        "text": "No seat minimum, no sales call, and no feature held back to force an upgrade. Change plans or leave whenever you like.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f007": {
+      "id": "node_f007",
+      "blockId": "pricing-table",
+      "name": "Pricing table",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "currency": "$",
+        "description": "Yearly is two months off.",
+        "eyebrow": "",
+        "glass": false,
+        "heading": "Every plan, side by side",
+        "headingAlign": "center",
+        "headingLevel": 2,
+        "hidden": false,
+        "highlightIndex": 1,
+        "interval": "month",
+        "layout": "cards",
+        "plans": [
+          {
+            "badge": "",
+            "ctaHref": "#",
+            "ctaLabel": "Start free",
+            "description": "Everything you need to try it properly.",
+            "features": [
+              {
+                "included": true,
+                "label": "Three documents"
+              },
+              {
+                "included": true,
+                "label": "The full block registry"
+              },
+              {
+                "included": true,
+                "label": "React and HTML export"
+              },
+              {
+                "included": false,
+                "label": "Custom themes"
+              },
+              {
+                "included": false,
+                "label": "Team libraries"
+              }
+            ],
+            "name": "Free",
+            "priceMonthly": "0",
+            "priceYearly": "0"
+          },
+          {
+            "badge": "Most popular",
+            "ctaHref": "#",
+            "ctaLabel": "Get Studio",
+            "description": "For the work that ships.",
+            "features": [
+              {
+                "included": true,
+                "label": "Unlimited documents"
+              },
+              {
+                "included": true,
+                "label": "The full block registry"
+              },
+              {
+                "included": true,
+                "label": "Every export target"
+              },
+              {
+                "included": true,
+                "label": "Custom themes"
+              },
+              {
+                "included": false,
+                "label": "Team libraries"
+              }
+            ],
+            "name": "Studio",
+            "priceMonthly": "19",
+            "priceYearly": "190"
+          },
+          {
+            "badge": "",
+            "ctaHref": "#",
+            "ctaLabel": "Talk to us",
+            "description": "Shared libraries and review.",
+            "features": [
+              {
+                "included": true,
+                "label": "Unlimited documents"
+              },
+              {
+                "included": true,
+                "label": "The full block registry"
+              },
+              {
+                "included": true,
+                "label": "Every export target"
+              },
+              {
+                "included": true,
+                "label": "Custom themes"
+              },
+              {
+                "included": true,
+                "label": "Team libraries"
+              }
+            ],
+            "name": "Team",
+            "priceMonthly": "49",
+            "priceYearly": "490"
+          }
+        ],
+        "showToggle": true
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 20,
+            "duration": 520
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 70,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.25,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f008": {
+      "id": "node_f008",
+      "blockId": "comparison-table",
+      "name": "Comparison table",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "columns": [
+          {
+            "highlighted": false,
+            "label": "Free"
+          },
+          {
+            "highlighted": true,
+            "label": "Studio"
+          },
+          {
+            "highlighted": false,
+            "label": "Team"
+          }
+        ],
+        "description": "",
+        "eyebrow": "",
+        "heading": "What each plan includes",
+        "headingAlign": "center",
+        "headingLevel": 2,
+        "hidden": false,
+        "regionLabel": "Plan comparison",
+        "rows": [
+          {
+            "label": "Documents",
+            "values": [
+              "3",
+              "Unlimited",
+              "Unlimited"
+            ]
+          },
+          {
+            "label": "The full block registry",
+            "values": [
+              "yes",
+              "yes",
+              "yes"
+            ]
+          },
+          {
+            "label": "React and HTML export",
+            "values": [
+              "yes",
+              "yes",
+              "yes"
+            ]
+          },
+          {
+            "label": "Next.js export",
+            "values": [
+              "no",
+              "yes",
+              "yes"
+            ]
+          },
+          {
+            "label": "Custom themes",
+            "values": [
+              "no",
+              "yes",
+              "yes"
+            ]
+          },
+          {
+            "label": "Shared libraries",
+            "values": [
+              "no",
+              "no",
+              "yes"
+            ]
+          }
+        ]
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 14,
+            "duration": 440
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 70,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.25,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f009": {
+      "id": "node_f009",
+      "blockId": "faq-accordion",
+      "name": "FAQ accordion",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "defaultOpen": 0,
+        "description": "",
+        "eyebrow": "",
+        "heading": "Questions about billing",
+        "headingAlign": "center",
+        "headingLevel": 2,
+        "hidden": false,
+        "items": [
+          {
+            "answer": "Nothing is deleted. You can still open, edit and export every document you have — you cannot create a fourth until you archive one or upgrade.",
+            "question": "What happens when I hit the free limit?"
+          },
+          {
+            "answer": "Yes, and the difference is prorated to the day. Downgrading takes effect at the end of the period you have already paid for.",
+            "question": "Can I change plans mid-month?"
+          },
+          {
+            "answer": "Yearly billing is two months off, and there is a free Studio plan for students, non-profits and anyone maintaining an open-source project.",
+            "question": "Do you offer a discount?"
+          },
+          {
+            "answer": "Your documents stay yours. Export them as .motion files or as code at any point, including after the subscription ends.",
+            "question": "What if I cancel?"
+          }
+        ],
+        "jsonLd": false,
+        "mode": "single"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 20,
+            "duration": 520
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 70,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.25,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f010": {
+      "id": "node_f010",
+      "blockId": "cta-banner",
+      "name": "CTA banner",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "actions": [
+          {
+            "href": "#start",
+            "label": "Start free",
+            "variant": "primary"
+          },
+          {
+            "href": "#contact",
+            "label": "Talk to us",
+            "variant": "secondary"
+          }
+        ],
+        "align": "center",
+        "description": "The free plan needs no card and has every export target that matters.",
+        "eyebrow": "",
+        "heading": "Still deciding?",
+        "headingLevel": 2,
+        "hidden": false,
+        "surface": "gradient"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 18,
+            "duration": 520
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 70,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.25,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f011": {
+      "id": "node_f011",
+      "blockId": "footer",
+      "name": "Footer",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "activeHref": "",
+        "ariaLabel": "Footer",
+        "brandHref": "/",
+        "brandLabel": "Motion Studio",
+        "columns": [
+          {
+            "links": [
+              {
+                "href": "#studio",
+                "label": "Studio"
+              },
+              {
+                "href": "#blocks",
+                "label": "Blocks"
+              },
+              {
+                "href": "#export",
+                "label": "Export"
+              },
+              {
+                "href": "#changelog",
+                "label": "Changelog"
+              }
+            ],
+            "title": "Product"
+          },
+          {
+            "links": [
+              {
+                "href": "#start",
+                "label": "Getting started"
+              },
+              {
+                "href": "#motion",
+                "label": "Motion"
+              },
+              {
+                "href": "#theming",
+                "label": "Theming"
+              }
+            ],
+            "title": "Docs"
+          },
+          {
+            "links": [
+              {
+                "href": "#about",
+                "label": "About"
+              },
+              {
+                "href": "#contact",
+                "label": "Contact"
+              }
+            ],
+            "title": "Company"
+          }
+        ],
+        "copyright": "© Motion Studio",
+        "headingLevel": 2,
+        "hidden": false,
+        "legal": [
+          {
+            "href": "#privacy",
+            "label": "Privacy"
+          },
+          {
+            "href": "#terms",
+            "label": "Terms"
+          }
+        ],
+        "showNewsletter": true,
+        "socials": [
+          {
+            "href": "#github",
+            "icon": "code",
+            "network": "GitHub"
+          },
+          {
+            "href": "#x",
+            "icon": "external-link",
+            "network": "X"
+          },
+          {
+            "href": "#youtube",
+            "icon": "video",
+            "network": "YouTube"
+          }
+        ],
+        "tagline": "A visual editor for modern React interfaces. The export is the product."
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16,
+            "duration": 480
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.15,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    }
+  },
+  "assets": {}
+}
+

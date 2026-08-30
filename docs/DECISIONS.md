@@ -11314,3 +11314,282 @@ target underneath it is already painted, and the handles arrive over it.
 - The `clip-path` and `transition` sandboxes each pay for their own tool on the click that opens them.
 - `@motion-studio/motion` gained a `./curves` subpath so the bezier chunk takes the twelve easing
   curves without the preset catalogue behind them.
+
+## ADR-282 — `fake-indexeddb` is a dev dependency of `web`
+
+**Date** 2026-08-30 · **Prompt** 50 · **Status** Accepted
+
+### Question
+Prompt 50 requires the autosave path, the ring buffer and the quota-failure toast to be unit-tested.
+jsdom implements no `indexedDB`. Contract § 1.10 requires a check that nothing already present can
+do the job before a dependency is added.
+
+### Checked first
+- **Node 20's `indexedDB`** — there is none. The `node:sqlite`-backed one landed nowhere.
+- **Hand-rolled mock** — a faithful one has to model `IDBOpenDBRequest`, `onupgradeneeded`,
+  transaction lifetimes and the `success`/`error` event pair. That is ~120 lines whose only consumer
+  is the 40-line wrapper it stands in for, so the assertions would be about the mock.
+- **Testing one layer up** — injecting a backend interface into `document-store.ts` leaves `idb.ts`
+  itself, the file most likely to be wrong, with no test at all.
+
+### Decision
+`fake-indexeddb@6` as a `devDependency` of `apps/web`, imported by `src/test/setup.ts` through its
+`auto` entry point. It is the reference implementation used by the spec's own test suite, it ships
+no runtime code into the app, and the real engine is still exercised by `e2e/editor/persistence.spec.ts`.
+
+### Consequences
+- Accepted: unit tests assert against an implementation, not against the browser. The seven E2E
+  persistence scenarios run in Chromium, so the two levels disagree loudly rather than silently.
+- The global is installed for every `web` test file rather than imported per file, so any future test
+  that touches storage has a working `indexedDB` without repeating the import.
+
+## ADR-283 — Restore is a command; `replaceDocument` stays the load path
+
+**Date** 2026-08-30 · **Prompt** 50 · **Status** Accepted · **Extends** ADR-054
+
+### Question
+FILE_FORMAT.md § Autosave: "Restoring is a command, so it is undoable." The store already has
+`replaceDocument`, and ADR-054 measured it into the load path precisely *because* it clears history.
+Which one restores a snapshot?
+
+### Decision
+Neither is reused. `restoreSnapshot({ document })` is a new command in `packages/editor/src/commands`:
+it assigns every field of the snapshot onto the draft except `meta.id`, `meta.createdAt` and
+`meta.template`, which are the document's identity rather than its content.
+
+The distinction is what the two operations mean. Opening a file replaces *which document is open* —
+undoing across that boundary would restore nodes into a document they do not belong to, which is what
+ADR-054 measured. Restoring a snapshot changes the content of the document that is already open, and
+that is what undo is for.
+
+### Measurement
+`applyCommands` on the 60-node `export-landing` fixture, mean of 20 runs:
+
+| | Patches out | Patches back | Time |
+| --- | --- | --- | --- |
+| `restoreSnapshot` | 4 | 4 | 1.30 ms |
+
+Four, not sixty: the command assigns whole objects, and Immer records one `replace` per assignment
+rather than one per node. `theme`, `nodes`, `assets` and `meta` are the four; `version` and `rootId`
+are unchanged by a restore of the same document and produce none.
+
+### Consequences
+- A restore is one small history entry, not a document-sized one. `HISTORY_LIMIT` counts entries, so
+  it costs one of the fifty and undoing it costs 1.3 ms.
+- `meta.id` surviving the restore is what keeps autosave writing to the same IndexedDB key afterwards.
+- Accepted: restoring a snapshot from a document whose blocks a later build removed produces a
+  document with unknown blocks. It renders as a placeholder, which is the same answer import gives.
+
+## ADR-284 — A snapshot is taken on a material change, and material has a number
+
+**Date** 2026-08-30 · **Prompt** 50 · **Status** Accepted
+
+### Question
+Prompt 50: a snapshot on every autosave makes ten snapshots cover twenty seconds of history and be
+useless. It states the shape of the rule — "node count, or more than N patches since the last
+snapshot" — and leaves N to be set.
+
+### Criterion (set before measuring)
+Ten snapshots should span a working session rather than a minute of it. The target: the buffer holds
+at least a hundred deliberate edits before the oldest snapshot is dropped.
+
+### Measurement
+Patches per interaction, counted by `applyCommands` on the 60-node `export-landing` fixture:
+
+| Interaction | Patches |
+| --- | --- |
+| `setProp` — one text commit | 1 |
+| `setResponsiveProp` | 1 |
+| `renameNode` | 1 |
+| `reorderNode` | 1 |
+| `insertBlock` | 2 |
+| `removeNodes` — one leaf | 2 |
+
+One to two per deliberate edit, and an inspector drag is one because ADR-113 coalesces it. So a
+threshold of N buys N/2 to N edits per snapshot, and ten snapshots hold between 5 N and 10 N of them.
+
+### Decision
+`SNAPSHOT_PATCH_THRESHOLD = 20`, plus an unconditional snapshot whenever the node count differs from
+the last snapshot's.
+
+Twenty is the smallest value that clears the criterion: it holds 100–200 deliberate edits across the
+ten, where ten would hold 50–100 and miss it. The node-count rule rides along because a structural
+change is what a user goes looking for in version history and it is free to detect.
+
+### Consequences
+- The patch counter lives in the autosave hook's ref, not in the store: it is a property of this
+  session's writes, and a second tab autosaving the same document keeps its own count.
+- Accepted: a burst of typing snapshots every ~20 commits with no structural beat to hang them on.
+  The node-count rule cannot see it, and the patch rule is the whole answer for that case.
+- Accepted: the criterion counts edits, not minutes. How long a hundred edits take is the user's
+  pace, which is not a thing this repository can measure.
+
+## ADR-285 — `beforeunload` writes to `localStorage`, and the next load migrates it
+
+**Date** 2026-08-30 · **Prompt** 50 · **Status** Accepted
+
+### Question
+`beforeunload` cannot await, and every IndexedDB write is a promise. A tab closed inside the two
+second debounce window would lose the last edit — the one failure mode PRODUCT.md § 10 calls
+unacceptable.
+
+### Options
+1. **`navigator.sendBeacon`** — there is no server. Rejected outright.
+2. **A synchronous `IDBTransaction`** — none exists. `put` returns a request that settles on a later
+   task, and the browser tears the page down first.
+3. **A `localStorage` fallback lane.** `localStorage.setItem` is synchronous and completes inside the
+   handler. The next load reads the key, writes it to IndexedDB, and deletes it.
+
+### Decision
+Option 3. `PENDING_KEY = 'motion-studio.pending-write'` holds one serialised document; `flushPending()`
+runs before the store is hydrated on the next load, so an unload write is never read back as an older
+version than what IndexedDB already has — the pending lane carries `savedAt` and loses to a newer
+record.
+
+### Consequences
+- Accepted: a document over the ~5 MB `localStorage` quota cannot use the lane. The write throws, is
+  caught, and the two-second debounce remains the only guarantee for that document. The largest
+  committed fixture, the 200-node stress document, serialises to 168 kB — 3 % of the cap.
+- Accepted: `beforeunload` is not fired reliably on mobile Safari. `visibilitychange` is, it flushes
+  through the normal asynchronous path, and it fires first — the lane is the backstop, not the plan.
+
+## ADR-286 — The fixture path does not autosave
+
+**Date** 2026-08-30 · **Prompt** 50 · **Status** Accepted
+
+### Question
+`/studio?fixture=stress-200-nodes` replaces the document from a committed file (ADR at prompt 34).
+Autosave subscribes to `version`, and `replaceDocument` bumps it. Should a fixture session persist?
+
+### Criterion (set before measuring)
+The fixture path exists for measurement — TESTING.md § Determinism. If autosaving one perturbs a
+number PERFORMANCE.md budgets, it does not belong on that path.
+
+### Measurement
+`stress-200-nodes.motion.json` is 168 kB. Persisting it means a `structuredClone` of the whole
+document onto the IndexedDB thread, plus a second one for the first snapshot, inside the window the
+canvas interaction specs measure frames in.
+
+### Decision
+`useAutosave({ enabled })`, and the studio passes `false` when `?fixture=` is in the query. Nothing
+else changes: the store, the canvas and every command behave identically.
+
+The reason is not only the measurement. A fixture is a committed file, not the user's work, and the
+document list is a list of things the user made.
+
+### Consequences
+- `e2e/editor/persistence.spec.ts` cannot open a fixture. It builds its document the way a user does —
+  a template, or a block from the palette — which is a better test of the path it is testing.
+- Accepted: a session that arrives with `?fixture=` and then edits for an hour saves nothing. The
+  query parameter is a testing seam and is not linked from anywhere in the product.
+
+## ADR-287 — The size guard runs before the parse
+
+**Date** 2026-08-30 · **Prompt** 50 · **Status** Accepted · **Amends** FILE_FORMAT.md § Import
+
+### Question
+FILE_FORMAT.md § Import listed `JSON.parse` first and the 10 MB guard second. Implementing that order
+means handing an arbitrarily large string to a parser and hoping.
+
+### Decision
+The two boxes are swapped in the document, and the guard measures the text. `JSON.parse` is
+synchronous, cannot be given a budget, and cannot be interrupted once it has started, so a file too
+large to accept has to be refused before it reaches one. Everything after the parse is unchanged.
+
+### Consequences
+- The guard measures UTF-16 code units, not bytes on disk. A 10 MB cap read that way is at most the
+  documented cap and never more, which is the direction to be wrong in.
+- The `SIZE` rejection now precedes `PARSE`, so a file that is both huge and malformed reports its
+  size. That is the more actionable of the two messages.
+
+## ADR-288 — The template picker draws a schematic, not a screenshot
+
+**Date** 2026-08-30 · **Prompt** 50 · **Status** Accepted
+
+### Question
+Prompt 50 asks for a thumbnail and a node count on each template card. `pnpm generate:thumbnails`
+renders block thumbnails in a real browser and commits the images. Do templates get the same?
+
+### Criterion (set before deciding)
+A preview earns its place if it answers the question the person clicking is asking. On this dialog
+that question is "what page is this", asked eight times in two seconds.
+
+### Decision
+A schematic: coloured bands stacked in the order of the template's top-level blocks, with heroes and
+the one feature block accented, drawn from an `outline` array in `templates.json`. No image is
+rendered, stored or fetched.
+
+Eight screenshots at 320×200 in two colour modes is sixteen images and a browser in the build, and
+each one goes stale the moment a block's default copy changes — the exact rot the CI check exists to
+prevent for the documents themselves. The schematic is generated from the document, so it cannot
+disagree with it.
+
+### Consequences
+- The dialog costs one 3 kB fetch and no images.
+- Accepted: the preview shows structure, not visual style. Two templates with the same block order
+  look alike, which is honest — they *are* alike in the way this preview reports on.
+- The bands are `aria-hidden`; the name, the node count and the one-line description carry the card.
+
+## ADR-289 — The toast viewport declares `aria-live="off"` so a dialog cannot hide it
+
+**Date** 2026-08-30 · **Prompt** 50 · **Status** Accepted
+
+### Question
+Deleting a document from the document list publishes an undo toast — PRODUCT.md § 10 and
+UI_GUIDELINES.md § Feedback rules, which prefer it to a confirmation dialog. Writing the test for it
+found the undo button missing from the accessibility tree.
+
+### Cause (verified in the session)
+A modal Radix `Dialog` calls `hideOthers` from the `aria-hidden` package, which marks every sibling of
+the dialog content `aria-hidden="true"`. The toast viewport is one of those siblings. So every toast
+raised from inside any dialog in this app — the export dialog's "Copied" included — was visible and
+unreachable.
+
+### Decision
+`aria-live="off"` on `RadixToast.Viewport`. `hideOthers` exempts `[aria-live]` from its sweep by
+design, and `off` is the truthful value: Radix announces a toast through its own announcer element,
+so this region must be reachable without announcing a second time.
+
+### Consequences
+- The defect predates this prompt and affected every dialog. `toast.test.tsx` now opens a dialog over
+  a published toast and asserts `getByRole` still finds the action, so it cannot come back.
+- Accepted: the toast is still *visually* above the scrim and clickable only because Radix marks the
+  toast root `pointer-events: auto`. That is Radix's behaviour, not ours, and is not asserted here —
+  jsdom resolves the inherited value through the portal differently from a browser.
+
+## ADR-290 — The document dialogs stay in the studio chunk
+
+**Date** 2026-08-30 · **Prompt** 50 · **Status** Accepted
+
+### Question
+Prompt 50 adds five dialogs, a storage layer and an import pipeline to `/studio`, which is already
+over its 250 kB budget at 360 kB (ADR-198 and prompt 49 both record it). PERFORMANCE.md § Mandatory
+dynamic imports names four modules that must be split. Do these belong on that list?
+
+### Criterion (set before measuring)
+`/studio` is 360 kB before this prompt. Split the dialogs if splitting recovers **5 kB or more** of
+first load; leave them static below that, because a `next/dynamic` boundary is five more indirections
+for a reader and a frame of latency for the user.
+
+### Measurement
+`pnpm --filter web build`, first-load JS for `/studio`:
+
+| | First load | Route |
+| --- | --- | --- |
+| Prompt 49 | 360 kB | — |
+| Prompt 50, everything static | **371 kB** | 193 kB |
+| Prompt 50, all five dialogs dynamic | **369 kB** | 191 kB |
+
+Two kilobytes. The dialogs are thin: they are `Dialog`, `Button` and `Input` over an import pipeline
+and a storage layer that the store already pulls in, because `editor-store` imports the registry and
+`@motion-studio/schema` on the studio's first line.
+
+### Decision
+Static. The split does not clear the threshold, and the eleven kilobytes prompt 50 costs are the
+pipeline and the storage layer, neither of which can be deferred — autosave has to be listening
+before the first edit and the session restore before the first paint.
+
+### Consequences
+- `/studio` is **371 kB** against a 250 kB budget. It was 360 before this prompt and the gap is
+  prompt 54's to close; this records what prompt 50 added and why none of it is deferrable.
+- The four modules PERFORMANCE.md names are still the four that are split. This adds none.

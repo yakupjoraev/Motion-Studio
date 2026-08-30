@@ -26,6 +26,7 @@
     "generate:tokens": "tsx packages/tokens/src/build/generate.ts",
     "generate:thumbnails": "node scripts/generate-thumbnails.mjs",
     "generate:fixtures": "tsx scripts/generate-fixtures.ts",
+    "generate:templates": "tsx scripts/generate-templates.ts",
     "measure:export": "tsx scripts/measure-export.ts",
     "golden:update": "pnpm --filter @motion-studio/codegen golden:update",
     "verify:html-export": "node scripts/verify-html-export.mjs",

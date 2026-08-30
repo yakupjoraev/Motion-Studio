@@ -1,0 +1,120 @@
+[
+  {
+    "slug": "saas-landing",
+    "name": "SaaS landing",
+    "description": "Hero, proof, features, pricing and an answer to the four questions people ask.",
+    "nodeCount": 11,
+    "outline": [
+      "navbar",
+      "hero-aurora",
+      "logo-cloud",
+      "feature-grid",
+      "bento-grid",
+      "testimonial-marquee",
+      "pricing-table",
+      "faq-accordion",
+      "cta-split",
+      "footer"
+    ]
+  },
+  {
+    "slug": "portfolio",
+    "name": "Portfolio",
+    "description": "A quiet index of work: one statement, selected projects, and a way to make contact.",
+    "nodeCount": 12,
+    "outline": [
+      "navbar-floating",
+      "hero-centered",
+      "feature-split",
+      "section",
+      "quote",
+      "timeline",
+      "cta-banner",
+      "footer"
+    ]
+  },
+  {
+    "slug": "product-launch",
+    "name": "Product launch",
+    "description": "One announcement, the numbers behind it, and the shortest path to trying it.",
+    "nodeCount": 8,
+    "outline": [
+      "navbar",
+      "hero-app-preview",
+      "stat-grid",
+      "feature-grid",
+      "testimonial-marquee",
+      "cta-banner",
+      "footer"
+    ]
+  },
+  {
+    "slug": "docs-home",
+    "name": "Docs home",
+    "description": "The front door of a documentation site: install, orient, and the common questions.",
+    "nodeCount": 11,
+    "outline": [
+      "navbar",
+      "hero-terminal",
+      "section",
+      "feature-grid",
+      "faq-accordion",
+      "footer"
+    ]
+  },
+  {
+    "slug": "pricing-page",
+    "name": "Pricing page",
+    "description": "Plans, a comparison people can scan, and the objections answered underneath.",
+    "nodeCount": 11,
+    "outline": [
+      "navbar",
+      "section",
+      "pricing-table",
+      "comparison-table",
+      "faq-accordion",
+      "cta-banner",
+      "footer"
+    ]
+  },
+  {
+    "slug": "blog-index",
+    "name": "Blog index",
+    "description": "A list of posts that reads like a contents page rather than a feed.",
+    "nodeCount": 10,
+    "outline": [
+      "navbar",
+      "section",
+      "feature-grid",
+      "newsletter-form",
+      "footer"
+    ]
+  },
+  {
+    "slug": "waitlist",
+    "name": "Waitlist",
+    "description": "One screen, one form, and just enough proof to make signing up feel reasonable.",
+    "nodeCount": 12,
+    "outline": [
+      "navbar-floating",
+      "hero-centered",
+      "section",
+      "logo-cloud",
+      "section",
+      "footer"
+    ]
+  },
+  {
+    "slug": "changelog",
+    "name": "Changelog",
+    "description": "Releases in reverse order, written for people deciding whether to upgrade.",
+    "nodeCount": 10,
+    "outline": [
+      "navbar",
+      "section",
+      "timeline",
+      "newsletter-form",
+      "footer"
+    ]
+  }
+]

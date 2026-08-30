@@ -150,10 +150,19 @@ export type LeftTab = 'blocks' | 'motion' | 'effects' | 'theme' | 'layers'
 
 /**
  * The dialogs that are not their own flag. `Mod+,` and `Mod+/` are SHORTCUTS.md § Global; the import
- * report is FILE_FORMAT.md § Repair. The command palette and the export dialog keep their own booleans
- * because STATE_MANAGEMENT.md § ui declares them that way.
+ * report is FILE_FORMAT.md § Repair, and the four document dialogs are its § Autosave and § Templates.
+ * The command palette and the export dialog keep their own booleans because STATE_MANAGEMENT.md § ui
+ * declares them that way.
  */
-export type DialogId = 'settings' | 'shortcuts' | 'import-report'
+export type DialogId =
+  | 'settings'
+  | 'shortcuts'
+  | 'import'
+  | 'import-report'
+  | 'documents'
+  | 'templates'
+  | 'save-as'
+  | 'version-history'
 
 export type PanelSide = 'left' | 'right'
 

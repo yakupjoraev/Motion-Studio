@@ -188,10 +188,10 @@ export function migrateDocument(input: unknown): Result<MotionDocument, Migratio
 File / paste
      │
      ▼
-JSON.parse ──────────► syntax error → "Not valid JSON (line 42)"
+size guard ──────────► > 10 MB → "File too large"
      │
      ▼
-size guard ──────────► > 10 MB → "File too large"
+JSON.parse ──────────► syntax error → "Not valid JSON (line 42)"
      │
      ▼
 migrateDocument ─────► future version → "Made with a newer version"
@@ -211,6 +211,10 @@ sanitizeAssets ──────► strip data: URLs above 2 MB, validate remot
      ▼
 Loaded, with a warning summary if anything was repaired or dropped
 ```
+
+The size guard runs on the **text**, before the parse. A parser is the one stage that cannot be
+given a budget once it has started, so a file too large to accept must be refused before it is
+handed to one — ADR-287.
 
 ### Repair vs reject
 

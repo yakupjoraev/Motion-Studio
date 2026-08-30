@@ -428,8 +428,10 @@ change → mark dirty → debounce 2000 ms → serialize → IndexedDB.put
 
 - IndexedDB (`idb-keyval`-style thin wrapper, hand-rolled, ~40 lines) stores documents by id.
 - `localStorage` stores the document index, last-open id, and UI preferences.
+- `beforeunload` cannot await, so its flush writes one serialised document to a `localStorage` lane
+  and the next load migrates it into IndexedDB, losing to a newer record — ADR-285.
 - Serialization is `documentSchema.parse` on the way in, plain `JSON.stringify` on the way out.
-- A failed write shows a non-blocking toast with a "download document" action. Never silent.
+- A failed write shows a **persistent** toast with a "download document" action. Never silent.
 
 ## Anti-patterns
 

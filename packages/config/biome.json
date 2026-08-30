@@ -10,6 +10,7 @@
       "**/coverage/**",
       "**/__golden__/expected/**",
       "**/__golden__/documents/**",
+      "**/public/templates/**",
       "**/.compile/**",
       "**/storybook-static/**",
       "**/playwright-report/**",

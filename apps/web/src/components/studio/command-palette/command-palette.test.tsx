@@ -147,17 +147,17 @@ describe('CommandPalette', () => {
     expect(screen.getByText(/Nothing matches/)).toBeInTheDocument()
   })
 
-  /** Persistence is prompt 50, so its bindings are the ones still declared unavailable. */
+  /** Settings is the binding still declared unavailable; persistence went live in prompt 50. */
   it('shows an unavailable command greyed rather than hiding it', () => {
     open()
 
     fireEvent.change(screen.getByRole('combobox', { name: 'Search commands' }), {
-      target: { value: 'save' },
+      target: { value: 'settings' },
     })
 
     const option = screen.getAllByRole('option')[0]
 
-    expect(within(option as HTMLElement).getByText(/Save/)).toBeInTheDocument()
+    expect(within(option as HTMLElement).getByText(/Settings/)).toBeInTheDocument()
     expect(option).toHaveAttribute('aria-disabled', 'true')
   })
 })

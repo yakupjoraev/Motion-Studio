@@ -36,6 +36,7 @@ export {
 export { removeEffect, type RemoveEffectPayload } from './remove-effect'
 export { removeNodes, type RemoveNodesPayload } from './remove-nodes'
 export { renameNode, type RenameNodePayload } from './rename-node'
+export { restoreSnapshot, type RestoreSnapshotPayload } from './restore-snapshot'
 export { reorderEffect, type ReorderEffectPayload } from './reorder-effect'
 export { reorderNode, type ReorderNodePayload } from './reorder-node'
 export {

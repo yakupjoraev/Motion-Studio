@@ -102,7 +102,19 @@ export function ToastProvider({ children, duration = 5000 }: ToastProviderProps)
           <ToastItem key={record.id} record={record} onDismiss={() => dismiss(record.id)} />
         ))}
 
-        <RadixToast.Viewport style={{ zIndex: Z_INDEX.toast }} className={toastViewportStyles()} />
+        {/*
+         * `aria-live="off"` is not a mistake and it is not decoration. A modal `Dialog` hides every
+         * sibling of its content with `aria-hidden`, and the viewport is one — so a toast raised
+         * while a dialog is open, with the undo the user needs, disappears from the accessibility
+         * tree. `aria-hidden`'s `hideOthers` exempts `[aria-live]` from that sweep, and `off` is the
+         * honest value: Radix announces a toast through its own announcer element, so this region
+         * must be *reachable* without announcing anything a second time. ADR-289.
+         */}
+        <RadixToast.Viewport
+          aria-live="off"
+          className={toastViewportStyles()}
+          style={{ zIndex: Z_INDEX.toast }}
+        />
       </RadixToast.Provider>
     </ToastContext.Provider>
   )

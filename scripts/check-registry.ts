@@ -20,16 +20,22 @@ import { fileURLToPath } from 'node:url'
  * component — and every icon — into a script whose whole job is to read metadata, which is precisely
  * the split that export exists for.
  */
+import { blockRegistry } from '@motion-studio/blocks/registry'
 import { DEFINITIONS } from '@motion-studio/blocks/registry'
+import { documentSchema, validateDocument } from '@motion-studio/schema'
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const THUMBNAILS = join(ROOT, 'apps', 'web', 'public', 'thumbnails')
 const MANIFEST = join(THUMBNAILS, 'thumbnails.json')
+const TEMPLATES = join(ROOT, 'apps', 'web', 'public', 'templates')
+const TEMPLATE_MANIFEST = join(TEMPLATES, 'templates.json')
 
 const MODES = ['dark', 'light'] as const
 const EXPECTED = { width: 320, height: 200 }
 /** FILE_FORMAT.md § Security caps a blur placeholder at 4 kB; ours are two orders under it. */
 const MAX_BLUR_BYTES = 4 * 1024
+/** FILE_FORMAT.md § Templates names them one by one; the count is what this script can check. */
+const EXPECTED_TEMPLATES = 8
 
 interface ThumbnailEntry {
   readonly src?: unknown
@@ -146,6 +152,99 @@ if (!existsSync(MANIFEST)) {
   }
 }
 
+/**
+ * The template gate — FILE_FORMAT.md § Templates: "Each is validated in CI against the current
+ * schema — a template that stops parsing is a build failure, which means templates cannot rot."
+ *
+ * It is the same question the thumbnail check asks, one directory over: does every entry in the
+ * manifest have a file, does every file parse, and does every block in it still exist?
+ */
+interface TemplateEntry {
+  readonly slug?: unknown
+  readonly name?: unknown
+  readonly nodeCount?: unknown
+}
+
+const readTemplates = (): readonly TemplateEntry[] => {
+  if (!existsSync(TEMPLATE_MANIFEST)) {
+    complain(`No template manifest at ${TEMPLATE_MANIFEST}. Run \`pnpm generate:templates\`.`)
+
+    return []
+  }
+
+  try {
+    const parsed: unknown = JSON.parse(readFileSync(TEMPLATE_MANIFEST, 'utf8'))
+
+    if (!Array.isArray(parsed)) {
+      complain('The template manifest is not an array. Run `pnpm generate:templates`.')
+
+      return []
+    }
+
+    return parsed as TemplateEntry[]
+  } catch (error) {
+    complain(
+      `The template manifest is not readable JSON: ${error instanceof Error ? error.message : ''}`,
+    )
+
+    return []
+  }
+}
+
+const templates = readTemplates()
+
+if (templates.length !== EXPECTED_TEMPLATES) {
+  complain(
+    `The manifest lists ${templates.length} templates; FILE_FORMAT.md names ${EXPECTED_TEMPLATES}.`,
+  )
+}
+
+for (const entry of templates) {
+  const slug = entry.slug
+
+  if (typeof slug !== 'string') {
+    complain('A manifest entry has no slug.')
+
+    continue
+  }
+
+  const path = join(TEMPLATES, `${slug}.motion.json`)
+
+  if (!existsSync(path)) {
+    complain(`${slug}: the manifest names a template that is not on disk.`)
+
+    continue
+  }
+
+  let document: ReturnType<typeof documentSchema.parse>
+
+  try {
+    document = documentSchema.parse(JSON.parse(readFileSync(path, 'utf8')))
+  } catch (error) {
+    complain(`${slug}: does not parse — ${error instanceof Error ? error.message : ''}`)
+
+    continue
+  }
+
+  if (document.meta.template !== true) {
+    complain(`${slug}: meta.template is not true, so loading it would edit the template itself.`)
+  }
+
+  const validation = validateDocument(document, { registry: blockRegistry })
+
+  if (!validation.ok) {
+    for (const error of validation.error) {
+      complain(`${slug}: ${error.code} — ${error.message}`)
+    }
+  }
+
+  if (Object.keys(document.nodes).length !== entry.nodeCount) {
+    complain(
+      `${slug}: the manifest says ${String(entry.nodeCount)} nodes and the file has ${Object.keys(document.nodes).length}.`,
+    )
+  }
+}
+
 if (problems.length > 0) {
   console.error('check-registry: failed')
 
@@ -161,5 +260,5 @@ const clips =
 
 console.log(
   `check-registry: ${DEFINITIONS.length} blocks, ${MODES.length} thumbnails each, ` +
-    `${clips} with hover clips — ok`,
+    `${clips} with hover clips, ${templates.length} templates — ok`,
 )

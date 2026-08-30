@@ -1,0 +1,592 @@
+{
+  "version": 1,
+  "meta": {
+    "id": "doc_productlaunch",
+    "name": "Product launch",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "generator": "motion-studio@0.0.0",
+    "canvas": {
+      "background": "surface-0",
+      "width": 1440
+    },
+    "template": true
+  },
+  "theme": {
+    "colorMode": "dark",
+    "elevationStyle": "soft",
+    "id": "studio-dark",
+    "motionScale": 1,
+    "name": "Studio Dark",
+    "palette": {
+      "accent": "oklch(70.00% 0.1560 285.00)",
+      "accentHueShift": 0,
+      "neutral": "slate",
+      "repairContrast": true,
+      "saturation": 1
+    },
+    "radiusScale": 1,
+    "spacingScale": 1,
+    "surface": {
+      "borderStyle": "hairline",
+      "glassLevel": "subtle",
+      "noiseLevel": "none"
+    },
+    "typography": {
+      "baseSize": 14,
+      "pairing": "geist",
+      "scaleRatio": 1.2
+    }
+  },
+  "rootId": "node_f001",
+  "nodes": {
+    "node_f001": {
+      "id": "node_f001",
+      "blockId": "container",
+      "name": "Container",
+      "parentId": null,
+      "slot": "root",
+      "children": [
+        "node_f002",
+        "node_f003",
+        "node_f004",
+        "node_f005",
+        "node_f006",
+        "node_f007",
+        "node_f008"
+      ],
+      "props": {
+        "align": "stretch",
+        "columns": 2,
+        "direction": "column",
+        "divide": false,
+        "gap": "md",
+        "hidden": false,
+        "justify": "start",
+        "maxWidth": "full",
+        "mode": "flex",
+        "padding": "none",
+        "wrap": false
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f002": {
+      "id": "node_f002",
+      "blockId": "navbar",
+      "name": "Navbar",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "actions": [
+          {
+            "href": "#signin",
+            "label": "Sign in",
+            "variant": "ghost"
+          },
+          {
+            "href": "#start",
+            "label": "Start building",
+            "variant": "primary"
+          }
+        ],
+        "activeHref": "",
+        "ariaLabel": "Main",
+        "brandHref": "/",
+        "brandLabel": "Motion Studio",
+        "hidden": false,
+        "links": [
+          {
+            "children": [],
+            "href": "#new",
+            "label": "What is new"
+          },
+          {
+            "children": [],
+            "href": "#docs",
+            "label": "Docs"
+          },
+          {
+            "children": [],
+            "href": "#pricing",
+            "label": "Pricing"
+          }
+        ],
+        "skipLink": true,
+        "skipLinkTarget": "#main",
+        "sticky": true
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 12,
+            "duration": 420
+          },
+          "presetId": "fade-down",
+          "trigger": {
+            "kind": "mount"
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f003": {
+      "id": "node_f003",
+      "blockId": "hero-app-preview",
+      "name": "Hero — app preview",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "actions": [
+          {
+            "href": "#try",
+            "label": "Try 2.0",
+            "variant": "primary"
+          },
+          {
+            "href": "#notes",
+            "label": "Read the release notes",
+            "variant": "secondary"
+          }
+        ],
+        "align": "start",
+        "background": "transparent",
+        "eyebrow": "Version 2.0",
+        "eyebrowStyle": "pill",
+        "glow": true,
+        "headline": "The rewrite you asked for, and the three things it fixes",
+        "hidden": false,
+        "image": {
+          "alt": "",
+          "src": ""
+        },
+        "imageHeight": 900,
+        "imageWidth": 1440,
+        "maxWidth": "xl",
+        "minHeight": "three-quarters",
+        "padding": "xl",
+        "perspective": 1400,
+        "subtitle": "Faster on large documents, honest about offline, and it finally exports the theme with the components.",
+        "tiltX": 8,
+        "tiltY": -12
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 28,
+            "duration": 600
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 80,
+            "from": "first"
+          },
+          "trigger": {
+            "kind": "mount"
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f004": {
+      "id": "node_f004",
+      "blockId": "stat-grid",
+      "name": "Stat grid",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "columns": 4,
+        "dividers": true,
+        "hidden": false,
+        "items": [
+          {
+            "delta": "",
+            "deltaDirection": "neutral",
+            "deltaRose": false,
+            "label": "Faster on 200-node documents",
+            "value": "3.4x"
+          },
+          {
+            "delta": "29%",
+            "deltaDirection": "down-is-good",
+            "deltaRose": false,
+            "label": "First load, down from 260",
+            "value": "184 kB"
+          },
+          {
+            "delta": "",
+            "deltaDirection": "neutral",
+            "deltaRose": false,
+            "label": "Offline after the first open",
+            "value": "100%"
+          },
+          {
+            "delta": "",
+            "deltaDirection": "neutral",
+            "deltaRose": false,
+            "label": "Migrations you have to run",
+            "value": "0"
+          }
+        ],
+        "size": "lg"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 12,
+            "duration": 420
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f005": {
+      "id": "node_f005",
+      "blockId": "feature-grid",
+      "name": "Feature grid",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "columns": 3,
+        "description": "The list is short on purpose. Each one was a year of complaints.",
+        "eyebrow": "What changed",
+        "heading": "Three things, done properly",
+        "headingAlign": "center",
+        "headingLevel": 2,
+        "hidden": false,
+        "items": [
+          {
+            "body": "Normalised, patched and indexed. A 200-node page now edits at the speed a 20-node one used to.",
+            "icon": "zap",
+            "title": "A new document model"
+          },
+          {
+            "body": "Tokens leave as CSS variables, Tailwind config or JSON, and the components read them wherever they land.",
+            "icon": "export",
+            "title": "The theme exports with it"
+          },
+          {
+            "body": "Everything is local first. Close the tab mid-sentence and the work is there when you come back.",
+            "icon": "success",
+            "title": "Offline that means offline"
+          }
+        ],
+        "showIcons": true,
+        "treatment": "card"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 20,
+            "duration": 520
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 70,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.25,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f006": {
+      "id": "node_f006",
+      "blockId": "testimonial-marquee",
+      "name": "Testimonial marquee",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "description": "",
+        "duration": 32000,
+        "eyebrow": "Social proof",
+        "fadeEdges": true,
+        "heading": "From the beta",
+        "headingAlign": "center",
+        "headingLevel": 2,
+        "hidden": false,
+        "items": [
+          {
+            "author": "Priya Raman",
+            "avatar": "",
+            "company": "Northwind",
+            "quote": "The export is the component I would have written by hand.",
+            "role": "Staff engineer"
+          },
+          {
+            "author": "Tomas Lind",
+            "avatar": "",
+            "company": "Kestrel",
+            "quote": "Our designers ship the motion now. That used to be a ticket.",
+            "role": "Design lead"
+          },
+          {
+            "author": "Amara Osei",
+            "avatar": "",
+            "company": "Vellum",
+            "quote": "Reduced motion works everywhere, which I checked, because it never does.",
+            "role": "Accessibility engineer"
+          },
+          {
+            "author": "Jonas Weber",
+            "avatar": "",
+            "company": "Halden",
+            "quote": "Six breakpoints and I can see which value came from where.",
+            "role": "Front-end lead"
+          },
+          {
+            "author": "Mei Chen",
+            "avatar": "",
+            "company": "Lantern",
+            "quote": "It is a tool, not a demo. That is rare.",
+            "role": "Product designer"
+          },
+          {
+            "author": "Rosa Delgado",
+            "avatar": "",
+            "company": "Corvid",
+            "quote": "The pricing table alone saved us a week of fighting a CMS.",
+            "role": "Marketing engineer"
+          }
+        ],
+        "pauseOnHover": true,
+        "rows": 1
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16,
+            "duration": 520
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 70,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.25,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f007": {
+      "id": "node_f007",
+      "blockId": "cta-banner",
+      "name": "CTA banner",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "actions": [
+          {
+            "href": "#try",
+            "label": "Try 2.0",
+            "variant": "primary"
+          },
+          {
+            "href": "#notes",
+            "label": "Read the release notes",
+            "variant": "secondary"
+          }
+        ],
+        "align": "center",
+        "description": "Your documents open unchanged. There is no migration to run and no account to make.",
+        "eyebrow": "",
+        "heading": "Upgrading takes one command",
+        "headingLevel": 2,
+        "hidden": false,
+        "surface": "gradient"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 18,
+            "duration": 520
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 70,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.25,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f008": {
+      "id": "node_f008",
+      "blockId": "footer",
+      "name": "Footer",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "activeHref": "",
+        "ariaLabel": "Footer",
+        "brandHref": "/",
+        "brandLabel": "Motion Studio",
+        "columns": [
+          {
+            "links": [
+              {
+                "href": "#studio",
+                "label": "Studio"
+              },
+              {
+                "href": "#blocks",
+                "label": "Blocks"
+              },
+              {
+                "href": "#export",
+                "label": "Export"
+              },
+              {
+                "href": "#changelog",
+                "label": "Changelog"
+              }
+            ],
+            "title": "Product"
+          },
+          {
+            "links": [
+              {
+                "href": "#start",
+                "label": "Getting started"
+              },
+              {
+                "href": "#motion",
+                "label": "Motion"
+              },
+              {
+                "href": "#theming",
+                "label": "Theming"
+              }
+            ],
+            "title": "Docs"
+          },
+          {
+            "links": [
+              {
+                "href": "#about",
+                "label": "About"
+              },
+              {
+                "href": "#contact",
+                "label": "Contact"
+              }
+            ],
+            "title": "Company"
+          }
+        ],
+        "copyright": "© Motion Studio",
+        "headingLevel": 2,
+        "hidden": false,
+        "legal": [
+          {
+            "href": "#privacy",
+            "label": "Privacy"
+          },
+          {
+            "href": "#terms",
+            "label": "Terms"
+          }
+        ],
+        "showNewsletter": true,
+        "socials": [
+          {
+            "href": "#github",
+            "icon": "code",
+            "network": "GitHub"
+          },
+          {
+            "href": "#x",
+            "icon": "external-link",
+            "network": "X"
+          },
+          {
+            "href": "#youtube",
+            "icon": "video",
+            "network": "YouTube"
+          }
+        ],
+        "tagline": "A visual editor for modern React interfaces. The export is the product."
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16,
+            "duration": 480
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.15,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    }
+  },
+  "assets": {}
+}
+

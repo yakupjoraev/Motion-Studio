@@ -1,0 +1,654 @@
+{
+  "version": 1,
+  "meta": {
+    "id": "doc_portfolio",
+    "name": "Portfolio",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z",
+    "generator": "motion-studio@0.0.0",
+    "canvas": {
+      "background": "surface-0",
+      "width": 1440
+    },
+    "template": true
+  },
+  "theme": {
+    "colorMode": "dark",
+    "elevationStyle": "soft",
+    "id": "studio-dark",
+    "motionScale": 1,
+    "name": "Studio Dark",
+    "palette": {
+      "accent": "oklch(70.00% 0.1560 285.00)",
+      "accentHueShift": 0,
+      "neutral": "slate",
+      "repairContrast": true,
+      "saturation": 1
+    },
+    "radiusScale": 1,
+    "spacingScale": 1,
+    "surface": {
+      "borderStyle": "hairline",
+      "glassLevel": "subtle",
+      "noiseLevel": "none"
+    },
+    "typography": {
+      "baseSize": 14,
+      "pairing": "geist",
+      "scaleRatio": 1.2
+    }
+  },
+  "rootId": "node_f001",
+  "nodes": {
+    "node_f001": {
+      "id": "node_f001",
+      "blockId": "container",
+      "name": "Container",
+      "parentId": null,
+      "slot": "root",
+      "children": [
+        "node_f002",
+        "node_f003",
+        "node_f004",
+        "node_f005",
+        "node_f009",
+        "node_f010",
+        "node_f011",
+        "node_f012"
+      ],
+      "props": {
+        "align": "stretch",
+        "columns": 2,
+        "direction": "column",
+        "divide": false,
+        "gap": "md",
+        "hidden": false,
+        "justify": "start",
+        "maxWidth": "full",
+        "mode": "flex",
+        "padding": "none",
+        "wrap": false
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f002": {
+      "id": "node_f002",
+      "blockId": "navbar-floating",
+      "name": "Floating navbar",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "actions": [
+          {
+            "href": "#contact",
+            "label": "Get in touch",
+            "variant": "primary"
+          }
+        ],
+        "activeHref": "",
+        "ariaLabel": "Main",
+        "brandHref": "/",
+        "brandLabel": "Ada Fournier",
+        "hidden": false,
+        "links": [
+          {
+            "href": "#work",
+            "label": "Work"
+          },
+          {
+            "href": "#about",
+            "label": "About"
+          },
+          {
+            "href": "#writing",
+            "label": "Writing"
+          }
+        ]
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16,
+            "duration": 460
+          },
+          "presetId": "fade-down",
+          "trigger": {
+            "kind": "mount"
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f003": {
+      "id": "node_f003",
+      "blockId": "hero-centered",
+      "name": "Hero — centred",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "actions": [
+          {
+            "href": "#work",
+            "label": "See selected work",
+            "variant": "primary"
+          },
+          {
+            "href": "#writing",
+            "label": "Read the notes",
+            "variant": "secondary"
+          }
+        ],
+        "align": "center",
+        "background": "transparent",
+        "eyebrow": "Interface design and front-end",
+        "eyebrowStyle": "pill",
+        "glow": true,
+        "headline": "I design the parts of a product people touch",
+        "hidden": false,
+        "maxWidth": "xl",
+        "minHeight": "three-quarters",
+        "padding": "xl",
+        "subtitle": "Twelve years of interface work for teams who care what it feels like to use the thing. Selected projects below.",
+        "trust": [
+          {
+            "label": "Available from March"
+          },
+          {
+            "label": "Remote, CET"
+          }
+        ]
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 28,
+            "duration": 600
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 80,
+            "from": "first"
+          },
+          "trigger": {
+            "kind": "mount"
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f004": {
+      "id": "node_f004",
+      "blockId": "feature-split",
+      "name": "Feature split",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "alternate": true,
+        "description": "",
+        "eyebrow": "Selected work",
+        "heading": "Three projects worth the room",
+        "headingAlign": "center",
+        "headingLevel": 2,
+        "hidden": false,
+        "rows": [
+          {
+            "body": "Six panels of live data reduced to one hierarchy. Alert volume fell by two thirds, and the desk stopped muting them.",
+            "eyebrow": "Kestrel",
+            "media": {
+              "alt": "",
+              "height": 1000,
+              "sizes": "(min-width: 1024px) 50vw, 100vw",
+              "src": "",
+              "width": 1600
+            },
+            "reversed": false,
+            "title": "A trading desk that stops shouting"
+          },
+          {
+            "body": "Rewrote the document model around blocks, then the interface around the model. Time to first draft halved.",
+            "eyebrow": "Vellum",
+            "media": {
+              "alt": "",
+              "height": 1000,
+              "sizes": "(min-width: 1024px) 50vw, 100vw",
+              "src": "",
+              "width": 1600
+            },
+            "reversed": true,
+            "title": "An editor people stopped fighting"
+          }
+        ]
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 24,
+            "duration": 520
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 70,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.25,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f005": {
+      "id": "node_f005",
+      "blockId": "section",
+      "name": "Section",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [
+        "node_f006"
+      ],
+      "props": {
+        "align": "start",
+        "background": "transparent",
+        "fullBleed": true,
+        "hidden": false,
+        "maxWidth": "lg",
+        "minHeight": "auto",
+        "overflow": "visible",
+        "padding": "lg",
+        "sticky": false
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 24,
+            "duration": 500
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 60,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.2,
+            "kind": "inView",
+            "margin": "0px 0px -10% 0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f006": {
+      "id": "node_f006",
+      "blockId": "container",
+      "name": "Container",
+      "parentId": "node_f005",
+      "slot": "children",
+      "children": [
+        "node_f007",
+        "node_f008"
+      ],
+      "props": {
+        "align": "stretch",
+        "columns": 2,
+        "direction": "column",
+        "divide": false,
+        "gap": "md",
+        "hidden": false,
+        "justify": "start",
+        "maxWidth": "full",
+        "mode": "flex",
+        "padding": "none",
+        "wrap": false
+      },
+      "responsive": {},
+      "motion": {},
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f007": {
+      "id": "node_f007",
+      "blockId": "heading",
+      "name": "Heading",
+      "parentId": "node_f006",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "anchor": "",
+        "balance": true,
+        "gradient": false,
+        "level": 2,
+        "size": "lg",
+        "text": "How I work",
+        "tracking": "tight",
+        "weight": "semibold"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f008": {
+      "id": "node_f008",
+      "blockId": "text",
+      "name": "Text",
+      "parentId": "node_f006",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "balance": false,
+        "columns": 1,
+        "dropCap": false,
+        "hidden": false,
+        "measure": "default",
+        "size": "md",
+        "text": "I start with the flow that is failing, not the screen that looks tired. Most redesigns I have been handed were a structure problem wearing a visual one, and repainting them costs a quarter and fixes nothing.",
+        "tone": "muted"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f009": {
+      "id": "node_f009",
+      "blockId": "quote",
+      "name": "Quote",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "align": "start",
+        "author": "Tomas Lind",
+        "avatar": "",
+        "hidden": false,
+        "mark": "rule",
+        "quote": "She rewrote the information architecture in a week, and the support queue told us before the analytics did.",
+        "role": "Head of product, Kestrel",
+        "size": "lg"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {},
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f010": {
+      "id": "node_f010",
+      "blockId": "timeline",
+      "name": "Timeline",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "hidden": false,
+        "items": [
+          {
+            "body": "Agency work, mostly marketing sites, mostly learning what not to do.",
+            "date": "2014",
+            "dateLabel": "2014",
+            "icon": "code",
+            "title": "Started in front-end"
+          },
+          {
+            "body": "Design systems at Vellum: tokens, components, and the argument for both.",
+            "date": "2018",
+            "dateLabel": "2018",
+            "icon": "layout-grid",
+            "title": "Moved to product"
+          },
+          {
+            "body": "Interface work for teams who have the engineers and need the shape.",
+            "date": "2022",
+            "dateLabel": "2022",
+            "icon": "zap",
+            "title": "Independent"
+          }
+        ],
+        "marker": "dot",
+        "orientation": "vertical",
+        "regionLabel": "Timeline"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 12,
+            "duration": 420
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.3,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f011": {
+      "id": "node_f011",
+      "blockId": "cta-banner",
+      "name": "CTA banner",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "actions": [
+          {
+            "href": "#contact",
+            "label": "Send an email",
+            "variant": "primary"
+          },
+          {
+            "href": "#cv",
+            "label": "See the CV",
+            "variant": "secondary"
+          }
+        ],
+        "align": "center",
+        "description": "Tell me what is not working. I answer every message within a day.",
+        "eyebrow": "",
+        "heading": "Have something that needs rethinking?",
+        "headingLevel": 2,
+        "hidden": false,
+        "surface": "gradient"
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 18,
+            "duration": 520
+          },
+          "presetId": "fade-up",
+          "stagger": {
+            "each": 70,
+            "from": "first"
+          },
+          "trigger": {
+            "amount": 0.25,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    },
+    "node_f012": {
+      "id": "node_f012",
+      "blockId": "footer",
+      "name": "Footer",
+      "parentId": "node_f001",
+      "slot": "children",
+      "children": [],
+      "props": {
+        "activeHref": "",
+        "ariaLabel": "Footer",
+        "brandHref": "/",
+        "brandLabel": "Ada Fournier",
+        "columns": [
+          {
+            "links": [
+              {
+                "href": "#kestrel",
+                "label": "Kestrel"
+              },
+              {
+                "href": "#vellum",
+                "label": "Vellum"
+              }
+            ],
+            "title": "Work"
+          },
+          {
+            "links": [
+              {
+                "href": "#github",
+                "label": "GitHub"
+              },
+              {
+                "href": "#cv",
+                "label": "Read.cv"
+              }
+            ],
+            "title": "Elsewhere"
+          }
+        ],
+        "copyright": "Ada Fournier",
+        "headingLevel": 2,
+        "hidden": false,
+        "legal": [
+          {
+            "href": "#privacy",
+            "label": "Privacy"
+          },
+          {
+            "href": "#terms",
+            "label": "Terms"
+          }
+        ],
+        "showNewsletter": false,
+        "socials": [
+          {
+            "href": "#github",
+            "icon": "code",
+            "network": "GitHub"
+          },
+          {
+            "href": "#x",
+            "icon": "external-link",
+            "network": "X"
+          },
+          {
+            "href": "#youtube",
+            "icon": "video",
+            "network": "YouTube"
+          }
+        ],
+        "tagline": "Interface design and front-end, for teams that already have engineers."
+      },
+      "responsive": {},
+      "motion": {
+        "entrance": {
+          "channel": "entrance",
+          "params": {
+            "distance": 16,
+            "duration": 480
+          },
+          "presetId": "fade-up",
+          "trigger": {
+            "amount": 0.15,
+            "kind": "inView",
+            "margin": "0px",
+            "once": true
+          }
+        }
+      },
+      "effects": [],
+      "locked": false,
+      "hidden": false
+    }
+  },
+  "assets": {}
+}
+

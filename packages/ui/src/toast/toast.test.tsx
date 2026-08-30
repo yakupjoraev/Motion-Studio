@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import type { ReactElement } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { Dialog } from '../dialog/index'
 import { expectNoViolations } from '../test/axe'
 
 import { ToastProvider, useToast } from './toast'
@@ -78,6 +79,38 @@ describe('ToastProvider', () => {
 
     await publish()
     await userEvent.click(screen.getByRole('button', { name: 'Undo' }))
+
+    expect(undo).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps its action reachable while a modal dialog is open', async () => {
+    /*
+     * ADR-289. A modal `Dialog` marks every sibling of its content `aria-hidden`, and the viewport is
+     * one — so the undo on a toast raised from inside a dialog was in the DOM and out of the
+     * accessibility tree. `getByRole` is the assertion because it is the tree that was wrong.
+     */
+    const undo = vi.fn()
+    const tree = (dialogOpen: boolean): ReactElement => (
+      <ToastProvider>
+        <Publisher options={{ title: 'Deleted Hero', action: { label: 'Undo', onClick: undo } }} />
+        <Dialog description="Everything saved here." open={dialogOpen} title="Documents">
+          <p>Rows</p>
+        </Dialog>
+      </ToastProvider>
+    )
+
+    const { rerender } = render(tree(false))
+
+    await publish()
+    rerender(tree(true))
+
+    // `getByRole` walks the accessibility tree, which is the half that was broken.
+    const action = screen.getByRole('button', { name: 'Undo' })
+
+    // Clicked directly rather than through `userEvent`: a modal dialog turns pointer events off on
+    // the body and Radix marks the toast itself `auto`, and jsdom resolves that inherited value
+    // through the portal differently from a browser. The accessibility tree is what this asserts.
+    action.click()
 
     expect(undo).toHaveBeenCalledTimes(1)
   })
