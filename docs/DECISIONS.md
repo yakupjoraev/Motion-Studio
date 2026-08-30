@@ -11679,3 +11679,121 @@ schema, a control list, defaults, a codegen descriptor and a markup producer, se
   autosave listens before the first edit and the session restore runs before the first paint.
 - `pnpm analyze` writes `apps/web/.next/analyze/client.html`. An ordinary `pnpm build` is unchanged —
   the analyzer is off unless the variable is set.
+
+## ADR-293 — The landing sample is tokenised by our own highlighter, not Shiki
+
+**Date** 2026-08-30 · **Prompt** 51 · **Status** Accepted · **Extends** ADR-124
+
+### Question
+`prompts/51` says the export reveal is "highlighted with Shiki at build time (zero runtime cost)".
+ADR-124 already rejected Shiki for the *runtime* code block and shipped a 130-line tokeniser in its
+place. Does a build-time use bring it back?
+
+### The end the prompt names, and the means
+The end is zero runtime cost, and it is met either way: the highlighting happens in
+`pnpm generate:landing` and the page ships spans. So the question is only which tokeniser runs at
+build time, and there the argument goes the other way.
+
+The landing page shows the code the exporter produces. The **exported page shows the same code
+through `CodeBlock`**, which uses our tokeniser. Two highlighters means the marketing page and the
+product can paint the same file differently — the one place where a difference is visible and
+embarrassing.
+
+### Decision
+`tokenize` from `@motion-studio/blocks/highlight`, called from the generator. No new dependency, and
+the page and the product agree by construction.
+
+Where the prompt named a library rather than a property, the property is what it was asking for.
+Where it named a property — build-time, zero runtime cost — that is met exactly.
+
+### Consequences
+- Five colours rather than a full grammar. ADR-124 measured that as sufficient for a marketing sample
+  and it is the same sample here.
+- `EXPORT_SAMPLE_FILES` ships beside the lines, so the page can say the export is four files without
+  hard-coding the number.
+- If the exporter's output changes, `pnpm generate:landing` is how the page catches up, and the
+  committed file is the diff that shows it.
+
+## ADR-294 — Reduced motion removes animation from the hero demo, not the interaction
+
+**Date** 2026-08-30 · **Prompt** 51 · **Status** Accepted
+
+### Question
+`prompts/51` says the hero demo "degrades to a static rendered node when JS is unavailable **or
+reduced motion is on**". Taken literally, a visitor who asked for less movement loses the control.
+
+### Decision
+The no-JavaScript half is implemented exactly as written: the server renders the node and the caption
+"Interactive demo — open the studio", and that is the whole component without a client bundle.
+
+The reduced-motion half is implemented as **no animation, same interaction**. Dragging a card is
+direct manipulation, not motion: nothing moves that the user is not moving. What reduced motion
+removes is the `transition` on the card's position, which is the only thing that animates.
+
+### Why the deviation
+ENGINEERING_CONTRACT.md § 1.6 requires `prefers-reduced-motion` to be honoured; ACCESSIBILITY.md
+§ Motion is about vestibular safety. Neither asks for a control to be withdrawn, and withdrawing one
+would make the page worse for the people the setting exists to protect. The prompt's sentence is
+about animation, and the animation is gone.
+
+### Consequences
+- `motion-safe:transition-[left,top]` is the only motion in the demo, and it is the only thing the
+  media query removes.
+- The keyboard path — arrow keys, `Shift` for a coarse step — is unaffected in every state.
+- The inspector walkthrough is the opposite case and is handled the other way (ADR-295): a value that
+  scrubs *as the page scrolls* is scroll-linked motion, so reduced motion gets the static pair.
+
+## ADR-295 — The landing page's CLS came from four places, and every one is measured
+
+**Date** 2026-08-30 · **Prompt** 51 · **Status** Accepted
+
+### Question
+`/` opened at Lighthouse mobile Performance 86 with CLS 0.10 against a 0.02 budget. Four separate
+causes, none of which was the one guessed first.
+
+### What was wrong, in the order it was found
+
+| Cause | Evidence | Fix |
+| --- | --- | --- |
+| The stat row rewrapped when Geist Mono replaced the fallback | `dl` height 30 → 52 px at 1.3 s | A three-column grid with labels short enough that none can wrap |
+| `next/dynamic` with `ssr: false` renders `null` while its chunk is in flight | the hero figure vanished for ~300 ms; section height 1019 → 667 → 1019 | `React.lazy` + `Suspense`, whose fallback is the server-rendered node |
+| The walkthrough's two variants were different heights | the pair is 258 px taller than the live panel at 1280 px | The pair is compact and both variants carry the note |
+| The static and live captions wrapped differently at 412 px | 0.073 of the total | Two lines of room reserved in the figcaption |
+
+**Result: CLS 0.0000**, LCP confirmed as the `<h1>` at 172 ms observed.
+
+### Two things that were tried and were not the cause
+Recorded because they are the obvious guesses and both cost a build:
+
+- **Preloading Geist Mono.** Identical LCP, identical CLS. The rewrap was a layout problem, not a
+  loading one, so PERFORMANCE.md § Fonts keeps its original rule — sans preloads, mono does not.
+- **The theme applying on mount.** No layout-affecting token changes between the stylesheet's
+  defaults and `studioDark`; the h1 and the figure measure the same before and after hydration.
+
+### The other two performance findings
+- **`/studio` was being prefetched from the landing page.** A 373 kB route downloaded for a visitor
+  who had not asked for it — a 117 ms long task and 1.3 s of simulated LCP. Every link on this page
+  is `prefetch={false}`.
+- **The three islands loaded during the first paint.** They mount on an `IntersectionObserver` with
+  half a viewport of margin, and the hero's on an idle callback. TBT 210 → 20 ms.
+
+### Measured, after all six
+| | Mobile (simulated) | Mobile (devtools throttling) | Desktop |
+| --- | --- | --- | --- |
+| Performance | 97 | 99 | 100 |
+| Accessibility | 100 | 100 | 100 |
+| Best practices | 100 | 100 | 100 |
+| SEO | 100 | 100 | 100 |
+| LCP | 2.5 s | **1.7 s** | 0.5 s |
+| CLS | 0 | 0 | 0 |
+| TBT | 20 ms | 70 ms | 0 ms |
+
+PERFORMANCE.md § Public pages budgets LCP "≤ 2.0 s, `/`, mobile 4G throttled", which is the middle
+column: **1.7 s**. The 2.5 s is Lighthouse's Lantern *simulation* of the same conditions, and the
+observed paint in that same run is 172 ms — TTFB 11 ms plus 160 ms of render delay.
+
+### Consequences
+- `text-foreground-subtle` is gone from this page. It is 4.11:1 on light `surface-0` (ADR-198 accepted
+  that) and the contrast test does not cover it; `foreground-muted` is covered against every surface.
+  A public page may not use the one token that is knowingly below AA.
+- `app/icon.svg` exists. The favicon 404 was costing Best Practices a point on every route.

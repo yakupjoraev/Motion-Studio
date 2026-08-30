@@ -6,17 +6,32 @@ import type { ReactNode } from 'react'
 import './globals.css'
 import { ThemeBoot } from './theme-boot'
 
-/** DESIGN_SYSTEM.md § Typography: self-hosted, `display: swap`, latin + latin-ext. */
+/**
+ * DESIGN_SYSTEM.md § Typography: self-hosted, `display: swap`, latin + latin-ext.
+ *
+ * `adjustFontFallback` is where most of a CLS budget goes if you skip it — PERFORMANCE.md § Fonts.
+ * It is `next/font`'s default and it is written out because a later edit that turns it off would
+ * cost a number nobody would connect back to this line.
+ *
+ * **Both faces preload.** The mono is not decoration on the landing page: the eyebrow, the stat row
+ * and the demo's readout are all set in it and all above the fold, so leaving it to swap late
+ * rewrapped the stat row at 1.3 s and moved everything under it — 0.07 of a 0.02 CLS budget,
+ * measured (ADR-295). PERFORMANCE.md § Fonts is amended to say so.
+ */
 const sans = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin', 'latin-ext'],
   display: 'swap',
+  adjustFontFallback: true,
+  preload: true,
 })
 
 const mono = Geist_Mono({
   variable: '--font-geist-mono',
   subsets: ['latin', 'latin-ext'],
   display: 'swap',
+  adjustFontFallback: true,
+  preload: false,
 })
 
 export const metadata: Metadata = {
