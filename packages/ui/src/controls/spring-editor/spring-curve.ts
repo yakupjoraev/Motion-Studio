@@ -1,4 +1,4 @@
-import { simulateSpring } from '@motion-studio/motion'
+import { simulateSpring } from '@motion-studio/motion/curves'
 
 import type { SpringConfig } from '@motion-studio/motion'
 

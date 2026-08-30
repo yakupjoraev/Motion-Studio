@@ -1,8 +1,16 @@
 import { cva } from 'class-variance-authority'
 
-import { HEIGHT_CLASS, LABEL_COLUMN_CLASS } from '../../styles/density'
+import { LABEL_COLUMN_CLASS, MIN_HEIGHT_CLASS } from '../../styles/density'
 
-export const controlRowStyles = cva(['flex items-center gap-1.5 pr-1', HEIGHT_CLASS.controlRow])
+/**
+ * A minimum height, not a fixed one. Every single-line control is 26 px inside a 28 px row and looks
+ * identical either way; a `textarea` is two lines and a list control is as many as it has items, and
+ * with a fixed height those drew straight over the row below — ADR-302.
+ */
+export const controlRowStyles = cva([
+  'flex items-center gap-1.5 py-0.5 pr-1',
+  MIN_HEIGHT_CLASS.controlRow,
+])
 
 /** The dot's gutter is reserved whether or not a dot is in it, so labels line up down the panel. */
 export const controlRowDotSlotStyles = cva('flex w-[8px] shrink-0 justify-center')

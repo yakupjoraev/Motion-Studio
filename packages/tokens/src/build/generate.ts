@@ -3,7 +3,7 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
 import { toCss } from './to-css'
-import { toTailwind } from './to-tailwind'
+import { toScopedTailwind, toTailwind } from './to-tailwind'
 
 /**
  * `pnpm generate:tokens`. Writes the one generated stylesheet: the `@theme` block that binds Tailwind's
@@ -35,7 +35,7 @@ export const OUTPUT_PATHS: readonly string[] = APPS.map((app) =>
 )
 
 export function generateThemeCss(): string {
-  return `${[HEADER, toTailwind(), toCss()].join('\n\n')}\n`
+  return `${[HEADER, toTailwind(), toScopedTailwind(), toCss()].join('\n\n')}\n`
 }
 
 export async function writeThemeCss(paths: readonly string[] = OUTPUT_PATHS): Promise<void> {

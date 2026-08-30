@@ -309,6 +309,15 @@ accepts any element, and `<ThemeScope>` applies the variables to a wrapper inste
 Because everything resolves through variables, a scoped theme just works — nested scopes
 included. This is also how the canvas can preview a theme change on the selection only.
 
+**It takes one more line than that, and the line is not optional.** Tailwind's `@theme` emits
+`--color-surface-0: var(--ms-color-surface-0)` on `:root`; CSS substitutes a custom property in the
+context of the element that declares it, and descendants inherit the *substituted* colour. A scope
+that overwrites `--ms-color-surface-0` therefore changes nothing for `class="bg-surface-0"` — which
+is what every block is built out of. So the generated stylesheet emits the alias block a second time,
+keyed on `[data-color-mode]`, the attribute `applyTheme` sets on whatever root it is given. Inside a
+scope the aliases re-substitute in the scope's own context. ADR-306 has the measurement that found
+it: a light preset whose variables were correct and whose paint was the dark root's.
+
 ## Rules
 
 1. **No component reads `ThemeConfig` to style itself.** It uses token classes. The config is

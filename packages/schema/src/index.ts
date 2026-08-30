@@ -165,6 +165,7 @@ export {
   UnknownBlockError,
   createRegistry,
 } from './registry/create-registry'
+export { describeProps, type PropRow } from './registry/describe-props'
 
 export {
   MAX_NAME_LENGTH,

@@ -8,6 +8,7 @@
     ".": "./src/index.ts",
     "./registry": "./src/registry.ts",
     "./effects": "./src/effects/components.ts",
+    "./lazy": "./src/lazy-components.ts",
     "./markup": "./src/markup-registry.ts",
     "./highlight": "./src/content/code-block/highlight.ts",
     "./styles.css": "./src/styles/blocks.css",

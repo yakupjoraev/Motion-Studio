@@ -147,7 +147,7 @@ Radix handles most of it. Requirements we still verify:
 
 Ordinary content-page rules, held strictly:
 
-- One `h1`, then a correct heading order with no skipped levels.
+- One `h1` **of the page's own**, then a correct heading order with no skipped levels.
 - Landmarks: `header`, `nav`, `main`, `footer`, each labelled when there is more than one.
 - Skip link to `#main` as the first focusable element.
 - Every image has meaningful `alt`, or `alt=""` when decorative — and the decision is explicit.
@@ -155,6 +155,19 @@ Ordinary content-page rules, held strictly:
 - Links are descriptive: never "click here", never "learn more" alone.
 - Every live demo has a non-interactive fallback description.
 - Docs code blocks are keyboard-scrollable and have a labelled copy button.
+
+**A live preview brings its own headings, and that is not a violation.** `/blocks/hero-centered`
+renders the real `hero-centered`, which contains a real `h1`, so the page has two — one describing
+the page and one belonging to the thing on it. The rule is about the page's structure and a preview
+is not part of it. What the preview owes instead:
+
+- a labelled `region`, so a screen reader announces entering and leaving the demonstration rather
+  than dropping the reader into a second document with no warning;
+- everything inside it reachable, since the point of the surface is that the component is real.
+
+The alternative is an `iframe` per preview, which does scope the outline. It is rejected in ADR-303
+with the measurement: a document per card, a theme that no longer cascades in, and a resize observer
+where a container query now does the work.
 
 ## Reduced motion
 

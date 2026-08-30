@@ -29,6 +29,14 @@ export const HEIGHT_CLASS = {
   blockCard: 'h-[88px]',
 } as const satisfies Record<DensityToken, string>
 
+/**
+ * A control row's *minimum*. The density scale gives every row 28 px and that is right for the
+ * twenty-odd controls that are one line tall; a `textarea` is two lines and a list control is as many
+ * as it has items, and a fixed height made those paint over the row beneath them — visible in the
+ * inspector and in the block gallery, which is where it was found (ADR-302).
+ */
+export const MIN_HEIGHT_CLASS = { controlRow: 'min-h-[28px]' } as const
+
 export const LABEL_COLUMN_CLASS = 'w-[88px]'
 
 /** § Control glyphs. Each size is derived from a row above rather than chosen — ADR-030. */

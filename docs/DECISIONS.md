@@ -12112,3 +12112,228 @@ them, which is what an inspector is for.
   decoration and 3:1 would be wrong for it. Here the effect is the subject of the card.
 - Not enforced in CI. The measurement wants a rasterised page, which is the visual-regression pass in
   prompt 57; this entry is the number it should be given.
+
+## ADR-302 — A control row has a minimum height, not a fixed one
+
+**Date** 2026-08-31 · **Prompt** 52 · **Status** Accepted
+
+### Question
+The gallery's props panel renders `hero-split`, whose `headline` and `subtitle` are `textarea`
+controls. Both drew straight over the rows beneath them.
+
+### Measurement
+`controlRowStyles` was `flex items-center gap-1.5 pr-1` plus `HEIGHT_CLASS.controlRow`, which is
+`h-[28px]`. A `textarea` control is `minRows: 2`, about 40 px, and a list control is as many rows as
+it has items. A fixed height does not clip an overflowing child; it lets it paint outside the box, so
+the row below is covered by content that belongs to the row above.
+
+This is not the gallery's bug. The studio's inspector renders the same descriptor through the same
+`ControlRow`, so it has drawn the same overlap for every multi-line control since prompt 23. The
+gallery is only where someone looked at one.
+
+### Decision
+`min-h-[28px]` in place of `h-[28px]`, plus `py-0.5`. Every single-line control is 26 px inside a
+28 px row and is unchanged; the tall ones now take the room they need.
+
+`DENSITY.controlRow` stays 28 — the scale in UI_GUIDELINES.md § Density is a statement about the
+rhythm of a panel, and the rhythm is unchanged. What changed is that 28 is a floor.
+
+### Consequences
+- The studio's inspector is fixed by the same edit, which is the argument for fixing the primitive
+  rather than working around it in one consumer.
+- 65 `packages/ui` tests and 64 `apps/web` tests pass unchanged; none of them asserted the height.
+- A panel with several `textarea` controls is taller than it was. That is the correct height and it
+  was always the correct height.
+
+## ADR-303 — A live preview brings its own headings, and it is not an iframe
+
+**Date** 2026-08-31 · **Prompt** 52 · **Status** Accepted
+
+### Question
+`/blocks/hero-centered` renders the real `hero-centered`, which contains a real `h1`. The page has
+its own `h1` too. ACCESSIBILITY.md § Landing, gallery, docs says "One `h1`".
+
+### The options, and what each costs
+
+| | Outline | Theme | Cost |
+| --- | --- | --- | --- |
+| Preview in an `iframe` | Scoped, correct | A separate document: `ThemeScope` no longer cascades in, so each frame needs its own theme write | A document per card, 72 of them on `/blocks`; container queries replaced by a resize observer per frame |
+| Preview inline | Two `h1`s on 6 of 72 pages | One `ThemeScope`, variables only | None |
+| Preview inline, `aria-hidden` | One `h1` | — | The component is unreachable, which is the surface's whole point |
+
+### Decision
+Inline, and the document changed to say so before this code was written. A preview is a
+demonstration, not part of the page's structure, and the rule was about structure. What the preview
+owes instead is a labelled `region`, so a reader is told they are entering a demonstration rather
+than dropped into a second document with no warning — `block-preview.tsx` renders
+`<section aria-label="Hero — centred, live preview">` and `gallery.spec.ts` asserts it.
+
+The iframe is rejected on the table above rather than on taste. It is the only option that fixes the
+outline, and it costs the two things this surface is built out of: one theme cascading into every
+preview, and a container query doing the scaling arithmetic with no JavaScript.
+
+### Consequences
+- Six of the seventy-two detail pages have two `h1`s: the hero blocks. The others have one.
+- `grab-effect.spec.ts` scopes its heading assertion to `main > header`, so the page's own heading is
+  still checked on all seventy-two.
+- A future docs surface embedding the same previews inherits this decision and the same obligation.
+
+## ADR-304 — A card nobody has scrolled to is an aspect-ratio box, not a container query
+
+**Date** 2026-08-31 · **Prompt** 52 · **Status** Accepted
+
+### Question
+`/blocks` renders 72 cards. Mobile Lighthouse opened at Performance 94 with 545 ms of Style & Layout
+and a 250 ms long task attributed to the document before any script ran.
+
+### Measurement
+
+| | Before | After |
+| --- | --- | --- |
+| Style & Layout | 545 ms | 308 ms |
+| CLS | 0.026 | 0.0007 |
+| Accessibility | 96 | 100 |
+
+Three causes, each measured separately:
+
+1. **72 container query contexts.** `PreviewFrame` scales its stage with `100cqw`, which needs
+   `container-type: inline-size` — and it was on every card at first paint, including the sixty a
+   visitor never scrolls to. An unmounted card is now a plain `aspect-ratio` box with the same
+   geometry and none of the containment work.
+2. **72 running animations.** Every placeholder was `animate-pulse`. A skeleton animates to say
+   "something is coming"; a card nobody has scrolled to is not waiting for anything.
+3. **A wrapping row of category chips** re-wrapped when Geist Mono replaced its fallback — 0.026 of a
+   0.02 budget, and the same defect ADR-295 found in the landing page's stat row. It is one line that
+   scrolls now, because a row that cannot wrap cannot re-wrap.
+
+The accessibility point is separate and was found in the same run: `opacity-60` on a count beside a
+`foreground-muted` label drops it under 4.5:1. The opacity is gone; the token was already correct.
+
+### What the first three runs of this measurement were worth
+
+Nothing, and the reason is worth recording. Lighthouse was run while a `next build` was running on
+the same machine, and TBT swung 92–326 ms across four identical runs — Performance 92 to 99 on bytes
+that did not change. **The final numbers below were taken on an idle machine**, and any performance
+number in this repository taken beside a build should be assumed to be noise.
+
+### Measured, on an idle machine, three runs each
+
+| | `/blocks` | `/blocks/aurora-background` |
+| --- | --- | --- |
+| Performance | 100, 100, 100 | 98, 99, 99 |
+| Accessibility | 100 | 100 |
+| Best practices | 100 | 100 |
+| SEO | 100 | 100 |
+| LCP | 1.4–1.5 s | 1.4–1.6 s |
+| CLS | 0.0007 | 0.0005 |
+| TBT | 0–6 ms | 0–30 ms |
+
+### Consequences
+- The catalogue's first paint is HTML and 72 boxes. Everything else waits for a scroll.
+- `card-preview.test.tsx` asserts the negative — that nothing loads before the observer fires —
+  because that is the half an eye cannot check.
+
+## ADR-305 — The gallery's detail page carries 36 kB of animation runtime it does not use
+
+**Date** 2026-08-31 · **Prompt** 52 · **Status** Accepted, and not acted on here
+
+### Question
+`/blocks/[slug]` is 190 kB of first-load JS. What is in it?
+
+### Measurement
+Every chunk the page requests, gzipped from disk, timed from navigation:
+
+```
+53.0 kB  at 18 ms  framework
+44.9 kB  at 18 ms  shared
+36.4 kB  at 18 ms  motion — framer-motion's projection, drag, animation and value modules
+12.6 kB  at 18 ms  …
+```
+
+The 36.4 kB arrives with the route's own scripts, not on demand. The chain is:
+`ControlRow`/`ControlRenderer` → `@motion-studio/ui` barrel → `controls/index.ts` →
+`segmented-field` → `Segmented` → `motion/react`.
+
+`ControlRenderer` lazy-loads `control-fields` precisely so that the control library is not in a
+consumer's first load (prompt 23). **The barrel undoes it**: `packages/ui/src/index.ts` does
+`export * from './controls/index'`, and that module eagerly re-exports every field, so importing one
+row component pulls the graph the lazy boundary exists to defer.
+
+One narrower path was found and taken because it is unambiguous: `spring-curve.ts` imported
+`simulateSpring` from the `@motion-studio/motion` barrel, which exports `FramerMotion`. It now
+imports from `@motion-studio/motion/curves`, a subpath that already existed and now points at the
+folder's barrel rather than at `easings.ts` alone. That is correct on its own terms and it did not
+move the number.
+
+### Decision
+**Record it; do not restructure `packages/ui`'s public surface in a prompt about a gallery.**
+
+The fix is to stop `controls/index.ts` re-exporting the fields eagerly, which changes what
+`@motion-studio/ui` exports and touches every consumer — most of all `/studio`, whose 250 kB budget
+is over by 115 kB and which prompt 54 owns. The gallery meets its own bar without it: 98–99 mobile
+Performance, TBT under 30 ms, because none of those 36 kB is on the critical path.
+
+Doing it here would be a change to a shared package's API, measured against a page that does not
+need the change, in a prompt whose subject is something else.
+
+### Consequences
+- Prompt 54 has a named first target with a measured size and a reproduced import chain.
+- Until then `/blocks/[slug]` ships an animation runtime it never calls.
+
+## ADR-306 — A scoped theme did not reach a single Tailwind class
+
+**Date** 2026-08-31 · **Prompt** 52 · **Status** Accepted
+
+### Question
+The detail page's theme switcher renders the preview inside a `ThemeScope`. Switching to `paper`, a
+**light** preset, left the preview dark.
+
+### Measurement
+Reading the scope element after the switch:
+
+```
+scopeMode        light          ← the scope knows
+--ms-color-surface-0    oklch(98.50% 0.0013 81.00)   ← the variable is written
+background-color        oklch(0.095 0.006 265)       ← what is painted: the dark root value
+```
+
+The engine was doing its job and nothing looked at the result. Tailwind v4's `@theme` emits
+`--color-surface-0: var(--ms-color-surface-0)` **on `:root`**. CSS substitutes a custom property in
+the context of the element that declares it, and descendants inherit the *substituted* value — so
+`class="bg-surface-0"` inside a scope keeps the root's colour however many `--ms-*` variables the
+scope overwrites.
+
+Every block in the catalogue is built out of those classes. So `ThemeScope` changed the palette for
+anything written as `var(--ms-color-…)` directly — a handful of effects — and nothing else.
+THEME_ENGINE.md § Scoped themes has claimed this works since prompt 6.
+
+### Decision
+The generator emits the alias block a second time, keyed on `[data-color-mode]` — the attribute
+`applyTheme` already sets on whatever root it is given:
+
+```css
+[data-color-mode] {
+  --color-surface-0: var(--ms-color-surface-0);
+  …
+}
+```
+
+Inside a scope the aliases re-substitute in the scope's own context. `:root` carries the attribute
+too and is matched with identical values, so this is additive rather than a second source of truth,
+and `generate.test.ts`'s existing assertions — committed bytes match a fresh run, every referenced
+`--ms-*` is declared, no value is ever inlined — cover the new block unchanged.
+
+### Measured, after
+
+```
+--ms-color-surface-0    oklch(98.50% 0.0013 81.00)
+background-color        oklch(0.985 0.0013 81)      ← the scope's own value
+```
+
+### Consequences
+- Both generated stylesheets grow by 133 lines. They are generated; the source of truth is one list
+  of mappings emitted twice.
+- Every scoped theme in the product now works, not only the gallery's. The studio's theme builder
+  previews the same way.
+- The rule is `[data-color-mode]`, so an element that carries the attribute without being a theme
+  scope would also re-resolve — to the same values it already had.

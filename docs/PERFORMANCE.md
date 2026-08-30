@@ -83,6 +83,25 @@ not in `/page`'s entry in `app-build-manifest.json`, gzipped from disk — ADR-3
 | Inspector walkthrough | 2.9 kB | — | Half a viewport before the section |
 | All three, with what they share | | **27.9 kB** | |
 
+### Gallery, measured
+
+`/blocks` renders 72 cards and `/blocks/[slug]` is 72 static pages. Three mobile runs each, real
+throttling, on an idle machine — ADR-304, which also records what the same measurement said on a
+machine that was building at the time, and why that number was worthless.
+
+| | `/blocks` | `/blocks/[slug]` |
+| --- | --- | --- |
+| Performance | 100 | 98–99 |
+| A11y / Best practices / SEO | 100 / 100 / 100 | 100 / 100 / 100 |
+| LCP | 1.4–1.5 s | 1.4–1.6 s |
+| CLS | 0.0007 | 0.0005 |
+| TBT | 0–6 ms | 0–30 ms |
+| First-load JS | 119 kB | 199 kB |
+
+The detail page's 199 kB includes 36.4 kB of `motion` that nothing on the page calls: the
+`@motion-studio/ui` barrel re-exports every control field eagerly, which defeats the lazy boundary
+inside `ControlRenderer`. ADR-305 has the import chain; it is prompt 54's first target.
+
 ### Tree-shaking discipline
 
 - Named exports only from packages. A default export of an object graph defeats shaking.

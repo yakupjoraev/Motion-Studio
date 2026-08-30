@@ -50,9 +50,29 @@ const mappings = (): Mapping[] => [
 ]
 
 export function toTailwind(): string {
-  const body = mappings()
+  return `@theme {\n${declarations()}\n}`
+}
+
+/**
+ * The same mappings again, on any element carrying a colour mode of its own — which is what
+ * `applyTheme` marks a `ThemeScope` with.
+ *
+ * Without this a scoped theme reaches `var(--ms-color-surface-0)` and nothing else. Tailwind's
+ * `@theme` puts `--color-surface-0: var(--ms-color-surface-0)` on `:root`, CSS substitutes it *there*,
+ * and every descendant inherits the already-resolved colour — so `class="bg-surface-0"` inside a
+ * scope keeps the root's value however many variables the scope overwrites. Measured on
+ * `/blocks/hero-centered`: switching to the light `paper` preset moved `--ms-color-surface-0` to
+ * `oklch(98.5% …)` and left the painted background at `oklch(9.5% …)`. ADR-306.
+ *
+ * Re-declaring the aliases inside the scope makes them substitute in the scope's context instead.
+ * `:root` carries the attribute too and is matched with identical values, which is why this is
+ * additive rather than a second source of truth.
+ */
+export function toScopedTailwind(): string {
+  return `[data-color-mode] {\n${declarations()}\n}`
+}
+
+const declarations = (): string =>
+  mappings()
     .map(([tailwind, ms]) => `  ${tailwind}: var(${ms});`)
     .join('\n')
-
-  return `@theme {\n${body}\n}`
-}
