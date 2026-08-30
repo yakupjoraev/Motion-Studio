@@ -23,7 +23,10 @@ export function InspectorWalkthrough() {
   return (
     <Section id="inspector" label="03 / inspector">
       <div className="flex flex-col gap-10 py-16 lg:py-24">
-        <SectionIntro heading="Change a value; watch the component, not a preview of one.">
+        <SectionIntro
+          heading="Change a value; watch the component, not a preview of one."
+          id="inspector-heading"
+        >
           Controls come from each block&rsquo;s Zod schema, so a prop that exists has a control and
           a prop that does not cannot be set. Scrub one and the canvas is already the answer.
         </SectionIntro>

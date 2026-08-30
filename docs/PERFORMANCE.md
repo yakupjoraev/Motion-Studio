@@ -71,11 +71,26 @@ its largest single item at 44.5 kB gzip, which is what a first-load pass should 
 | `chart-preview` | 34 kB | The block renders |
 | `@motion-studio/blocks/highlight` | 4 kB | Generated code is displayed (ADR-245) |
 
+### Landing islands, measured
+
+`prompts/51` budgets the hero demo at 40 kB. The measurement is every chunk the page requests that is
+not in `/page`'s entry in `app-build-manifest.json`, gzipped from disk — ADR-300.
+
+| Island | Own chunks | Everything it pulls | Loads when |
+| --- | --- | --- | --- |
+| Hero demo | 2.8 kB | **2.8 kB** | Idle callback, after the `<h1>` paints |
+| Effect grid | 4.3 kB | — | Half a viewport before the section |
+| Inspector walkthrough | 2.9 kB | — | Half a viewport before the section |
+| All three, with what they share | | **27.9 kB** | |
+
 ### Tree-shaking discipline
 
 - Named exports only from packages. A default export of an object graph defeats shaking.
 - `"sideEffects": false` in every package's `package.json` except those with CSS imports, which
-  list the CSS files explicitly.
+  list the CSS files explicitly. `packages/config` is the one exemption: its presets are read as
+  files rather than imported as modules, so there is no graph to shake. Without the declaration a
+  barrel that re-exports a `'use client'` module cannot be shaken at all, and one import of two pure
+  functions drags the whole package in — ADR-300 has the 46 kB it cost the landing page.
 - No barrel file that re-exports an entire subtree if a consumer only needs one entry —
   `packages/blocks` exports the registry and the lazy component map, not 62 eager imports.
 - Icons are individual components, never a single `icons.tsx` with 200 exports.

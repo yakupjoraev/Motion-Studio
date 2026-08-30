@@ -2,6 +2,8 @@ import type { ReactNode } from 'react'
 
 export interface SectionIntroProps {
   readonly heading: string
+  /** The heading's id. `Section` names its region from it, so the two cannot drift apart. */
+  readonly id: string
   readonly children: ReactNode
 }
 
@@ -12,10 +14,13 @@ export interface SectionIntroProps {
  * seven-word heading across three lines, and a page whose right half is empty for its whole length
  * reads as a draft. The heading gets a wide, short measure; the prose gets a narrow, tall one.
  */
-export function SectionIntro({ heading, children }: SectionIntroProps) {
+export function SectionIntro({ heading, id, children }: SectionIntroProps) {
   return (
     <div className="grid gap-x-12 gap-y-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-end">
-      <h2 className="max-w-[26ch] text-balance font-display text-3xl leading-[1.08] tracking-[-0.025em] sm:text-4xl">
+      <h2
+        className="max-w-[26ch] text-balance font-display text-3xl leading-[1.08] tracking-[-0.025em] sm:text-4xl"
+        id={id}
+      >
         {heading}
       </h2>
       <p className="max-w-[52ch] text-foreground-muted text-lg leading-relaxed">{children}</p>

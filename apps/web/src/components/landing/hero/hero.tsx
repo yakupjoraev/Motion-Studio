@@ -15,10 +15,24 @@ import { HeroDemoStatic } from './hero-demo-static'
 export function Hero() {
   return (
     <section className="relative overflow-hidden" id="hero">
-      {/* The aurora is a decorative wash behind text that is already painted — never the LCP. */}
+      {/*
+        The ground, in two layers, both decorative and both behind text that is already painted —
+        neither is ever the LCP. ADR-296 has the measurement that produced them.
+
+        The lattice first: the same dot grid the canvas rules its surface with, faded out at the
+        edges. It is what turns the section from an absence into a plane, and it is the page's own
+        product showing through its own marketing.
+      */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 [background:radial-gradient(52rem_30rem_at_12%_-14%,color-mix(in_oklch,var(--ms-color-accent)_38%,transparent),transparent_68%),radial-gradient(40rem_26rem_at_78%_-6%,color-mix(in_oklch,var(--ms-color-info)_26%,transparent),transparent_66%),radial-gradient(34rem_22rem_at_58%_92%,color-mix(in_oklch,var(--ms-color-accent)_14%,transparent),transparent_70%)]"
+        className="pointer-events-none absolute inset-0 [background-size:28px_28px] [background:radial-gradient(circle_at_1px_1px,color-mix(in_oklch,var(--ms-color-foreground)_11%,transparent)_1px,transparent_0)] [mask-image:radial-gradient(58rem_34rem_at_28%_38%,#000,transparent_75%)]"
+      />
+
+      {/* Then the light on it: two cores inside the section rather than clipped above it, and a low
+          wash across the floor so the bottom half is lit surface instead of void. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 [background:radial-gradient(48rem_28rem_at_10%_2%,color-mix(in_oklch,var(--ms-color-accent)_34%,transparent),transparent_70%),radial-gradient(38rem_24rem_at_80%_0%,color-mix(in_oklch,var(--ms-color-info)_24%,transparent),transparent_68%),radial-gradient(64rem_30rem_at_46%_112%,color-mix(in_oklch,var(--ms-color-accent)_20%,transparent),transparent_72%)]"
       />
 
       {/* The hairline the light falls on. One rule at the top of the section, brightest under the

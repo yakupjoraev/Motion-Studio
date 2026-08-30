@@ -18,7 +18,7 @@ export function EffectGrid() {
   return (
     <Section id="effects" label="02 / effects">
       <div className="flex flex-col gap-10 py-16 lg:py-24">
-        <SectionIntro heading="Every effect is a component with a schema.">
+        <SectionIntro heading="Every effect is a component with a schema." id="effects-heading">
           Not a snippet to paste and patch. Each one is parameterised, tunable in the inspector,
           correct under reduced motion, and exportable as source you can read.
         </SectionIntro>

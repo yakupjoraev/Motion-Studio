@@ -1,9 +1,15 @@
+import { SectionIntro } from './section-intro'
 import { Section } from './section-rail'
 
 /**
  * VISION.md § The problem, as the page's argument. Two columns and a rule between them, because the
  * claim is literally that there is a gap between two things — a three-card grid would flatten the
  * one shape the section is about.
+ *
+ * The claim opens the section and the two columns are its evidence, which is the order every other
+ * band of this page is built in. It read the other way round until the side-by-side against the
+ * reference (ADR-297): the heading alone left the right half of the first screen of the argument
+ * empty, and it was the only section on the page that did.
  */
 const SIDES = [
   {
@@ -24,9 +30,13 @@ export function Problem() {
   return (
     <Section id="problem" label="01 / gap">
       <div className="flex flex-col gap-10 py-16 lg:py-24">
-        <h2 className="max-w-[22ch] text-balance font-display text-3xl leading-tight tracking-[-0.02em] sm:text-4xl">
-          Two kinds of tools, and nothing lives between them.
-        </h2>
+        <SectionIntro
+          heading="Two kinds of tools, and nothing lives between them."
+          id="problem-heading"
+        >
+          Neither side is bad at its job. The gap is that the job stops halfway across: one hands
+          you a picture of an interface, the other hands you code you cannot try first.
+        </SectionIntro>
 
         <div className="grid gap-px overflow-hidden rounded-xl border border-border bg-border md:grid-cols-2">
           {SIDES.map((side) => (

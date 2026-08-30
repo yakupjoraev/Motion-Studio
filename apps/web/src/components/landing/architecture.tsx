@@ -47,7 +47,7 @@ export function Architecture() {
   return (
     <Section id="architecture" label="05 / shape">
       <div className="flex flex-col gap-10 py-16 lg:py-24">
-        <SectionIntro heading="Seventeen packages, one direction.">
+        <SectionIntro heading="Seventeen packages, one direction." id="architecture-heading">
           Nothing depends on the app. The editor never imports a block — it talks to the registry
           through schema types only. That rule is what makes the export testable without a browser.
         </SectionIntro>

@@ -53,6 +53,50 @@ test.describe('the landing page', () => {
     await context.close()
   })
 
+  test('has no axe violations at 320 px, and reaches the code block from the keyboard', async ({
+    browser,
+  }) => {
+    /*
+     * The suite ran at 1440 px only, and a whole class of defect lives below that width: a region
+     * that scrolls at 320 px does not scroll at 1440 px, so it is not a scrollable region there and
+     * axe has nothing to complain about. The export sample was exactly that — ADR-298.
+     */
+    const context = await browser.newContext({ viewport: { width: 320, height: 720 } })
+    const page = await context.newPage()
+
+    await open(page)
+    await page.getByRole('contentinfo').scrollIntoViewIfNeeded()
+    await page.waitForTimeout(1500)
+
+    expect((await scan(page)).violations).toEqual([])
+
+    const code = page.getByRole('region', { name: /\.tsx$/i })
+    await code.focus()
+    await expect(code).toBeFocused()
+
+    await context.close()
+  })
+
+  test('names each band of the page by its heading, not by its rail coordinate', async ({
+    page,
+  }) => {
+    await open(page)
+
+    // A reader moving by landmark hears the subject first; the coordinate is the second half.
+    for (const [id, heading] of [
+      ['problem', 'Two kinds of tools'],
+      ['effects', 'Every effect is a component'],
+      ['inspector', 'Change a value'],
+      ['export', 'The export is the component'],
+      ['architecture', 'Seventeen packages'],
+      ['stack', 'The stack, with the actual reasons'],
+    ] as const) {
+      await expect(page.locator(`#${id}`), `#${id} is named by its heading`).toHaveAccessibleName(
+        new RegExp(`^${heading}`),
+      )
+    }
+  })
+
   test('starts its keyboard path at the skip link', async ({ page }) => {
     await open(page)
     await page.keyboard.press('Tab')

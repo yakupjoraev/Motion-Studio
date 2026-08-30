@@ -11797,3 +11797,234 @@ observed paint in that same run is 172 ms — TTFB 11 ms plus 160 ms of render d
   that) and the contrast test does not cover it; `foreground-muted` is covered against every surface.
   A public page may not use the one token that is knowingly below AA.
 - `app/icon.svg` exists. The favicon 404 was costing Best Practices a point on every route.
+
+## ADR-296 — The hero's ground is a lit plane, not a black rectangle
+
+**Date** 2026-08-30 · **Prompt** 51 · **Status** Accepted
+
+### Question
+`prompts/51` asks for the landing page to be compared directly against impeccable.style and judged on
+"the hero's depth and gradient quality". Opened side by side at 1440 × 900, the reference's first
+screen has visible atmosphere and ours has none. Is that an impression or a fact, and how big is it?
+
+### Criterion (set before measuring)
+The same band on both pages — the full-width strip from y 620 to y 780, which carries no text on
+either — sampled for luminance. Ours must reach a **median of at least 8/255**, so that the majority
+of the ground carries light rather than sitting on the bare surface, and a **5th-to-95th-percentile
+spread of at least 35**.
+
+### Measurement
+
+| | p05 | p50 | p95 | spread |
+| --- | --- | --- | --- | --- |
+| Ours, before | 2.9 | **2.9** | 20.0 | **17.1** |
+| Ours, after | 2.9 | **8.4** | 22.0 | **19.1** |
+| impeccable.style | 1.6 | 5.1 | 94.5 | 92.9 |
+
+Before the change the median pixel of the hero's floor was `surface-0` exactly: half the first screen
+was not a dark surface, it was the absence of one. Two of the three radial gradients had their bright
+cores placed *above* the section — `at 12% -14%` and `at 78% -6%` — so what reached the page was only
+their outer falloff.
+
+### Decision
+Two layers behind the copy, both decorative and `aria-hidden`, neither an LCP candidate — a CSS
+gradient is not one, only `url()` is:
+
+1. The dot lattice the canvas rules its own surface with, masked to fade at the edges. It is what
+   turns the section from an absence into a plane, and it is the product showing through its own
+   marketing rather than a texture bought in.
+2. The light on it: the two cores moved inside the section, and a wide low wash across the floor.
+
+**The median target is met (8.4 ≥ 8). The spread target is not (19.1 against 35), and it is not
+close.** The reference gets its spread from a photographic marble texture. Reaching 92.9 with CSS
+gradients would mean a wash several times louder than this page's register, and reaching it with an
+image would put a large decorative download in front of a page whose argument is that it is fast. The
+number is recorded as missed rather than restated at a level the result happens to clear.
+
+### Consequences
+- LCP re-confirmed as the `<h1>`, observed at **164 ms**, single entry. CLS still 0.
+- The hero is heavier to look at on an OLED panel, which is the point, and slightly less black.
+- A pass that wants the reference's number needs a texture, and that is a performance decision
+  before it is a visual one.
+
+## ADR-297 — The problem section opens like every other band of the page
+
+**Date** 2026-08-30 · **Prompt** 51 · **Status** Accepted
+
+### Question
+`prompts/51` asks whether the page "reads as one designed system rather than eight sections".
+Section 01 was the one that did not.
+
+### Criterion (set before measuring)
+Count the bands that open with the shared two-column `SectionIntro` — heading left, argument right —
+against those that do not. A single exception is a defect in the system, not a variation of it.
+
+### Measurement
+Six of seven bands used `SectionIntro`. `problem` used a bare `h2`, and it was also the only band
+whose opening left the right half of the content column empty at 1440 px: 561 px of heading in a
+1063 px column, with nothing beside it.
+
+### Decision
+`problem` uses `SectionIntro` like the rest. The claim opens the section and the two columns of
+evidence follow it, which is the order every other band is built in — state it, then show it.
+
+### Consequences
+- One new sentence of copy for the right column. The closing line, which is the section's punchline,
+  stays where it was.
+- The section is a few lines taller. CLS unaffected: it is below the fold and server-rendered.
+
+## ADR-298 — A code sample that scrolls is a focusable region, and the suite now looks at 320 px
+
+**Date** 2026-08-30 · **Prompt** 51 · **Status** Accepted
+
+### Question
+`prompts/51` asks for the page at 320 px: no horizontal scroll, everything legible. The page passed
+that. It did not pass axe.
+
+### Measurement
+axe, WCAG 2.0/2.1 A and AA, at 320 × 720 with every island mounted:
+
+```
+1 violation
+- scrollable-region-focusable (serious): Scrollable region must have keyboard access
+    pre
+```
+
+The export sample's `pre` is `overflow-x-auto`. At 1440 px the file fits and the element does not
+scroll, so it is not a scrollable region and axe has nothing to say about it. At 320 px it scrolls
+368 px inside 278, and every character past that edge is unreachable from a keyboard.
+
+The suite ran at 1440 px only. It was not a missing assertion — it was a missing viewport, and a
+whole class of defect lives below the width the suite used.
+
+### Decision
+Already specified, so nothing here is new design: ACCESSIBILITY.md § Dialogs states the shape for the
+export dialog's code blocks — `tabindex="0"`, `role="region"` and a label — and it holds wherever a
+`pre` scrolls. The landing page's sample now matches the one in `packages/blocks`.
+
+The focus ring is drawn **inside** the box, with a negative outline offset. The figure wrapping the
+sample is `overflow-hidden` and the two-ring focus shadow of `:focus-visible` is drawn outside the
+border box: on an element that fills a clipped container that is a focus indicator nobody can see.
+
+The suite gained a 320 px pass that runs the same axe scan and then focuses the sample. Zero
+violations at both widths.
+
+### Consequences
+- One more tab stop on the page, between the export section's heading and the next link.
+- The 320 px scan costs about 2.6 s in a suite that runs in 15 s.
+
+## ADR-299 — A band of the page is named by its heading, not by its rail coordinate
+
+**Date** 2026-08-30 · **Prompt** 51 · **Status** Accepted
+
+### Question
+`prompts/51` asks what a screen reader announces for the architecture diagram. The answer was worse
+than expected, and it was not about the diagram.
+
+### Measurement
+The accessibility tree for `#architecture`:
+
+```
+region: "05 / SHAPE"
+  heading: "Seventeen packages, one direction."
+  list: 4 items, each a heading, a note, and a nested list of packages
+```
+
+The diagram itself reads correctly — it is `ol`/`ul` with headings rather than an image, so the
+structure *is* the text alternative, and a reader walks it layer by layer. But the region containing
+it is named `05 / SHAPE`. Every band had the same defect: a reader moving by landmark heard
+"01 / GAP", "02 / EFFECTS", "05 / SHAPE" — the rail coordinates, which are a visual device for
+locating yourself on the page and say nothing about what is in the section.
+
+### Decision
+`aria-labelledby` names the region from its heading first and its coordinate second:
+"Seventeen packages, one direction. 05 / shape". The heading carries the id and `SectionIntro` takes
+it as a required prop, so the name cannot drift from the heading it is taken from.
+
+The coordinate is kept rather than dropped: it is what the visible rail says, and a reader who hears
+"05 / shape" and a reader who sees `05 / shape` are then in the same place on the page.
+
+### Consequences
+- `SectionIntro` gained a required `id`. Every caller passes one; a new section cannot forget it.
+- A test asserts the accessible name of all six bands, so a heading edit that leaves the id behind
+  fails rather than degrades quietly.
+
+## ADR-300 — Seven packages were missing `sideEffects`, and the hero demo was carrying the canvas context menu
+
+**Date** 2026-08-30 · **Prompt** 51 · **Status** Accepted
+
+### Question
+`prompts/51` § The interactive hero demo: "under 40 kB of JS". The number had never been measured.
+
+### Criterion (set before measuring)
+Every chunk the page requests that is not in `/page`'s entry in `app-build-manifest.json`, gzipped
+from disk. The hero demo's share is what arrives with no scrolling at all, because it is the only
+island that mounts on an idle callback rather than on an observer. Budget: under 40 kB gzip.
+
+### Measurement, before
+
+```
+hero demo: 48.9 kB gzip across 5 chunks
+   2403  18.2 kB   Radix DismissableLayer · FocusScope · Popper · Presence · aria-hidden
+   9114   8.0 kB   Radix Collection · Direction · roving focus
+   7571   3.4 kB   Radix Menu / ContextMenu
+   2066  16.3 kB   @motion-studio/canvas, including CanvasContextMenu — "Add motion",
+                   "Bring forward", "Copy React"
+   3231   3.0 kB   the hero demo itself
+```
+
+**Over budget by 8.9 kB, and 29.6 kB of it is a right-click menu the landing page does not have.**
+`hero-demo.tsx` imports `canvasRect` and `computeSnap` — two pure functions — from the
+`@motion-studio/canvas` barrel, and the whole graph behind the barrel came with them.
+
+### The cause was a rule already written down and not applied
+
+PERFORMANCE.md § Tree-shaking discipline: *"`sideEffects: false` in every package's `package.json`
+except those with CSS imports, which list the CSS files explicitly."* Seven packages did not have it
+— `canvas`, `codegen`, `dnd`, `editor`, `schema`, `tokens`, `utils`. Without the declaration webpack
+must assume that evaluating any module in the package can matter, so a barrel that re-exports a
+`'use client'` module is not shakeable and the import of two functions pulls the file that defines
+`CanvasContextMenu`.
+
+So this is § 9.1, not a new design: apply what the document says, then measure.
+
+### The alternative that was measured and rejected
+
+`experimental.optimizePackageImports` on the five large barrels — Next rewrites a named import from
+a barrel into an import of the declaring module at build time. It was tried first, before the cause
+was found, and it works. It is not kept, because it is strictly worse than the rule that was already
+written and adds nothing on top of it:
+
+| | Before | `optimizePackageImports` | `sideEffects: false` | Both |
+| --- | --- | --- | --- | --- |
+| Hero demo, everything it pulls | 48.9 kB | 8.6 kB | **2.8 kB** | 2.8 kB |
+| All three islands together | 73.9 kB | 33.5 kB | **27.9 kB** | 27.9 kB |
+| `/studio` first-load JS | 373 kB | 372 kB | **365 kB** | 365 kB |
+| `/playground` first-load JS | 185 kB | 184 kB | **181 kB** | 181 kB |
+
+The combination measures identically to the declaration alone, so the experimental flag earns
+nothing and `next.config.ts` keeps only the analyzer.
+
+### Measured, after
+
+| Island | Own chunks | Everything it pulls |
+| --- | --- | --- |
+| Hero demo | 2.8 kB gzip | **2.8 kB gzip** — budget 40 kB |
+| Effect grid | 4.3 kB gzip | — |
+| Inspector walkthrough | 2.9 kB gzip | — |
+| All three, plus what they share | | **27.9 kB gzip** |
+
+`/` first-load JS is 108 kB either way: none of those 46 kB was ever on the critical path. It was
+46 kB downloaded a second after the paint for no reason. Lighthouse is unchanged, which is the
+expected result and the reason the defect survived four Lighthouse passes.
+
+### Consequences
+- `/studio` is 8 kB lighter and `/playground` 4 kB, from a change made for the landing page. The
+  studio's 250 kB budget is still 115 kB away — ADR-292 has the attribution, and prompt 54 the pass.
+- `packages/config` is the one package still without the declaration. It ships tsconfig, biome and
+  vitest presets that are read as files rather than imported as modules, so there is no graph for
+  the bundler to shake and the field would assert something about nothing.
+- The declaration is a promise: a module in one of these seven packages that does work at import
+  time will now be dropped silently. None does — they export functions, components and constants —
+  and a package that needs to break the promise has to list its exceptions like `blocks` and `ui`
+  already do.

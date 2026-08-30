@@ -70,7 +70,7 @@ export function Stack() {
   return (
     <Section id="stack" label="06 / stack">
       <div className="flex flex-col gap-10 py-16 lg:py-24">
-        <SectionIntro heading="The stack, with the actual reasons.">
+        <SectionIntro heading="The stack, with the actual reasons." id="stack-heading">
           Every one of these is written down at length in <code className="font-mono">docs/</code>,
           with the alternatives that were rejected and why.
         </SectionIntro>

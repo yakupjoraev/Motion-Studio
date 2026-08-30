@@ -14,11 +14,14 @@ export interface SectionProps {
  * with rulers down two edges of its canvas, and the landing page is laid out on one. The label is
  * the section's coordinate. Below `lg` the rail has nowhere to go, so it becomes the same label above
  * the section — the information survives, the device does not pretend to.
+ *
+ * The region is named by its heading first and its coordinate second, so a reader moving by landmark
+ * hears "Seventeen packages, one direction. 05 / shape" rather than "05 / shape" — ADR-299.
  */
 export function Section({ label, id, children }: SectionProps) {
   return (
     <section
-      aria-labelledby={`${id}-label`}
+      aria-labelledby={`${id}-heading ${id}-label`}
       className="relative scroll-mt-14 border-border-subtle border-t"
       id={id}
     >
