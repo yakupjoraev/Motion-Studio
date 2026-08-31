@@ -1,3 +1,9 @@
+---
+group: Design
+order: 3
+summary: Runtime theming, palette generation, CSS-variable strategy
+---
+
 # THEME_ENGINE
 
 The theme engine turns a small config object into a full set of CSS custom properties, applied

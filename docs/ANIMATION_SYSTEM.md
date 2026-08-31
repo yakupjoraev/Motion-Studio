@@ -1,3 +1,9 @@
+---
+group: Design
+order: 4
+summary: Easings, springs, channels, preset catalogue, reduced motion
+---
+
 # ANIMATION_SYSTEM
 
 Animation is the product. It is therefore **data**, not code sprinkled through components.

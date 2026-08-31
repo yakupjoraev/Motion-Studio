@@ -1,3 +1,9 @@
+---
+group: Engineering foundations
+order: 5
+summary: Types, naming, file layout, patterns, banned patterns
+---
+
 # CODE_STANDARDS
 
 The rules that make a large codebase readable by one person a month later.

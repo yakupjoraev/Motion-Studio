@@ -1,3 +1,9 @@
+---
+group: Quality
+order: 4
+summary: CI pipeline, Docker, releases, deploy, quality gates
+---
+
 # DEVOPS
 
 ## Repository
@@ -117,7 +123,8 @@ Branch protection: no direct pushes, no force-push, linear history, up-to-date b
 
 ### Custom gates
 
-Two scripts that exist because the rules in `docs/ARCHITECTURE.md` are otherwise unenforceable:
+Three scripts that exist because the rules in `docs/ARCHITECTURE.md` and `docs/README.md` are
+otherwise unenforceable:
 
 **`pnpm check:deps`**
 - Builds the workspace dependency graph and asserts it is acyclic, reporting the cycle path.
@@ -141,6 +148,16 @@ package outside the gate.
 - Every definition has a thumbnail at the expected path and size.
 - Every `defaultMotion` preset id exists.
 - Every template in `public/templates/` parses against the current schema.
+
+**`pnpm check:docs-index`**
+- Regenerates `docs/README.md`'s index tables from every document's frontmatter and fails when the
+  committed file differs, naming `pnpm generate:docs-index` as the fix.
+- Fails when a document has no frontmatter block, because such a document is absent from both the
+  index and the documentation site's nav and nothing else would say so.
+- Fails when a document claims a group the index does not have.
+
+The nav on `/docs` reads the same frontmatter, so the index and the nav cannot drift from each other
+— prompt 53 decided the source, and this is what holds it.
 
 Small scripts — one file, no framework — that prevent the specific ways a monorepo rots.
 

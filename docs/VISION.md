@@ -1,3 +1,9 @@
+---
+group: Product
+order: 1
+summary: Why the product exists, who it is for, what it refuses to be
+---
+
 # VISION
 
 ## The one-sentence version

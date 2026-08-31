@@ -1,3 +1,9 @@
+---
+group: Subsystems
+order: 2
+summary: Viewport maths, zoom, pan, snapping, guides, rulers, hit testing
+---
+
 # CANVAS
 
 `packages/canvas` owns geometry. It knows about viewports, coordinates, snapping, hit testing,

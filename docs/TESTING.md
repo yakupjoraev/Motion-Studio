@@ -1,3 +1,9 @@
+---
+group: Quality
+order: 3
+summary: What to test, where, with what, and the coverage contract
+---
+
 # TESTING
 
 ## Strategy

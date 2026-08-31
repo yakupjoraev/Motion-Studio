@@ -1,3 +1,9 @@
+---
+group: Subsystems
+order: 5
+summary: Breakpoints, prop overrides, resolution, preview device frames
+---
+
 # RESPONSIVE_ENGINE
 
 Responsive design in a visual editor has one hard requirement: **the user edits at one

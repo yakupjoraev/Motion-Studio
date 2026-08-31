@@ -1,3 +1,9 @@
+---
+group: Design
+order: 1
+summary: Tokens: colour, type, space, radius, elevation, blur, glass, noise
+---
+
 # DESIGN_SYSTEM
 
 Tokens are the source of truth. `packages/tokens` exports typed objects; a build step emits a

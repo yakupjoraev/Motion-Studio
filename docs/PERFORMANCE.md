@@ -1,3 +1,9 @@
+---
+group: Quality
+order: 1
+summary: Budgets, measurement, render strategy, virtualization, bundle policy
+---
+
 # PERFORMANCE
 
 Performance is a feature of this product specifically. It is a tool about motion — a dropped

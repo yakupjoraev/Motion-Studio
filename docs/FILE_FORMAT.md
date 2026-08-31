@@ -1,3 +1,9 @@
+---
+group: Subsystems
+order: 7
+summary: `.motion` schema, versioning, migrations, import/export safety
+---
+
 # FILE_FORMAT
 
 The `.motion` file is the document. It is plain JSON, validated by Zod, versioned, and

@@ -1,3 +1,9 @@
+---
+group: Quality
+order: 2
+summary: Per-surface requirements, focus model, ARIA contracts, testing
+---
+
 # ACCESSIBILITY
 
 Target: **WCAG 2.2 AA**, verified. Not "we care about a11y" — a list of requirements per surface,

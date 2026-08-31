@@ -1,3 +1,9 @@
+---
+group: Engineering foundations
+order: 2
+summary: Every decision not answered by another document, with the evidence that produced it
+---
+
 # DECISIONS
 
 Every decision not already answered by another document lives here, with the evidence that produced
@@ -12337,3 +12343,226 @@ background-color        oklch(0.985 0.0013 81)      ← the scope's own value
   previews the same way.
 - The rule is `[data-color-mode]`, so an element that carries the attribute without being a theme
   scope would also re-resolve — to the same values it already had.
+
+## ADR-307 — Documentation markdown is compiled by `marked`'s lexer, not MDX
+
+**Date** 2026-08-31 · **Prompt** 53 · **Status** Accepted
+
+### Question
+`/docs/[...slug]` renders 29 existing `.md` files. Prompt 53 names `docs-content.tsx` as "MDX
+components", which implies compiling the documents as MDX. Three candidates: MDX, an external
+markdown parser, or a hand-written one.
+
+### Criterion (set before measuring)
+The prompt states the criterion itself, for the nav source, and it applies unchanged here:
+*robustness against ordinary edits* — "a build failure caused by editing prose is not acceptable".
+Two further checks, from TECH_STACK.md § Adding a dependency: what the candidate does that we cannot
+do in ~50 lines, and what it costs in the bundle it lands in.
+
+### Measurement
+MDX makes `<` and `{` syntax in prose. A specification document is prose about code, so
+`{ id: string }` or `<button>` written outside a fence is an ordinary edit that becomes a build
+failure. A census of today's corpus found **0 prose lines** carrying either character outside a
+fence, so MDX is not blocked today; the exposure is prospective and it is exactly the class the
+prompt refuses.
+
+A hand-written parser was measured against the corpus instead of guessed at. The documents use 11
+block constructs and 5 inline ones: paragraph, heading, fenced code (216 fences), GFM table (179),
+list and nested list (614 lists, 2053 items, 49 task checkboxes), `hr`, blockquote, and inline text,
+code span (8562), strong, em, link. Tables carry code spans containing `|`, which is the case a
+line-splitting table parser gets wrong. That is not a ~50-line job, and its failure mode is a
+mis-rendered specification page.
+
+`marked` 18: one package, GFM by default, ships its own types, and exposes a token tree
+(`Lexer.lex`) rather than an HTML string — so the renderer stays ours and no HTML is injected.
+
+### Decision
+`marked`'s lexer, with our own React renderer over its tokens. No `dangerouslySetInnerHTML`, no MDX
+compiler, no bundler plugin.
+
+The route is fully static, so the parser runs during `next build` and never in a browser.
+
+### Consequences
+- Accepted: one dependency, 480 kB unpacked, in `apps/web`'s `dependencies` because `next build`
+  resolves it. It contributes 0 bytes to any client chunk.
+- Accepted: a construct nobody uses today (raw HTML in a document, images, footnotes) renders as
+  nothing until the renderer handles it. The renderer's test asserts the token types the corpus
+  actually contains, so a new one arriving is a test failure and not a silent blank.
+- The renderer owns anchors, `scope` on table headers, callouts and code blocks, which an HTML
+  string from a parser could not carry.
+
+## ADR-308 — Documentation code fences use the existing tokeniser, not `shiki`
+
+**Date** 2026-08-31 · **Prompt** 53 · **Status** Accepted
+
+### Question
+Prompt 53 § Code blocks asks for "Shiki at build time, our theme". ADR-124 already removed `shiki`
+from this repository in favour of a 168-line tokeniser, and ADR-245 reused that tokeniser for the
+export dialog rather than adding a second highlighter. Does the docs site add `shiki` back?
+
+### Criterion (set before measuring)
+Three checks, all answerable with numbers:
+1. Coverage — what fraction of the corpus's fences the tokeniser's language list can highlight.
+2. Colour-mode correctness — how each candidate resolves colours through `--ms-color-*`, since the
+   prompt requires both modes to be right.
+3. Bytes shipped to a reader.
+
+### Measurement
+Fence census over `docs/*.md`, 432 fences:
+
+| Language | Fences | Tokeniser |
+| --- | --- | --- |
+| *(none)* | 273 | plain text — ASCII diagrams and trees, nothing to highlight |
+| `ts` | 112 | yes |
+| `tsx` | 14 | yes |
+| `yaml` | 6 | via the `bash` rules — `#` comments and quoted strings, no keywords |
+| `js` | 6 | yes |
+| `css` | 5 | yes |
+| `html` | 4 | yes |
+| `bash` | 4 | yes |
+| `jsonc` | 3 | via `json` |
+| `markdown` | 2 | plain text |
+| `svg` | 1 | via `html` |
+| `dockerfile` | 1 | via `bash` |
+
+Coverage after a 5-line alias map: 432 of 432. The degradation is confined to 13 fences (3.0 %),
+where a language's own keywords are not painted; comments, strings and numbers still are.
+
+Colour mode: the tokeniser emits five token kinds which map to five token-backed classes, so both
+modes are the theme's own variables and correctness is inherited. `shiki` emits computed colours and
+needs its dual-theme CSS-variable output plus a rule per mode — the same post-processing the prompt
+rejects Mermaid for.
+
+Bytes to a reader: both are zero, because highlighting happens at build time either way. The
+tokeniser is pure TypeScript, so build-time use costs no dependency at all.
+
+### Decision
+Reuse `tokenize` from `@motion-studio/blocks/highlight` at build time, with an alias map from the
+corpus's languages to the tokeniser's. `shiki` is not added.
+
+Line highlighting reuses `parseHighlightLines` from the same module, driven by the fence's info
+string.
+
+Prompt 53's instruction is not followed, and this entry is the record of why: the repository already
+answered the question twice, the second time explicitly to prevent two highlighters in one product.
+Code in the gallery and code in the docs are now painted by one implementation.
+
+### Consequences
+- Accepted: 13 fences show no keyword colour. `yaml` keys are still legible; they are not code.
+- Accepted: `packages/blocks` is now imported by a build-time module in `apps/web`. It is the
+  `./highlight` subpath, which exists for exactly this — ADR-245 — and it carries no React.
+- No dependency, no WASM in the build, and no second theme to keep in step with the tokens.
+
+## ADR-309 — The docs nav is rendered by the pages, not by the layout
+
+**Date** 2026-08-31 · **Prompt** 53 · **Status** Accepted
+
+### Question
+Prompt 53 lists `app/docs/layout.tsx` as "sidebar + content + toc". The sidebar has to mark the
+current page with `aria-current="page"`. A Next layout at `app/docs/` cannot see the `[...slug]`
+params, so where does the current page come from?
+
+### Criterion (set before measuring)
+ACCESSIBILITY.md § Landing, gallery, docs requires the landmark and its state to be correct with no
+JavaScript — the same rule that made the gallery's cards server-rendered. So: the option that keeps
+`aria-current` in the static HTML wins; ties break on bytes.
+
+### Measurement
+`usePathname()` in a client sidebar puts 29 links plus their group wrappers into a hydrated tree and
+makes `aria-current` a client-side effect: with JavaScript blocked — `page.route` abort, the method
+ACCESSIBILITY.md § Testing already uses — the nav renders but no item is current.
+
+Rendering the sidebar from each page's own slug keeps the attribute in the HTML the reader receives
+and adds no client component.
+
+### Decision
+`app/docs/layout.tsx` owns the chrome that does not depend on the slug — skip link, header, search
+trigger, the two-column grid. `DocsSidebar` is rendered by `app/docs/page.tsx` and
+`app/docs/[...slug]/page.tsx`, which know their own slug. Collapsible groups are `<details>`
+elements, so the disclosure needs no script either.
+
+### Consequences
+- Accepted: the deliverable list's file roles are not followed literally; the sidebar is a component
+  the pages render rather than the layout.
+- Accepted: the sidebar's markup is repeated in both pages' HTML. It is 29 links, and it is the
+  price of a nav that is correct without JavaScript.
+- The only client components under `/docs` are the table of contents' scroll-spy, the code blocks'
+  copy button, and the search dialog.
+
+## ADR-310 — Docs search reuses the palette's combobox, not the palette
+
+**Date** 2026-08-31 · **Prompt** 53 · **Status** Accepted
+
+### Question
+Prompt 53 § Search asks for `⌘K` "reusing the palette component with a docs source". The studio's
+`CommandPalette` takes its items from `usePaletteItems(context)`, its open state from
+`useStudioStore`, its recency from `useRecentItems`, and virtualizes its rows. What exactly is
+reused?
+
+### Criterion (set before measuring)
+Reuse is worth doing where the shared code has one behaviour and one test. Two numbers decide the
+boundary: how many studio-only dependencies would have to become injectable, and what the shared
+part costs the docs route in bytes.
+
+### Measurement
+Making `CommandPalette` itself the shared component means injecting four things — the store's
+open-state setter, `StudioShortcutContext`, the item source, and the recency store — and shipping
+`@tanstack/react-virtual` to a docs route whose result list is bounded by the search index's 29
+documents and their headings.
+
+The part that is genuinely one behaviour is smaller, and it is the part that is easy to get wrong: a
+combobox that keeps focus in its input, points at the active option with `aria-activedescendant`,
+moves with the arrow keys, swallows `Tab` because it is modal, and commits on `Enter`.
+
+### Decision
+That behaviour moves to `apps/web/src/components/palette/palette-combobox.tsx`, which renders its
+rows through a child function. The studio's palette keeps its virtualizer, its recency ordering and
+its option row; the docs search passes its own rows. `fuzzyScore` is imported by both, unchanged.
+
+### Consequences
+- Accepted: the studio's palette is refactored by a prompt that is not about the studio.
+  `command-palette.test.tsx` is the check, and it is unchanged.
+- The keyboard contract is tested once and both surfaces get it.
+- Docs search ships no virtualizer.
+
+## ADR-311 — What the cross-reference gate checks, and what it cannot
+
+**Date** 2026-08-31 · **Prompt** 53 · **Status** Accepted
+
+### Question
+Prompt 53 calls the link test "the important one": every internal doc link must resolve. The corpus
+also carries 538 `§` section references in prose — `EDITOR_ENGINE.md § Coalescing`. Are those in the
+gate, and matched how?
+
+### Criterion (set before measuring)
+A gate is worth having if it is green today and a genuine defect turns it red. A gate that can only
+be made green by editing a file whose own rules forbid editing is not a gate.
+
+### Measurement
+- Markdown links in `docs/`: **82**, of which 82 point at documents and 0 carry an `#anchor`. Nine
+  further links are external `https://`.
+- `§` references naming a document: **401**. All 401 name a file that exists, once a reference's
+  explicit path is honoured (`prompts/00-GLOBAL_RULES.md`) and a bare name is resolved against
+  `docs/` and then the repository root (`CONTRIBUTING.md`).
+- Section names, matched by normalising case and whitespace and accepting a numbered heading by its
+  number: **22 mismatches, all 22 inside `DECISIONS.md`**, 0 in the other 28 documents. They are
+  references that abbreviate a heading — `§ Auto-behaviours` for "Auto-behaviours during drag".
+
+`DECISIONS.md` § Rules 2 makes that file append-only: "Never edit history". So the 22 cannot be
+fixed, and a gate that fails on them can never go green.
+
+### Decision
+`links.test.ts` gates three things and reports the counts:
+1. every markdown link resolves to a file that exists, and its `#anchor` to a heading that exists;
+2. every `§` reference names a document that exists;
+3. every `§` section name resolves to a heading of the target — for the 28 documents that are not
+   `DECISIONS.md`.
+
+### Consequences
+- Accepted: `DECISIONS.md`'s 22 abbreviated section names are not checked, and a 23rd would not be
+  caught. The exclusion is one named file, asserted in the test, not a threshold.
+- 483 cross-references are checked on every run, and adding a document that another document
+  references by a section it does not have fails the build.
+- Accepted: a `§` reference with no document name — 137 of them, referring to the current document —
+  is not checked. Deciding whether `§ 9` in prose means this document or the contract it just named
+  needs a parser for English, not for markdown.

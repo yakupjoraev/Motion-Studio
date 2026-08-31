@@ -1,3 +1,9 @@
+---
+group: Design
+order: 2
+summary: Studio layout, chrome, density, interaction feel, copy tone
+---
+
 # UI_GUIDELINES
 
 How the studio itself looks and feels. [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) owns the tokens;

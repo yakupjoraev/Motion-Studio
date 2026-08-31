@@ -1,3 +1,9 @@
+---
+group: Subsystems
+order: 6
+summary: IR, printers, formatting, dependency collection, export targets
+---
+
 # EXPORT_ENGINE
 
 Export is where the project either earns credibility or loses it. Generated code is read by

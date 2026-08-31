@@ -1,3 +1,9 @@
+---
+group: Engineering foundations
+order: 4
+summary: Every dependency, its version, and the reason it was chosen
+---
+
 # TECH_STACK
 
 Every dependency, why it is here, and what it is not allowed to do. A dependency without a
@@ -162,6 +168,24 @@ gzipped, no dependencies of its own, and the part worth not owning is flattening
 array into RHF's dotted field names — ADR-212 has the measurement. `contact-form` and `waitlist-form`
 are the only two blocks that take it, and both carry it plus `react-hook-form` and `zod` in their
 codegen descriptors, so the emitted project installs what the emitted component imports.
+
+## Documentation
+
+### marked 18
+The lexer behind `/docs/[...slug]`. It runs during `next build` and contributes zero bytes to any
+client chunk: the route is static, so the token tree is turned into React on the server and only HTML
+reaches a reader.
+
+We take `Lexer.lex` and not `marked.parse` — a token tree rather than an HTML string, so the renderer
+stays ours and headings can carry anchors, tables can carry `scope`, and no markup is ever injected.
+ADR-307 records the alternatives: MDX is rejected because it makes `<` and `{` syntax in prose, and a
+hand-written parser is rejected against a corpus of 179 GFM tables whose cells contain `|` inside code
+spans.
+
+Code fences are **not** highlighted by `shiki`. ADR-124 removed it from this repository and ADR-308
+keeps it out: the 168-line tokeniser in `@motion-studio/blocks/highlight` covers all 432 fences in
+`docs/` through a five-line alias map, paints through the theme's own token classes in both colour
+modes, and adds no dependency.
 
 ## Tooling
 

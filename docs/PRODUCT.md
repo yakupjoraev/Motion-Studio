@@ -1,3 +1,9 @@
+---
+group: Product
+order: 2
+summary: Feature specification, surfaces, user flows, acceptance criteria
+---
+
 # PRODUCT
 
 Feature specification. Each surface lists what it contains, how it behaves, and how we know it
@@ -14,7 +20,9 @@ links out for the *mechanism*.
 | `/playground` | Live CSS property sandboxes | Client, code editor lazy-loaded |
 | `/blocks` | Browsable registry with live previews | Server + client islands |
 | `/blocks/[slug]` | Single block: live preview, controls, source, a11y notes | Server + client islands |
+| `/docs` | Documentation index, from `docs/README.md` | Static |
 | `/docs/[...slug]` | Rendered documentation | Static |
+| `/docs-search-index.json` | The docs search index, fetched on the first `⌘K` | Static, built |
 
 ## 1. Studio shell
 

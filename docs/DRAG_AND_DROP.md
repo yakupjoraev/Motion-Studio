@@ -1,3 +1,9 @@
+---
+group: Subsystems
+order: 3
+summary: Drag sources, drop targets, insertion semantics, keyboard DnD
+---
+
 # DRAG_AND_DROP
 
 `packages/dnd` wraps dnd-kit into the four drag operations the studio needs. It is a thin,

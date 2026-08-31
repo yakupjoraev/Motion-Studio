@@ -1,3 +1,9 @@
+---
+group: Engineering foundations
+order: 6
+summary: Store shape, slices, selectors, commands, transient state
+---
+
 # STATE_MANAGEMENT
 
 ## Principles

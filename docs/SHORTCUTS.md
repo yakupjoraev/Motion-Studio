@@ -1,3 +1,9 @@
+---
+group: Subsystems
+order: 9
+summary: Keyboard map, chords, command palette, conflict rules
+---
+
 # SHORTCUTS
 
 The studio is keyboard-first. A power user should never need the mouse except on the canvas, and

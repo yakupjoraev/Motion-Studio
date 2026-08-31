@@ -1,3 +1,9 @@
+---
+group: Engineering foundations
+order: 3
+summary: Monorepo topology, package boundaries, dependency rules, data flow
+---
+
 # ARCHITECTURE
 
 ## Shape of the thing

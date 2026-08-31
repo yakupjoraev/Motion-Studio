@@ -1,3 +1,9 @@
+---
+group: Subsystems
+order: 1
+summary: Document model, commands, history, selection, clipboard
+---
+
 # EDITOR_ENGINE
 
 `packages/editor` is the brain: the document model, the command system, history, selection

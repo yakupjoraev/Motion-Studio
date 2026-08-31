@@ -1,3 +1,9 @@
+---
+group: Product
+order: 4
+summary: Exact meaning of every domain term used in code and docs
+---
+
 # GLOSSARY
 
 Terms with exact meanings in this codebase. When a word appears here, it means this and nothing

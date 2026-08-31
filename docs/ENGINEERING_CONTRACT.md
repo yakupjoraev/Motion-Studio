@@ -1,3 +1,9 @@
+---
+group: Engineering foundations
+order: 1
+summary: "**Start here.** The rules every change obeys. Overrides every other document"
+---
+
 # Motion Studio — Engineering Contract
 
 > This file is the **contract**: the rules every change in this repository obeys. Everything else

@@ -1,3 +1,9 @@
+---
+group: Subsystems
+order: 4
+summary: Registry contract, block anatomy, full block catalogue
+---
+
 # COMPONENT_LIBRARY
 
 `packages/blocks` is the registry: the things a user can place. A block is a **pure

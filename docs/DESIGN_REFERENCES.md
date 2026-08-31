@@ -1,3 +1,9 @@
+---
+group: Design
+order: 5
+summary: Which references set the visual bar, how to use them, licence rules
+---
+
 # DESIGN_REFERENCES
 
 Motion Studio's visual bar is set by looking at the best work in the field. This document says

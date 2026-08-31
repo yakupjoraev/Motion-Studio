@@ -1,3 +1,9 @@
+---
+group: Subsystems
+order: 8
+summary: Live CSS editor, property sandboxes, parsing and safety
+---
+
 # PLAYGROUND
 
 `/playground` is a live CSS laboratory: write a value, see it applied, send it to the canvas.
