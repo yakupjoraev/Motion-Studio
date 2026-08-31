@@ -5,6 +5,7 @@ import { useVirtualizer } from '@tanstack/react-virtual'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { useStudioStore } from '../../../store/editor-store'
+import { PaletteCombobox } from '../../palette/palette-combobox'
 import type { StudioShortcutContext } from '../shortcuts/shortcut.types'
 
 import { fuzzyScore } from './fuzzy-match'
@@ -16,9 +17,9 @@ const ROW_HEIGHT = 32
 const LIST_HEIGHT = 320
 
 /**
- * `⌘K`. A combobox over one virtualized listbox — SHORTCUTS.md § Command palette, including the two
- * rules that are easy to miss: recent items come first whatever the score, and `Tab` does nothing, so
- * focus cannot leave a modal that owns the keyboard.
+ * `⌘K`. SHORTCUTS.md § Command palette, including the two rules that are easy to miss: recent items
+ * come first whatever the score, and `Tab` does nothing, so focus cannot leave a modal that owns the
+ * keyboard. The combobox itself is shared with the docs site — ADR-310.
  */
 export function CommandPalette({ context }: { readonly context: StudioShortcutContext }) {
   const setOpen = useStudioStore((state) => state.setCommandPaletteOpen)
@@ -67,42 +68,14 @@ export function CommandPalette({ context }: { readonly context: StudioShortcutCo
     virtualizer.scrollToIndex(active)
   }, [active, virtualizer])
 
-  const pick = (item: PaletteItem): void => {
-    if (!item.available) {
+  const pick = (item: PaletteItem | undefined): void => {
+    if (item === undefined || !item.available) {
       return
     }
 
     remember(item.id)
     setOpen(false)
     item.run()
-  }
-
-  const onKeyDown = (event: React.KeyboardEvent): void => {
-    if (event.key === 'Tab') {
-      // The palette is modal: leaving it with Tab would put focus on the document behind it.
-      event.preventDefault()
-
-      return
-    }
-
-    if (event.key === 'ArrowDown') {
-      event.preventDefault()
-      setActive((current) => Math.min(current + 1, matches.length - 1))
-    }
-
-    if (event.key === 'ArrowUp') {
-      event.preventDefault()
-      setActive((current) => Math.max(current - 1, 0))
-    }
-
-    if (event.key === 'Enter') {
-      event.preventDefault()
-      const item = matches[active]
-
-      if (item !== undefined) {
-        pick(item)
-      }
-    }
   }
 
   const activeItem = matches[active]
@@ -115,70 +88,47 @@ export function CommandPalette({ context }: { readonly context: StudioShortcutCo
       size="lg"
       title="Command palette"
     >
-      <div className="flex flex-col gap-2" data-shortcut-scope="dialog">
-        <input
-          aria-activedescendant={
-            activeItem === undefined ? undefined : `palette-option-${activeItem.id}`
-          }
-          aria-autocomplete="list"
-          aria-controls="palette-listbox"
-          aria-expanded
-          aria-label="Search commands"
-          autoComplete="off"
-          /*
-           * The field takes focus on open, not the dialog. Measured in the browser: without it the
-           * palette opened with focus on the dialog container, so the first keystroke went nowhere
-           * and Enter ran nothing — a palette you have to click into is not a palette.
-           */
-          // biome-ignore lint/a11y/noAutofocus: a modal search field is the case the rule exempts — the palette exists to be typed into
-          autoFocus
-          className="h-9 w-full rounded-sm border border-border bg-surface-1 px-3 text-foreground text-sm outline-none focus-visible:border-accent"
-          data-testid="palette-input"
-          onChange={(event) => setQuery(event.target.value)}
-          onKeyDown={onKeyDown}
-          placeholder="Type a command…"
-          role="combobox"
-          value={query}
-        />
+      <PaletteCombobox
+        active={active}
+        activeOptionId={activeItem === undefined ? undefined : `palette-option-${activeItem.id}`}
+        count={matches.length}
+        empty={
+          <p className="p-4 text-center text-foreground-subtle text-xs">
+            Nothing matches “{query}”.
+          </p>
+        }
+        inputLabel="Search commands"
+        inputTestId="palette-input"
+        listHeight={LIST_HEIGHT}
+        listId="palette-listbox"
+        listLabel="Commands"
+        listRef={listRef}
+        listTestId="palette-listbox"
+        onPick={(index) => pick(matches[index])}
+        placeholder="Type a command…"
+        query={query}
+        setActive={setActive}
+        setQuery={setQuery}
+      >
+        <div style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
+          {virtualizer.getVirtualItems().map((row) => {
+            const item = matches[row.index]
 
-        {/* biome-ignore lint/a11y/useFocusableInteractive: the combobox keeps focus and points at the
-            active option with aria-activedescendant, which is the pattern ACCESSIBILITY.md names */}
-        <div
-          aria-label="Commands"
-          className="relative overflow-y-auto"
-          data-testid="palette-listbox"
-          id="palette-listbox"
-          ref={listRef}
-          // biome-ignore lint/a11y/useSemanticElements: a <select> cannot hold virtualized rows or a shortcut column
-          role="listbox"
-          style={{ height: LIST_HEIGHT }}
-        >
-          <div style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
-            {virtualizer.getVirtualItems().map((row) => {
-              const item = matches[row.index]
-
-              return item === undefined ? null : (
-                <PaletteOption
-                  active={row.index === active}
-                  height={row.size}
-                  index={row.index}
-                  item={item}
-                  key={item.id}
-                  onPick={pick}
-                  setSize={matches.length}
-                  top={row.start}
-                />
-              )
-            })}
-          </div>
-
-          {matches.length === 0 && (
-            <p className="p-4 text-center text-foreground-subtle text-xs">
-              Nothing matches “{query}”.
-            </p>
-          )}
+            return item === undefined ? null : (
+              <PaletteOption
+                active={row.index === active}
+                height={row.size}
+                index={row.index}
+                item={item}
+                key={item.id}
+                onPick={pick}
+                setSize={matches.length}
+                top={row.start}
+              />
+            )
+          })}
         </div>
-      </div>
+      </PaletteCombobox>
     </Dialog>
   )
 }

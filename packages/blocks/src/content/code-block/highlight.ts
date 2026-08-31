@@ -12,6 +12,8 @@
  */
 import type { Language } from './code-block.languages'
 
+export type { Language } from './code-block.languages'
+
 export const TOKEN_KINDS = ['comment', 'string', 'number', 'keyword', 'plain'] as const
 
 export type TokenKind = (typeof TOKEN_KINDS)[number]

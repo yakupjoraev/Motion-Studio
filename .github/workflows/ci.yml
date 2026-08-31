@@ -47,6 +47,10 @@ jobs:
       # Presence and consistency only: proving a thumbnail still matches what its block renders needs
       # a browser, so that stays in `pnpm generate:thumbnails --verify`.
       - run: pnpm check:registry
+      # The documentation index and the docs site's nav are built from the same frontmatter, so a
+      # document added without regenerating the index fails here rather than shipping a nav the
+      # index contradicts.
+      - run: pnpm check:docs-index
 
   # Every golden export and every committed document exported from the shipped catalogue, through
   # `tsc`. It runs on every pull request because a codegen change can break compilation without

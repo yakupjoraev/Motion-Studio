@@ -29,6 +29,7 @@
     "generate:thumbnails": "node scripts/generate-thumbnails.mjs",
     "generate:fixtures": "tsx scripts/generate-fixtures.ts",
     "generate:templates": "tsx scripts/generate-templates.ts",
+    "generate:docs-index": "tsx scripts/generate-docs-index.ts",
     "generate:landing": "tsx scripts/generate-landing-export.ts",
     "measure:export": "tsx scripts/measure-export.ts",
     "golden:update": "pnpm --filter @motion-studio/codegen golden:update",
@@ -37,6 +38,7 @@
     "clean": "turbo clean && rm -rf node_modules",
     "check:deps": "node scripts/check-deps.mjs",
     "check:registry": "tsx scripts/check-registry.ts",
+    "check:docs-index": "tsx scripts/generate-docs-index.ts --check",
     "check:secrets": "node scripts/check-secrets.mjs",
     "check:commit-msg": "node scripts/check-commit-msg.mjs",
     "prepare": "lefthook install"
