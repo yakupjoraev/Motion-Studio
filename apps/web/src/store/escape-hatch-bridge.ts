@@ -1,6 +1,5 @@
 'use client'
 
-import { blockRegistry } from '@motion-studio/blocks'
 import { commands } from '@motion-studio/editor'
 import {
   ESCAPE_HATCH_PROP,
@@ -10,6 +9,7 @@ import {
   withDeclaration,
 } from '@motion-studio/schema'
 
+import { deferredBlockRegistry } from './block-registry'
 import { useStudioStore } from './editor-store'
 import { type EscapeHatchTarget, escapeHatchPort } from './escape-hatch-port'
 
@@ -39,7 +39,7 @@ export function readTarget(
   }
 
   const node = document.nodes[id]
-  const definition = node === undefined ? undefined : blockRegistry.get(node.blockId)
+  const definition = node === undefined ? undefined : deferredBlockRegistry.get(node.blockId)
 
   if (node === undefined || definition === undefined) {
     return undefined

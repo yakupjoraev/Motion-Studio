@@ -1,6 +1,5 @@
 'use client'
 
-import { blockRegistry } from '@motion-studio/blocks/registry'
 import {
   DndProvider,
   type DragPayload,
@@ -16,6 +15,7 @@ import {
 import { DENSITY } from '@motion-studio/ui'
 import { type ReactNode, useCallback, useMemo, useRef } from 'react'
 
+import { deferredBlockRegistry } from '../../store/block-registry'
 import { useStudioStore } from '../../store/editor-store'
 
 import { canvasRects } from './canvas-area/canvas-handle'
@@ -59,7 +59,7 @@ export function DndHost({ children }: DndHostProps) {
       draggedBlockId: payload.blockId,
       draggedNodeIds: draggedNodeIds(payload),
       document: state.document,
-      registry: blockRegistry,
+      registry: deferredBlockRegistry,
       rects: rectsFor(zone.surface),
       isolationId: state.selection.isolationId,
       breakpoint: state.viewport.breakpoint,

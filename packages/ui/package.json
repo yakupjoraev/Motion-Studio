@@ -6,6 +6,7 @@
   "sideEffects": ["./src/styles/chrome.css"],
   "exports": {
     ".": "./src/index.ts",
+    "./controls": "./src/controls/index.ts",
     "./package.json": "./package.json",
     "./styles.css": "./src/styles/chrome.css"
   },

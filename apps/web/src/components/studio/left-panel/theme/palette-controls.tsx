@@ -1,7 +1,8 @@
 'use client'
 
 import { NEUTRAL_HUES } from '@motion-studio/theme'
-import { ColorField, ControlRow, type SelectOption } from '@motion-studio/ui'
+import type { SelectOption } from '@motion-studio/ui'
+import { ColorField, ControlRow } from '@motion-studio/ui/controls'
 
 import { ThemeSelectRow } from './theme-select-row'
 import { ThemeSliderRow } from './theme-slider-row'

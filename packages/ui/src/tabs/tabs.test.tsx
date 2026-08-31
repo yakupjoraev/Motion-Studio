@@ -110,31 +110,41 @@ describe('Tabs', () => {
     expect(screen.getByRole('tab', { name: 'Design' })).toHaveAttribute('aria-selected', 'true')
   })
 
-  it('renders exactly one indicator, under the selected tab', () => {
-    const { container } = render(<Tabs aria-label="Panel" items={ITEMS} defaultValue="layers" />)
+  it('renders one indicator, in the strip rather than in a tab', () => {
+    render(<Tabs aria-label="Panel" items={ITEMS} defaultValue="layers" />)
 
-    const indicators = container.querySelectorAll('span[class*="-bottom-px"]')
+    // One underline for the strip is what lets it slide between tabs without a layout animation
+    // library — ADR-313.
+    const indicators = screen.getAllByTestId('tabs-indicator')
 
     expect(indicators).toHaveLength(1)
-    expect(screen.getByRole('tab', { name: 'Layers' })).toContainElement(
+    expect(screen.getByRole('tablist')).toContainElement(indicators[0] as HTMLElement)
+    expect(screen.getByRole('tab', { name: 'Layers' })).not.toContainElement(
       indicators[0] as HTMLElement,
     )
   })
 
-  it('moves the indicator when an uncontrolled strip is clicked', async () => {
-    const { container } = render(<Tabs aria-label="Panel" items={ITEMS} defaultValue="design" />)
+  it('places the underline from the active tab own offsets', async () => {
+    render(<Tabs aria-label="Panel" items={ITEMS} defaultValue="design" />)
+
+    const strip = screen.getByRole('tablist')
+
+    // jsdom has no layout, so the numbers are zero; what this asserts is that the strip measured an
+    // active tab and wrote both properties, which is what the CSS reads.
+    expect(strip.getAttribute('data-indicator')).toBe('on')
+    expect(strip.style.getPropertyValue('--ms-tabs-x')).toBe('0px')
 
     await userEvent.click(screen.getByRole('tab', { name: 'Layers' }))
 
-    expect(screen.getByRole('tab', { name: 'Layers' })).toContainElement(
-      container.querySelector('span[class*="-bottom-px"]') as HTMLElement,
-    )
+    expect(screen.getByRole('tab', { name: 'Layers' })).toHaveAttribute('aria-selected', 'true')
+    expect(strip.getAttribute('data-indicator')).toBe('on')
   })
 
   it('spends the accent on the underline, which § Character permits for an active tab', () => {
-    const { container } = render(<Tabs aria-label="Panel" items={ITEMS} defaultValue="design" />)
-
-    expect(container.querySelector('span[class*="-bottom-px"]')?.className).toContain('bg-accent')
+    expect(
+      render(<Tabs aria-label="Panel" items={ITEMS} defaultValue="design" />) &&
+        screen.getByTestId('tabs-indicator').className,
+    ).toContain('bg-accent')
   })
 
   it('takes its strip height from the density scale', () => {

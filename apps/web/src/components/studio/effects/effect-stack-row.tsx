@@ -3,7 +3,8 @@
 import { blockRegistry } from '@motion-studio/blocks'
 import { commands } from '@motion-studio/editor'
 import { BLEND_MODES, type EffectInstance, type NodeId, effectBlockId } from '@motion-studio/schema'
-import { Button, ControlRenderer, ControlRow, SelectField, SliderField } from '@motion-studio/ui'
+import { Button } from '@motion-studio/ui'
+import { ControlRenderer, ControlRow, SelectField, SliderField } from '@motion-studio/ui/controls'
 import { useCallback } from 'react'
 
 import { useStudioStore } from '../../../store/editor-store'

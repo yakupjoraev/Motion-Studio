@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic'
 import { useEffect } from 'react'
 
 import { StudioShell } from '../../src/components/studio/studio-shell'
+import { loadBlockRegistry } from '../../src/store/block-registry'
 import { connectEscapeHatch } from '../../src/store/escape-hatch-bridge'
 
 /**
@@ -26,6 +27,15 @@ export function StudioClient() {
    */
   useEffect(() => {
     connectEscapeHatch()
+  }, [])
+
+  /*
+   * The catalogue, on its own chunk — ADR-312. Requested on mount so it is in flight beside the
+   * canvas island's chunk rather than after it, and awaited by nothing: every consumer reads a
+   * definition when a command runs, a drag starts or a node is selected.
+   */
+  useEffect(() => {
+    void loadBlockRegistry()
   }, [])
 
   // `?fixture=` — imported rather than bundled, so the fixture path costs the studio's first load a

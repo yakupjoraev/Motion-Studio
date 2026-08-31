@@ -1,6 +1,7 @@
 'use client'
 
-import { ControlRow, SelectField, type SelectOption } from '@motion-studio/ui'
+import type { SelectOption } from '@motion-studio/ui'
+import { ControlRow, SelectField } from '@motion-studio/ui/controls'
 
 export interface ThemeSelectRowProps {
   readonly label: string

@@ -1,15 +1,20 @@
 'use client'
 
-import { blockRegistry } from '@motion-studio/blocks'
 import { type EditorStore, commands, createEditorStore } from '@motion-studio/editor'
+
+import { deferredBlockRegistry } from './block-registry'
 
 /**
  * ADR-102. The composition root: the registry a store validates against is fixed when the store is
  * built, so the studio's store is built here — where both halves of the seam are in scope — rather
  * than in `packages/editor`, which must not import `packages/blocks`.
+ *
+ * What is fixed is the *instance*, not its contents: ADR-312 fills it from a chunk that arrives after
+ * the shell paints, because 69.4 kB of definitions in the first load is what put `/studio` 120 kB over
+ * its budget.
  */
 export const useStudioStore: EditorStore = createEditorStore({
-  registry: blockRegistry,
+  registry: deferredBlockRegistry,
   now: () => Date.now(),
 })
 

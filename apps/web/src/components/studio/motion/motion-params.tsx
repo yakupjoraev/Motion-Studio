@@ -10,7 +10,7 @@ import {
   CurveEditor,
   SpringEditor,
   type SpringValue,
-} from '@motion-studio/ui'
+} from '@motion-studio/ui/controls'
 import { useCallback, useState } from 'react'
 
 import { useStudioStore } from '../../../store/editor-store'

@@ -13,26 +13,34 @@ frame is a domain bug, not a nit.
 
 Enforced in CI. A regression fails the build.
 
+**Every byte number in this document is gzipped KiB** — 1024 bytes — which is what
+`pnpm measure:routes` prints first and what every number recorded here was taken in. `next build` and
+`size-limit` print decimal kB, 2.4 % larger for the same bytes, so `.size-limit.js` carries its limits
+in bytes where they cannot be read two ways (ADR-314).
+
+The **Measured** column is the state of the current build, not a target. A budget with no measurement
+beside it is aspirational; these are the numbers `pnpm size-limit` and `pnpm measure:routes` reproduce.
+
 ### Public pages
 
-| Metric | Budget | Measured on |
-| --- | --- | --- |
-| Lighthouse Performance | ≥ 95 | `/`, `/blocks`, `/docs`, mobile emulation |
-| Lighthouse Accessibility | ≥ 95 (target 100) | all routes |
-| Lighthouse Best Practices | ≥ 95 | all routes |
-| Lighthouse SEO | ≥ 95 | `/`, `/blocks`, `/docs` |
-| LCP | ≤ 2.0 s | `/`, mobile 4G throttled |
-| CLS | ≤ 0.02 | all routes |
-| INP | ≤ 200 ms | all routes |
-| TBT | ≤ 200 ms | `/` |
-| First-load JS | ≤ 120 kB gzip | `/` |
+| Metric | Budget | Measured on | Measured |
+| --- | --- | --- | --- |
+| Lighthouse Performance | ≥ 95 | `/`, `/blocks`, `/docs`, mobile emulation | 98–100 |
+| Lighthouse Accessibility | ≥ 95 (target 100) | all routes | 100 |
+| Lighthouse Best Practices | ≥ 95 | all routes | 100 |
+| Lighthouse SEO | ≥ 95 | `/`, `/blocks`, `/docs` | 100 |
+| LCP | ≤ 2.0 s | `/`, mobile 4G throttled | 1.7 s (`/`), 1.6 s (`/docs`) |
+| CLS | ≤ 0.02 | all routes | 0–0.0007 |
+| INP | ≤ 200 ms | all routes | not yet measured |
+| TBT | ≤ 200 ms | `/` | 20–50 ms |
+| First-load JS | ≤ 120 kB gzip | `/` | **106.4 KiB** |
 
 ### Studio
 
-| Metric | Budget |
-| --- | --- |
-| First-load JS | ≤ 250 kB gzip |
-| Time to interactive canvas | ≤ 1.2 s on a mid-range laptop |
+| Metric | Budget | Measured |
+| --- | --- | --- |
+| First-load JS | ≤ 250 kB gzip | **246.2 KiB** — ADR-312 and ADR-313 took it there from 369.7 |
+| Time to interactive canvas | ≤ 1.2 s on a mid-range laptop | not yet measured |
 | Pan / zoom | 60 fps with 200 nodes |
 | Node drag | 60 fps with 200 nodes |
 | Marquee over 200 nodes | 60 fps |
@@ -47,22 +55,45 @@ Enforced in CI. A regression fails the build.
 
 ### Route budgets (`size-limit`)
 
-```js
-module.exports = [
-  { name: 'landing',    path: '.next/static/chunks/pages/index-*.js',      limit: '120 kB' },
-  { name: 'studio',     path: '.next/static/chunks/app/studio/page-*.js',  limit: '250 kB' },
-  { name: 'playground', path: '.next/static/chunks/app/playground/page-*.js', limit: '90 kB' },
-  { name: 'blocks',     path: '.next/static/chunks/app/blocks/page-*.js',  limit: '140 kB' },
-]
-```
+`.size-limit.js` in the repository root, generated from `.next/app-build-manifest.json` so each entry
+is the exact file list its route loads. `pnpm size-limit` after `pnpm --filter web build`.
+
+Two metrics, because these four budgets were written as two different things (ADR-314):
+
+| Entry | Metric | Budget | Measured |
+| --- | --- | --- | --- |
+| `landing first-load JS` | every chunk `/` loads | 120 KiB | 106.4 KiB |
+| `studio first-load JS` | every chunk `/studio` loads | 250 KiB | 246.2 KiB |
+| `playground route chunk` | the chunks only `/playground` loads | 90 KiB | 43.3 KiB |
+| `blocks route chunk` | the chunks only `/blocks` loads | 140 KiB | 10.6 KiB |
+
+`/blocks/[slug]` (195.5 KiB) and `/docs` (106.9 KiB) are reported by `pnpm measure:routes` and gated by
+neither, because no document gives them a number.
 
 ### Mandatory dynamic imports
 
 Anything here appearing in an initial chunk is a CI failure. `pnpm analyze` produces the treemap
-that proves it, in `apps/web/.next/analyze/client.html`.
+that proves it, in `apps/web/.next/analyze/client.html`, and `pnpm measure:routes --markers` answers
+the same question in two seconds by probing the built chunks for a string only that module produces.
 
-The studio's own chunk, attributed — ADR-292 has the table and the date. The block definitions are
-its largest single item at 44.5 kB gzip, which is what a first-load pass should go after first.
+**Verified 2026-08-31, after ADR-312 and ADR-313: none of the ten is in any route's first load**, with
+one deliberate exception — the tokeniser is in `/blocks/[slug]`'s own chunk (0.9 KiB), because that page
+highlights the source it prints at runtime (ADR-245, prompt 52).
+
+The studio's first load, attributed, replaces ADR-292's table:
+
+| | gzip |
+| --- | --- |
+| framework and shared runtime | 105.4 KiB |
+| `app/studio` — shell, panels, store, commands | 47.0 KiB |
+| `@dnd-kit` + toast + `immer` | 24.3 KiB |
+| Radix primitives the chrome renders | 29.6 KiB |
+| `zod` | 12.6 KiB |
+| `packages/theme` + `packages/tokens` | 7.0 KiB |
+| `tailwind-merge` | 6.5 KiB |
+| everything else | 13.8 KiB |
+
+The block definitions (69.4 KiB) and `motion` (34.7 KiB) are no longer in it.
 
 | Module | ~Size gzip | Loads when |
 | --- | --- | --- |
@@ -355,7 +386,7 @@ Documented exceptions to the ≤ 20 kB initial-chunk dependency rule:
 
 | Dependency | Size | Justification |
 | --- | --- | --- |
-| `motion` | ~34 kB | Core to the product; used on every surface including the landing |
+| `motion` | ~34 kB | Core to the product — and **no longer in any route's first load**: ADR-313 took the last two eager consumers off it, so it arrives with the blocks that animate |
 | `@dnd-kit/core` + `sortable` | ~26 kB | Required for the studio's primary interaction; accessibility is not retrofittable |
 | `zustand` + `immer` | ~14 kB | The state architecture |
 | `zod` | ~14 kB (tree-shaken) | Schema is the contract; drives validation and the inspector |

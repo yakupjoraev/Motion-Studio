@@ -1,7 +1,7 @@
 'use client'
 
 import type { ControlDescriptor, NodeId } from '@motion-studio/schema'
-import { ControlRenderer, ControlRow } from '@motion-studio/ui'
+import { ControlRenderer, ControlRow } from '@motion-studio/ui/controls'
 import { memo } from 'react'
 
 import { OverrideIndicator, describeOverride } from './override-indicator'

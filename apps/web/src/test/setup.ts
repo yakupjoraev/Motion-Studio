@@ -33,3 +33,14 @@ if (typeof Blob.prototype.text !== 'function') {
  * Five seconds is a timeout, not a sleep: a test that finds its element in 40 ms still takes 40 ms.
  */
 configure({ asyncUtilTimeout: 5000 })
+
+/*
+ * ADR-312 put the block definitions on a chunk the studio requests after it paints, so the store's
+ * registry starts empty. A unit test measures behaviour rather than bytes, and its studio needs a
+ * catalogue: this is the real one, injected once for every file in this app.
+ */
+import { blockRegistry } from '@motion-studio/blocks/registry'
+
+import { primeBlockRegistry } from '../store/block-registry'
+
+primeBlockRegistry(blockRegistry)

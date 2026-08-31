@@ -1,13 +1,13 @@
 'use client'
 
-import { blockRegistry } from '@motion-studio/blocks'
 import { NODE_ID_ATTRIBUTE } from '@motion-studio/canvas'
 import { commands } from '@motion-studio/editor'
 import type { NodeId } from '@motion-studio/schema'
 import type { ControlDescriptor } from '@motion-studio/schema'
-import { cssVariable } from '@motion-studio/ui'
+import { cssVariable } from '@motion-studio/ui/controls'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 
+import { deferredBlockRegistry } from '../../../store/block-registry'
 import { useStudioStore } from '../../../store/editor-store'
 
 import { editCoalesceKey, propCommand, recordResponsiveEdit } from './use-responsive-edit'
@@ -127,7 +127,7 @@ export function useControlCommit(
           const list = ids.flatMap((nodeId) => {
             const node = state.document.nodes[nodeId]
             const defaults =
-              node === undefined ? undefined : blockRegistry.get(node.blockId)?.defaults
+              node === undefined ? undefined : deferredBlockRegistry.get(node.blockId)?.defaults
 
             return defaults === undefined
               ? []

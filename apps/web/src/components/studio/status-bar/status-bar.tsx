@@ -1,7 +1,11 @@
 'use client'
 
 import { selectors } from '@motion-studio/editor'
-import { useReducedMotion } from '@motion-studio/motion'
+/*
+ * The subpath, not the barrel: `@motion-studio/motion` also exports the applier, which is
+ * framer-motion, and the status bar reads one media query — ADR-313.
+ */
+import { useReducedMotion } from '@motion-studio/motion/reduced'
 import { BREAKPOINTS } from '@motion-studio/schema'
 import { Separator } from '@motion-studio/ui'
 import { useState } from 'react'

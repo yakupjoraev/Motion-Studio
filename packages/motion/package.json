@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./curves": "./src/curves/index.ts",
+    "./reduced": "./src/reduced/use-reduced-motion.ts",
     "./marquee": "./src/presets/scroll/marquee.ts",
     "./package.json": "./package.json"
   },

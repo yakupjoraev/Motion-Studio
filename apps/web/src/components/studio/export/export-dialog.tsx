@@ -3,26 +3,41 @@
 import type { ExportFile } from '@motion-studio/codegen'
 import type { NodeId } from '@motion-studio/schema'
 import { Dialog, useToast } from '@motion-studio/ui'
-import { useCallback, useMemo, useState } from 'react'
+import dynamic from 'next/dynamic'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { useStudioStore } from '../../../store/editor-store'
 
 import { CodeViewer } from './code-viewer'
 import { DownloadActions } from './download-actions'
-import { FileTree } from './file-tree'
-import { OptionsPanel } from './options-panel'
 import { TargetSelector } from './target-selector'
 import { useExport } from './use-export'
 import { WarningsList } from './warnings-list'
 
 /**
+ * The two children with a graph behind them, fetched on idle rather than on the click — ADR-313.
+ *
+ * `OptionsPanel` reaches `@motion-studio/ui/controls`, which is 26 field components and their Radix
+ * packages, and `FileTree` reaches the virtualizer. Both render only inside an open dialog, and both
+ * are in memory long before the button is pressed, so "visible in the frame the button is pressed"
+ * still holds — it is the *click* that cannot afford a request, not the session.
+ */
+const OptionsPanel = dynamic(() => import('./options-panel').then((module) => module.OptionsPanel))
+
+const FileTree = dynamic(() => import('./file-tree').then((module) => module.FileTree))
+
+const prefetchExportPanels = (): void => {
+  void import('./options-panel')
+  void import('./file-tree')
+}
+
+/**
  * The export surface — EXPORT_ENGINE.md § Export dialog.
  *
- * It is mounted by the shell only while it is open, and its own code is in the studio chunk on
- * purpose: "visible in the frame the button is pressed" and "behind a dynamic import" cannot both be
- * true, and PERFORMANCE.md § Mandatory dynamic imports names the four modules that have to be split —
- * `codegen`, Prettier, `jszip` and the highlighter — none of which is this file. All four are behind
- * an `import()` in `run-export`, `download-actions` and `code-viewer`.
+ * Mounted always so a reopen shows the previous run rather than regenerating it. Its own code is in
+ * the studio chunk; the four heavy modules PERFORMANCE.md § Mandatory dynamic imports names —
+ * `codegen`, Prettier, `jszip` and the highlighter — are behind an `import()` in `run-export`,
+ * `download-actions` and `code-viewer`, and its two heaviest children are prefetched on idle.
  */
 export function ExportDialog() {
   const open = useStudioStore((state) => state.ui.exportDialogOpen)
@@ -31,6 +46,18 @@ export function ExportDialog() {
   const notify = useToast()
   const { options, resolved, snapshot, setOptions } = useExport(open)
   const [chosen, setChosen] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (typeof requestIdleCallback !== 'function') {
+      prefetchExportPanels()
+
+      return
+    }
+
+    const handle = requestIdleCallback(prefetchExportPanels, { timeout: 2000 })
+
+    return () => cancelIdleCallback(handle)
+  }, [])
 
   const formatted = useMemo(() => new Set(snapshot.formatted), [snapshot.formatted])
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { ASSET_MODES, type ExportOptions } from '@motion-studio/codegen/options'
-import { ControlRow, SegmentedField, SelectField, SwitchField } from '@motion-studio/ui'
+import { ControlRow, SegmentedField, SelectField, SwitchField } from '@motion-studio/ui/controls'
 import type { ReactNode } from 'react'
 
 export interface OptionsPanelProps {

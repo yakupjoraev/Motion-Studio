@@ -5,6 +5,8 @@ import { cn } from '@motion-studio/utils'
 import dynamic from 'next/dynamic'
 import { type ReactNode, useEffect, useState } from 'react'
 
+import { useStudioStore } from '../../store/editor-store'
+
 import { type PanelSide, isCollapsed } from '../../hooks/panel-layout'
 import { usePanelLayout } from '../../hooks/use-panel-layout'
 import { useViewportGuard } from '../../hooks/use-viewport-guard'
@@ -12,7 +14,6 @@ import { useViewportGuard } from '../../hooks/use-viewport-guard'
 import { DndHost } from './dnd-host'
 import { DocumentsProvider } from './documents/documents-context'
 import { DocumentsHost } from './documents/documents-host'
-import { ExportDialog } from './export/export-dialog'
 import { Inspector } from './inspector/inspector'
 import { LeftPanel } from './left-panel/left-panel'
 import { ThemeHost } from './left-panel/theme/theme-host'
@@ -56,6 +57,20 @@ const ShortcutHost = dynamic(
   { ssr: false },
 )
 
+/**
+ * Mounted from the first time it opens and never unmounted after — ADR-313.
+ *
+ * "Mounted always" was there for two things: a reopen shows the previous run rather than regenerating
+ * it, and the surface is visible in the frame the button is pressed. Both survive. What does not
+ * survive is 11 kB of Radix dialog machinery in the first load of a studio whose dialog is closed:
+ * `react-remove-scroll` and the dismissable layer are 8.9 kB of it, and the chunk is fetched on idle
+ * long before anyone presses Export.
+ */
+const ExportDialog = dynamic(
+  () => import('./export/export-dialog').then((module) => module.ExportDialog),
+  { ssr: false },
+)
+
 const REGION_CLASS = 'relative min-w-0 outline-none focus-visible:shadow-focus'
 
 const PANEL_CLASS = 'ms-panel-overlay bg-surface-1'
@@ -68,6 +83,29 @@ const PANEL_CLASS = 'ms-panel-overlay bg-surface-1'
  */
 export function StudioShell({ canvas }: StudioShellProps) {
   const { layout, setWidth, toggleCollapsed } = usePanelLayout()
+  const exportOpen = useStudioStore((state) => state.ui.exportDialogOpen)
+  const [exportMounted, setExportMounted] = useState(false)
+
+  useEffect(() => {
+    if (exportOpen) {
+      setExportMounted(true)
+    }
+  }, [exportOpen])
+
+  /** In memory before the button is pressed, which is what keeps the dialog instant. */
+  useEffect(() => {
+    if (typeof requestIdleCallback !== 'function') {
+      void import('./export/export-dialog')
+
+      return
+    }
+
+    const handle = requestIdleCallback(() => void import('./export/export-dialog'), {
+      timeout: 2000,
+    })
+
+    return () => cancelIdleCallback(handle)
+  }, [])
   const mode = useViewportGuard()
   /** Overlay openness is session state, not a persisted preference — ADR-050. */
   const [overlayOpen, setOverlayOpen] = useState<PanelSide | null>(null)
@@ -187,10 +225,8 @@ export function StudioShell({ canvas }: StudioShellProps) {
 
         <ShortcutHost panels={panels} />
 
-        {/* Mounted always, open on a flag: "visible in the frame the button is pressed" is what the
-          export dialog is judged on, and a chunk fetched on the click cannot promise it. The four
-          heavy modules it needs are behind dynamic imports of their own. */}
-        <ExportDialog />
+        {/* Open on a flag, mounted from the first open onwards, its chunk prefetched on idle. */}
+        {exportMounted ? <ExportDialog /> : null}
 
         {/* Renders nothing itself: autosave, the session restore and the import intake, plus the five
           dialogs each behind its own flag. */}

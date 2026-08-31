@@ -12566,3 +12566,199 @@ fixed, and a gate that fails on them can never go green.
 - Accepted: a `§` reference with no document name — 137 of them, referring to the current document —
   is not checked. Deciding whether `§ 9` in prose means this document or the contract it just named
   needs a parser for English, not for markdown.
+
+## ADR-312 — The block definitions leave the studio's first load behind a deferred registry
+
+**Date** 2026-08-31 · **Prompt** 54 · **Status** Accepted
+
+### Question
+`/studio` was 369.7 kB gzip of first-load JavaScript against a 250 kB budget — ENGINEERING_CONTRACT.md
+§ 6, missed by 120 kB. ADR-292 attributed the largest single item and named the pass: the 72 block
+definitions. How do they leave the first load without making the registry asynchronous?
+
+### Criterion (set before measuring)
+The budget is the criterion, and the constraint on how to meet it comes from
+ARCHITECTURE.md § The registry seam: `BlockRegistry` is four synchronous methods — `get`, `require`,
+`list`, `byCategory` — and commands, drop resolution and the inspector call them during a render or a
+gesture. A fix that pushes `await` into `insertNode` fails, whatever it saves.
+
+### Measurement
+Every chunk `/studio` loads, gzipped from disk, attributed by module through `pnpm analyze`
+(`scripts/measure-routes.mjs`, `scripts/eager-graph.mjs`):
+
+| | gzip |
+| --- | --- |
+| framework and shared runtime | 105.4 kB |
+| `app/studio` — shell, panels, store, commands | 55.8 kB |
+| **`packages/blocks` definitions, nine category chunks** | **69.4 kB** |
+| Radix primitives | 41.7 kB |
+| `motion` | 34.7 kB |
+| `@dnd-kit` + virtualizer + toast + `immer` | 30.0 kB |
+| `zod` | 12.6 kB |
+| everything else | 19.9 kB |
+
+The graph says why they are there: **six modules that load before the shell paints** import the
+registry, and the registry is a module-scope `createRegistry(DEFINITIONS)` over all 72 —
+`store/editor-store.ts`, `store/escape-hatch-bridge.ts`, `dnd-host.tsx`,
+`documents/documents-context.tsx`, `inspector/inspector.tsx`, and `layers/use-flat-layers.ts` through
+`layer-rects.ts`.
+
+Every one of the six reads a definition **at interaction time**: a command running, a drag starting, a
+document being imported, a node being selected. None reads one to paint.
+
+### Decision
+`apps/web/src/store/block-registry.ts` holds a `BlockRegistry` that delegates to an empty registry
+until `import('@motion-studio/blocks/registry')` resolves, and the studio requests that on mount, in
+parallel with the canvas island's own chunk. The six modules hold the deferred instance. The four
+methods stay synchronous, so nothing downstream changes.
+
+The one consumer that reads a definition while rendering — the inspector, on a selection restored
+from a session — subscribes through `useBlockRegistry()`, so it renders again when the chunk lands
+instead of showing its unknown-block state.
+
+### Measured, after
+`/studio` first-load JS **369.7 → 306.1 kB**, and the eager module count 1348 → 708.
+
+### Consequences
+- Accepted: for a few hundred milliseconds after hydration the registry is empty. Nothing can be
+  clicked in that window — the canvas island has not mounted either — and the inspector is the only
+  component that could render into it.
+- Accepted: `blockRegistry` is no longer the app's composition-root value; `deferredBlockRegistry` is.
+  A new eager import of `@motion-studio/blocks` would silently put 69.4 kB back, which
+  `scripts/eager-graph.mjs` is how a reviewer sees.
+- The canvas island keeps its own static import of the real registry, so the definitions arrive with
+  the code that renders them and webpack dedupes the module.
+
+## ADR-313 — Three more items leave the first load: the control barrel, the sliding indicators, and the closed dialogs
+
+**Date** 2026-08-31 · **Prompt** 54 · **Status** Accepted
+
+### Question
+After ADR-312 `/studio` was 306.1 kB against 250. The remaining first load held 41.7 kB of Radix,
+34.7 kB of `motion`, and 26 control fields the studio's shell does not render. What is actually
+holding them there?
+
+### Criterion (set before measuring)
+Two rules decide each candidate, and both are checkable:
+1. Does anything that paints the shell *render* it? If not, it does not belong in the first load.
+2. Does deferring it break a promise the documents make about interaction? UI_GUIDELINES.md § Loading
+   and empty states, and the export dialog's own "visible in the frame the button is pressed".
+
+A chunk fetched **on idle** rather than on the click satisfies (2), because the click then costs a
+render. That is the whole difference between this and the trade ADR-290 and the export dialog's own
+comment declined.
+
+### Measurement
+`scripts/eager-graph.mjs`, which walks static imports only and ignores `import type` —
+`verbatimModuleSyntax` erases those, and `control-renderer/coerce.ts` names eight field modules
+without importing one:
+
+| Holder | What it held | Renders it at boot? |
+| --- | --- | --- |
+| `packages/ui/src/index.ts` → `export * from './controls/index'` | 26 field components, `@radix-ui/react-select`, `react-radio-group` | No — the shell imports `ToastProvider` |
+| `export/options-panel.tsx` | `@motion-studio/ui/controls` | No — inside a closed dialog |
+| `export/file-tree.tsx` | `@tanstack/react-virtual` | No — inside a closed dialog |
+| `ui/src/segmented/segmented.tsx` | `motion/react`, for one `layoutId` highlight | Yes, the control; no, the animation |
+| `ui/src/tabs/tabs.tsx` | `motion/react`, for one `layoutId` underline | Yes, the strip; no, the animation |
+| `status-bar.tsx` → `@motion-studio/motion` barrel | the framer-motion applier, to read one media query | No |
+| `export-dialog.tsx` and `documents-host.tsx`'s five dialogs | `@radix-ui/react-dialog`, `react-remove-scroll`, dismissable layer | No — all closed |
+
+The two `layoutId` indicators carried a second defect: the id is a string constant, so every
+`Segmented` on the page shared `ms-segmented-indicator` and the highlight could travel between two
+unrelated controls.
+
+### Decision
+Four changes, each at its cause:
+
+1. `controls/index.ts` is no longer re-exported by the chrome barrel; it is the `@motion-studio/ui/controls`
+   subpath. Twelve call sites import from there, and `index.test.ts` now checks each directory against
+   the barrel it belongs to.
+2. `OptionsPanel` and `FileTree` are `dynamic()` inside the export dialog, prefetched on idle.
+3. Both indicators are one span placed from the checked element's own offsets, written to
+   `--ms-segmented-x/-w` and `--ms-tabs-x/-w` in a layout effect and transitioned in CSS with the
+   theme's own duration — so reduced motion zeroes them through the variable every other transition
+   uses (ADR-021). The offsets are read on a selection change and on a resize, never per frame.
+   `@motion-studio/motion` gains a `./reduced` subpath for the status bar's media query.
+4. The export dialog and the five document dialogs mount from the first time each opens, and their
+   chunks are prefetched on idle. This supersedes ADR-290's measurement, whose stated premise — "the
+   weight is the schema and the registry, which the store already brings" — ADR-312 removed.
+
+### Measured, after
+| | before | after |
+| --- | --- | --- |
+| `/studio` first load | 306.1 kB | **246.2 kB** |
+| `/playground` first load | 179.9 kB | **145.6 kB** |
+| eager modules under `/studio` | 708 | 418 |
+
+`/studio` is under its 250 kB budget for the first time, at **246.2 kB**, and the whole pass took it
+from 369.7 kB.
+
+### Consequences
+- Accepted: the sliding indicators now read `offsetLeft`/`offsetWidth` on a selection change. That is
+  a layout read, which PERFORMANCE.md § Anti-patterns bans **in a loop**; this one runs once per
+  commit and once per resize.
+- Accepted: an indicator is hidden until its group has measured a checked item, so a group with no
+  selection shows none. It was previously rendered inside the selected item, so the behaviour is the
+  same by construction.
+- Accepted: `@motion-studio/ui`'s public surface is smaller, and a consumer that wants a field says
+  so. `check:deps` is exports-aware, so the new subpath is legal and a deep import still is not.
+- Accepted: the first open of a dialog depends on an idle prefetch having run. Under a load heavy
+  enough to starve `requestIdleCallback` for the whole session, the first open costs a request.
+- `motion` is no longer in any route's first load: it arrives with the blocks that animate.
+
+## ADR-314 — `size-limit` gates first-load JS per route, from the build manifest
+
+**Date** 2026-08-31 · **Prompt** 54 · **Status** Accepted
+
+### Question
+Prompt 54 gives a `.size-limit.js` whose entries are globs over chunk directories —
+`.next/static/chunks/app/studio/**`. PERFORMANCE.md § Budgets states the budgets as **first-load JS**.
+Those are different numbers: the studio's own chunk is 47 kB and its first load is 246 kB. Which does
+the gate measure?
+
+### Criterion (set before measuring)
+The gate has to measure the number the budget names, or it is not that budget. ENGINEERING_CONTRACT.md
+§ 6 says "first-load JS ≤ 250 kB gzip" for `/studio`, and PERFORMANCE.md § Public pages says
+"First-load JS ≤ 120 kB gzip" for `/`. Both are what a browser downloads before the route is
+interactive: the route's own chunks **plus** the shared ones.
+
+### Measurement
+A glob over `app/studio/**` matches 47.0 kB — 19 % of what the route loads. It would have passed
+every day the route was 120 kB over.
+
+### The unit, which turned out to matter
+`size-limit` reported 251.77 kB for files this repository's own script measured at 246.2 — the same
+bytes, 1.024 apart. `size-limit` and `next build` print decimal kB; every number in `PERFORMANCE.md`
+is KiB, which the history settles rather than asserts: ADR-292 recorded `/studio` at "370 kB gzip" for
+a build whose files gzip to 369.7 **KiB** and which `next build` printed as **378 kB**.
+
+So "250 kB" in the documents means 250 KiB, and a limit written as `kB` would be a 2 % tighter budget
+than the one the contract states. The entries carry byte limits, which cannot be read two ways, and
+PERFORMANCE.md § Budgets now says which unit its numbers are in.
+
+### Decision
+`.size-limit.js` is generated from `.next/app-build-manifest.json`: one entry per gated route, its
+`path` the exact file list that route's first load consists of, `gzip: true`, `@size-limit/file` so
+the files are measured as built rather than re-bundled, and `limit` in bytes.
+
+`/` and `/studio` are gated on first-load JS. `/playground` and `/blocks` are gated on the route's own
+chunks, because PERFORMANCE.md § Route budgets writes them as globs at `app/<route>/page-*.js` and 90
+kB cannot be a first-load number when the shared baseline alone is 105 KiB.
+
+The prompt's globs are not used, and this is the record of why. `/blocks/[slug]` and `/docs` are
+reported rather than gated, because no document gives them a number.
+
+### Measured, after
+```
+landing first-load JS (120 KiB)     108.94 kB of 122.88 kB
+studio first-load JS (250 KiB)      251.77 kB of 256.00 kB
+playground route chunk (90 KiB)      44.29 kB of  92.16 kB
+blocks route chunk (140 KiB)         10.86 kB of 143.36 kB
+```
+
+### Consequences
+- Accepted: `pnpm size-limit` needs a build first. It is the same requirement `pnpm analyze` has.
+- A route added without an entry is not gated. `scripts/measure-routes.mjs` prints every route in the
+  manifest, so the omission is visible rather than silent.
+- The gate and the report read the same manifest, so a number in `PERFORMANCE.md` can be reproduced
+  by either.

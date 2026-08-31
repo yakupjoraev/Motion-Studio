@@ -40,6 +40,8 @@
     "check:registry": "tsx scripts/check-registry.ts",
     "check:docs-index": "tsx scripts/generate-docs-index.ts --check",
     "check:secrets": "node scripts/check-secrets.mjs",
+    "size-limit": "size-limit",
+    "measure:routes": "node scripts/measure-routes.mjs",
     "check:commit-msg": "node scripts/check-commit-msg.mjs",
     "prepare": "lefthook install"
   },
@@ -50,8 +52,10 @@
     "@motion-studio/motion": "workspace:*",
     "@motion-studio/schema": "workspace:*",
     "@motion-studio/theme": "workspace:*",
+    "@size-limit/file": "^13.0.3",
     "ffmpeg-static": "^5.3.0",
     "lefthook": "^1.13.6",
+    "size-limit": "^13.0.3",
     "tsx": "^4.23.7",
     "turbo": "^2.5.8",
     "typescript": "~5.6.3"

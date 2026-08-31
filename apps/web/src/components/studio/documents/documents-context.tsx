@@ -1,6 +1,5 @@
 'use client'
 
-import { blockRegistry } from '@motion-studio/blocks'
 import { commands } from '@motion-studio/editor'
 import { createEmptyDocument } from '@motion-studio/schema'
 import { useToast } from '@motion-studio/ui'
@@ -12,6 +11,7 @@ import type { ImportRejection, ImportSuccess } from '../../../lib/documents/impo
 import { importDocument } from '../../../lib/documents/import-document'
 import { entryOf, upsertEntry, writeLastOpenId } from '../../../lib/storage/document-index'
 import { loadSnapshot, saveDocument } from '../../../lib/storage/document-store'
+import { deferredBlockRegistry } from '../../../store/block-registry'
 import { useStudioStore } from '../../../store/editor-store'
 
 /** What the report dialog shows, plus the bytes it offers back — a repair must not destroy the copy. */
@@ -93,7 +93,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
           return
         }
 
-        const outcome = importDocument(await response.text(), blockRegistry)
+        const outcome = importDocument(await response.text(), deferredBlockRegistry)
 
         if (!outcome.ok) {
           publish({ title: outcome.error.title, description: outcome.error.detail, tone: 'danger' })
@@ -110,7 +110,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
       },
 
       read(text: string, fileName: string) {
-        const outcome = importDocument(text, blockRegistry)
+        const outcome = importDocument(text, deferredBlockRegistry)
 
         if (outcome.ok) {
           setRejection(null)

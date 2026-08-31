@@ -1,6 +1,7 @@
 'use client'
 
-import { ControlRow, SegmentedField, type SegmentedOption } from '@motion-studio/ui'
+import type { SegmentedOption } from '@motion-studio/ui'
+import { ControlRow, SegmentedField } from '@motion-studio/ui/controls'
 
 export interface ThemeSegmentedRowProps {
   readonly label: string

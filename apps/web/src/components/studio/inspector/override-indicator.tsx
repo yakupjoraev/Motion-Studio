@@ -1,7 +1,7 @@
 'use client'
 
 import type { BreakpointId } from '@motion-studio/schema'
-import { controlRowDotStyles } from '@motion-studio/ui'
+import { controlRowDotStyles } from '@motion-studio/ui/controls'
 import type { ReactElement } from 'react'
 
 /**

@@ -2,7 +2,7 @@ import { commands } from '@motion-studio/editor'
 import { type NodeId, blockId, createEmptyDocument, nodeId } from '@motion-studio/schema'
 import { act, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useStudioStore } from '../../../store/editor-store'
 
@@ -30,6 +30,16 @@ const insert = (block: string, parentId = root()): NodeId => {
 
   return id
 }
+
+/*
+ * The block body is a chunk of its own, and transforming its graph takes about eight seconds on a
+ * cold Vite cache — longer than a test's own timeout. It used to be warm by accident: the store's
+ * eager `@motion-studio/blocks` import paid for it during setup, and ADR-312 removed that import.
+ * Warming it here pays the same cost where it belongs, and mirrors the shell, which prefetches it.
+ */
+beforeAll(async () => {
+  await import('./block-inspector')
+}, 60_000)
 
 beforeEach(() => {
   Element.prototype.hasPointerCapture = vi.fn(() => false)

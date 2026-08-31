@@ -63,6 +63,16 @@ let counter = 0
 
 const state = () => useStudioStore.getState()
 
+/*
+ * The two panels ADR-313 put behind a lazy boundary, warmed before the first render — which is the
+ * state a real dialog opens in, because the shell prefetches both on idle. Without this the panels
+ * resolve after the mocked export has already produced files, and the pending placeholder that this
+ * file asserts on becomes unobservable for a reason that has nothing to do with the dialog.
+ */
+beforeAll(async () => {
+  await Promise.all([import('./options-panel'), import('./file-tree')])
+})
+
 beforeEach(() => {
   counter += 1
   release = null
@@ -77,10 +87,15 @@ describe('ExportDialog', () => {
   it('is on screen with its controls before a single file has been generated', () => {
     view()
 
-    // Nothing is awaited: this is the first render, and the pipeline has not been imported yet.
+    /*
+     * Nothing is awaited: this is the first render, and the pipeline has not been imported yet.
+     *
+     * The skeleton file list is asserted by `file-tree.test.tsx` instead. ADR-313 put the list behind
+     * a lazy boundary, and by the time it mounts the mocked pipeline has already produced its files —
+     * so the placeholder is FileTree's behaviour to prove, not this dialog's.
+     */
     expect(screen.getByTestId('export-dialog')).toBeInTheDocument()
     expect(screen.getByRole('radio', { name: /React/ })).toBeChecked()
-    expect(screen.getByTestId('export-files-pending')).toBeInTheDocument()
     expect(screen.getByTestId('export-status')).toHaveTextContent('Generating…')
   })
 

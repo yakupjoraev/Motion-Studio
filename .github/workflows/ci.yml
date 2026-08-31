@@ -69,8 +69,9 @@ jobs:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - run: pnpm build
-      # `pnpm size-limit` and `pnpm analyze` with the bundle-analysis artifact — added by prompt 54
-      # (performance hardening), which writes the per-route budgets they check against.
+      # The four route budgets, from the build manifest rather than from a glob — ADR-314. It runs
+      # after `pnpm build` because it measures the files that build produced.
+      - run: pnpm size-limit
 
   # Non-blocking by design — prompt 10 § Verify. A broken story is worth knowing about on every pull
   # request, and it is not a reason to stop one: the workshop is a development tool, not a shipped

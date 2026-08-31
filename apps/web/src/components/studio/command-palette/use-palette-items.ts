@@ -1,12 +1,12 @@
 'use client'
 
-import { blockRegistry } from '@motion-studio/blocks'
 import { commands } from '@motion-studio/editor'
 import { PRESETS as MOTION_PRESETS } from '@motion-studio/motion'
 import { effectId } from '@motion-studio/schema'
 import { type PresetId, PRESETS as THEME_PRESETS } from '@motion-studio/theme'
 import { useMemo } from 'react'
 
+import { deferredBlockRegistry } from '../../../store/block-registry'
 import { useStudioStore } from '../../../store/editor-store'
 import { insertBlockAtSelection } from '../left-panel/blocks/use-insert-block'
 import type { StudioShortcutContext } from '../shortcuts/shortcut.types'
@@ -80,7 +80,7 @@ export function usePaletteItems(context: StudioShortcutContext): readonly Palett
       })
     }
 
-    for (const definition of blockRegistry.list()) {
+    for (const definition of deferredBlockRegistry.list()) {
       const isEffect = definition.category === 'effects'
       const [target] = state.selection.ids
 

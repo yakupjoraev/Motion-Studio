@@ -43,8 +43,10 @@ describe('the gallery does not own a control system', () => {
     expect(rendering.length).toBeGreaterThan(0)
 
     for (const file of rendering) {
+      // `@motion-studio/ui/controls` since ADR-313 split the field barrel off the chrome one; the
+      // rule is unchanged — the renderer comes from the package, not from this directory.
       expect(file.text, `${file.path} imports the shared renderer`).toContain(
-        "from '@motion-studio/ui'",
+        "from '@motion-studio/ui/controls'",
       )
     }
   })

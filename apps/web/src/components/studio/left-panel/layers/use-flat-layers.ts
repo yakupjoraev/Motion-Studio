@@ -1,10 +1,10 @@
 'use client'
 
-import { blockRegistry } from '@motion-studio/blocks'
 import { selectors } from '@motion-studio/editor'
 import type { BlockId, NodeId } from '@motion-studio/schema'
 import { useMemo } from 'react'
 
+import { deferredBlockRegistry } from '../../../../store/block-registry'
 import { useStudioStore } from '../../../../store/editor-store'
 
 /** A row as the tree renders it: the document's own fields plus everything ARIA asks a treeitem for. */
@@ -143,7 +143,7 @@ function search(
 }
 
 /** The name the block is listed under, so a search for "Section" finds nodes nobody renamed. */
-const registryName = (id: BlockId): string => blockRegistry.get(id)?.name ?? id
+const registryName = (id: BlockId): string => deferredBlockRegistry.get(id)?.name ?? id
 
 /**
  * One flattening per document version, per fold and per query — never per render. `selectFlatLayers`

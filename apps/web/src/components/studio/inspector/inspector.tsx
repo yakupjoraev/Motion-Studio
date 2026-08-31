@@ -1,6 +1,5 @@
 'use client'
 
-import { blockRegistry } from '@motion-studio/blocks'
 import type { NodeId } from '@motion-studio/schema'
 import { PanelHeader, ScrollArea } from '@motion-studio/ui'
 import dynamic from 'next/dynamic'
@@ -8,6 +7,7 @@ import { useMemo } from 'react'
 
 import { usePersistedSections } from '../../../hooks/use-persisted-sections'
 import { useStudioStore } from '../../../store/editor-store'
+import { useBlockRegistry } from '../../../store/use-block-registry'
 
 import { InspectorEmpty } from './inspector-empty'
 import { ResponsiveHeader } from './responsive-header'
@@ -52,6 +52,8 @@ const InspectorSkeleton = () => (
 export function Inspector() {
   usePersistedSections()
 
+  const registry = useBlockRegistry()
+
   const hintVisible = useResponsiveHintVisible()
 
   const selectionKey = useStudioStore((state) => state.selection.ids.join(' '))
@@ -70,7 +72,7 @@ export function Inspector() {
     return id === undefined ? null : (state.document.nodes[id]?.name ?? null)
   })
 
-  const definition = blockId === null ? undefined : blockRegistry.get(blockId)
+  const definition = blockId === null ? undefined : registry.get(blockId)
 
   return (
     <div className="flex h-full flex-col">

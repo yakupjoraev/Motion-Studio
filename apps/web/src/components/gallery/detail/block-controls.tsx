@@ -1,7 +1,7 @@
 'use client'
 
 import type { BlockDefinition, ControlDescriptor, UnknownProps } from '@motion-studio/schema'
-import { ControlRenderer, ControlRow } from '@motion-studio/ui'
+import { ControlRenderer, ControlRow } from '@motion-studio/ui/controls'
 
 export interface BlockControlsProps {
   readonly definition: BlockDefinition | undefined

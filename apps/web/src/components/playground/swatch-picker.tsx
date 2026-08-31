@@ -1,6 +1,6 @@
 'use client'
 
-import { ColorPicker } from '@motion-studio/ui'
+import { ColorPicker } from '@motion-studio/ui/controls'
 import { type ReactElement, useEffect, useRef } from 'react'
 
 import type { ColorHit } from './color-swatches'

@@ -133,30 +133,46 @@ describe('Segmented', () => {
     }
   })
 
-  it('renders exactly one indicator, and only behind the selected segment', () => {
+  it('renders one indicator, in the group rather than in a segment', () => {
     const { container } = render(
       <Segmented aria-label="Direction" options={OPTIONS} defaultValue="column" />,
     )
 
     // One moving element rather than a background per segment: two would disagree mid-animation.
-    const indicators = container.querySelectorAll('span[class*="absolute"]')
+    // It belongs to the group, which is what lets it slide between segments without a layout
+    // animation library — ADR-313.
+    const indicators = screen.getAllByTestId('segmented-indicator')
+
     expect(indicators).toHaveLength(1)
-    expect(screen.getByRole('radio', { name: 'Column' })).toContainElement(
+    expect(container.firstElementChild).toContainElement(indicators[0] as HTMLElement)
+    expect(screen.getByRole('radio', { name: 'Column' })).not.toContainElement(
       indicators[0] as HTMLElement,
     )
   })
 
-  it('moves the indicator when an uncontrolled group is clicked', async () => {
-    // Radix keeps the uncontrolled selection in its own context; without a copy the indicator never moves.
+  it('places the indicator from the checked segment own offsets', () => {
     const { container } = render(
-      <Segmented aria-label="Direction" options={OPTIONS} defaultValue="row" />,
+      <Segmented aria-label="Direction" options={OPTIONS} defaultValue="column" />,
     )
+
+    const root = container.firstElementChild as HTMLElement
+
+    // jsdom has no layout, so the numbers are zero; what this asserts is that the group measured a
+    // checked item and wrote both properties, which is what the CSS reads.
+    expect(root.getAttribute('data-indicator')).toBe('on')
+    expect(root.style.getPropertyValue('--ms-segmented-x')).toBe('0px')
+    expect(root.style.getPropertyValue('--ms-segmented-w')).toBe('0px')
+  })
+
+  it('follows an uncontrolled selection', async () => {
+    // Radix keeps the uncontrolled selection in its own context; without a copy the indicator never
+    // moves, so this asserts the component's own copy rather than the pixels jsdom cannot give.
+    render(<Segmented aria-label="Direction" options={OPTIONS} defaultValue="row" />)
 
     await userEvent.click(screen.getByRole('radio', { name: 'Column' }))
 
-    const indicator = container.querySelector('span[class*="absolute"]')
-
-    expect(screen.getByRole('radio', { name: 'Column' })).toContainElement(indicator as HTMLElement)
+    expect(screen.getByRole('radio', { name: 'Column' })).toHaveAttribute('data-state', 'checked')
+    expect(screen.getByRole('radio', { name: 'Row' })).toHaveAttribute('data-state', 'unchecked')
   })
 
   it('takes its height from the density scale', () => {

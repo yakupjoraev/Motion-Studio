@@ -1,6 +1,6 @@
 'use client'
 
-import { ControlRow, SliderField } from '@motion-studio/ui'
+import { ControlRow, SliderField } from '@motion-studio/ui/controls'
 import { useState } from 'react'
 
 export interface ThemeSliderRowProps {
