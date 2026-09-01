@@ -2,7 +2,7 @@ import { XIcon } from '@motion-studio/icons'
 import { Z_INDEX } from '@motion-studio/tokens'
 import { cn } from '@motion-studio/utils'
 import * as RadixDialog from '@radix-ui/react-dialog'
-import { type ReactElement, useEffect, useRef, useState } from 'react'
+import { type ReactElement, useLayoutEffect, useRef, useState } from 'react'
 
 import { Button } from '../button/index'
 
@@ -14,6 +14,7 @@ import {
   dialogScrimStyles,
   dialogTitleStyles,
 } from './dialog.styles'
+import { focusReturnTarget, watchFocusReturn } from './focus-return'
 
 import type { DialogProps } from './dialog.types'
 
@@ -33,30 +34,29 @@ export function Dialog({
   onOpenChange,
   className,
 }: DialogProps): ReactElement {
-  /*
-   * ACCESSIBILITY.md § Dialogs: focus returns where it came from. Radix restores whatever was active
-   * when its content mounted, and for a dialog opened from a store flag or a keyboard shortcut that is
-   * already `body` — measured on this primitive, with the shortcut sheet and the export dialog both
-   * landing on `body`. So the element is tracked while the dialog is closed and restored explicitly.
-   */
-  const previous = useRef<HTMLElement | null>(null)
   const [uncontrolled, setUncontrolled] = useState(defaultOpen ?? false)
   const visible = open ?? uncontrolled
+  const previous = useRef<HTMLElement | null>(null)
 
-  useEffect(() => {
-    if (visible) {
+  /*
+   * ACCESSIBILITY.md § Dialogs: focus returns to the control that opened this — ADR-325. Captured in
+   * a layout effect, which runs before the focus scope's own effect moves focus into the dialog, and
+   * skipped when the control is inside another overlay: a dialog opened from a menu item returns to
+   * the menu's trigger, because the item itself is gone by then.
+   */
+  useLayoutEffect(() => {
+    watchFocusReturn()
+
+    if (!visible) {
       return
     }
 
-    const record = (event: FocusEvent): void => {
-      if (event.target instanceof HTMLElement) {
-        previous.current = event.target
-      }
-    }
+    const active = document.activeElement
 
-    document.addEventListener('focusin', record)
-
-    return () => document.removeEventListener('focusin', record)
+    previous.current =
+      active instanceof HTMLElement && active.closest('[data-ms-overlay]') === null
+        ? active
+        : focusReturnTarget()
   }, [visible])
 
   // `exactOptionalPropertyTypes`: omit an absent prop rather than passing `undefined`.
@@ -82,8 +82,10 @@ export function Dialog({
         <RadixDialog.Content
           data-ms-overlay="dialog"
           onCloseAutoFocus={(event) => {
+            // Radix would focus its `Trigger`, which these dialogs do not have, and prevent the focus
+            // scope's own restore on the way — so the return is ours to make.
             event.preventDefault()
-            previous.current?.focus()
+            ;(previous.current ?? focusReturnTarget())?.focus()
           }}
           style={{ zIndex: Z_INDEX.dialog }}
           className={cn(dialogContentStyles({ size }), className)}

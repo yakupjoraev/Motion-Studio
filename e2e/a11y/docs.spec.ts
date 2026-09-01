@@ -113,15 +113,24 @@ test.describe('the documentation site', () => {
     await context.close()
   })
 
-  test('puts the skip link first and lands it on the article', async ({ page }) => {
-    await page.goto('/docs/canvas')
-    await page.keyboard.press('Tab')
+  test.describe('its keyboard path', () => {
+    /*
+     * Safari's default keyboard access leaves links out of the tab order — "Press Tab to highlight each
+     * item" is off until a user turns it on, and Playwright's WebKit follows that default. The skip link
+     * is a link, so on that engine this asserts a platform setting rather than the page (ADR-329).
+     */
+    test.skip(({ browserName }) => browserName === 'webkit', 'Tab does not reach links in WebKit')
 
-    const skip = page.getByRole('link', { name: 'Skip to content' })
-    await expect(skip).toBeFocused()
+    test('puts the skip link first and lands it on the article', async ({ page }) => {
+      await page.goto('/docs/canvas')
+      await page.keyboard.press('Tab')
 
-    await page.keyboard.press('Enter')
-    await expect(page.locator('#main')).toBeVisible()
+      const skip = page.getByRole('link', { name: 'Skip to content' })
+      await expect(skip).toBeFocused()
+
+      await page.keyboard.press('Enter')
+      await expect(page.locator('#main')).toBeVisible()
+    })
   })
 
   test('reads sidebar, then article, then table of contents', async ({ page }) => {

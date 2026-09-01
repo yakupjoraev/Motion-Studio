@@ -69,9 +69,14 @@ const state = () => useStudioStore.getState()
  * resolve after the mocked export has already produced files, and the pending placeholder that this
  * file asserts on becomes unobservable for a reason that has nothing to do with the dialog.
  */
+/*
+ * The two dialog panels are `dynamic()` (ADR-313), so the first render waits on Vitest transforming
+ * them and everything they import. On a machine running the whole suite that has twice exceeded the
+ * 10 s default and failed the file — the timeout is the hook's own, not the app's.
+ */
 beforeAll(async () => {
   await Promise.all([import('./options-panel'), import('./file-tree')])
-})
+}, 60_000)
 
 beforeEach(() => {
   counter += 1

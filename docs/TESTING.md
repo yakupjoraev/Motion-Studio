@@ -317,7 +317,8 @@ counters and the `window.studio` handle, which an ordinary build strips (ADR-315
 `window.__renderCounts` absent says so rather than reading zero and passing.
 
 Every spec that produces a number prints it as well as annotating it, because the `list` reporter does
-not print annotations. `e2e/perf` is one of the two places `noConsole` is off, for that reason.
+not print annotations. `e2e/perf` and `e2e/a11y` are where `noConsole` is off, for that reason — the
+same exemption `scripts/**` has.
 
 ## Visual regression
 

@@ -51,7 +51,7 @@ const LIGHT_MAP: SemanticMap = {
 
   foreground: { source: 'neutral', step: 950 },
   'foreground-muted': { source: 'neutral', step: 600 },
-  'foreground-subtle': { source: 'neutral', step: 500 },
+  'foreground-subtle': { source: 'neutral', step: 600 },
   'foreground-onAccent': { source: 'white' },
 
   border: { source: 'neutral', step: 200 },
@@ -90,7 +90,7 @@ const DARK_MAP: SemanticMap = {
 
   foreground: { source: 'neutral', step: 50 },
   'foreground-muted': { source: 'neutral', step: 400 },
-  'foreground-subtle': { source: 'neutral', step: 500 },
+  'foreground-subtle': { source: 'neutral', step: 400 },
   'foreground-onAccent': { source: 'neutral', step: 1000 },
 
   border: { source: 'neutral', step: 800 },

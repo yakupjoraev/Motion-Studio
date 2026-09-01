@@ -8,7 +8,7 @@ import {
 } from '@motion-studio/schema'
 import { act, render, renderHook, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useStudioStore } from '../../../store/editor-store'
 
@@ -79,6 +79,16 @@ beforeEach(() => {
 afterEach(() => {
   vi.useRealTimers()
 })
+
+/*
+ * The inspector's rows, sections and controls are a chunk of their own (ADR-152), so the first render
+ * that needs one waits on Vitest transforming it and everything it imports. Warmed here rather than
+ * waited for in a query: on a machine running the whole suite that transform has exceeded an eight
+ * second `findBy` timeout.
+ */
+beforeAll(async () => {
+  await Promise.all([import('./block-inspector'), import('./inspector-multi')])
+}, 60_000)
 
 describe('where an edit lands', () => {
   it('writes the base props at base and an override anywhere else', () => {

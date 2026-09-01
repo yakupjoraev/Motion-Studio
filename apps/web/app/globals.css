@@ -66,3 +66,20 @@
     box-shadow: var(--ms-shadow-focus);
   }
 }
+
+/*
+ * Forced colours drops every `box-shadow`, so the two-ring focus shadow above is not painted at all
+ * and the `outline: none` beside it still is — measured on a focused control: `box-shadow: none`,
+ * `outline-style: none`. In this mode the indicator has to be an outline, in the system's own focus
+ * colour rather than in a token the mode has replaced (ADR-324).
+ *
+ * Deliberately **outside `@layer base`**: `outline-none` is a utility, and a layered base rule loses
+ * to it. An unlayered author rule wins over every layer, which is what makes this reach the controls
+ * that ask for no outline.
+ */
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+}

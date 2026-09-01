@@ -1,18 +1,20 @@
 'use client'
 
-import { applyTheme, markThemeReady, studioDark } from '@motion-studio/theme'
+import { applyTheme, markThemeReady, storedColorMode, studioDark } from '@motion-studio/theme'
 import { useEffect } from 'react'
 
 /**
  * Applies the default theme once, on mount, and opens the transition gate a frame later so the initial
  * variable write has nothing to animate from — `THEME_ENGINE.md` § Colour mode.
  *
- * Renders nothing: a theme change is a `style.setProperty` loop on the root, never a React render. The
- * studio shell takes this over in prompt 11, along with the mode toggle and the theme builder.
+ * The stored preference wins over the preset's own mode: `studioDark` says `dark`, and applying that
+ * unconditionally overrode the choice the mode script had just read from storage — ADR-322.
  */
 export function ThemeBoot() {
   useEffect(() => {
-    applyTheme(studioDark)
+    const stored = storedColorMode()
+
+    applyTheme(stored === undefined ? studioDark : { ...studioDark, colorMode: stored })
     markThemeReady()
   }, [])
 

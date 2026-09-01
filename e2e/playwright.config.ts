@@ -40,17 +40,19 @@ export default defineConfig({
     },
     /*
      * TESTING.md § E2E asks for three browsers; the perf specs are Chrome-only because the budgets in
-     * PERFORMANCE.md were measured there and a budget is only comparable to itself. So the other two
-     * run the flows, which are the specs whose subject is behaviour rather than timing — ADR-280.
+     * PERFORMANCE.md were measured there and a budget is only comparable to itself — ADR-280. The
+     * other two run the flows and the **a11y** specs: focus order, focus restoration and the
+     * keyboard maps are exactly where engines differ, so a single-browser accessibility pass proves
+     * one browser's accessibility (ADR-329).
      */
     {
       name: 'firefox',
-      testMatch: '**/flows/*.spec.ts',
+      testMatch: ['**/flows/*.spec.ts', '**/a11y/*.spec.ts'],
       use: { ...devices['Desktop Firefox'] },
     },
     {
       name: 'webkit',
-      testMatch: '**/flows/*.spec.ts',
+      testMatch: ['**/flows/*.spec.ts', '**/a11y/*.spec.ts'],
       use: { ...devices['Desktop Safari'] },
     },
   ],

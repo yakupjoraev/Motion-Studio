@@ -13077,3 +13077,322 @@ and a change that adds a megabyte of unused code will be caught by exactly one o
   in for it. `/blocks/[slug]` and `/docs` are those routes, which is why ADR-320's 41 KiB was found by
   a measurement nobody was forced to take.
 - The regression files were deleted; `git status` on the landing is clean.
+## ADR-322 — `ThemeBoot` applies the stored colour mode, not the preset's own
+
+**Date** 2026-09-01 · **Prompt** 55 · **Status** Accepted
+
+### Question
+Prompt 55 requires zero axe violations on every route **in both colour modes**. Light mode turned out
+to be unreachable: `ThemeBoot` called `applyTheme(studioDark)` on mount, `studioDark.colorMode` is
+`dark`, and `applyTheme` writes that mode onto the root — so the blocking mode script's reading of the
+stored preference was overwritten a moment later, and a scan of "light mode" measured dark mode twice.
+
+### Measurement
+With the stored preference honoured, the sweep runs in both modes and finds what only light mode has:
+two `color-contrast` violations, on `/blocks/hero-centered` and `/playground`, both from the same token
+(ADR-323). Dark mode had passed all along, which is why nothing had reported them.
+
+### Decision
+`apps/web/app/theme-boot.tsx` reads `storedColorMode()` and applies `{ ...studioDark, colorMode: stored }`
+when there is one. The preset's mode remains the default for a visitor who has not chosen; ADR-318's
+server-rendered attribute is that default in the HTML.
+
+### Consequences
+- Light mode is reachable, and `e2e/a11y/axe-all-routes.spec.ts` asserts the mode the page ended in
+  before it scans — a test that asked for light and got dark would otherwise pass quietly.
+- The `theme-toggle` block, which the gallery renders live, now changes the app's own pages for real
+  rather than until the next reload.
+- Still open, and still the owner's: whether a public route should follow the **system** preference
+  when nothing is stored. Today it does not — the preset decides.
+
+## ADR-323 — `foreground-subtle` is not a text tier, because the ramp has no step for one
+
+**Date** 2026-09-01 · **Prompt** 55 · **Status** Accepted, supersedes ADR-198's escalation
+
+### Question
+axe reported two `color-contrast` failures in light mode: 4.30:1 and 4.11:1 for text in
+`foreground-subtle`, against a 4.5:1 requirement. ADR-198 had already measured this and escalated it
+with two options — move the token into `TEXT_PAIRS` and lighten it, or change two dozen call sites.
+Prompt 55 is where that decision belongs, and the first thing it needs is the real number of call sites.
+
+### Measurement
+`text-foreground-subtle` appears **111 times across 78 files** — the studio chrome, the blocks
+catalogue, the docs components, the playground. Not two dozen.
+
+The token is `NEUTRAL[500]` in both modes. Measured against the surfaces it is used on:
+
+```
+light  neutral.500  surface-0 4.10  surface-1 4.28  surface-2 3.87  surface-3 4.28
+dark   neutral.500  surface-0 4.82  surface-1 4.65  surface-2 4.27  surface-3 3.52
+light  neutral.600  worst 6.30       dark neutral.400  worst 5.64
+```
+
+No step clears 4.5:1 except the one `foreground-muted` already occupies, in either mode. The ramp has
+twelve steps and none between 500 and 600, so a three-tier text scale where all three tiers meet AA
+needs a **new ramp step** — which means a step in every hue ramp (`RampStep` is a closed union that
+eight ramps satisfy), in the generated theme ramps, in the exported token formats and in the Figma
+tokens.
+
+DESIGN_SYSTEM.md § Contrast contract held tertiary text to 3:1 "under a duplication rule". WCAG 1.4.3
+has no such exemption: the exceptions are large text, incidental text, and text in an inactive
+control. Duplicated tertiary metadata is none of those.
+
+### Decision
+`foreground-subtle` takes the same step as `foreground-muted` — 600 in light, 400 in dark — in the
+token set and in the theme engine's `semantic-map`, and its four surface pairs move from `UI_PAIRS`
+into `TEXT_PAIRS` in all three contrast tests: `contrast.test.ts`, `presets.test.ts` (all ten presets)
+and `neutral.test.ts` (every neutral family). All pass at 4.5:1.
+
+Two lines of token rather than 111 call sites, for the same rendered result: the call sites keep saying
+"tertiary", and the value they resolve to now meets AA. A later ramp extension can separate the two
+tiers again — the intent survives in the call sites, which is the reason this was not a sweep.
+
+### Consequences
+- Accepted: the token is an alias of `foreground-muted` until the ramp gains a step, so both palettes
+  have two text tiers where the document described three. DESIGN_SYSTEM.md says so now, and the
+  contract no longer contains a 3:1 tier for text.
+- Accepted: tertiary text is visually heavier than it was. That is the point of the change.
+- The duplication rule stays as a rule about hierarchy, and stops carrying an accessibility claim it
+  could not support.
+
+## ADR-324 — In forced colours the focus ring is an outline, declared outside the cascade layer
+
+**Date** 2026-09-01 · **Prompt** 55 · **Status** Accepted
+
+### Question
+Prompt 55: "forced colours: borders and focus survive". Do they?
+
+### Measurement
+Borders do. With forced colours active the left panel keeps a 1 px `border-inline-end`, the inspector a
+1 px `border-inline-start`, the status bar a 1 px `border-top`, and the mode repaints their colours to
+`CanvasText`. Nothing in the chrome depends on a change of surface value alone.
+
+Focus did not. The ring is `box-shadow: var(--ms-shadow-focus)` with `outline: none` beside it, and
+forced colours **drops every box-shadow**. Measured on a focused link with the mode active:
+`box-shadow: none`, `outline-style: none`. There was no focus indicator at all.
+
+The first fix landed inside `@layer base` and changed nothing, because `outline-none` is a utility and
+`@layer utilities` beats `@layer base` at equal specificity. The measurement said so before the theory
+did: the ring appeared on a public route and stayed missing in the studio, whose controls carry that
+utility.
+
+### Decision
+`apps/web/app/globals.css` declares, **outside every layer**, so it beats all of them:
+
+```css
+@media (forced-colors: active) {
+  :focus-visible { outline: 2px solid Highlight; outline-offset: 2px; }
+}
+```
+
+`Highlight` rather than a token: the mode has replaced the token, and the system's own focus colour is
+the one the rest of the desktop uses. Measured after: `outline: solid 2px` on both a public route and a
+studio control.
+
+### Consequences
+- Accepted: one unlayered rule in a stylesheet that is otherwise entirely layered. The comment above it
+  says why, because "move it into the layer" is a tidy-looking change that silently removes the ring.
+- `e2e/a11y/forced-colors.spec.ts` asserts `outline-style`, not width: `outline: none` computes to
+  `none 3px` in Chrome, so a width assertion passes on a page with no ring — the first version of that
+  spec did exactly that.
+- Accepted: axe's `color-contrast` rule is disabled in that spec, and only there. Playwright's
+  emulation repaints backgrounds with system colours while axe still reads the authored text colour,
+  which produced 13,773 lines of violations that do not exist in the real mode.
+
+## ADR-325 — Focus returns to the control that opened a dialog, tracked outside the dialog
+
+**Date** 2026-09-01 · **Prompt** 55 · **Status** Accepted
+
+### Question
+ACCESSIBILITY.md § Dialogs: "focus is trapped and restored to the trigger on close". Measured on all
+seven of the studio's dialogs — five File-menu dialogs, the export dialog, the command palette — focus
+after `Esc` landed on `body`. Every one of them.
+
+### Measurement
+The focus sequence, logged with a capturing listener: the dialog's Close button blurs, and **no
+`focusin` follows**. Nothing receives focus.
+
+Radix's modal content does this:
+
+```js
+onCloseAutoFocus = composeEventHandlers(props.onCloseAutoFocus, (event) => {
+  event.preventDefault()
+  if (!isRightClickOutside) context.triggerRef.current?.focus()
+})
+```
+
+It restores to its own `Trigger`. These dialogs have none — they open from a store flag or a shortcut —
+so `triggerRef` is null, nothing is focused, and the `preventDefault` stops the focus scope's own
+restore on the way out.
+
+The primitive had a tracker for exactly this: a `focusin` listener registered while the dialog is
+closed. It could never fire. ADR-313 made the dialogs mount **at the moment they open**, so the
+listener starts after the control that opened them was focused. Two further attempts failed for the
+same reason before the mounting order was measured: restoring on the next frame, and letting Radix's
+default run.
+
+### Decision
+`packages/ui/src/dialog/focus-return.ts` — a module-level `focusin` listener, installed the first time
+any dialog mounts, recording the last focused element **outside** any `[data-ms-overlay]`. The dialog
+captures its own target in a `useLayoutEffect` on open, which runs before the focus scope's passive
+effect moves focus, and falls back to the module's record when the active element is inside another
+overlay — which is what makes a dialog opened from a menu item return to the menu's trigger rather than
+to an item that no longer exists.
+
+Measured after: all seven restore. `e2e/a11y/focus-restore.spec.ts` is one test per dialog.
+
+### Consequences
+- Accepted: one document-level listener for the life of the page, with a `closest()` call per focus
+  change. It is the only place that can see the trigger of a dialog that mounts late.
+- Accepted: the overlay filter means focus is never returned *into* another overlay. For a dialog
+  opened from a dropdown that is the correct answer rather than a compromise.
+- The primitive's unit tests passed throughout, in jsdom, where `aria-hidden`, cascade layers and
+  Radix's trigger ref all behave differently. This is a defect only a browser could show.
+
+## ADR-326 — Every selection change is announced, and a command's result gets its own region
+
+**Date** 2026-09-01 · **Prompt** 55 · **Status** Accepted
+
+### Question
+ACCESSIBILITY.md § Canvas asks for a polite live region "on every change" of the selection, and for the
+result of an action — "Duplicated Hero. 7 blocks." Measured: a click on the canvas announced, a marquee
+announced, a keyboard selection announced. A click in the **layers tree** — the surface the document
+names as the screen-reader path — announced nothing, and no command announced its result at all.
+
+### Measurement
+The canvas announced from three call sites, each inside a gesture handler. Every other path into the
+selection writes it through the store: the tree, an insert from the palette, an undo. None of them
+passes through those handlers.
+
+### Decision
+Two changes, at two levels.
+
+1. `Canvas` subscribes to the scene and announces `describeSelection` whenever the selected ids differ
+   from the last announced set. One subscription replaces the question "did we remember to announce
+   here", and the 150 ms debounce that was already there collapses the duplicate when a gesture handler
+   announces as well.
+2. `CommandAnnouncer` — an app-level `<output>` subscribing to the store's history, saying what the
+   last committed command was: `"${entry.label}. ${count} blocks."`, and `"Undone. …"` when the future
+   grew. Separate from the selection region because the two describe different events: a duplicate
+   changes the selection *and* the document, and one region cannot say both without overwriting itself.
+
+Measured after: "Add Section. 5 blocks.", "Add Tabs. 6 blocks.", "Reorder block. 4 blocks." — each after
+a keyboard-only insert or reorder.
+
+### Consequences
+- Accepted: a third polite region on the page, after the canvas announcer and dnd-kit's. Each has one
+  subject, which is what keeps them from talking over each other.
+- Accepted: the announcement is the command's own label, so it reads "Add Section" rather than
+  "Inserted a section". That label is the one the undo tooltip shows, and two phrasings for one action
+  would be worse than a terse one.
+- The store subscription is the store's own, not a hook: PERFORMANCE.md § Studio budgets zero React
+  re-renders for the chrome, and `theme-no-rerender.spec.ts` still measures zero.
+
+## ADR-327 — The keyboard drag reorders from the palette and not from the tree
+
+**Date** 2026-09-01 · **Prompt** 55 · **Status** Accepted
+
+### Question
+DRAG_AND_DROP.md § Accessibility: "the full drag can be performed with the keyboard on all four
+operations." Can it?
+
+### Measurement
+Operation 1, a palette card into the canvas — **it can**:
+
+```
+Space       Picked up Section, layout block. Use arrow keys to move, space to drop, escape to cancel.
+ArrowDown   Section, layout block over Grid, position 3 of 3.
+Space       Dropped Section, layout block into Grid at position 4.      nodes 4 → 5
+```
+
+Operation 3, a layers row to another position — **it cannot**:
+
+```
+Enter        Heading over Grid, position 1 of 2.
+ArrowDown ×8 Heading over Grid, position 1 of 2.     (every press, unchanged)
+Enter        Dropped Heading into Grid at position 1.  tree order unchanged
+```
+
+The difference is where the drag starts. A palette card begins outside every zone, so the first press
+takes `canvasAwareCoordinateGetter`'s "step into the next zone" branch and lands on a resolved
+position. A tree row begins **inside** its own zone, so every press takes the "stay inside" branch —
+and the position the zone resolves for that point never moves, so eight presses and one press are the
+same drag. The drop then commits the position it started at, which is why the tree looks like it
+accepted a reorder and did nothing.
+
+An earlier draft of this entry claimed the drag jams on both operations. That was wrong: the
+measurement above was taken after a failing test of my own making — a fixed number of tab presses that
+never reached the card — and the first version of the entry generalised from it. The palette drag has
+worked all along.
+
+### Criterion
+Is the remaining half a WCAG failure? No. 2.1.1 asks whether the *function* is keyboard operable, and
+reordering a row is: `Mod+ArrowUp` / `Mod+ArrowDown` moves a row and announces the result — measured,
+and asserted in `e2e/a11y/keyboard-drag.spec.ts`. The tree's keyboard drag is a second path to the same
+function, and it is the one that does not work.
+
+### Decision
+Assert operation 1 end to end, assert the tree's `Mod+↑`/`↓` reorder, and mark the tree's keyboard
+*drag* `fixme` naming this entry. Fixing it means teaching the zone resolution to move a position
+inside a list — ADR-127's grid stepping is right for the canvas and has no notion of list positions —
+which is a change to the drag layer measured against a surface that is not this prompt's subject.
+
+### Consequences
+- Accepted: the layers tree ships a keyboard drag that starts, announces its target and drops it back
+  where it began. ACCESSIBILITY.md § Known limitations says so, and the reorder shortcut is the path a
+  keyboard user is given.
+- Operations 2 and 4 remain unwired for every input device — `useDraggableNode` is attached to layer
+  rows only, so there is no canvas gesture to make accessible yet. Both are declared as skips so the
+  count of four stays visible in the report.
+- The lesson about the measurement is worth more than the finding: a spec that fails proves something
+  about the spec until the interaction is reproduced by hand.
+
+## ADR-328 — The canvas describes its key map, because `role="application"` obliges it to
+
+**Date** 2026-09-01 · **Prompt** 55 · **Status** Accepted
+
+### Question
+ACCESSIBILITY.md § Canvas writes the canvas element out with `aria-describedby="canvas-help"`. The
+implementation had `role="application"`, `aria-label` and a tab stop, and no description.
+
+### Measurement
+`role="application"` tells a screen reader to stop offering its own navigation and pass keys through.
+The canvas then takes `Tab` for itself, to step between siblings — measured: fourteen consecutive `Tab`
+presses leave focus on the canvas. The way out is `F2`, and nothing told the reader that.
+
+### Decision
+A visually hidden element, `useId`-keyed, referenced by `aria-describedby`, naming every key the
+surface takes: `Tab` / `Shift+Tab` between blocks, `Enter` / `Escape` in and out of a group, arrows to
+nudge, `Mod+A` for the level, `F2` to the next panel. The text lives beside the component whose handler
+implements those keys.
+
+### Consequences
+- WCAG 2.1.2 is satisfied by the documented method rather than by removing the trap: `Tab` inside the
+  canvas is the feature, and `F2` is the exit.
+- Accepted: the description is a second place the key map is written and it can drift from
+  `useKeyboardSelection`. The comment on each names the other.
+
+## ADR-329 — The accessibility suite runs on three browsers
+
+**Date** 2026-09-01 · **Prompt** 55 · **Status** Accepted
+
+### Question
+`playwright.config.ts` gave Firefox and WebKit the flows only; `e2e/a11y` ran on Chrome. Prompt 55 asks
+for the eight specs on three browsers. Is that worth the runner time, or is one browser's accessibility
+tree the same as another's?
+
+### Measurement
+It is not. This prompt's findings are engine behaviour: `:focus-visible` is not matched by a
+programmatic `focus()`, `outline: none` computes to `none 3px`, forced colours drops `box-shadow`, and
+Radix's focus restoration depends on when a component mounts. Every one of those is a browser fact
+rather than a React fact.
+
+### Decision
+Firefox and WebKit match `**/a11y/*.spec.ts` as well as the flows, and `pnpm test:e2e:a11y` no longer
+pins `--project=chrome`. `forced-colors.spec.ts` skips on WebKit, which implements no forced-colours
+mode — a skip with a stated reason rather than an assertion that cannot mean anything there.
+
+### Consequences
+- Accepted: the a11y job is three times longer. It is the job that stands in for the screen-reader
+  sessions nobody can automate.
+- The perf specs stay Chrome-only for the reason ADR-280 gives: a budget is comparable to itself.

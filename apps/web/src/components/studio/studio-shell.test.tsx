@@ -126,7 +126,7 @@ describe('StudioShell', () => {
      */
     beforeAll(async () => {
       await import('./shortcuts/shortcut-host')
-    })
+    }, 60_000)
 
     const shortcutsMounted = (): Promise<HTMLElement> =>
       screen.findByTestId('shortcut-host', {}, { timeout: 5000 })

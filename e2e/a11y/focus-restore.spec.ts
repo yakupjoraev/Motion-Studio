@@ -1,0 +1,100 @@
+import { type Page, expect, test } from '@playwright/test'
+
+import { StudioPage } from '../fixtures/studio-page'
+
+/**
+ * ACCESSIBILITY.md § Dialogs: "focus is trapped and restored to the trigger on close". Every dialog
+ * the studio has, opened from the control a person would use and closed with `Esc` — a restored focus
+ * is the difference between closing a dialog and being dropped at the top of the document.
+ */
+const DIALOGS = [
+  { item: 'New', title: 'New document' },
+  { item: 'Open', title: 'Documents' },
+  { item: 'Save as', title: 'Save as' },
+  { item: 'Import a document', title: 'Import a document' },
+  { item: 'Version history', title: 'Version history' },
+] as const
+
+/** What the accessibility tree would call the focused element, for a failure message worth reading. */
+const focusedName = (page: Page): Promise<string> =>
+  page.evaluate(() => {
+    const element = document.activeElement
+
+    if (element === null || element === document.body) {
+      return 'BODY'
+    }
+
+    return `${element.tagName.toLowerCase()}:${element.getAttribute('aria-label') ?? element.textContent?.trim().slice(0, 24) ?? ''}`
+  })
+
+test.describe('the studio’s dialogs', () => {
+  test.beforeEach(async ({ page }) => {
+    const studio = new StudioPage(page)
+
+    await studio.open('responsive-grid')
+  })
+
+  for (const { item, title } of DIALOGS) {
+    test(`${item} restores focus to the File menu on Esc`, async ({ page }) => {
+      const file = page.getByRole('button', { name: 'File' })
+
+      /*
+       * Focused and pressed rather than clicked: a mouse click does not focus a button in WebKit, so a
+       * click-opened dialog has no trigger to return to on that engine — the platform's behaviour, not
+       * the app's. Every engine focuses on `Enter`.
+       */
+      await file.focus()
+      await page.keyboard.press('Enter')
+      await page.getByRole('menuitem', { name: item }).click()
+
+      const dialog = page.getByRole('dialog', { name: title })
+
+      await expect(dialog).toBeVisible()
+      // Focus is inside: a dialog that opens without moving focus is a dialog a keyboard cannot use.
+      expect(await dialog.evaluate((node) => node.contains(document.activeElement))).toBe(true)
+
+      await page.keyboard.press('Escape')
+      await expect(dialog).toBeHidden()
+
+      // The menu item is gone with the menu, so the trigger that survives is the File button.
+      await expect(file).toBeFocused({ timeout: 5000 })
+    })
+  }
+
+  test('the export dialog restores focus to the Export button', async ({ page }) => {
+    const trigger = page.getByRole('button', { name: /^Export/ })
+
+    await trigger.focus()
+    await page.keyboard.press('Enter')
+
+    const dialog = page.getByRole('dialog', { name: 'Export' })
+
+    await expect(dialog).toBeVisible()
+    expect(await dialog.evaluate((node) => node.contains(document.activeElement))).toBe(true)
+
+    await page.keyboard.press('Escape')
+    await expect(dialog).toBeHidden()
+    await expect(trigger).toBeFocused({ timeout: 5000 })
+  })
+
+  test('the command palette gives focus back to what had it', async ({ page }) => {
+    const studio = new StudioPage(page)
+
+    const canvas = page.getByRole('application', { name: 'Design canvas' })
+
+    await canvas.focus()
+
+    // The modifier the registry matches, which is not the one the host suggests on WebKit.
+    await studio.press('Mod+k')
+
+    const palette = page.getByRole('dialog').filter({ has: page.getByRole('combobox') })
+
+    await expect(palette).toBeVisible()
+
+    await page.keyboard.press('Escape')
+    await expect(palette).toBeHidden()
+
+    expect(await focusedName(page)).not.toBe('BODY')
+    await expect(canvas).toBeFocused({ timeout: 5000 })
+  })
+})

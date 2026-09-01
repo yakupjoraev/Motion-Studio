@@ -30,7 +30,8 @@ export const LIGHT: SemanticColors = {
 
   foreground: NEUTRAL[950],
   'foreground-muted': NEUTRAL[600],
-  'foreground-subtle': NEUTRAL[500],
+  // Step 600, the same as `foreground-muted`: no step between them clears 4.5:1 — ADR-323.
+  'foreground-subtle': NEUTRAL[600],
   'foreground-onAccent': WHITE,
 
   // Hairlines. Texture rather than information — § What is deliberately exempt.

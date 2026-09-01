@@ -275,7 +275,7 @@
   --ms-color-surface-inset: oklch(92.5% 0.006 265);
   --ms-color-foreground: oklch(14.0% 0.008 265);
   --ms-color-foreground-muted: oklch(46.5% 0.014 265);
-  --ms-color-foreground-subtle: oklch(58.0% 0.014 265);
+  --ms-color-foreground-subtle: oklch(46.5% 0.014 265);
   --ms-color-foreground-onAccent: oklch(100% 0 0);
   --ms-color-border: oklch(92.5% 0.006 265);
   --ms-color-border-strong: oklch(86.0% 0.008 265);
@@ -436,7 +436,7 @@
   --ms-color-surface-inset: oklch(9.5% 0.006 265);
   --ms-color-foreground: oklch(98.5% 0.002 265);
   --ms-color-foreground-muted: oklch(70.0% 0.012 265);
-  --ms-color-foreground-subtle: oklch(58.0% 0.014 265);
+  --ms-color-foreground-subtle: oklch(70.0% 0.012 265);
   --ms-color-foreground-onAccent: oklch(9.5% 0.006 265);
   --ms-color-border: oklch(27.0% 0.012 265);
   --ms-color-border-strong: oklch(37.0% 0.014 265);
@@ -478,7 +478,7 @@
     --ms-color-surface-inset: oklch(9.5% 0.006 265);
     --ms-color-foreground: oklch(98.5% 0.002 265);
     --ms-color-foreground-muted: oklch(70.0% 0.012 265);
-    --ms-color-foreground-subtle: oklch(58.0% 0.014 265);
+    --ms-color-foreground-subtle: oklch(70.0% 0.012 265);
     --ms-color-foreground-onAccent: oklch(9.5% 0.006 265);
     --ms-color-border: oklch(27.0% 0.012 265);
     --ms-color-border-strong: oklch(37.0% 0.014 265);

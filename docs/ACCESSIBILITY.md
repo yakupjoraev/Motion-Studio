@@ -128,6 +128,10 @@ Radix handles most of it. Requirements we still verify:
 - Background content is `aria-hidden`, **except** the live-region announcer, which must stay
   reachable — an announcer inside an `aria-hidden` subtree goes silent, which is a subtle bug
   worth stating.
+- Restoration is ours rather than Radix's: these dialogs open from a store flag, so they have no
+  `Trigger` for Radix to restore to and it prevents the focus scope's own restore on the way out.
+  `packages/ui/src/dialog/focus-return.ts` tracks the last control focused outside any overlay —
+  ADR-325, which is also why the tracker cannot live inside the dialog.
 - The export dialog's code blocks are `tabindex="0"` with `role="region"` and a label, so they are
   scrollable by keyboard.
 
@@ -261,7 +265,8 @@ Automated tools catch roughly 40 % of real issues. The gate is necessary, not su
 
 ### Manual, per release
 
-A checklist run before every release, recorded in the release notes:
+A checklist run before every release, recorded in `ACCESSIBILITY_AUDIT.md` at the repository root with
+what each item found:
 
 - [ ] Complete flow A (grab an effect) with keyboard only
 - [ ] Complete flow B (compose a page) with keyboard only
@@ -278,16 +283,25 @@ A checklist run before every release, recorded in the release notes:
 
 ### E2E specs
 
-Dedicated `e2e/a11y/`:
+`e2e/a11y/`, on **three browsers** — focus order, focus restoration and the keyboard maps are exactly
+where engines differ, and every finding in the last audit was engine behaviour rather than React
+behaviour (ADR-329):
 
-1. `keyboard-only-compose.spec.ts` — build a 4-section page without a mouse.
-2. `keyboard-drag.spec.ts` — all four drag operations.
-3. `focus-restore.spec.ts` — every dialog restores focus to its trigger.
-4. `live-regions.spec.ts` — selection, drag, and command results are announced.
-5. `reduced-motion.spec.ts` — with the media feature emulated, assert no transform animations run
-   and every route is usable.
-6. `axe-all-routes.spec.ts` — zero violations, both colour modes.
-7. `zoom-200.spec.ts` — no horizontal overflow at 200 % on public routes.
+| Spec | What it holds |
+| --- | --- |
+| `axe-all-routes.spec.ts` | Zero violations on six routes plus the studio, in **both colour modes** |
+| `keyboard-only-compose.spec.ts` | A four-section page inserted with nothing but key presses, and the inspector reached from the canvas |
+| `keyboard-drag.spec.ts` | All four drag operations, including the two that are unwired and the one that jams (ADR-327) |
+| `focus-restore.spec.ts` | Every dialog, and the command palette, returning focus to what opened it |
+| `live-regions.spec.ts` | Selection from either surface, the drag sequence, and a command's result |
+| `reduced-motion.spec.ts` | No transform keyframes and no unreadable line on any route; hidden controls appear on focus |
+| `zoom-200.spec.ts` | No horizontal scrolling at a 640 px and a 320 px viewport, and the studio's own notice |
+| `forced-colors.spec.ts` | A painted focus outline and real panel borders with the mode active (Chromium and Firefox) |
+| `landing.spec.ts`, `gallery.spec.ts`, `docs.spec.ts` | Each public surface in the states it has |
+
+The per-release record of what a manual pass found is `ACCESSIBILITY_AUDIT.md`, at the repository root
+rather than in this folder: the docs site renders what is in `docs/`, and a signed-off audit belongs
+beside the README a reader lands on.
 
 ## Known limitations
 
@@ -300,5 +314,18 @@ Stated honestly rather than hidden:
   through the layers tree and inspector, not a spatial description of the canvas.
 - **HTML export approximates some motion presets.** Each approximation is listed in the export
   warnings.
+- **A keyboard drag works from the palette and not from the layers tree.** A card is picked up, moved
+  over a section and dropped there; a row is picked up, announces "position 1 of 2" and drops back
+  where it began, however many times the arrow keys are pressed — ADR-327 has both measurements. The
+  tree's keyboard path to the same function is `Mod+↑`/`↓`, which reorders and announces the result.
+- **Dragging a node on the canvas does not exist yet** — for any input device. `useDraggableNode` is
+  attached to layer rows only, so operations 2 and 4 of DRAG_AND_DROP.md § The four operations have no
+  gesture to make accessible.
+- **There are two text tiers, not three.** `foreground-subtle` resolves to the same ramp step as
+  `foreground-muted` because no step between them meets 4.5 : 1 (ADR-323). The call sites still say
+  which tier they mean, so the tier returns when the ramp gains a step.
+- **No public route follows the system colour scheme.** The default theme's mode is in the HTML the
+  server sends (ADR-318) and a stored preference overrides it (ADR-322); `prefers-color-scheme` reaches
+  exported pages, not the app's own. Whether it should is the owner's call.
 
 Each limitation has a matching item in [ROADMAP.md](ROADMAP.md) if it is addressable later.

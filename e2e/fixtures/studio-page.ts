@@ -43,18 +43,28 @@ export class StudioPage {
   }
 
   /**
-   * The document's undo, through the key that runs it. The modifier is read off the same
-   * `navigator` the shortcut registry normalises against rather than assumed from the host: a WebKit
-   * run on Windows presents a macOS platform, and Playwright's own ControlOrMeta reads the host.
+   * The modifier the shortcut registry will match, read off the same `navigator` it normalises
+   * against rather than assumed from the host: a WebKit run on Windows presents a macOS platform, and
+   * Playwright's own `ControlOrMeta` reads the host, so the two disagree on exactly one browser.
    */
-  async undo(): Promise<void> {
-    const modifier = await this.page.evaluate(() =>
+  async modifier(): Promise<'Meta' | 'Control'> {
+    return this.page.evaluate(() =>
       /mac|iphone|ipad|ipod/i.test(`${navigator.platform} ${navigator.userAgent}`)
         ? 'Meta'
         : 'Control',
     )
+  }
 
-    await this.page.keyboard.press(`${modifier}+z`)
+  /** A studio shortcut, with the modifier the app itself is listening for — `press('Mod+d')`. */
+  async press(combination: string): Promise<void> {
+    const modifier = await this.modifier()
+
+    await this.page.keyboard.press(combination.replace(/^Mod\+/, `${modifier}+`))
+  }
+
+  /** The document's undo, through the key that runs it. */
+  async undo(): Promise<void> {
+    await this.press('Mod+z')
   }
 
   /** 4× CPU throttling — PERFORMANCE.md § Measurement: the profile every number here is taken at. */

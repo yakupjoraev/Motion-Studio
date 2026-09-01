@@ -2,7 +2,7 @@
 
 import type { NodeId } from '@motion-studio/schema'
 import { cn } from '@motion-studio/utils'
-import { type ReactNode, useCallback, useEffect, useMemo, useRef } from 'react'
+import { type ReactNode, useCallback, useEffect, useId, useMemo, useRef } from 'react'
 
 import { CANVAS_ROOT_CLASS, MARQUEE_CLASS } from './canvas.styles'
 import type {
@@ -89,6 +89,13 @@ export interface CanvasProps {
    */
   readonly onReady?: ((handle: CanvasHandle | null) => void) | undefined
 }
+
+/**
+ * What `role="application"` obliges the canvas to say — every key it takes over, in the order a
+ * reader would need them. ACCESSIBILITY.md § Canvas; the keys themselves are `useKeyboardSelection`.
+ */
+const CANVAS_HELP =
+  'Tab and Shift Tab move between blocks at this level. Enter goes into a group, Escape comes back out. Arrow keys nudge the selection, Command or Control A takes the whole level, and F2 moves to the next panel.'
 
 /**
  * CANVAS.md § DOM structure: a fixed root, one transformed scene, and an overlay layer outside the
@@ -216,6 +223,29 @@ export function Canvas({
   }, [handle, onReady])
 
   const announcer = useAnnouncer()
+  const helpId = useId()
+
+  /*
+   * Every selection change, whatever made it — ACCESSIBILITY.md § Canvas asks for a live region "on
+   * every change", and the three gesture paths that announce for themselves are not every change: the
+   * layers tree, an insert from the palette and an undo all write the selection through the store and
+   * used to arrive in silence (ADR-326).
+   */
+  useEffect(() => {
+    let previous = scene.selectedIds().join(',')
+
+    return scene.subscribe(() => {
+      const current = scene.selectedIds().join(',')
+
+      if (current === previous) {
+        return
+      }
+
+      previous = current
+      announcer.announce(describeSelection(scene, rootId))
+    })
+  }, [announcer, rootId, scene])
+
   const snap = useSnap({ viewport, thresholdPx: snapThreshold, enabled: snapEnabled })
 
   const hitContext = useCallback(
@@ -282,6 +312,7 @@ export function Canvas({
 
   const root = (
     <div
+      aria-describedby={helpId}
       aria-label="Design canvas"
       className={cn(CANVAS_ROOT_CLASS, className)}
       data-testid="canvas-root"
@@ -290,6 +321,14 @@ export function Canvas({
       // biome-ignore lint/a11y/noNoninteractiveTabindex: the canvas is one tab stop with its own key map — CANVAS.md § Keyboard operation
       tabIndex={0}
     >
+      {/*
+        ACCESSIBILITY.md § Canvas specifies this description, and `role="application"` is why it is not
+        optional: the role hands every key to the page, including `Tab`, which the canvas uses to walk
+        siblings. A reader who is not told that has no way out of the surface — ADR-328.
+      */}
+      <span className="sr-only" id={helpId}>
+        {CANVAS_HELP}
+      </span>
       <Scene sceneRef={viewport.sceneRef}>
         <Artboard
           artboardRef={artboardRef}

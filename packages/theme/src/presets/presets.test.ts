@@ -41,15 +41,15 @@ const TEXT_PAIRS: readonly (readonly [SemanticColorToken, SemanticColorToken])[]
   ['foreground', 'warning-muted'],
   ['foreground', 'danger-muted'],
   ['foreground', 'info-muted'],
+  ['foreground-subtle', 'surface-0'],
+  ['foreground-subtle', 'surface-1'],
+  ['foreground-subtle', 'surface-2'],
+  ['foreground-subtle', 'surface-3'],
 ]
 
 const UI_PAIRS: readonly (readonly [SemanticColorToken, SemanticColorToken])[] = [
   ['accent-ring', 'surface-0'],
   ['accent-ring', 'surface-inset'],
-  ['foreground-subtle', 'surface-0'],
-  ['foreground-subtle', 'surface-1'],
-  ['foreground-subtle', 'surface-2'],
-  ['foreground-subtle', 'surface-3'],
   ['canvas-selection', 'canvas-bg'],
   ['canvas-guide', 'canvas-bg'],
   ['canvas-snap', 'canvas-bg'],

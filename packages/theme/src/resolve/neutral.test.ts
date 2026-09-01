@@ -75,9 +75,6 @@ describe('every family passes the contrast gate', () => {
     ['foreground-muted', 'surface-1'],
     ['foreground-muted', 'surface-2'],
     ['foreground-muted', 'surface-3'],
-  ] as const
-
-  const UI_PAIRS = [
     ['foreground-subtle', 'surface-0'],
     ['foreground-subtle', 'surface-1'],
     ['foreground-subtle', 'surface-2'],
@@ -100,12 +97,6 @@ describe('every family passes the contrast gate', () => {
           contrastRatio(colors[foreground], colors[background]),
           `${family} ${mode} ${foreground}/${background}`,
         ).toBeGreaterThanOrEqual(4.5)
-      }
-      for (const [foreground, background] of UI_PAIRS) {
-        expect(
-          contrastRatio(colors[foreground], colors[background]),
-          `${family} ${mode} ${foreground}/${background}`,
-        ).toBeGreaterThanOrEqual(3)
       }
     }
   })

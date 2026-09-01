@@ -19,7 +19,8 @@ export const DARK: SemanticColors = {
   foreground: NEUTRAL[50],
   'foreground-muted': NEUTRAL[400],
   // The same step as light: `neutral.500` is the one value reading as tertiary in both modes.
-  'foreground-subtle': NEUTRAL[500],
+  // Step 400, the same as `foreground-muted`: no step between them clears 4.5:1 — ADR-323.
+  'foreground-subtle': NEUTRAL[400],
   // The far end of the neutral ramp from this mode's accent ladder — ADR-019.
   'foreground-onAccent': NEUTRAL[1000],
 

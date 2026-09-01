@@ -7,6 +7,7 @@ import { type ReactNode, useEffect, useState } from 'react'
 
 import { RenderCounter } from '../../lib/dev/render-counter'
 import { useStudioStore } from '../../store/editor-store'
+import { CommandAnnouncer } from './command-announcer'
 
 import { type PanelSide, isCollapsed } from '../../hooks/panel-layout'
 import { usePanelLayout } from '../../hooks/use-panel-layout'
@@ -156,6 +157,8 @@ export function StudioShell({ canvas }: StudioShellProps) {
     <ToastProvider>
       {/* PERFORMANCE.md § Studio: the chrome's half of "zero React re-renders" is counted here. */}
       <RenderCounter id="studio-shell" />
+      {/* ACCESSIBILITY.md § Canvas: what a command did, in words — ADR-326. */}
+      <CommandAnnouncer />
       {/* The File menu and the five document dialogs share one set of actions, and the top bar is
           inside the provider because it is the surface that starts most of them. */}
       <DocumentsProvider>

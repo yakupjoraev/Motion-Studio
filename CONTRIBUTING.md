@@ -41,8 +41,8 @@ chore(ci): cache turbo remote artifacts
 Allowed types: `feat`, `fix`, `perf`, `refactor`, `docs`, `test`, `build`, `ci`, `chore`, `style`.
 
 Scopes match package names: `web`, `storybook`, `ui`, `blocks`, `editor`, `canvas`, `dnd`, `codegen`,
-`schema`, `motion`, `theme`, `tokens`, `icons`, `hooks`, `utils`, `config`, plus `e2e`, `ci` and `docs`
-for the cross-cutting work that belongs to no package.
+`schema`, `motion`, `theme`, `tokens`, `icons`, `hooks`, `utils`, `config`, plus `e2e`, `ci`, `docs` and
+`a11y` for the cross-cutting work that belongs to no package.
 
 `scripts/check-commit-msg.mjs` reads this list, so a scope that is not here is rejected. Every workspace
 package must appear: `icons`, `config` and `storybook` were missing from the original list while the rule

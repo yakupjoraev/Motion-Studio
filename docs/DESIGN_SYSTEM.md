@@ -233,7 +233,7 @@ never a literal — the ramp is the only place a colour value is written.
 | `surface-inset` | `neutral.200` | `neutral.1000` | One step past `surface-2` away from the mode's elevation direction |
 | `foreground` | `neutral.950` | `neutral.50` | 19.9 : 1 on `surface-1` |
 | `foreground-muted` | `neutral.600` | `neutral.400` | 6.98 : 1 / 7.45 : 1 on `surface-1` |
-| `foreground-subtle` | `neutral.500` | `neutral.500` | 4.28 : 1 / 4.65 : 1 on `surface-1`. See the tertiary-text rule below |
+| `foreground-subtle` | `neutral.600` | `neutral.400` | The same step as `foreground-muted`: no step between them clears 4.5 : 1, and it paints text in 78 files — ADR-323 |
 | `foreground-onAccent` | `white` | `neutral.1000` | Each mode's accent ladder climbs away from that mode's surfaces, so the readable foreground is the far end of the neutral ramp: 7.81 light, 7.41 dark |
 | `border` | `neutral.200` | `neutral.800` | Hairline. Decorative — see the exemption below |
 | `border-strong` | `neutral.300` | `neutral.700` | Input and control boundaries |
@@ -278,16 +278,19 @@ Four rules travel with this table:
 3. **Status colours take the step that clears 4.5 : 1 twice**: on the mode's `surface-1` and on the
    status's own `-muted` background. Measured, that is step 600 in light and step 400 in dark. Using
    500 in dark fails on the muted background for every hue (3.87–4.49 : 1).
-4. **Tertiary text is held to 3 : 1, not 4.5 : 1** — and in exchange, a value rendered in
-   `foreground-subtle` must be duplicated somewhere at `foreground-muted` or above. A placeholder
-   repeats its field's label; tertiary metadata repeats what a primary label already states. If a
-   value is the only carrier of its information, it is not tertiary and does not use this token.
+4. **Tertiary text meets 4.5 : 1 like every other text**, which currently costs the tier its own
+   step: `foreground-subtle` resolves to the same ramp step as `foreground-muted`, because the ramp
+   has none between them and WCAG 1.4.3 exempts large text, incidental text and inactive controls —
+   not duplicated metadata (ADR-323). The duplication rule stays as a rule about hierarchy: a value
+   rendered in `foreground-subtle` is repeated somewhere at `foreground-muted` or above, and a value
+   that is the only carrier of its information is not tertiary. Separating the two tiers again needs a
+   ramp step, not a threshold.
 
 ### Contrast contract
 
 - Body text on its surface: **≥ 4.5:1**
 - Large text (≥ 24 px or ≥ 19 px bold): **≥ 3:1**
-- Tertiary text and placeholders: **≥ 3:1**, under the duplication rule above
+- Tertiary text and placeholders: **≥ 4.5:1** — they are text (ADR-323)
 - Non-text graphics that carry information: **≥ 3:1**
 - Focus ring against both the element and its surroundings: **≥ 3:1**
 
@@ -313,12 +316,12 @@ const TEXT_PAIRS = [
   ['foreground', 'accent-muted'], ['foreground', 'success-muted'],
   ['foreground', 'warning-muted'], ['foreground', 'danger-muted'],
   ['foreground', 'info-muted'],
+  ['foreground-subtle', 'surface-0'], ['foreground-subtle', 'surface-1'],
+  ['foreground-subtle', 'surface-2'], ['foreground-subtle', 'surface-3'],
 ] as const   // ≥ 4.5:1
 
 const UI_PAIRS = [
   ['accent-ring', 'surface-0'], ['accent-ring', 'surface-inset'],
-  ['foreground-subtle', 'surface-0'], ['foreground-subtle', 'surface-1'],
-  ['foreground-subtle', 'surface-2'], ['foreground-subtle', 'surface-3'],
   ['canvas-selection', 'canvas-bg'],
   ['canvas-guide', 'canvas-bg'],
   ['canvas-snap', 'canvas-bg'],

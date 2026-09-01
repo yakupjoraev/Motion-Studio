@@ -34,6 +34,10 @@ const SCOPES = [
   'e2e',
   'ci',
   'docs',
+  // A pass that touches nine packages for one subject — prompt 55's commit, and the accessibility
+  // work that follows it, belongs to no package. CONTRIBUTING.md § Commits lists it beside the other
+  // cross-cutting three.
+  'a11y',
 ]
 
 const ATTRIBUTION = [
