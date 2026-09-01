@@ -13396,3 +13396,53 @@ mode — a skip with a stated reason rather than an assertion that cannot mean a
 - Accepted: the a11y job is three times longer. It is the job that stands in for the screen-reader
   sessions nobody can automate.
 - The perf specs stay Chrome-only for the reason ADR-280 gives: a budget is comparable to itself.
+
+## ADR-330 — The Node floor moves to 22.18, because the byte gate cannot run below it
+
+**Date** 2026-09-01 · **Prompt** 54 · **Status** Accepted
+
+### Question
+`pnpm size-limit` — the byte gate ADR-314 added — fails on every CI run since it was wired, including
+the commit that wired it, while passing locally:
+
+```
+node_modules/.pnpm/size-limit@13.0.3/node_modules/size-limit/colors.js:1
+import { styleText } from 'node:util'
+SyntaxError: The requested module 'node:util' does not provide an export named 'styleText'
+Node.js v20.11.1
+```
+
+`build` is the only red job in `CI`, so every Dependabot pull request inherits a red pipeline and none
+of them can be judged on their own contents.
+
+### Criterion (set before changing anything)
+This is ADR-048 again — a job green locally and red in CI because the two run different Node — and that
+one was resolved by making the code work on the declared floor rather than by moving the floor. So the
+question is whether the floor is still the right specification, not which of the two Nodes wins.
+
+### Measurement
+It is not the same case. `size-limit@13` declares what it needs:
+
+| | Value |
+| --- | --- |
+| `size-limit@13.0.3` `engines.node` | `^22.18.0 \|\| ^24.0.0 \|\| >=26.0.0` |
+| `.nvmrc` / `engines.node` | `20.11` / `>=20.11` |
+| Node on the development machine | `22.20.0` |
+
+`styleText` landed in 20.12, so even the last 20.x would not have carried this. Two further facts
+settle it: Node 20 reached end of life in April 2026, and ADR-048 already established that the project
+had been running its Vitest presets on a Node feature newer than the floor it claimed. The floor was
+describing a Node nobody used.
+
+### Decision
+`.nvmrc` becomes `22.20.0` and `engines.node` becomes `>=22.18` — the intersection of what
+`size-limit` requires and what the development machine already runs. `TECH_STACK.md` § Runtime
+requirements states the same number, which is the file the floor is specified in.
+
+### Consequences
+- CI and the development machine now run the same major, so a green local run means something about CI.
+- ADR-048's `.mjs` presets stay as they are. Type stripping is no longer the reason they cannot be
+  `.ts`, but a file Node loads is still JavaScript, and rewriting two working modules to prove a point
+  about a floor that moved is not a change with a reason.
+- A dependency that raises its own floor now breaks the build rather than being silently unusable. The
+  gate that caught this one was the gate itself.

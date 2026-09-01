@@ -13,7 +13,7 @@ reason in this file does not belong in `package.json`.
 
 | | Version | Note |
 | --- | --- | --- |
-| Node | `>=20.11` | LTS. Pinned in `.nvmrc` and `engines`. |
+| Node | `>=22.18` | LTS. Pinned in `.nvmrc` and `engines`. ADR-330 has why the floor moved. |
 | pnpm | `>=9` | Workspaces + strict node-linker. Enable via `corepack`. |
 
 ## Core
