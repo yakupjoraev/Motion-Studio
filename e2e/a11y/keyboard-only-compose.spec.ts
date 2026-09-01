@@ -79,6 +79,13 @@ test.describe('composing a page with the keyboard alone', () => {
       await settled(page)
 
       if (key === 'Enter') {
+        /*
+         * Polled for the sentence rather than read once. A live region is written in the render the
+         * command schedules, not in the key press — on Firefox the read has landed in between and
+         * collected an empty string, which then fails as a missing announcement.
+         */
+        await expect.poll(() => announced(page)).toMatch(/^Add /)
+
         inserted.push(await announced(page))
       }
     }

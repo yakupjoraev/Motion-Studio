@@ -87,11 +87,11 @@ test.describe('operation 1 — a palette card into the canvas', () => {
     await page.keyboard.press('Space')
     await settled(page)
     await page.keyboard.press('ArrowDown')
-    await settled(page)
 
-    const over = (await page.locator('#ms-dnd-announcer').textContent()) ?? ''
-
-    expect(over, over).toMatch(/over .*position \d+ of \d+/)
+    // Polled, not read: the announcement is written in the render the move schedules.
+    await expect
+      .poll(async () => (await page.locator('#ms-dnd-announcer').textContent()) ?? '')
+      .toMatch(/over .*position \d+ of \d+/)
 
     await page.keyboard.press('Space')
 

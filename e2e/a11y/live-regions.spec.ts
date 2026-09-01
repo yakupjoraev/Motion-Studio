@@ -107,11 +107,11 @@ test.describe('a keyboard drag', () => {
     await page.keyboard.press('Enter')
     await settled(page)
     await page.keyboard.press('ArrowDown')
-    await settled(page)
 
-    const held = (await dragAnnouncements(page)).join(' / ')
-
-    expect(held, held).toMatch(/Heading over .*position \d+ of \d+|cannot go into/)
+    // Polled, not read: the announcement is written in the render the move schedules.
+    await expect
+      .poll(async () => (await dragAnnouncements(page)).join(' / '))
+      .toMatch(/Heading over .*position \d+ of \d+|cannot go into/)
 
     await page.keyboard.press('Enter')
 
