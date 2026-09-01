@@ -62,9 +62,11 @@ test.describe('forced colours', () => {
     // The skip link is the first focusable element on every public route — ACCESSIBILITY.md § Landing.
     await page.keyboard.press('Tab')
 
-    const focused = await page.evaluate(() => document.activeElement?.tagName ?? 'NONE')
-
-    expect(focused).not.toBe('BODY')
+    // Focus moves synchronously, but the element it moves to is rendered by React — so the wait is
+    // for something other than the body to hold it, rather than for the press to have been made.
+    await expect
+      .poll(() => page.evaluate(() => document.activeElement?.tagName ?? 'NONE'))
+      .not.toBe('BODY')
 
     const outline = await outlineOf(page, ':focus-visible')
 
