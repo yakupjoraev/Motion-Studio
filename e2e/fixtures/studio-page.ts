@@ -122,6 +122,26 @@ export class StudioPage {
   }
 
   /**
+   * What the status bar says about the selection — "Hero selected", "3 selected", or nothing.
+   *
+   * The store's own phrasing, which is also what the canvas announces, so a spec that asserts on it
+   * is asserting the thing a user is told rather than an internal array's length.
+   */
+  async selectionLabel(): Promise<string> {
+    return (await this.page.getByTestId('status-selection').textContent()) ?? ''
+  }
+
+  /** A layers row, held with `Shift` or `Mod` to extend or toggle the selection — SHORTCUTS.md. */
+  async clickLayer(nodeId: string, modifiers?: ('Shift' | 'Control' | 'Meta')[]): Promise<void> {
+    await this.openPanelTab('Layers')
+
+    const row = this.page.locator(`[data-layer-row="${nodeId}"]`)
+
+    await row.scrollIntoViewIfNeeded()
+    await row.click(modifiers === undefined ? {} : { modifiers })
+  }
+
+  /**
    * A render count from `window.__renderCounts`. An ordinary production build strips the counters,
    * which is why `pnpm test:e2e:perf` builds with `MS_INSTRUMENT=1` first (ADR-315).
    */

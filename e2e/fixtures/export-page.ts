@@ -46,8 +46,24 @@ export class ExportPage {
   }
 
   /**
+   * Opens the dialog once and closes it again, so its chunk is in memory and its component is
+   * mounted — ADR-313: the chunk leaves the first load and is prefetched on idle, and from the first
+   * open onwards the dialog stays mounted behind a flag.
+   *
+   * Anything measuring the *cost of the click* has to do this first, or it measures a download.
+   */
+  async warmUp(): Promise<void> {
+    await this.open()
+    await this.page.keyboard.press('Escape')
+    await expect(this.page.getByTestId('export-dialog')).toBeHidden()
+  }
+
+  /**
    * Clicks Export from inside the page and answers after one animation frame, which is what
    * "visible in the frame the button is pressed" means. Playwright's own round trip is not in it.
+   *
+   * Call `warmUp` first. On a cold page this measures the network — which is a real number about a
+   * first click, and not the one the promise in prompt 45 is about.
    */
   openWithinOneFrame(): Promise<{
     readonly visible: boolean
@@ -78,6 +94,11 @@ export class ExportPage {
         frameMs: performance.now() - started,
       }
     })
+  }
+
+  /** How many file rows the tree is showing right now — zero while a run is still printing. */
+  fileCount(): Promise<number> {
+    return this.page.locator('[data-file-row]').count()
   }
 
   async paths(): Promise<string[]> {

@@ -23,6 +23,8 @@ export class StudioInspector {
    * slider is a `slider`, both of which take a number, while a combobox and a textbox take text.
    */
   async setControl(label: string, value: string): Promise<void> {
+    await this.ready()
+
     const textbox = this.byRole('textbox', label)
 
     if ((await textbox.count()) > 0) {
@@ -73,6 +75,20 @@ export class StudioInspector {
     }
 
     throw new Error(`the inspector has no control labelled "${label}"`)
+  }
+
+  /**
+   * Waits for the inspector to have drawn a block's controls.
+   *
+   * `block-inspector` is a chunk of its own — ADR-313 took it out of the studio's first load — so a
+   * query fired at the moment a node is selected races the import and finds a skeleton. The failure
+   * looks like a missing control rather than like a wait that was not made.
+   */
+  async ready(): Promise<void> {
+    await this.page
+      .locator('[data-testid="block-inspector"], [data-testid="inspector-multi"]')
+      .first()
+      .waitFor({ timeout: 30_000 })
   }
 
   /** What a control currently reports, for a value that has to be read back rather than set. */

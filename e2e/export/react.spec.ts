@@ -1,17 +1,17 @@
-import { readFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
-
 import { expect, test } from '@playwright/test'
 import JSZip from 'jszip'
 
 import { ExportPage } from '../fixtures/export-page'
 import { StudioPage } from '../fixtures/studio-page'
 
-/** The sixty-node landing: the document the export decision was measured on. */
+/**
+ * EXPORT_ENGINE.md § React, and the dialog itself.
+ *
+ * React is the target the dialog opens on, so the behaviours that belong to no particular target —
+ * the archive, the regeneration an option toggle causes, the keyboard path in and out — are exercised
+ * here rather than repeated in the other three files.
+ */
 const FIXTURE = 'export-landing'
-
-const here = dirname(fileURLToPath(import.meta.url))
 
 /** These specs exist partly to produce numbers, so the numbers are written where a run shows them. */
 const report = (line: string): void => {
@@ -24,19 +24,10 @@ test.beforeEach(async ({ page, context }) => {
   await new StudioPage(page).open(FIXTURE)
 })
 
-test('React: the dialog opens, files stream in, and a copy lands on the clipboard', async ({
-  page,
-}) => {
+test('lists the files it printed and copies one to the clipboard', async ({ page }) => {
   const exportPage = new ExportPage(page)
 
-  const opened = await exportPage.openWithinOneFrame()
-
-  // In the DOM in the frame of the click, with no file in it: the dialog does not wait on the
-  // pipeline, which is the difference between a tool and a build step. `frameMs` is reported rather
-  // than asserted — it measures when the next frame boundary arrived, not when the dialog did.
-  expect(opened.visible).toBe(true)
-  expect(opened.files).toBe(0)
-  report(`dialog on screen at the next frame, ${opened.frameMs.toFixed(1)} ms after the click`)
+  await exportPage.open()
 
   const paths = await exportPage.paths()
 
@@ -50,64 +41,21 @@ test('React: the dialog opens, files stream in, and a copy lands on the clipboar
   expect(copied.split('\n')[0]).toMatch(/^export \{ \w+ \} from '\.\//)
 })
 
-test('Next.js: the file list is a project', async ({ page }) => {
+test('opening costs a render once the chunk is there', async ({ page }) => {
   const exportPage = new ExportPage(page)
 
-  await exportPage.open()
-  await exportPage.chooseTarget('Next.js')
-  await exportPage.settled()
+  await exportPage.warmUp()
 
-  const paths = await exportPage.paths()
+  const opened = await exportPage.openWithinOneFrame()
 
-  for (const expected of [
-    'app/layout.tsx',
-    'app/page.tsx',
-    'app/globals.css',
-    'package.json',
-    'postcss.config.mjs',
-    'tsconfig.json',
-    'README.md',
-  ]) {
-    expect(paths).toContain(expected)
-  }
-})
-
-test('HTML: one self-contained document', async ({ page }) => {
-  const exportPage = new ExportPage(page)
-
-  await exportPage.open()
-  await exportPage.chooseTarget('HTML')
-  await exportPage.settled()
-
-  expect(await exportPage.paths()).toEqual(['index.html'])
-
-  const copied = await exportPage.copyShownFile()
-
-  expect(copied).toContain('<!doctype html>')
-  expect(copied).toContain('<style>')
-})
-
-test('JSON: what comes out parses back into the document that went in', async ({ page }) => {
-  const exportPage = new ExportPage(page)
-
-  await exportPage.open()
-  await exportPage.chooseTarget('JSON')
-  await exportPage.settled()
-
-  const copied = await exportPage.copyShownFile()
-  const exported = JSON.parse(copied) as Record<string, unknown>
-  const committed = JSON.parse(
-    readFileSync(join(here, '..', 'fixtures', 'documents', `${FIXTURE}.motion.json`), 'utf8'),
-  ) as Record<string, unknown>
-
-  // `meta.updatedAt` is the one field a load is allowed to move, so it is left out of the comparison.
-  const withoutTime = (document: Record<string, unknown>): unknown => {
-    const { updatedAt, ...meta } = document['meta'] as Record<string, unknown>
-
-    return { ...document, meta, stamped: typeof updatedAt === 'string' }
-  }
-
-  expect(withoutTime(exported)).toEqual(withoutTime(committed))
+  /*
+   * The promise in prompt 45 — "visible in the frame the button is pressed" — as ADR-313 left it: the
+   * dialog's chunk is prefetched on idle and the component stays mounted after the first open, so the
+   * click costs a render. `frameMs` is reported rather than asserted; it measures when the next frame
+   * boundary arrived, which is a property of the browser's schedule and not of this code.
+   */
+  expect(opened.visible).toBe(true)
+  report(`dialog on screen at the next frame, ${opened.frameMs.toFixed(1)} ms after the click`)
 })
 
 test('Copy React on a selection puts one component on the clipboard', async ({ page }) => {
@@ -124,7 +72,7 @@ test('Copy React on a selection puts one component on the clipboard', async ({ p
   expect(copied).not.toContain('export { ')
 })
 
-test('Zip: the archive holds the files the tree listed', async ({ page }) => {
+test('the archive holds the files the tree listed', async ({ page }) => {
   const exportPage = new ExportPage(page)
 
   await exportPage.open()
@@ -181,7 +129,7 @@ test('the whole dialog is reachable from the keyboard, and gives focus back', as
   await page.getByTestId('shortcut-host').waitFor({ state: 'attached' })
   await page.locator('[data-node-id]').first().click()
 
-  const trigger = page.getByRole('button', { name: /^Export/ })
+  const trigger = page.getByTestId('export-button')
 
   await trigger.focus()
   await page.keyboard.press('ControlOrMeta+Shift+KeyE')
