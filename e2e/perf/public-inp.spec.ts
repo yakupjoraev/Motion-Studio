@@ -109,6 +109,14 @@ test.describe('the public routes', () => {
         window.scrollTo(0, 0)
       })
 
+      /*
+       * A control has to exist before a pass over the controls means anything. `first-input` is only
+       * reported for an event a handler ran for, so a route whose islands have not mounted yet gives
+       * ten tab presses, no entry, and a `first` of -1 — which is what the fixed one-second wait used
+       * to hide rather than prevent.
+       */
+      await page.locator('button:visible').first().waitFor()
+
       const driven = await interact(page)
       const inp = await page.evaluate(() => window.__inp ?? { worst: 0, slow: 0, first: -1 })
       const worst =
