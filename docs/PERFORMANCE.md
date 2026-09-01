@@ -39,6 +39,11 @@ cost an afternoon. Taken 2026-09-01.
 | TBT | ≤ 200 ms | 3 ms (`/`), 22, 101, 48 | 0 ms |
 | First-load JS | ≤ 120 kB gzip | **106.6 KiB** (`/`) | — |
 
+The figures above are the development machine's. The same run on a CI runner reads 90 / 78 / 155 / 71 ms
+of TBT, because `devtools` throttling multiplies whatever the host is by four and the runner's
+`benchmarkIndex` is 2431–3088 where the development machine's is 4500. ADR-332 has the comparison and
+what to check in the uploaded report before treating a red mobile leg as a regression.
+
 INP is the worst interaction latency Chrome's own Event Timing API reported over a scripted pass
 through each route's controls — `e2e/perf/public-inp.spec.ts`. Lighthouse does not measure it: it is a
 field metric, and a lab reading of it needs interactions, which a page load has none of.

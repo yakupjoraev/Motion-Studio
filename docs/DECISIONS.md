@@ -13475,3 +13475,49 @@ nothing since the workflow was added — a gate with no evidence behind its verd
 - A failing assertion now comes with the twelve reports that produced it, for seven days.
 - The lesson is about the warning: `if: always()` guarantees the step runs, not that it did anything.
   A step whose failure mode is a warning needs its output checked once, by hand, when it is written.
+
+## ADR-332 — The mobile Lighthouse leg is host-sensitive, and the budget does not move for it
+
+**Date** 2026-09-01 · **Prompt** 54 · **Status** Accepted
+
+### Question
+One `main` run failed the mobile leg on `/blocks/section` — performance 0.92 against 0.95, TBT 301 ms
+against 200 — and the next run on the same code passed with 0.97 and 155 ms. Either the page is on the
+edge of its budget or the runner is, and the answer decides whether a budget or a page has to change.
+
+### Measurement
+With ADR-331's reports finally downloadable, the four routes on one CI run, medians of three, next to
+the same measurement on the development machine:
+
+| Route | TBT (CI) | TBT (dev) | Script evaluation (CI) |
+| --- | --- | --- | --- |
+| `/` | 90 ms | — | 447 ms |
+| `/blocks` | 78 ms | — | 335 ms |
+| `/blocks/section` | **155 ms** | **50–65 ms** | **1044 ms** |
+| `/docs` | 71 ms | — | 273 ms |
+
+`environment.benchmarkIndex` is 2431–3088 **within a single run** on the runner and 4494–4506 on the
+development machine. `devtools` throttling applies a fixed 4× on top of whatever the host is, so the
+mobile leg emulates a device that is as slow as the runner happens to be that minute: a 27 % spread in
+host speed inside one run, and a run-to-run spread wide enough to double TBT.
+
+`/blocks/section` is the leg's tightest route for a reason that is about the page — one shared chunk
+evaluates 893 ms there against 180 ms on `/blocks`, which is `BlockWorkbench` hydrating a live block
+and a generated inspector. That is a real number for a visitor on a real phone.
+
+### Decision
+Neither budget moves. ENGINEERING_CONTRACT.md § 9 rules out a threshold chosen after seeing the number,
+and 200 ms is Lighthouse's own "good" boundary rather than a figure this project picked.
+
+The page is what has headroom to give, so the hydration cost of `BlockWorkbench` is recorded here as
+the work it is. Until it is done, a red mobile leg on `/blocks/section` is read against the report the
+job now uploads: `benchmarkIndex` under about 2000 is the runner, and a script-evaluation figure over
+about 1100 ms on that route is the page.
+
+### Consequences
+- Accepted: the mobile leg can fail on a slow runner while the code is unchanged, and re-running it is
+  the correct response in exactly that case — which is checkable now and was not before ADR-331.
+- Accepted: `simulate` throttling would remove the host sensitivity, and ADR-319 measured what it does
+  to LCP on this project. Stability that reports the wrong number is not the trade to make.
+- The three other routes sit at 71–90 ms against the same 200 ms budget. The gate is tight on one
+  route, not on the page set.
