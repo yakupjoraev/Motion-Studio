@@ -83,10 +83,38 @@ jobs:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - run: pnpm build:storybook
+  # The flows, the editor, the export targets, the playground and the accessibility suite — 422 specs
+  # across three engines, sharded so no runner carries more than a third of them. Playwright splits by
+  # file, which is part of why `export/` is four files rather than one (ADR-333).
+  #
+  # `perf` is deliberately not here. Those specs need `MS_INSTRUMENT=1` and read frame timings, and
+  # ADR-332 measured what a shared runner does to a timing budget: `benchmarkIndex` moved by 27 %
+  # inside a single Lighthouse run. A budget is only comparable to itself — ADR-280.
+  e2e:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      # `chrome` rather than bundled Chromium: `playwright.config.ts` pins the channel, for the reason
+      # PERFORMANCE.md gives about where the numbers were taken.
+      - run: pnpm --filter e2e exec playwright install --with-deps chrome firefox webkit
+      - run: pnpm build
+      - run: pnpm --filter e2e exec playwright test flows editor export playground a11y --shard=${{ matrix.shard }}/3
+      # The trace is the whole point of `retain-on-failure`: a red shard with no trace is a re-run.
+      - if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: playwright-shard-${{ matrix.shard }}
+          path: e2e/test-results
+          include-hidden-files: true
+          retention-days: 7
+
 # Lighthouse has its own workflow — `.github/workflows/lighthouse.yml`, prompt 54.
 #
 # Jobs still to come, each with the prompt that creates what it tests:
-#   e2e             — prompt 56, Playwright sharded ×3 across three browsers
-#   a11y            — prompt 55, zero axe violations
 #   visual          — prompt 57, non-blocking, main and labelled pull requests
 # Prompt 60 assembles the complete pipeline and reports per-job duration.

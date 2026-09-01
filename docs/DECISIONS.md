@@ -13521,3 +13521,113 @@ about 1100 ms on that route is the page.
   to LCP on this project. Stability that reports the wrong number is not the trade to make.
 - The three other routes sit at 71–90 ms against the same 200 ms budget. The gate is tight on one
   route, not on the page set.
+
+## ADR-333 — A page object per surface, composed, rather than one class per app
+
+**Date** 2026-09-01 · **Prompt** 56 · **Status** Accepted
+
+### Question
+Flows B and C need the palette, the theme builder, the generated inspector, the motion panel and the
+export dialog. TESTING.md § Page objects sketches a single `StudioPage` carrying `insertBlock`,
+`setControl`, `export` and the rest, and prompt 56 asks for `fixtures/pages/` holding four classes.
+Neither is what the repository has — `StudioPage` is 233 lines and at the contract's 300-line ceiling
+before any of this is added.
+
+### Criterion (set before writing)
+Whatever the shape, two things have to hold: no raw selector in a spec, and a panel's chrome changing
+costs one file. A 400-line class satisfies the first and fails the second — every spec in the suite
+compiles against it, so the spring editor and the block palette share a blast radius.
+
+### Decision
+One page object per surface — `studio-palette`, `studio-theme-panel`, `studio-inspector`,
+`studio-motion-panel` — constructed by `StudioPage` and reached through it: `studio.palette.insert`,
+`studio.inspector.setControl`. `StudioPage` keeps what belongs to no panel: opening, shortcuts, the
+layers tree, canvas gestures, render counts.
+
+They stay in `e2e/fixtures/` beside `export-page.ts` and `playground-page.ts` rather than moving into
+a `pages/` subdirectory. The prompt's directory would be a rename of two working files for a
+grouping the flat list already has, and ENGINEERING_CONTRACT.md § 10 says not to move files a task
+does not ask to move. TESTING.md is updated to describe what exists, per § 9's first resolution.
+
+### Consequences
+- A spec reads as the surface it is about: `studio.palette.insert('hero-aurora')` names the panel that
+  owns the behaviour, which a bare `studio.insertBlock` does not.
+- Accepted: five files instead of one, and a spec touching three panels imports one class and reaches
+  three fields. That is the cost of the blast radius being small.
+- `export/` splits into `react`, `next`, `html` and `json-roundtrip` for the same reason and one
+  more: Playwright shards by file, so four files parallelise where one did not.
+
+## ADR-334 — `settled(page)` replaces twenty-eight fixed waits, and four stay because they measure
+
+**Date** 2026-09-01 · **Prompt** 56 · **Status** Accepted
+
+### Question
+The suite held 32 `page.waitForTimeout` calls, from 50 ms to 3 s. TESTING.md § Determinism bans them.
+Each one was there for a reason that had been true in a browser, so removing them wholesale would
+trade flake for failure.
+
+### Measurement
+Sorted by what each was actually waiting for:
+
+| Waiting for | Count | Available as an event? |
+| --- | --- | --- |
+| A deferred island's chunk to arrive and mount | 26 | Yes — `networkidle`, then two frames |
+| An entrance animation to have started | 1 | Yes — poll `document.getAnimations()` |
+| The page to stop requesting, before asserting it requested nothing bad | 1 | Yes — `networkidle` |
+| Compositing to settle, on both sides of an action | 2 | **No** — the window is the reading |
+| The cadence between wheel events in a scroll gesture | 1 | **No** — the cadence is the gesture |
+| Three seconds of wall clock in a hidden tab | 1 | **No** — the duration is the assertion |
+
+### Decision
+`e2e/fixtures/settle.ts` — `networkidle`, then two animation frames, which is one to let React commit
+and one to be after it. Twenty-six sites call it; two became assertions instead, which is stronger.
+
+The remaining four keep `waitForTimeout` and each carries a comment saying why the duration is the
+measurement rather than a wait for readiness. A helper renamed to hide them would have made the suite
+look compliant without changing anything about it.
+
+### Consequences
+- The a11y suite went from 1500 ms of guessed settling per scan to an event, and stayed green on all
+  88 Chrome specs.
+- Accepted: `networkidle` is a heuristic — 500 ms of no requests — so it is not free. It is bounded by
+  what the page does rather than by what a machine can do in a fixed time, which is the property that
+  matters on a runner.
+
+## ADR-335 — "Visible in the frame the button is pressed" is a claim about a warm dialog
+
+**Date** 2026-09-01 · **Prompt** 56 · **Status** Accepted
+
+### Question
+The export spec asserting that the dialog is in the DOM one animation frame after the click failed on
+every run of this session. The export job it belongs to has never run in CI — `ci.yml` lists `e2e` as
+still to come — so nothing had contradicted it since it was written in prompt 45.
+
+### Measurement
+Three clicks, each on a freshly loaded `/studio?fixture=export-landing`:
+
+| Click | Dialog after one frame | Dialog after 500 ms | Dialog after 2 s of idle |
+| --- | --- | --- | --- |
+| Programmatic, immediately after load | no | no | — |
+| Programmatic, after 2 s of idle | — | — | **yes** |
+| Playwright, immediately after load | — | yes | — |
+
+ADR-313 took the dialog's chunk out of the studio's first load and prefetches it on idle, explicitly
+to keep this promise: "a chunk fetched on idle rather than on the click satisfies it, because the
+click then costs a render." That is exactly what the table shows — and it means the promise is about
+a session where the idle callback has run, not about the first 200 ms of a page's life.
+
+### Decision
+Two specs instead of one. `opening costs a render once the chunk is there` warms the dialog through a
+real open and close, then measures the click from inside the page. `lists the files it printed`
+asserts the pipeline separately.
+
+The assertion that the tree is empty at the moment the dialog appears is dropped: it was only ever
+observable inside the same frame as the click, and outside a `page.evaluate` there is a round trip in
+between. It described a real property with a measurement that could not see it.
+
+### Consequences
+- The frame time is reported rather than asserted — 62 ms on this machine, which is when the next
+  frame boundary arrived and not a property of this code. ENGINEERING_CONTRACT.md § 9 forbids turning
+  it into a threshold after the fact.
+- The cold-click number is worth having and is not asserted anywhere: a first click that waits on a
+  chunk is what a visitor gets, and it is bounded by the prefetch rather than by the click.

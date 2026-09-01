@@ -258,28 +258,47 @@ e2e/
 │   └── theme-no-rerender.spec.ts
 └── fixtures/
     ├── documents/*.motion.json
-    └── test-app.ts               page objects
+    ├── studio-page.ts            the shell: open, shortcuts, layers, canvas gestures
+    ├── studio-palette.ts         the block palette and its three insertion paths
+    ├── studio-theme-panel.ts     presets, scales, accent, and the variables they write
+    ├── studio-inspector.ts       generated controls, breakpoints, overflow
+    ├── studio-motion-panel.ts    preset cards and a preset's own parameters
+    ├── export-page.ts            the export dialog
+    ├── playground-page.ts        the playground
+    ├── settle.ts                 "the page has finished arriving", as an event
+    └── measure.ts                the CDP readings the performance specs take
 ```
 
 ### Page objects
 
-```ts
-export class StudioPage {
-  constructor(private page: Page) {}
+One per surface, composed onto `StudioPage` rather than gathered into it — ADR-333. A spec that
+inserts blocks says so in the palette's own words:
 
-  async open(fixture?: string) { /* navigate, optionally load a document */ }
-  async insertBlock(name: string) { /* via palette, keyboard path */ }
-  async dragBlockToCanvas(name: string, target: { x: number; y: number }) { /* ... */ }
-  async selectNode(name: string) { /* via layers tree — stable */ }
-  async setControl(label: string, value: string) { /* ... */ }
-  async export(target: ExportTarget) { /* ... */ }
-  async getRenderCount(testId: string): Promise<number> { /* reads a dev counter */ }
-  async nodeCount(): Promise<number> { /* ... */ }
-}
+```ts
+const studio = new StudioPage(page)
+
+await studio.openEmpty()
+await studio.palette.insert('hero-aurora')
+await studio.selectNode('aurora')
+await studio.inspector.setControl('Headline', 'Ship faster')
+await studio.theme.choosePreset('midnight')
+await studio.motion.applyPreset('Clip reveal')
 ```
 
-Every spec goes through the page object. No raw selectors in specs — a chrome change then costs
-one file, not forty.
+`StudioPage` itself owns what belongs to no panel: `open` / `openEmpty`, `press` with the modifier the
+shortcut registry is listening for, the layers tree, the canvas gestures, and the render counts the
+performance specs read.
+
+Every spec goes through a page object. No raw selectors in specs — a chrome change then costs one
+file, not forty. Three things a page object is responsible for knowing, because each one cost a
+browser session to find out:
+
+- the layers tree and the block palette are **virtual windows**, so a row or a card nobody has
+  filtered down to is absent from the DOM rather than scrolled off it
+- the artboard **transitions** to a breakpoint's frame, so a measurement taken on the switch is of a
+  page still on its way
+- the inspector and the export dialog are **chunks**, so a query fired at the moment a node is
+  selected races an import
 
 ### Determinism
 
@@ -287,7 +306,11 @@ one file, not forty.
 - Freeze animations: `page.emulateMedia({ reducedMotion: 'reduce' })` unless the spec is about
   motion, in which case use Playwright's clock control.
 - Fixed viewport `1440 × 900` for studio specs.
-- No `waitForTimeout`. Wait for a state assertion or a specific event.
+- No `waitForTimeout` as a **wait**. `settled(page)` — network quiet, then two animation frames — is
+  what "the page has finished arriving" means here; anything narrower is a state assertion. A fixed
+  duration is admissible only when the duration is the **measurement**, and those four places say so
+  in a comment: compositing settles over a window, a scroll has a cadence, and "a hidden tab burns no
+  frames for three seconds" is three seconds by construction. ADR-334.
 - `trace: 'retain-on-failure'`, `video: 'retain-on-failure'`, `screenshot: 'only-on-failure'`.
 - Retries: 2 in CI, 0 locally. A test needing retries locally is a broken test — fix it, do not
   raise the retry count.

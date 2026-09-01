@@ -77,7 +77,13 @@ describe('Navbar', () => {
       },
       { timeout: 5_000 },
     )
-  })
+    /*
+     * A budget for the whole test, not only for the wait inside it. `userEvent` puts a delay between
+     * every synthetic event it fires, so the click and the key press cost real time before the wait
+     * even starts — and on a loaded runner the two together have exceeded Vitest's five-second
+     * default twice, on pull requests that changed a GitHub Action and a Tailwind utility.
+     */
+  }, 20_000)
 
   it('moves along the bar with the arrow keys', async () => {
     const user = userEvent.setup()
