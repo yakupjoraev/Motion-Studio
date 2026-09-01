@@ -11,6 +11,12 @@ export function ExportButton() {
 
   return (
     <Button
+      /*
+       * Named for the specs rather than found by its text: the word "Export" appears inside blocks on
+       * the canvas too — a hero's own trust list carries "Exports as CSS" — and a role-and-text query
+       * matches both.
+       */
+      data-testid="export-button"
       leadingIcon={<ExportIcon size={16} />}
       onClick={() => setOpen(true)}
       size="sm"

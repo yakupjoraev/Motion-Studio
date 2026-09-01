@@ -87,7 +87,14 @@ afterEach(() => {
  * second `findBy` timeout.
  */
 beforeAll(async () => {
-  await Promise.all([import('./block-inspector'), import('./inspector-multi')])
+  await Promise.all([
+    import('./block-inspector'),
+    import('./inspector-multi'),
+    // The third one, and the one this file's queries actually wait on: `responsive-hint` is mounted
+    // beside the control row that carries the override marker. Warming two of the three left the
+    // eight-second query racing a transform on a loaded runner — it lost twice in one afternoon.
+    import('./responsive-hint'),
+  ])
 }, 60_000)
 
 describe('where an edit lands', () => {

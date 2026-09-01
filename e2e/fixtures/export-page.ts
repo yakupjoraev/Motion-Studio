@@ -11,9 +11,14 @@ export class ExportPage {
     this.page = page
   }
 
-  /** Opens the dialog and waits for the frame it is drawn in, not for the generation to finish. */
+  /**
+   * Opens the dialog and waits for the frame it is drawn in, not for the generation to finish.
+   *
+   * By test id, not by text: a block on the canvas can carry the word too — a hero's trust list says
+   * "Exports as CSS" — and the role-and-text query then matches the chrome and the document at once.
+   */
   async open(): Promise<void> {
-    await this.page.getByRole('button', { name: /^Export/ }).click()
+    await this.page.getByTestId('export-button').click()
     await this.page.getByTestId('export-dialog').waitFor()
   }
 
@@ -50,11 +55,9 @@ export class ExportPage {
     readonly frameMs: number
   }> {
     return this.page.evaluate(async () => {
-      const button = [...document.querySelectorAll('button')].find((one) =>
-        one.textContent?.trimStart().startsWith('Export'),
-      )
+      const button = document.querySelector<HTMLButtonElement>('[data-testid="export-button"]')
 
-      if (button === undefined) {
+      if (button === null) {
         throw new Error('No Export button')
       }
 
@@ -92,6 +95,21 @@ export class ExportPage {
 
   async selectFile(path: string): Promise<void> {
     await this.page.locator(`[data-file-row="${path}"]`).click()
+  }
+
+  /**
+   * The file the viewer is showing, read off the page rather than off the clipboard.
+   *
+   * Clipboard reads need a permission only Chromium grants under automation, so a spec that runs on
+   * three engines asserts on what is on screen. The viewer truncates a very long file and says so —
+   * `export-truncated` — which is why this is for looking something up, not for a byte comparison.
+   */
+  async shownFile(): Promise<string> {
+    const viewer = this.page.getByTestId('export-code-viewer')
+
+    await viewer.waitFor()
+
+    return (await viewer.textContent()) ?? ''
   }
 
   async copyShownFile(): Promise<string> {

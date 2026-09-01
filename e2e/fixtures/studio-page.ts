@@ -1,5 +1,10 @@
 import type { CDPSession, Locator, Page } from '@playwright/test'
 
+import { StudioInspector } from './studio-inspector'
+import { StudioMotionPanel } from './studio-motion-panel'
+import { StudioPalette } from './studio-palette'
+import { StudioThemePanel } from './studio-theme-panel'
+
 interface Box {
   readonly x: number
   readonly y: number
@@ -31,8 +36,22 @@ async function boxOf(locator: Locator, what: string): Promise<Box> {
 export class StudioPage {
   private readonly page: Page
 
+  /**
+   * One surface each, rather than forty methods on this class. The panels change independently — the
+   * palette is prompt 37's, the theme builder is 36's — and a spec that only inserts blocks has no
+   * reason to be recompiled when the spring editor moves.
+   */
+  readonly palette: StudioPalette
+  readonly theme: StudioThemePanel
+  readonly inspector: StudioInspector
+  readonly motion: StudioMotionPanel
+
   constructor(page: Page) {
     this.page = page
+    this.palette = new StudioPalette(page)
+    this.theme = new StudioThemePanel(page)
+    this.inspector = new StudioInspector(page)
+    this.motion = new StudioMotionPanel(page)
   }
 
   /** Opens the studio on a committed fixture and waits for it to be on screen, not merely fetched. */
@@ -40,6 +59,17 @@ export class StudioPage {
     await this.page.goto(`/studio?fixture=${fixture}`)
     await this.page.waitForSelector(`html[data-fixture="${fixture}"]`)
     await this.page.waitForSelector('[data-testid="canvas-root"] [data-node-id]')
+  }
+
+  /**
+   * Opens the studio on an empty document — no `?fixture=`, which is the session a person gets.
+   *
+   * A fixture session neither restores nor autosaves (ADR-286), so a spec that composes a page has to
+   * come in this way. Playwright hands every test a fresh context, so the restore finds nothing.
+   */
+  async openEmpty(): Promise<void> {
+    await this.page.goto('/studio')
+    await this.page.waitForSelector('[data-testid="canvas-root"]')
   }
 
   /**
@@ -60,6 +90,17 @@ export class StudioPage {
     const modifier = await this.modifier()
 
     await this.page.keyboard.press(combination.replace(/^Mod\+/, `${modifier}+`))
+  }
+
+  /**
+   * `F2` walks the three regions — UI_GUIDELINES.md § Focus and keyboard — and two presses land on
+   * the left panel. The wait is on the region really holding focus, since the count of presses is
+   * the app's contract and a spec that assumed it would pass against a broken key map.
+   */
+  async focusLeftPanel(): Promise<void> {
+    await this.page.keyboard.press('F2')
+    await this.page.keyboard.press('F2')
+    await this.page.getByRole('complementary', { name: 'Left panel' }).waitFor()
   }
 
   /** The document's undo, through the key that runs it. */
@@ -114,6 +155,51 @@ export class StudioPage {
     await row.scrollIntoViewIfNeeded()
     await row.click()
     await this.page.locator(`[data-layer-row="${nodeId}"][data-selected="true"]`).waitFor()
+  }
+
+  /**
+   * Selects a node by the name the layers tree shows for it.
+   *
+   * A spec composing a page has ids it never saw — `insertBlock` lets the store mint them — so the
+   * name is the only handle it has. `selectLayer` stays for the fixtures, whose ids are committed.
+   */
+  async selectNode(name: string): Promise<void> {
+    await this.openPanelTab('Layers')
+
+    /*
+     * Through the tree's own search box, not by scrolling to the row: the tree renders a virtual
+     * window, so a node forty rows down a sixty-node document is not in the DOM to be scrolled to.
+     * The filter is also what a person would reach for, which is the better reason.
+     */
+    const search = this.page.getByRole('searchbox', { name: 'Search layers' })
+
+    await search.fill(name)
+
+    const row = this.page.getByRole('treeitem', { name: new RegExp(name, 'i') }).first()
+
+    await row.scrollIntoViewIfNeeded()
+    await row.click()
+    await this.page.locator('[data-layer-row][data-selected="true"]').first().waitFor()
+    // Cleared, so the next call sees the whole tree rather than this call's filter.
+    await search.fill('')
+  }
+
+  /**
+   * The names the layers tree is showing, top to bottom — what a compose spec asserts it built.
+   *
+   * The panel is opened first: the tabs mount one panel at a time, so a tree nobody has switched to
+   * is not in the DOM at all and would answer an empty list rather than fail.
+   */
+  async layerNames(): Promise<string[]> {
+    await this.openPanelTab('Layers')
+    // The tree is a virtual window over the document — @tanstack/react-virtual measures the scroll
+    // container first and renders rows in the frame after that, so a read taken on the switch itself
+    // finds an empty list rather than a wrong one.
+    await this.page.locator('[data-layer-row]').first().waitFor()
+
+    return this.page
+      .locator('[data-layer-row]')
+      .evaluateAll((rows) => rows.map((row) => row.textContent?.trim() ?? ''))
   }
 
   /**
