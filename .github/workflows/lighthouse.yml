@@ -36,9 +36,13 @@ jobs:
       - run: npx --yes @lhci/cli@0.15.1 autorun --config=./lighthouserc.cjs
         env:
           MS_LH_PRESET: ${{ matrix.preset }}
+      # `include-hidden-files` because `.lighthouseci` is a dotted directory, and upload-artifact has
+      # skipped those silently since v4.4 — every report this job produced before ADR-331 was dropped
+      # with a warning rather than an error.
       - if: always()
         uses: actions/upload-artifact@v5
         with:
           name: lighthouse-${{ matrix.preset }}
           path: .lighthouseci
+          include-hidden-files: true
           retention-days: 7

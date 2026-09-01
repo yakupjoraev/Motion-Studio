@@ -13446,3 +13446,32 @@ requirements states the same number, which is the file the floor is specified in
   about a floor that moved is not a change with a reason.
 - A dependency that raises its own floor now breaks the build rather than being silently unusable. The
   gate that caught this one was the gate itself.
+
+## ADR-331 — The Lighthouse reports are uploaded with hidden files included
+
+**Date** 2026-09-01 · **Prompt** 54 · **Status** Accepted
+
+### Question
+The mobile leg has been failing two assertions on `/blocks/section` — performance 0.92 against 0.95,
+TBT 301 ms against 200 — and there was no way to look at the trace that produced them. Every attempt to
+download the run's artifact answered `no valid artifacts found`.
+
+### Measurement
+The job log says so itself, as a warning rather than an error:
+
+```
+##[warning]No files were found with the provided path: .lighthouseci.
+No artifacts will be uploaded.
+```
+
+`upload-artifact` has excluded dotted paths by default since v4.4. `.lighthouseci` is the directory
+Lighthouse CI writes into and the one the step names, so the step has been succeeding while uploading
+nothing since the workflow was added — a gate with no evidence behind its verdict.
+
+### Decision
+`include-hidden-files: true` on the step.
+
+### Consequences
+- A failing assertion now comes with the twelve reports that produced it, for seven days.
+- The lesson is about the warning: `if: always()` guarantees the step runs, not that it did anything.
+  A step whose failure mode is a warning needs its output checked once, by hand, when it is written.
