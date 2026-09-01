@@ -116,7 +116,7 @@ jobs:
       - run: pnpm --filter e2e exec playwright test flows editor export playground a11y --project=${{ matrix.project }} --shard=${{ matrix.shard }}/2 --workers=2
       # The trace is the whole point of `retain-on-failure`: a red shard with no trace is a re-run.
       - if: failure()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-${{ matrix.project }}-${{ matrix.shard }}
           path: e2e/test-results
