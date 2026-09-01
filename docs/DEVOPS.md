@@ -87,38 +87,37 @@ jobs:
       - uses: ./.github/actions/setup
       - run: pnpm test:compile      # tsc over every golden export
 
+  # Six jobs: one per engine, halved. The accessibility specs are in here rather than in a job of
+  # their own — `playwright.config.ts` matches them for all three engines, and a second job would run
+  # the same specs a second time. ADR-336 has why the split is by engine and not by test count.
   e2e:
-    needs: build
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3]
-        browser: [chromium, firefox, webkit]
+        project: [chrome, firefox, webkit]
+        shard: [1, 2]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
-      - run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
-      - run: pnpm test:e2e --project=${{ matrix.browser }} --shard=${{ matrix.shard }}/3
-      - uses: actions/upload-artifact@v4
+      - run: pnpm --filter e2e exec playwright install --with-deps ${{ matrix.project }}
+      - run: pnpm build
+      - run: pnpm --filter e2e exec playwright test flows editor export playground a11y --project=${{ matrix.project }} --shard=${{ matrix.shard }}/2 --workers=2
+      - uses: actions/upload-artifact@v5
         if: failure()
         with:
-          name: playwright-${{ matrix.browser }}-${{ matrix.shard }}
-          path: playwright-report/
-
-  a11y:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-      - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm test:e2e:a11y     # zero axe violations required
+          name: playwright-${{ matrix.project }}-${{ matrix.shard }}
+          path: e2e/test-results
+          include-hidden-files: true
 ```
+
+The performance specs are not in it. They need `MS_INSTRUMENT=1` and they read frame timings, which
+a shared runner does not hold still — ADR-332 measured a 27 % swing in `benchmarkIndex` inside one
+Lighthouse run. They stay a local gate, run through `pnpm test:e2e:perf`.
 
 ### Required checks on `main`
 
-`quality`, `graph`, `build`, `compile-exports`, `e2e` (all shards), `a11y`, `lighthouse`.
+`quality`, `graph`, `build`, `compile-exports`, `e2e` (all six), `lighthouse`.
 Branch protection: no direct pushes, no force-push, linear history, up-to-date before merge.
 
 ### Custom gates

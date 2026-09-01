@@ -13631,3 +13631,46 @@ between. It described a real property with a measurement that could not see it.
   it into a threshold after the fact.
 - The cold-click number is worth having and is not asserted anywhere: a first click that waits on a
   chunk is what a visitor gets, and it is bounded by the prefetch rather than by the click.
+
+## ADR-336 — The end-to-end job is split by engine, and the performance specs stay out of CI
+
+**Date** 2026-09-01 · **Prompt** 56 · **Status** Accepted
+
+### Question
+`ci.yml` has carried `e2e — prompt 56` as a comment since prompt 05, so the suite has never run in
+CI. DEVOPS.md § CI writes the job as a nine-way matrix — three engines by three shards — plus a
+separate `a11y` job. Both numbers were written before there was a suite to time.
+
+### Measurement
+The first wired version, sharded three ways by test count across all engines:
+
+| Shard | Testing | Job |
+| --- | --- | --- |
+| 1 | 8 min | 11.7 min |
+| 2 | 6.5 min | 10.0 min |
+| 3 | **16 min** | **19.5 min** |
+
+Playwright divides the list of tests evenly, and this list is not evenly expensive: shard 3 drew the
+WebKit catalogue walk — seventy-two navigations — and most of the accessibility sweep. The other two
+finished ten minutes before it. Fixed overhead is 3.5 minutes in every job: 20 s of setup, 50 s of
+browser install, 2 min 12 s of `pnpm build`.
+
+### Decision
+Three engines × two halves, six jobs. The division is by cost rather than by count, since one engine
+is one browser's worth of work, and it is also the division a failure is read in — "WebKit is red" is
+a sentence about a browser and a shard number is not.
+
+No separate `a11y` job: `playwright.config.ts` matches `a11y/*.spec.ts` for all three engines already
+(ADR-329), so a second job would run the same specs again.
+
+`perf` stays out of CI entirely. Those specs need an instrumented build and read frame timings, and
+ADR-332 measured a 27 % swing in the runner's `benchmarkIndex` inside a single Lighthouse run. A
+budget is only comparable to itself — ADR-280 — so they remain a local gate.
+
+### Consequences
+- The four jobs that do not need a browser are unaffected; the pipeline's critical path is now the
+  slowest engine rather than the unluckiest shard.
+- Accepted: `pnpm build` runs in six jobs. Turbo's remote cache is configured and would collapse it,
+  and the fix if it does not is a cache to investigate rather than a matrix to shrink.
+- The performance suite is the one gate a pull request cannot see. It is named in TESTING.md
+  § Commands, and prompt 60 is where the pipeline is assembled with per-job durations reported.
