@@ -57,24 +57,22 @@ test.describe('the clipboard', () => {
     await expect.poll(() => studio.nodeCount()).toBe(before)
   })
 
-  test('undoes a paste in one step, however many nodes it brought', async ({ page }) => {
+  test('undoes a multi-node duplicate in one step', async ({ page }) => {
     const studio = new StudioPage(page)
     const before = await studio.nodeCount()
 
     /*
-     * The grid, which carries two children — so the paste is a subtree rather than a single node.
-     * The selection is cleared before pasting: `resolvePasteTarget` puts a copy beside the selection,
-     * and a container cannot be pasted into itself, so pasting with the grid still selected is a
-     * no-op that would make this spec pass by measuring nothing.
+     * Duplicate rather than copy-and-paste, because the grid carries two children and this spec is
+     * about the **history entry** rather than about where a paste lands. `resolvePasteTarget` refuses
+     * to put a container inside itself and there is no second container in this fixture to aim at, so
+     * a paste here would be a no-op that made the assertion pass by measuring nothing.
      */
     await studio.clickLayer('node_f002')
-    await studio.press('Mod+c')
-    await page.keyboard.press('Escape')
-    await studio.press('Mod+v')
+    await studio.press('Mod+d')
 
-    const pasted = await studio.nodeCount()
+    const duplicated = await studio.nodeCount()
 
-    expect(pasted).toBeGreaterThan(before + 1)
+    expect(duplicated).toBe(before + 3)
 
     await studio.press('Mod+z')
     await expect.poll(() => studio.nodeCount()).toBe(before)

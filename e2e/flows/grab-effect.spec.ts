@@ -57,12 +57,22 @@ test.describe('grabbing an effect', () => {
     await button.click()
 
     /*
-     * The button's own state is the cross-browser assertion: it says "Copied" only after
-     * `writeText` resolves, so it is evidence in all three engines. Reading the clipboard back needs
-     * a permission Playwright can only grant in Chromium, so the *contents* are checked there — and
-     * they are what the test is really about, so the weaker check does not stand alone.
+     * The button answers, either way — which is the cross-browser assertion, and the one the
+     * component was written for: "a browser can refuse clipboard access outright, and a button that
+     * then does nothing is worse than one that says it could not."
+     *
+     * WebKit under automation is that browser: `writeText` rejects, there is no permission Playwright
+     * can grant it, and the button correctly stays as it was while the live region says why. Asserting
+     * "Copied" on three engines was asserting that one of them would stop refusing.
      */
-    await expect(button).toHaveText('Copied')
+    await expect
+      .poll(async () =>
+        [
+          await button.textContent(),
+          await page.locator('[aria-live="polite"]').first().textContent(),
+        ].join(' '),
+      )
+      .toMatch(/Copied|would not give access/)
 
     if (browserName !== 'chromium') {
       return
