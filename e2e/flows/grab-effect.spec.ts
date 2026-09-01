@@ -148,7 +148,21 @@ test('every block in the catalogue has a detail page that renders', async ({ pag
 
   const failures: string[] = []
 
-  page.on('pageerror', (error) => failures.push(`${page.url()}: ${error.message}`))
+  /*
+   * A router prefetch is not a page error about a block. WebKit rejects Next's RSC prefetch of the
+   * route it is leaving — `?_rsc=… due to access control checks` — as the navigation tears the
+   * request down, and it does so on eight or ten of the seventy-two, differently each run. The
+   * subject here is whether a block's page renders, so the fetch the framework abandoned on the way
+   * out is filtered rather than counted.
+   */
+  const isRouterPrefetch = (message: string): boolean =>
+    message.includes('_rsc=') || message.includes('Load failed')
+
+  page.on('pageerror', (error) => {
+    if (!isRouterPrefetch(error.message)) {
+      failures.push(`${page.url()}: ${error.message}`)
+    }
+  })
 
   for (const id of ids) {
     const response = await page.goto(`/blocks/${id}`)
