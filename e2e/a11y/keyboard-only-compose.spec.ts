@@ -132,6 +132,14 @@ test.describe('composing a page with the keyboard alone', () => {
 
     await expect(page.getByRole('complementary', { name: 'Inspector' })).toBeFocused()
 
+    /*
+     * The inspector's controls are a chunk of their own — ADR-313 — and until it arrives the panel
+     * holds a skeleton with no tab stops in it. Thirty presses through a skeleton reach nothing, and
+     * the failure reads as a broken key map rather than as a wait that was not made. Seen once in
+     * five full runs, on Firefox.
+     */
+    await studio.inspector.ready()
+
     let reached = false
 
     for (let press = 0; press < 30 && !reached; press += 1) {

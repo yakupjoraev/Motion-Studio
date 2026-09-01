@@ -156,7 +156,11 @@ test('every block in the catalogue has a detail page that renders', async ({ pag
    * out is filtered rather than counted.
    */
   const isRouterPrefetch = (message: string): boolean =>
-    message.includes('_rsc=') || message.includes('Load failed')
+    message.includes('_rsc=') ||
+    message.includes('Load failed') ||
+    // The same cause on the other side: a route chunk requested for the page being left, cancelled
+    // when the navigation replaces the document. Seen once in five full runs, on a different block.
+    message.includes('Loading chunk')
 
   page.on('pageerror', (error) => {
     if (!isRouterPrefetch(error.message)) {

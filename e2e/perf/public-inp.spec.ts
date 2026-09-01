@@ -118,6 +118,17 @@ test.describe('the public routes', () => {
       await page.locator('button:visible').first().waitFor()
 
       const driven = await interact(page)
+
+      /*
+       * Polled, because a `PerformanceObserver` callback is queued rather than run inside the event
+       * it observes: reading `window.__inp` in the microtask after the last key press finds the
+       * counters as they were before the last few entries landed. Waiting for `first` is waiting for
+       * the observer to have been called at all, which is the thing this assertion is about.
+       */
+      await expect
+        .poll(() => page.evaluate(() => window.__inp?.first ?? -1))
+        .toBeGreaterThanOrEqual(0)
+
       const inp = await page.evaluate(() => window.__inp ?? { worst: 0, slow: 0, first: -1 })
       const worst =
         inp.worst === 0 ? `under ${REPORTING_FLOOR_MS} ms` : `${inp.worst.toFixed(0)} ms`
