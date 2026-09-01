@@ -2,6 +2,8 @@ import { type Page, expect, test } from '@playwright/test'
 
 import { StudioPage } from '../fixtures/studio-page'
 
+import { settled } from '../fixtures/settle'
+
 declare global {
   interface Window {
     /** Every value the drag region has held during a test, in order. */
@@ -103,9 +105,9 @@ test.describe('a keyboard drag', () => {
      * survives carries the label *and* the position.
      */
     await page.keyboard.press('Enter')
-    await page.waitForTimeout(250)
+    await settled(page)
     await page.keyboard.press('ArrowDown')
-    await page.waitForTimeout(250)
+    await settled(page)
 
     const held = (await dragAnnouncements(page)).join(' / ')
 

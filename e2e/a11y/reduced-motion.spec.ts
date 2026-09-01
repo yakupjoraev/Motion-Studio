@@ -2,6 +2,8 @@ import { type Page, expect, test } from '@playwright/test'
 
 import { StudioPage } from '../fixtures/studio-page'
 
+import { settled } from '../fixtures/settle'
+
 /**
  * ACCESSIBILITY.md § Reduced motion, over every route. `e2e/perf/reduced-motion-off.spec.ts` makes
  * the same two assertions about the canvas; this is the public half, where the animations are
@@ -58,7 +60,7 @@ const walk = async (page: Page): Promise<void> => {
 
     window.scrollTo(0, 0)
   })
-  await page.waitForTimeout(400)
+  await settled(page)
 }
 
 for (const route of ROUTES) {

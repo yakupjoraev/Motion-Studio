@@ -3,6 +3,8 @@ import { type Browser, type Page, expect, test } from '@playwright/test'
 
 import { StudioPage } from '../fixtures/studio-page'
 
+import { settled } from '../fixtures/settle'
+
 /**
  * ACCESSIBILITY.md § Focus, in Windows High Contrast. Forced colours replaces every colour the page
  * chose and **drops `box-shadow` entirely** — which is what the focus ring is made of, so a page that
@@ -113,7 +115,7 @@ test.describe('forced colours', () => {
 
     await page.goto('/blocks')
     await page.getByRole('heading', { level: 1 }).waitFor()
-    await page.waitForTimeout(500)
+    await settled(page)
 
     /*
      * `color-contrast` is disabled here, and only here. Playwright's forced-colours emulation flips

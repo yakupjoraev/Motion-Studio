@@ -1,6 +1,8 @@
 import AxeBuilder from '@axe-core/playwright'
 import { type Browser, type Page, expect, test } from '@playwright/test'
 
+import { settled } from '../fixtures/settle'
+
 /**
  * `pnpm test:e2e:a11y` — ACCESSIBILITY.md § Landing, gallery, docs. The docs are checked in both
  * colour modes and at 320 px as well as 1440, for the reason ADR-298 records: a region that scrolls
@@ -19,7 +21,7 @@ const scan = async (page: Page) =>
 const settle = async (page: Page): Promise<void> => {
   await page.getByRole('heading', { level: 1 }).waitFor()
   await page.waitForFunction(() => document.documentElement.hasAttribute('data-theme-ready'))
-  await page.waitForTimeout(250)
+  await settled(page)
 }
 
 /**
@@ -188,7 +190,7 @@ test.describe('the documentation site', () => {
     // Following the link is what puts the heading under the sticky header, which is the position the
     // observer's band is defined around. `scrollIntoViewIfNeeded` leaves it at the bottom instead.
     await target.click()
-    await page.waitForTimeout(400)
+    await settled(page)
 
     await expect(target).toHaveAttribute('aria-current', 'true')
     await expect(toc.getByRole('link').first()).not.toHaveAttribute('aria-current', 'true')
@@ -203,7 +205,7 @@ test.describe('searching the documentation', () => {
 
     await page.goto('/docs/canvas')
     await page.getByRole('heading', { level: 1 }).waitFor()
-    await page.waitForTimeout(500)
+    await settled(page)
 
     expect(requests.filter((url) => url.includes('docs-search-index.json'))).toHaveLength(0)
 
@@ -236,7 +238,7 @@ test.describe('searching the documentation', () => {
     await settle(page)
     await page.getByTestId('docs-search-trigger').click()
     await page.getByTestId('docs-search-input').waitFor()
-    await page.waitForTimeout(300)
+    await settled(page)
 
     expect((await scan(page)).violations).toEqual([])
   })

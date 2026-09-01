@@ -2,6 +2,8 @@ import { expect, test } from '@playwright/test'
 
 import { StudioPage } from '../fixtures/studio-page'
 
+import { settled } from '../fixtures/settle'
+
 /**
  * DRAG_AND_DROP.md § Accessibility: "the full drag can be performed with the keyboard on all four
  * operations." All four are declared here, including the ones that cannot be — an operation missing
@@ -53,7 +55,7 @@ test.describe('operation 1 — a palette card into the canvas', () => {
       .toMatch(/Picked up |over |not over a valid target/)
 
     await page.keyboard.press('Escape')
-    await page.waitForTimeout(250)
+    await settled(page)
 
     expect(await studio.nodeCount()).toBe(before)
   })
@@ -83,9 +85,9 @@ test.describe('operation 1 — a palette card into the canvas', () => {
     expect(onCard, 'a block card is reachable by Tab').toBe(true)
 
     await page.keyboard.press('Space')
-    await page.waitForTimeout(300)
+    await settled(page)
     await page.keyboard.press('ArrowDown')
-    await page.waitForTimeout(300)
+    await settled(page)
 
     const over = (await page.locator('#ms-dnd-announcer').textContent()) ?? ''
 
@@ -132,7 +134,7 @@ test.describe('operation 3 — a layers row to another position', () => {
     await studio.selectLayer('node_f003')
 
     await page.keyboard.press('Enter')
-    await page.waitForTimeout(250)
+    await settled(page)
 
     await expect
       .poll(async () => (await page.locator('#ms-dnd-announcer').textContent()) ?? '')

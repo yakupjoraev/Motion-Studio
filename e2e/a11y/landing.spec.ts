@@ -1,6 +1,8 @@
 import AxeBuilder from '@axe-core/playwright'
 import { type Page, expect, test } from '@playwright/test'
 
+import { settled } from '../fixtures/settle'
+
 /**
  * `pnpm test:e2e:a11y` — ACCESSIBILITY.md § Gates: zero violations on every public surface, and the
  * keyboard path walked rather than assumed.
@@ -22,7 +24,7 @@ test.describe('the landing page', () => {
     await open(page)
     // Every island is behind an observer, so the scan has to walk the page to wake them.
     await page.getByRole('contentinfo').scrollIntoViewIfNeeded()
-    await page.waitForTimeout(1500)
+    await settled(page)
 
     expect((await scan(page)).violations).toEqual([])
   })
@@ -46,7 +48,7 @@ test.describe('the landing page', () => {
 
     await open(page)
     await page.getByRole('contentinfo').scrollIntoViewIfNeeded()
-    await page.waitForTimeout(1500)
+    await settled(page)
 
     expect((await scan(page)).violations).toEqual([])
 
@@ -66,7 +68,7 @@ test.describe('the landing page', () => {
 
     await open(page)
     await page.getByRole('contentinfo').scrollIntoViewIfNeeded()
-    await page.waitForTimeout(1500)
+    await settled(page)
 
     expect((await scan(page)).violations).toEqual([])
 
@@ -117,7 +119,7 @@ test.describe('the landing page', () => {
     page,
   }) => {
     await open(page)
-    await page.waitForTimeout(1500)
+    await settled(page)
 
     const node = page.getByRole('button', { name: /Hero block/ })
 
@@ -165,7 +167,7 @@ test.describe('the landing page', () => {
 
     await open(page)
     await page.getByRole('contentinfo').scrollIntoViewIfNeeded()
-    await page.waitForTimeout(1500)
+    await settled(page)
 
     /*
      * `prompts/51`: "Nothing at opacity 0 waiting for an entrance." Anything a scroll trigger would

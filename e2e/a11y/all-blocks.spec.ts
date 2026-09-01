@@ -1,6 +1,8 @@
 import AxeBuilder from '@axe-core/playwright'
 import { type Page, expect, test } from '@playwright/test'
 
+import { settled } from '../fixtures/settle'
+
 /**
  * ACCESSIBILITY.md § Testing asks for a registry-wide scan: "every block — zero violations, all 62".
  * The component tests cover four categories block by block (156 assertions); this is the other side of
@@ -42,7 +44,7 @@ test.describe('every block in the registry', () => {
     for (const slug of slugs) {
       await page.goto(`/blocks/${slug}`)
       await page.getByTestId('block-controls').waitFor()
-      await page.waitForTimeout(250)
+      await settled(page)
 
       const { violations } = await scan(page)
 

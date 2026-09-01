@@ -4,6 +4,8 @@ import { join } from 'node:path'
 import AxeBuilder from '@axe-core/playwright'
 import { type ConsoleMessage, type Page, expect, test } from '@playwright/test'
 
+import { settled } from '../fixtures/settle'
+
 /**
  * The exported page, running as a project of its own — DEVOPS.md § Export smoke test. The workflow
  * exports `export-landing`, installs it with **npm**, builds it and starts it; these specs are what
@@ -53,11 +55,10 @@ test('renders one element for every section the document holds', async ({ page }
 test('runs its entrance animations', async ({ page }) => {
   await open(page)
   await page.mouse.wheel(0, 1200)
-  await page.waitForTimeout(200)
 
-  const running = await page.evaluate(() => document.getAnimations().length)
-
-  expect(running).toBeGreaterThan(0)
+  // Polled rather than waited out: the entrance is triggered by an observer, and how long that takes
+  // is a property of the machine. The assertion is that something started, not that 200 ms passed.
+  await expect.poll(() => page.evaluate(() => document.getAnimations().length)).toBeGreaterThan(0)
 })
 
 test('has no axe violations', async ({ page }) => {
@@ -96,7 +97,8 @@ test('logs nothing to the console', async ({ page }) => {
 
   await open(page)
   await page.mouse.wheel(0, 2000)
-  await page.waitForTimeout(500)
+  // The subject is what the page requested, so the wait is for it to have stopped requesting.
+  await settled(page)
 
   expect(noise).toEqual([])
 })

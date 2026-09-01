@@ -1,5 +1,7 @@
 import { type Page, expect, test } from '@playwright/test'
 
+import { settled } from '../fixtures/settle'
+
 declare global {
   interface Window {
     /** Written by the init script below: the worst interaction the Event Timing API reported. */
@@ -102,7 +104,7 @@ test.describe('the public routes', () => {
       await page.evaluate(() => {
         window.scrollTo(0, document.body.scrollHeight)
       })
-      await page.waitForTimeout(1000)
+      await settled(page)
       await page.evaluate(() => {
         window.scrollTo(0, 0)
       })

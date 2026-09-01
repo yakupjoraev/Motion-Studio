@@ -2,6 +2,8 @@ import { type Page, expect, test } from '@playwright/test'
 
 import { StudioPage } from '../fixtures/studio-page'
 
+import { settled } from '../fixtures/settle'
+
 /**
  * ACCESSIBILITY.md § Testing, the manual checklist's flow B, as a spec: compose a page without a
  * mouse. Nothing here clicks or focuses an element directly — every step is a key press, so the path
@@ -74,7 +76,7 @@ test.describe('composing a page with the keyboard alone', () => {
       'Enter',
     ]) {
       await page.keyboard.press(key)
-      await page.waitForTimeout(200)
+      await settled(page)
 
       if (key === 'Enter') {
         inserted.push(await announced(page))

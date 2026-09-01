@@ -1,5 +1,7 @@
 import { type Page, expect, test } from '@playwright/test'
 
+import { settled } from '../fixtures/settle'
+
 /**
  * WCAG 1.4.10 Reflow, which is a viewport measurement rather than a zoom setting: 200 % zoom on a
  * 1280 px window is a 640 px viewport, and the criterion itself is written at 320 px. Both are
@@ -70,7 +72,7 @@ for (const { label, width } of WIDTHS) {
         // `.first()`: a detail page has two — its own, and the one inside the live preview, which
         // ACCESSIBILITY.md § Landing, gallery, docs says is not a violation.
         await page.getByRole('heading', { level: 1 }).first().waitFor()
-        await page.waitForTimeout(600)
+        await settled(page)
 
         expect(await widest(page)).toEqual([])
         expect(await overflow(page)).toBeLessThanOrEqual(1)

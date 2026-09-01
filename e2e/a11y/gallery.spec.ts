@@ -1,6 +1,8 @@
 import AxeBuilder from '@axe-core/playwright'
 import { type Page, expect, test } from '@playwright/test'
 
+import { settled } from '../fixtures/settle'
+
 /**
  * `pnpm test:e2e:a11y` — ACCESSIBILITY.md § Gates: zero violations on every public surface. The
  * gallery is two surfaces, and the detail page is checked at 320 px as well as at 1440 for the
@@ -14,7 +16,7 @@ test.describe('the block catalogue', () => {
   test('has no axe violations once the previews have mounted', async ({ page }) => {
     await page.goto('/blocks')
     await page.getByRole('heading', { level: 1 }).waitFor()
-    await page.waitForTimeout(1500)
+    await settled(page)
 
     expect((await scan(page)).violations).toEqual([])
   })
@@ -38,7 +40,7 @@ test.describe('a block’s detail page', () => {
   test('has no axe violations', async ({ page }) => {
     await page.goto('/blocks/aurora-background')
     await page.getByTestId('block-controls').waitFor()
-    await page.waitForTimeout(800)
+    await settled(page)
 
     expect((await scan(page)).violations).toEqual([])
   })
@@ -51,7 +53,7 @@ test.describe('a block’s detail page', () => {
 
     await page.goto('/blocks/aurora-background')
     await page.getByTestId('block-controls').waitFor()
-    await page.waitForTimeout(800)
+    await settled(page)
 
     expect((await scan(page)).violations).toEqual([])
 

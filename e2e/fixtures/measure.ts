@@ -116,6 +116,13 @@ export async function countLayers(page: Page, action?: () => Promise<void>): Pro
     peak = Math.max(peak, settled)
   })
 
+  /*
+   * The two waits here are the measurement, not a wait for readiness — TESTING.md § Determinism bans
+   * the second kind. Compositing settles asynchronously and `LayerTree` reports it as it goes, so
+   * "how many layers does this page hold when nothing is happening" is a question about a window of
+   * time and has to be asked as one. `SETTLE_MS` is that window, and it is the same on both sides of
+   * the action so the two readings are comparable.
+   */
   await client.send('LayerTree.enable')
   await page.waitForTimeout(SETTLE_MS)
   await action?.()
@@ -212,6 +219,8 @@ async function wheelOverCanvas(
       direction *= -1
     }
 
+    // The cadence of the gesture: a scroll is a series of wheel events at human speed, and firing
+    // them back to back would measure a burst nobody produces.
     await page.waitForTimeout(50)
   }
 }

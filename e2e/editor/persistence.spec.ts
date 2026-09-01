@@ -3,6 +3,8 @@ import { join } from 'node:path'
 
 import { type Page, expect, test } from '@playwright/test'
 
+import { settled } from '../fixtures/settle'
+
 /**
  * The promise the whole subsystem exists to keep — `prompts/50`: "a crash, a refresh, or a bad file
  * must never lose the user's work." Every scenario here is that sentence in one of its forms.
@@ -120,7 +122,7 @@ test.describe('persistence', () => {
     const expected = await insertFirstBlock(page)
 
     // Past the two-second debounce, with a second of margin for the write itself.
-    await page.waitForTimeout(3000)
+    await settled(page)
     await page.reload()
     await page.waitForSelector('[data-testid="canvas-root"]')
 

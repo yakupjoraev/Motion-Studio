@@ -3,6 +3,8 @@ import { type Page, expect, test } from '@playwright/test'
 
 import { StudioPage } from '../fixtures/studio-page'
 
+import { settled } from '../fixtures/settle'
+
 /**
  * ACCESSIBILITY.md § Testing: zero violations on every route, **in both colour modes**. The existing
  * route specs check each surface in the states that surface has; this one is the sweep, and the
@@ -19,9 +21,10 @@ const withMode = async (page: Page, mode: 'light' | 'dark'): Promise<void> => {
   }, mode)
 }
 
-const settled = async (page: Page): Promise<void> => {
+/** The theme is on the root before anything is scanned: a contrast check reads resolved colours. */
+const themed = async (page: Page): Promise<void> => {
   await page.waitForFunction(() => document.documentElement.hasAttribute('data-theme-ready'))
-  await page.waitForTimeout(250)
+  await settled(page)
 }
 
 const ROUTES = [
@@ -46,7 +49,7 @@ for (const mode of ['dark', 'light'] as const) {
           await page.getByRole('heading', { level: 1 }).waitFor()
         }
 
-        await settled(page)
+        await themed(page)
         // The mode under test is the mode the page ended in, not the one that was asked for.
         await expect(page.locator('html')).toHaveAttribute('data-color-mode', mode)
 
@@ -60,7 +63,7 @@ for (const mode of ['dark', 'light'] as const) {
       const studio = new StudioPage(page)
 
       await studio.open('responsive-grid')
-      await settled(page)
+      await themed(page)
 
       expect((await scan(page)).violations).toEqual([])
     })
