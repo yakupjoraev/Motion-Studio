@@ -84,8 +84,13 @@ jobs:
       - uses: ./.github/actions/setup
       - run: pnpm build:storybook
   # The flows, the editor, the export targets, the playground and the accessibility suite — 422 specs
-  # across three engines, sharded so no runner carries more than a third of them. Playwright splits by
-  # file, which is part of why `export/` is four files rather than one (ADR-333).
+  # across three engines.
+  #
+  # Split by **engine** and then in half, rather than into three by test count. Playwright's own
+  # sharding divides the list evenly and the list is not evenly expensive: the first cut put the
+  # WebKit catalogue walk and the accessibility sweep in one shard, which took 16 minutes of testing
+  # against the other two's 6. One engine per job is a division by cost, and it is also the division
+  # a failure is read in — "WebKit is red" is a sentence about a browser.
   #
   # `perf` is deliberately not here. Those specs need `MS_INSTRUMENT=1` and read frame timings, and
   # ADR-332 measured what a shared runner does to a timing budget: `benchmarkIndex` moved by 27 %
@@ -95,23 +100,25 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3]
+        # firefox and webkit match the flows and the a11y specs only — `playwright.config.ts`.
+        project: [chrome, firefox, webkit]
+        shard: [1, 2]
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
-      # `chrome` rather than bundled Chromium: `playwright.config.ts` pins the channel, for the reason
-      # PERFORMANCE.md gives about where the numbers were taken.
-      - run: pnpm --filter e2e exec playwright install --with-deps chrome firefox webkit
+      # One engine per job, so one browser per job. `chrome` is the channel rather than bundled
+      # Chromium, for the reason PERFORMANCE.md gives about where the numbers were taken.
+      - run: pnpm --filter e2e exec playwright install --with-deps ${{ matrix.project }}
       - run: pnpm build
       # Two workers, which the config does not set: `workers: 1` is there for the performance specs,
       # whose numbers are only comparable when nothing else is competing for the machine. This job
       # runs none of them, so the constraint is the runner's cores rather than a measurement.
-      - run: pnpm --filter e2e exec playwright test flows editor export playground a11y --shard=${{ matrix.shard }}/3 --workers=2
+      - run: pnpm --filter e2e exec playwright test flows editor export playground a11y --project=${{ matrix.project }} --shard=${{ matrix.shard }}/2 --workers=2
       # The trace is the whole point of `retain-on-failure`: a red shard with no trace is a re-run.
       - if: failure()
         uses: actions/upload-artifact@v5
         with:
-          name: playwright-shard-${{ matrix.shard }}
+          name: playwright-${{ matrix.project }}-${{ matrix.shard }}
           path: e2e/test-results
           include-hidden-files: true
           retention-days: 7
