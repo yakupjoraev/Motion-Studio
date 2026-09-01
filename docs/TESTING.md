@@ -295,21 +295,29 @@ one file, not forty.
 ### Performance specs
 
 ```ts
-test('scrubbing a slider does not re-render the canvas', async ({ page }) => {
+test('does not re-render the canvas', async ({ page }) => {
   const studio = new StudioPage(page)
-  await studio.open('fixtures/documents/landing-60-nodes.motion.json')
-  await studio.selectNode('Hero')
 
-  const before = await studio.getRenderCount('canvas-root')
-  await studio.scrubControl('Opacity', { pixels: 200 })
-  const after = await studio.getRenderCount('canvas-root')
+  await studio.open('stress-200-nodes')
+  await studio.selectLayer('node_f009')
 
-  expect(after - before).toBe(0)
+  const before = await studio.renderCount('canvas-root')
+
+  await studio.scrubControl('Duration', { pixels: 200 })
+
+  expect(await studio.renderCount('canvas-root')).toBe(before)
 })
 ```
 
 Exact assertions on render counts rather than fuzzy timing assertions. Frame timings on CI runners
 are noisy; a render count is not.
+
+`pnpm test:e2e:perf` builds with `pnpm build:instrumented` first — a production build that keeps the
+counters and the `window.studio` handle, which an ordinary build strips (ADR-315). A spec that finds
+`window.__renderCounts` absent says so rather than reading zero and passing.
+
+Every spec that produces a number prints it as well as annotating it, because the `list` reporter does
+not print annotations. `e2e/perf` is one of the two places `noConsole` is off, for that reason.
 
 ## Visual regression
 

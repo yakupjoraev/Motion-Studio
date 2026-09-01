@@ -83,9 +83,10 @@ jobs:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - run: pnpm build:storybook
+# Lighthouse has its own workflow — `.github/workflows/lighthouse.yml`, prompt 54.
+#
 # Jobs still to come, each with the prompt that creates what it tests:
 #   e2e             — prompt 56, Playwright sharded ×3 across three browsers
 #   a11y            — prompt 55, zero axe violations
-#   lighthouse      — prompt 54, its own workflow with the perf and a11y budgets
 #   visual          — prompt 57, non-blocking, main and labelled pull requests
 # Prompt 60 assembles the complete pipeline and reports per-job duration.

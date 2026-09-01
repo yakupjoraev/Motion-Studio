@@ -12,8 +12,7 @@ import { useThemeEdit } from './use-theme-edit'
 
 const state = () => useStudioStore.getState()
 
-const canvasRenders = (): number =>
-  (window as unknown as { __canvasRenders?: number }).__canvasRenders ?? 0
+const canvasRenders = (): number => window.__renderCounts?.['canvas-root'] ?? 0
 
 const variable = (name: string): string =>
   document.documentElement.style.getPropertyValue(name).trim()

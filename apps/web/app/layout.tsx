@@ -1,4 +1,4 @@
-import { COLOR_MODE_SCRIPT } from '@motion-studio/theme'
+import { COLOR_MODE_SCRIPT, studioDark } from '@motion-studio/theme'
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import type { ReactNode } from 'react'
@@ -43,9 +43,19 @@ export interface RootLayoutProps {
   children: ReactNode
 }
 
+/**
+ * The default theme's mode, elevation and glass level, in the HTML the server sends — ADR-318. The
+ * theme is known at build time, so the first paint is the theme rather than a step towards it.
+ */
+const boot = {
+  'data-color-mode': studioDark.colorMode === 'system' ? undefined : studioDark.colorMode,
+  'data-elevation': studioDark.elevationStyle,
+  'data-glass': studioDark.surface.glassLevel,
+}
+
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html className={`${sans.variable} ${mono.variable}`} lang="en">
+    <html className={`${sans.variable} ${mono.variable}`} lang="en" {...boot}>
       <head>
         {/*
           The one blocking script in the app — THEME_ENGINE.md § Colour mode. It applies a *stored*

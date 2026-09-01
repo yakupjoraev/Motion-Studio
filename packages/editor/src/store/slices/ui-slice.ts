@@ -16,8 +16,8 @@ export const INITIAL_UI: UiState = {
   commandPaletteOpen: false,
   exportDialogOpen: false,
   activeDialog: null,
-  // PRODUCT.md § 1: the FPS meter is on in development and behind a toggle in production.
-  fpsVisible: false,
+  /** PRODUCT.md § 1: on in development, behind the status-bar toggle in production. */
+  fpsVisible: process.env['NODE_ENV'] === 'development',
 }
 
 /** Panel state is persisted to `localStorage` and is not undoable — STATE_MANAGEMENT.md § ui. */

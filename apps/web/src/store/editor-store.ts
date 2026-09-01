@@ -18,9 +18,11 @@ export const useStudioStore: EditorStore = createEditorStore({
   now: () => Date.now(),
 })
 
-// A handle for the browser console in development: the store and the command factories, which is
-// what a walkthrough needs to build a document before there is a palette to drag from. The
-// assignment is guarded, so production has no such global.
-if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
+// A handle for the browser console and for the perf specs, which script edits through it. Both
+// operands are build-time constants, so an ordinary production build has no such global — ADR-315.
+if (
+  (process.env.NODE_ENV !== 'production' || process.env.MS_INSTRUMENT === '1') &&
+  typeof window !== 'undefined'
+) {
   ;(window as unknown as { studio?: unknown }).studio = { store: useStudioStore, commands }
 }

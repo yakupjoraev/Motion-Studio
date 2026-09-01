@@ -100,7 +100,9 @@ export const imageDefinition = defineBlock({
       controls: [
         {
           path: 'radius',
-          kind: 'radius',
+          // The prop is a token from `IMAGE_RADII`, so the control is the select its options are
+          // written for; `radius` is the four-corner object control and dropped every commit — ADR-317.
+          kind: 'select',
           label: 'Radius',
           options: { options: optionsFrom(IMAGE_RADII) },
         },

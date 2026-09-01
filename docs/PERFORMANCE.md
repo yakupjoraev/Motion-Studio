@@ -23,33 +23,72 @@ beside it is aspirational; these are the numbers `pnpm size-limit` and `pnpm mea
 
 ### Public pages
 
-| Metric | Budget | Measured on | Measured |
+Lighthouse numbers are the median of three runs per route on `lighthouserc.cjs`, both presets, with
+the browser really throttled rather than a fast run extrapolated — ADR-319 has why that distinction
+cost an afternoon. Taken 2026-09-01.
+
+| Metric | Budget | Mobile | Desktop |
 | --- | --- | --- | --- |
-| Lighthouse Performance | ≥ 95 | `/`, `/blocks`, `/docs`, mobile emulation | 98–100 |
-| Lighthouse Accessibility | ≥ 95 (target 100) | all routes | 100 |
-| Lighthouse Best Practices | ≥ 95 | all routes | 100 |
-| Lighthouse SEO | ≥ 95 | `/`, `/blocks`, `/docs` | 100 |
-| LCP | ≤ 2.0 s | `/`, mobile 4G throttled | 1.7 s (`/`), 1.6 s (`/docs`) |
-| CLS | ≤ 0.02 | all routes | 0–0.0007 |
-| INP | ≤ 200 ms | all routes | not yet measured |
-| TBT | ≤ 200 ms | `/` | 20–50 ms |
-| First-load JS | ≤ 120 kB gzip | `/` | **106.4 KiB** |
+| Lighthouse Performance | ≥ 95 | 99 (`/`), 100 (`/blocks`), 99 (`/blocks/section`), 99 (`/docs`) | 100 on all four |
+| Lighthouse Accessibility | ≥ 95 (target 100) | 100 | 100 |
+| Lighthouse Best Practices | ≥ 95 | 100 (`/`, `/docs`), 96 (`/blocks`, `/blocks/section`) | 100 |
+| Lighthouse SEO | ≥ 95 | 100 | 100 |
+| LCP | ≤ 2.0 s | **1638 ms** (`/`), 1448 (`/blocks`), 1459 (`/blocks/section`), 1639 (`/docs`) | 178 / 69 / 64 / 92 ms |
+| CLS | ≤ 0.02 | 0 (`/`, `/docs`), 0.0007, 0.0010 | 0–0.0022 |
+| INP | ≤ 200 ms | **32 ms** worst interaction (`/`, `/blocks`), 24 ms (`/docs`) | — |
+| TBT | ≤ 200 ms | 3 ms (`/`), 22, 101, 48 | 0 ms |
+| First-load JS | ≤ 120 kB gzip | **106.6 KiB** (`/`) | — |
+
+INP is the worst interaction latency Chrome's own Event Timing API reported over a scripted pass
+through each route's controls — `e2e/perf/public-inp.spec.ts`. Lighthouse does not measure it: it is a
+field metric, and a lab reading of it needs interactions, which a page load has none of.
 
 ### Studio
 
-| Metric | Budget | Measured |
-| --- | --- | --- |
-| First-load JS | ≤ 250 kB gzip | **246.2 KiB** — ADR-312 and ADR-313 took it there from 369.7 |
-| Time to interactive canvas | ≤ 1.2 s on a mid-range laptop | not yet measured |
-| Pan / zoom | 60 fps with 200 nodes |
-| Node drag | 60 fps with 200 nodes |
-| Marquee over 200 nodes | 60 fps |
-| Inspector scrub | 60 fps; **zero** canvas re-renders |
-| Theme switch | ≤ 16 ms; **zero** React re-renders |
-| Layers tree with 500 nodes | 60 fps scroll |
-| Undo of a 50-node paste | ≤ 32 ms |
-| Export of a 60-node document | ≤ 800 ms including formatting |
-| Memory after 30 min of editing | ≤ 250 MB, no upward trend |
+| Metric | Budget | Measured | Kept by |
+| --- | --- | --- | --- |
+| First-load JS | ≤ 250 kB gzip | **246.3 KiB** — ADR-312 and ADR-313 took it there from 369.7 | `size-limit` |
+| Time to interactive canvas | ≤ 1.2 s on a mid-range laptop | **499 ms** on the 200-node fixture | `studio-latency` |
+| Pan | 60 fps with 200 nodes | p95 **16.8 ms**, 0 long tasks | `canvas-200-nodes` |
+| Zoom | 60 fps with 200 nodes | p95 **16.8 ms**, worst 31.6 | `canvas-200-nodes` |
+| Node drag | 60 fps with 200 nodes | p95 **16.8 ms**, worst 33.3 | `canvas-200-nodes` |
+| Marquee over 200 nodes | 60 fps | p95 **16.7 ms**, 0 long tasks | `canvas-200-nodes` |
+| Inspector scrub | 60 fps; **zero** canvas re-renders | **0** renders over 200 px of drag | `scrub-no-rerender` |
+| Theme switch | ≤ 16 ms; **zero** React re-renders | **0** at the canvas and **0** at the shell | `theme-no-rerender` |
+| Layers tree with 500 nodes | 60 fps scroll | virtualized at 26 px rows; not separately timed |  |
+| Undo of a 50-node paste | ≤ 32 ms | **0.7 ms** applied, 16.7 ms to the next frame | `studio-latency` |
+| Export of a 60-node document | ≤ 800 ms including formatting | **197 ms** React, 197 Next, 96 HTML, 24 tokens, 2 JSON | `pnpm measure:export` |
+| Memory after 30 min of editing | ≤ 250 MB, no upward trend | **11.43 → 11.67 MB** over 500 passes, +452 B per pass | `memory-leak` |
+| Compositing layers, glass fixture | < 40 | **8** settled, **36** peak | `glass-layers` |
+| Canvas re-renders during a drag | 0 | **0** — was 32 before ADR-316 | `drag-no-rerender` |
+| Canvas re-renders during a marquee | 0 | **0**, sweep and commit alike | `marquee-no-rerender` |
+
+The four canvas gestures over the 200-node fixture, at full speed and at a quarter of a processor.
+Chrome, 1440 × 900, instrumented production build (ADR-315), taken 2026-09-01:
+
+| Gesture | Median | p95 | Worst | Long tasks | TBT |
+| --- | --- | --- | --- | --- | --- |
+| Pan | 16.7 ms | 16.8 ms | 16.8 ms | 0 | 0 ms |
+| Zoom | 16.7 ms | 16.8 ms | 31.6 ms | 0 | 0 ms |
+| Marquee | 16.7 ms | 16.7 ms | 16.8 ms | 0 | 0 ms |
+| Node drag | 16.7 ms | 16.8 ms | 33.3 ms | 1 | 2 ms |
+| Pan, 4× | 16.7 ms | 33.4–50.1 ms | 66.7 ms | 1–4 | 15–29 ms |
+| Zoom, 4× | 16.7 ms | 33.2 ms | 66.8 ms | 2 | 13 ms |
+| Marquee, 4× | 16.7 ms | 16.7 ms | 16.7 ms | 0 | 0 ms |
+| Node drag, 4× | 16.7 ms | 33.3 ms | 150.0 ms | 2 | 96 ms |
+
+The full-speed numbers are the stable ones: seven consecutive runs put every gesture at p95
+16.7–16.8 ms with no long task at all. The 4× numbers are not, and the spread above is the honest
+range rather than a best run — across those seven the throttled figures moved between p95 33 and 100
+ms, 0 and 30 long tasks, and 0 and 774 ms of blocking, with the drop commit of a node drag accounting
+for most of the worst of it.
+
+So the thresholds in `canvas-200-nodes.spec.ts` sit above that spread — p95 < 150 ms, fewer than 40
+long tasks, under 1500 ms of blocking — and are meant to stay there. At a quarter of a processor the
+scene rasterizes over the frame budget by definition; what is left to catch is a regression of kind,
+which lands an order of magnitude past those numbers. The exact guard is the render count beside each
+full-speed gesture, and two earlier drafts of these thresholds — 50 ms, then 80 ms and 300 ms — each
+failed on a healthy run before the spread was measured.
 
 ## Bundle policy
 
@@ -62,12 +101,12 @@ Two metrics, because these four budgets were written as two different things (AD
 
 | Entry | Metric | Budget | Measured |
 | --- | --- | --- | --- |
-| `landing first-load JS` | every chunk `/` loads | 120 KiB | 106.4 KiB |
-| `studio first-load JS` | every chunk `/studio` loads | 250 KiB | 246.2 KiB |
+| `landing first-load JS` | every chunk `/` loads | 120 KiB | 106.3 KiB |
+| `studio first-load JS` | every chunk `/studio` loads | 250 KiB | 245.9 KiB |
 | `playground route chunk` | the chunks only `/playground` loads | 90 KiB | 43.3 KiB |
 | `blocks route chunk` | the chunks only `/blocks` loads | 140 KiB | 10.6 KiB |
 
-`/blocks/[slug]` (195.5 KiB) and `/docs` (106.9 KiB) are reported by `pnpm measure:routes` and gated by
+`/blocks/[slug]` (154.4 KiB) and `/docs` (106.9 KiB) are reported by `pnpm measure:routes` and gated by
 neither, because no document gives them a number.
 
 ### Mandatory dynamic imports
@@ -76,9 +115,9 @@ Anything here appearing in an initial chunk is a CI failure. `pnpm analyze` prod
 that proves it, in `apps/web/.next/analyze/client.html`, and `pnpm measure:routes --markers` answers
 the same question in two seconds by probing the built chunks for a string only that module produces.
 
-**Verified 2026-08-31, after ADR-312 and ADR-313: none of the ten is in any route's first load**, with
-one deliberate exception — the tokeniser is in `/blocks/[slug]`'s own chunk (0.9 KiB), because that page
-highlights the source it prints at runtime (ADR-245, prompt 52).
+**Verified 2026-09-01, after ADR-312, ADR-313 and ADR-320: none of the ten is in any route's first
+load**, with one deliberate exception — the tokeniser is in `/blocks/[slug]`'s own chunk (0.9 KiB),
+because that page highlights the source it prints at runtime (ADR-245, prompt 52).
 
 The studio's first load, attributed, replaces ADR-292's table:
 
@@ -133,11 +172,13 @@ machine that was building at the time, and why that number was worthless.
 | LCP | 1.4–1.5 s | 1.4–1.6 s |
 | CLS | 0.0007 | 0.0005 |
 | TBT | 0–6 ms | 0–30 ms |
-| First-load JS | 119 kB | 199 kB |
+| First-load JS | 116.2 KiB | 154.4 KiB (was 199, ADR-320) |
 
-The detail page's 199 kB includes 36.4 kB of `motion` that nothing on the page calls: the
-`@motion-studio/ui` barrel re-exports every control field eagerly, which defeats the lazy boundary
-inside `ControlRenderer`. ADR-305 has the import chain; it is prompt 54's first target.
+The detail page was 199 kB, of which 36.4 kB was `motion` that nothing on the page animates.
+`block-source.ts` took `presetRegistry` from the `@motion-studio/motion` barrel, which also exports
+the framer-motion applier — one import, one module deep, found by reproducing the chain rather than
+reasoning about it. It now imports `@motion-studio/motion/presets`, and the route is **154.4 KiB**
+(ADR-320). `motion` is in no route's first load; `pnpm measure:routes --markers` is the check.
 
 ### Tree-shaking discipline
 
@@ -332,27 +373,46 @@ thrash, and none of these lists need variable heights.
 ### In development
 
 ```tsx
-<FpsMeter />        // status bar, dev + optional in prod
-<RenderCounter id="canvas-root" />   // dev only
+<FpsMeter />                          // status bar, on in dev, toggled in prod
+<RenderCounter id="studio-shell" />   // a subtree with no natural call site
+countRender('canvas-root')            // inside the canvas's own render path
 ```
 
-`RenderCounter` is how the "zero re-renders" budgets are asserted rather than assumed.
+`apps/web/src/lib/dev/render-counter.tsx` is how the "zero re-renders" budgets are asserted rather
+than assumed. It writes to `window.__renderCounts`, and an ordinary production build strips it: the
+guard is two build-time constants, so the minifier deletes everything behind it and a grep over
+`apps/web/.next/static` finds no `__renderCounts`, no `MS_INSTRUMENT` and no `window.studio`.
+
+The budgets are about production React, so `pnpm test:e2e:perf` builds with `pnpm build:instrumented`
+first — a production build with the counters and the store handle left in (ADR-315).
 
 ### In CI
 
 ```yaml
-- Lighthouse CI on /, /blocks, /docs (mobile + desktop), asserted against budgets
-- size-limit on every route entry
-- Playwright performance traces:
-    - pan 200 nodes → long-task count and frame timings
-    - drag a node → same
-    - scrub a slider → assert canvas render count === 0
-    - switch theme → assert React render count === 0
+- Lighthouse CI on /, /blocks, /blocks/section, /docs (mobile + desktop), three runs, median,
+  asserted against § Public pages — `.github/workflows/lighthouse.yml`
+- size-limit on every gated route entry
+- Playwright performance specs, `e2e/perf`, against `pnpm build:instrumented`:
+    - canvas-200-nodes    pan, zoom, marquee, drag; frame timings at full speed and at 4×
+    - scrub-no-rerender   canvas renders === 0
+    - theme-no-rerender   canvas and shell renders === 0
+    - drag-no-rerender    canvas renders === 0 with the button down
+    - marquee-no-rerender canvas renders === 0, sweep and commit
+    - glass-layers        compositing layers, settled and peak
+    - studio-latency      time to interactive canvas, undo of a 50-node paste
+    - public-inp          worst interaction latency on the three public routes
+    - memory-leak         heap trend over 500 scripted edits
 - Bundle treemap uploaded as an artifact on every PR
 ```
 
 The render-count assertions are the most valuable of these. Frame timings on CI hardware are
 noisy; a render count is exact.
+
+Each gate was watched going red on a deliberate regression, and they do not overlap: 636 KiB of dead
+weight in the landing's first load fails `size-limit` by 203 kB while Lighthouse still scores 97,
+and 1.5 s of synchronous work at hydration scores 70 and fails two assertions while the byte budget
+passes. ADR-321 has the table. `size-limit` is the only gate that sees bytes; Lighthouse is the only
+gate that sees the main thread.
 
 ### Profiling checklist
 

@@ -1,7 +1,9 @@
 import { markupRegistry } from '@motion-studio/blocks/markup'
 import { blockRegistry } from '@motion-studio/blocks/registry'
 import { buildIR, printReact, resolveOptions } from '@motion-studio/codegen'
-import { presetRegistry } from '@motion-studio/motion'
+// The subpath, not the barrel: the barrel re-exports the framer-motion applier, and this module is
+// what `use-source.ts` imports at runtime — 34.7 KiB of it in `/blocks/[slug]`'s load (ADR-320).
+import { presetRegistry } from '@motion-studio/motion/presets'
 import { type BlockId, type MotionDocument, type UnknownProps, nodeId } from '@motion-studio/schema'
 import { studioDark } from '@motion-studio/theme'
 

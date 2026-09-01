@@ -88,7 +88,7 @@
       "json": { "parser": { "allowComments": true } }
     },
     {
-      "include": ["scripts/**"],
+      "include": ["scripts/**", "e2e/perf/**"],
       "linter": { "rules": { "suspicious": { "noConsole": "off" } } }
     }
   ]

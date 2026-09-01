@@ -3,8 +3,9 @@
 import { Canvas, type CanvasHandle } from '@motion-studio/canvas'
 import { selectors } from '@motion-studio/editor'
 import { MotionSchedulerProvider } from '@motion-studio/motion'
-import { useCallback, useMemo, useRef } from 'react'
+import { type RefObject, useCallback, useMemo, useRef } from 'react'
 
+import { countRender } from '../../../lib/dev/render-counter'
 import { useStudioStore } from '../../../store/editor-store'
 
 import { useArtboardResize } from './artboard-resize'
@@ -16,18 +17,14 @@ import { NodeRenderer } from './node-renderer'
 import { useCanvasPorts } from './use-canvas-ports'
 
 /**
- * The counter PERFORMANCE.md's canvas budget is checked against: `renderNode` runs once per canvas
- * render, so this is how many times the canvas rendered. Not in production, and read by the perf
- * tests and by a browser walkthrough rather than by anything in the app.
+ * The auto-pan subscription, one component below the host: `useDragActive` reads dnd-kit's context,
+ * and a context consumer re-renders on every pointer move. Here that costs renders of a component
+ * that returns null instead of renders of the canvas — ADR-316.
  */
-const countCanvasRender = (): void => {
-  if (process.env.NODE_ENV === 'production' || typeof window === 'undefined') {
-    return
-  }
+function CanvasAutoPan({ rootRef }: { readonly rootRef: RefObject<HTMLDivElement | null> }): null {
+  useCanvasAutoPan(rootRef)
 
-  const held = window as unknown as { __canvasRenders?: number }
-
-  held.__canvasRenders = (held.__canvasRenders ?? 0) + 1
+  return null
 }
 
 /**
@@ -47,8 +44,6 @@ export function CanvasHost() {
   const artboard = useArtboardResize(handle)
   const island = useRef<HTMLDivElement>(null)
 
-  useCanvasAutoPan(island)
-
   const onReady = useCallback((ready: CanvasHandle | null) => {
     handle.current = ready
     // The palette inserts into a canvas it is not rendered inside — it reveals the new node through here.
@@ -57,8 +52,9 @@ export function CanvasHost() {
 
   // ADR-112: nothing here subscribes to the document. The rect cache hears about a change through
   // the scene's own subscription, so an inspector drag re-renders the edited node and nothing else.
+  // `renderNode` runs once per canvas render, so counting here counts the canvas rather than its host.
   const renderNode = useCallback((id: Parameters<typeof NodeRenderer>[0]['id']) => {
-    countCanvasRender()
+    countRender('canvas-root')
 
     return <NodeRenderer id={id} />
   }, [])
@@ -82,6 +78,7 @@ export function CanvasHost() {
   return (
     <MotionSchedulerProvider paused={motionPaused}>
       <MotionSettingsProvider>
+        <CanvasAutoPan rootRef={island} />
         {multiFrame ? (
           <MultiFrameView />
         ) : (

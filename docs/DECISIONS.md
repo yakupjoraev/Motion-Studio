@@ -12762,3 +12762,318 @@ blocks route chunk (140 KiB)         10.86 kB of 143.36 kB
   manifest, so the omission is visible rather than silent.
 - The gate and the report read the same manifest, so a number in `PERFORMANCE.md` can be reproduced
   by either.
+
+## ADR-315 — The exact-render budgets are measured in a production build with the counters left in
+
+**Date** 2026-09-01 · **Prompt** 54 · **Status** Accepted
+
+### Question
+PERFORMANCE.md § Rendering states four budgets as counts rather than timings — a scrub, a theme
+change, a drag and a marquee each cost the canvas **zero** React renders. A count needs a counter in
+the page. Prompt 54 also requires that counter to be absent from production, verified by grepping the
+bundle. Those two requirements are only compatible if the build the specs measure is not the build
+that ships.
+
+The third option, measuring a development build, was rejected before it was tried: development React
+renders twice under `StrictMode`, skips the production reconciler's bailouts, and ships the profiling
+hooks. A render count taken there describes a build nobody uses.
+
+### Criterion (set before implementing)
+1. `pnpm build` — the build that ships — contains no counter, no `window.studio`, and no reference to
+   the switch that would enable them. Checked by grep over `apps/web/.next/static`.
+2. The perf specs run against production React.
+3. One switch, and no second code path: the instrumented build differs from the shipping build only
+   in the value of one build-time constant.
+
+### Measurement
+`MS_INSTRUMENT=1` is declared in `next.config.ts` through `env: {}` and read as
+`process.env.NODE_ENV === 'production' && process.env.MS_INSTRUMENT !== '1'`. Both operands are
+build-time constants, so the minifier reduces `countRender` to its early return and deletes the rest.
+
+Declaring it is load-bearing. An **undeclared** `process.env.X` is not inlined: it survives
+minification as a runtime property lookup, and the branch behind it survives with it — which is the
+version that leaves `__renderCounts` in the shipping bundle.
+
+Grep over a clean `pnpm build`, `apps/web/.next/static/**/*.js`:
+
+```
+__renderCounts   0 hits
+MS_INSTRUMENT    0 hits
+.studio=         0 hits
+studio:{store    0 hits
+```
+
+`pnpm size-limit` on the same build: landing 108.93 kB / 122.88, studio 251.84 kB / 256, playground
+44.3 / 92.16, blocks 10.86 / 143.36.
+
+### Decision
+`apps/web/src/lib/dev/render-counter.tsx` exports `countRender(id)` and a `RenderCounter` component,
+both writing to `window.__renderCounts`. `pnpm build:instrumented` — `scripts/build-instrumented.mjs`
+— is `pnpm build` plus `MS_INSTRUMENT=1`, and `pnpm test:e2e:perf` runs it before the specs. The same
+switch keeps the `window.studio` handle, which is how `memory-leak.spec.ts` scripts five hundred edits
+and `studio-latency.spec.ts` times an undo.
+
+A wrapper script rather than a shell prefix because `VAR=1 cmd` is not portable to PowerShell.
+
+### Consequences
+- Accepted: `pnpm test:e2e:perf` builds before it runs, so the perf suite is slower to start than the
+  rest of the e2e suite. It is the price of measuring the right build.
+- Accepted: the instrumented build is not byte-identical to the shipping one — the counters are in it.
+  The budgets it measures are counts, which the counter does not change; the byte budgets are measured
+  on the shipping build by `size-limit`, which never sees this one.
+- A spec that finds `window.__renderCounts` absent fails with a message naming the build, rather than
+  reading a count of zero and passing.
+
+## ADR-316 — The canvas auto-pan subscription lives one component below the host
+
+**Date** 2026-09-01 · **Prompt** 54 · **Status** Accepted
+
+### Question
+`drag-no-rerender.spec.ts`, written to assert zero canvas renders while a drag is in flight, measured
+**32**. The document does not change until the drop commits, so what re-rendered, and why?
+
+### Measurement
+`CanvasHost` called `useCanvasAutoPan(island)`, which calls `useDragActive()`, which reads dnd-kit's
+`useDndContext()`. A context consumer re-renders on every context value change, and dnd-kit publishes
+a new value on every `pointermove` of every drag. So the host re-rendered once per pointer move, and
+`Canvas` — its child — re-rendered with it: 32 renders for one drag of one layer row, over a 200-node
+document.
+
+Nothing about the auto-pan behaviour was wrong. The subscription was in the wrong component.
+
+### Decision
+`CanvasAutoPan` is a component that calls the hook and returns `null`, rendered as a sibling of the
+canvas. The pointer moves now re-render a component that renders nothing.
+
+Measured after: **0** canvas renders across the whole gesture, with the count taken while the button
+is still down.
+
+### Consequences
+- The general rule this is an instance of: a subscription that updates at gesture rate belongs in a
+  leaf that renders nothing, never in a component that has children. PERFORMANCE.md § Rendering
+  states the pattern for values; this is the same pattern for subscriptions.
+- Accepted: one more component in the tree, whose name is the only thing that explains why it exists.
+  The comment at its definition and this entry are that explanation.
+- The spec that found it now guards it.
+
+## ADR-317 — `radius` on `image` and `video` is a select, not the four-corner control
+
+**Date** 2026-09-01 · **Prompt** 54 · **Status** Accepted
+
+### Question
+Found while walking the inspector for prompt 54's measurements: the `Radius` control on an `image`
+block showed `0px` for a block whose radius is `lg`, and dragging it changed nothing. The same for
+`video`.
+
+### Measurement
+Both definitions declared `kind: 'radius'` — the four-corner control, which reads and writes a
+`{ topLeft, topRight, bottomRight, bottomLeft }` object. The prop is a token:
+`z.enum(IMAGE_RADII).default('lg')`. And the options declared beside it,
+`optionsFrom(IMAGE_RADII)`, are read by the select and by nothing else, which is what says the
+control was mis-typed rather than the prop.
+
+The consequence was silent in both directions. Reading, the four-corner control found no object and
+displayed zeros. Writing, its commit failed the prop's schema and was dropped: `props.radius` stayed
+`"lg"` and the history stayed empty. No error surfaced anywhere.
+
+### Decision
+`kind: 'select'` in both definitions, which is the control the options were written for. Two blocks'
+radius controls now read and commit.
+
+### Consequences
+- The generated inspector accepts a control whose `kind` cannot produce a value its prop's schema
+  admits, and reports nothing when the commit is dropped. That is the general defect; this entry
+  fixes its two instances. A registry check that pairs every control kind against the prop schema it
+  writes to belongs with the other registry gates in `scripts/check-registry.ts`, and is not in this
+  prompt's scope.
+- Accepted: a document saved with a four-corner radius object on an `image` was already invalid
+  against the prop schema and was already being dropped on load. Nothing that worked stops working.
+
+## ADR-318 — The default theme's mode is in the HTML the server sends
+
+**Date** 2026-09-01 · **Prompt** 54 · **Status** Accepted
+
+### Question
+`/`'s LCP element is the hero `<h1>` — static text in server-rendered HTML — and Lighthouse
+attributed 81 % of its 2.4 s to *render delay*. The first hypothesis: `ThemeBoot` applies
+`studioDark` in an effect after hydration, so the page paints in one palette and repaints in another,
+and the repaint is what the LCP was being recorded at.
+
+### Measurement
+The flip is real. `studioDark.colorMode` is `'dark'`, so the resolution is dark whatever the visitor's
+system says, while the generated stylesheet's `:root` block is the **light** palette and its dark
+block is selected by `[data-color-mode='dark']` — an attribute nothing set until the effect ran. Every
+public page therefore painted light and turned dark at hydration. It is the same window
+`e2e/a11y/docs.spec.ts` works around: axe reads computed colours and scans inside it report a contrast
+failure that the settled page does not have.
+
+The 37 colour variables in the stylesheet's dark block and the 37 the resolution produces are the same
+colours, differing only in how the numbers are written (`oklch(9.5% 0.006 265)` against
+`oklch(9.50% 0.0060 265.00)`), so the attribute alone is enough to paint the theme.
+
+**And it did not move the LCP.** Three mobile runs before: 2327, 2324, 2343 ms. Three after: 2366,
+2363, 2343 ms. The hypothesis was wrong, and the reason is in ADR-319: `observedLargestContentfulPaint`
+is 261 ms and equal to `observedFirstContentfulPaint`, so there was never a late paint of the `<h1>`
+to remove.
+
+### Decision
+`apps/web/app/layout.tsx` writes `data-color-mode`, `data-elevation` and `data-glass` onto `<html>`
+from the `studioDark` preset it already ships. The blocking colour-mode script still overrides the
+attribute from a stored preference, and `ThemeBoot` still writes the full variable set and opens the
+transition gate; what it no longer does is change what the page looks like.
+
+### Consequences
+- The light frame on every public page load is gone, and with it the contrast-failure window the a11y
+  specs settle around. The workaround in those specs is left alone — it is prompt 55's to remove.
+- Accepted: the attribute is now always present, so `@media (prefers-color-scheme: dark)` on
+  `:root:not([data-color-mode])` no longer reaches the app's own pages (ADR-026 keeps it for exported
+  ones). Nothing changes for a visitor: `studioDark` forced dark either way. The open question of
+  whether a public page should follow the system preference at all is the owner's, and is unchanged
+  by this entry.
+- Accepted: this did not buy the LCP it was written to buy. It is kept for the repaint it removes.
+
+## ADR-319 — The Lighthouse gate throttles the browser instead of extrapolating an unthrottled run
+
+**Date** 2026-09-01 · **Prompt** 54 · **Status** Accepted
+
+### Question
+The first wired Lighthouse CI run failed the LCP assertion on all four public routes: 2327 ms on `/`
+against a 2000 ms budget, with 2324, 2618 and 2178 on the others. PERFORMANCE.md records 1.7 s for `/`
+and 1.6 s for `/docs`, measured in prompts 51 and 53. Either the pages regressed by 600 ms, or the two
+measurements are not measuring the same thing.
+
+### Criterion (set before investigating)
+A gate that reports a number the page does not have is worse than no gate. Before changing either the
+budget or the page, the measurement has to be shown to be about the page.
+
+### Measurement
+The trace says the LCP is not late at all:
+
+```
+observedFirstContentfulPaint       261 ms
+observedLargestContentfulPaint     261 ms
+firstContentfulPaint (reported)   1224 ms
+largestContentfulPaint (reported) 2366 ms
+```
+
+The `<h1>` — server-rendered static text — paints with the first paint, and nothing repaints it. Yet
+the reported LCP is 1.1 s behind the reported FCP for that one paint event. The two numbers come from
+Lighthouse's default `simulate` throttling: the page is loaded unthrottled and the metrics are
+extrapolated through a simulated 4G-and-4×-CPU graph. Every resource here arrives inside 265 ms on a
+local server, so this machine paints *after* the scripts have run, and the simulation puts the whole
+hydration cost in front of the LCP paint that follows it. On a throttled device the paint comes first.
+
+The same four routes with `throttlingMethod: 'devtools'`, which throttles the browser for real, three
+runs each, medians:
+
+| Route | Performance | LCP | CLS | TBT |
+| --- | --- | --- | --- | --- |
+| `/` | 99 | 1638 ms | 0 | 3 ms |
+| `/blocks` | 100 | 1448 ms | 0.0007 | 22 ms |
+| `/blocks/section` | 99 | 1459 ms | 0.0010 | 101 ms |
+| `/docs` | 99 | 1639 ms | 0 | 48 ms |
+
+1638 ms on `/` against the 1.7 s the document already recorded. The pages did not regress; the default
+method does not describe them.
+
+### Decision
+`lighthouserc.cjs` sets `throttlingMethod: 'devtools'` on both presets. No budget moved.
+
+### Consequences
+- Accepted: real throttling is noisier than simulation and slower to collect — the mobile leg takes
+  about seven minutes for twelve runs. Three runs per URL with the median taken is what absorbs the
+  noise, and the headroom is 360 ms on the tightest route.
+- Accepted: `simulate` is Lighthouse's recommendation for CI precisely because it is stable. It is
+  stable here too — 2327, 2324, 2343 ms across runs — and stably wrong about this page.
+- The numbers in PERFORMANCE.md and the numbers the gate asserts are now taken the same way, so a
+  failure means the page moved.
+
+## ADR-320 — The gallery's 36 kB of animation runtime came from a barrel import, one module deep
+
+**Date** 2026-09-01 · **Prompt** 54 · **Status** Accepted, supersedes ADR-305's diagnosis
+
+### Question
+ADR-305 measured 36.4 kB of `motion` in `/blocks/[slug]`'s first load, attributed it to
+`@motion-studio/ui`'s barrel re-exporting every control field, and left it for this prompt. ADR-313
+then took that barrel apart for the studio's sake. The bytes were still there: 195.5 KiB for the
+route, with a 34.7 KiB chunk that is framer-motion and nothing else.
+
+### Measurement
+`scripts/eager-graph.mjs` over the page, looking for `motion`, found exactly one chain and it is not
+the one ADR-305 recorded:
+
+```
+motion/react
+    apps/web/src/components/gallery/detail/block-source.ts
+  → packages/motion/src/index.ts
+  → packages/motion/src/apply/motion-node.tsx
+  → packages/motion/src/apply/framer-motion.tsx
+```
+
+`block-source.ts` needs `presetRegistry`, one object, and took it from the package barrel, which also
+exports the framer-motion applier. `use-source.ts` imports that module at runtime, so the applier
+came with it. The chunk was in the route's load and in no other route's.
+
+`packages/motion/src/presets/index.ts` imports no animation runtime at all — 57 modules eagerly, none
+of them `motion`. So the registry was always reachable without the applier; there was simply no
+subpath that said so.
+
+### Decision
+`@motion-studio/motion` gains a `./presets` export, and `block-source.ts` imports from it. Two lines.
+
+| | before | after |
+| --- | --- | --- |
+| `/blocks/[slug]` first load | 195.5 KiB, 14 files | **154.4 KiB, 12 files** |
+| `motion` markers in that load | `MotionConfig`, `motionValue` | none |
+
+ADR-305's diagnosis is superseded: the barrel it named was a real defect and ADR-313 fixed it, but it
+was not what held these bytes.
+
+### Consequences
+- `motion` is now absent from every route's first load, which is what ADR-313 claimed and what
+  `pnpm measure:routes --markers` can now be asked.
+- Accepted: one more subpath on a package that has four. The rule it follows is the one ADR-305 set
+  for `./curves` — a consumer that wants a pure value should not have to import a runtime to get it.
+- The general lesson is about the tool, not the package: an import chain that is *reproduced* costs
+  two minutes, and ADR-305 attributed these bytes to a chain it had reasoned about instead.
+
+## ADR-321 — What each gate actually catches, demonstrated on a deliberate regression
+
+**Date** 2026-09-01 · **Prompt** 54 · **Status** Accepted
+
+### Question
+Prompt 54 asks for the Lighthouse gate to be shown failing on a deliberate regression — "add a 200 kB
+eager import to the landing, watch it fail, revert". A gate nobody has seen go red is a gate nobody
+knows is wired.
+
+### Measurement
+200 kB of incompressible data, imported eagerly into `hero-demo-island.tsx` — a client component in
+the landing's first load — behind a runtime-dependent read so the minifier could not fold it away.
+The first attempt used `PAYLOAD.length === 0`, which it folded, and the landing did not move at all;
+that is worth knowing about any bundle experiment.
+
+| | clean | +212 KiB | +636 KiB | +1.5 s of blocking work |
+| --- | --- | --- | --- | --- |
+| `/` first-load JS | 106.6 KiB | 318.9 KiB | 742.2 KiB | 106.6 KiB |
+| `size-limit` | passes, 108.87 kB of 122.88 | **fails, over by 203.38 kB** | fails | passes |
+| Lighthouse Performance | 99 | 97 | 97 | **70** |
+| LCP | 1638 ms | 1911 ms | 1730 ms | 1863 ms |
+| TBT | 3 ms | 148 ms | 152 ms | **2981 ms** |
+| Lighthouse gate | passes | **passes** | **passes** | **fails** |
+
+So the bytes gate went red on the byte regression and Lighthouse did not. That is not a hole in the
+Lighthouse configuration — it is what the metric measures. Next's scripts do not block the first
+paint, so 636 KiB of dead weight arrives after the page is on screen and costs 100 ms of parse; the
+same page with 1.5 s of synchronous work at hydration scores 70 and fails two assertions.
+
+### Decision
+Both gates stay, and the documents say which one guards what: `size-limit` is the only gate that sees
+bytes, and Lighthouse is the only gate that sees the main thread. Neither substitutes for the other,
+and a change that adds a megabyte of unused code will be caught by exactly one of them.
+
+### Consequences
+- The Lighthouse gate is demonstrated to fail — on a regression of the kind it measures.
+- Accepted: a route with no `size-limit` entry has no byte gate at all, and Lighthouse will not stand
+  in for it. `/blocks/[slug]` and `/docs` are those routes, which is why ADR-320's 41 KiB was found by
+  a measurement nobody was forced to take.
+- The regression files were deleted; `git status` on the landing is clean.

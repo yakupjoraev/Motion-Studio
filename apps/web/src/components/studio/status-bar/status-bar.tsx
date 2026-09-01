@@ -8,7 +8,6 @@ import { selectors } from '@motion-studio/editor'
 import { useReducedMotion } from '@motion-studio/motion/reduced'
 import { BREAKPOINTS } from '@motion-studio/schema'
 import { Separator } from '@motion-studio/ui'
-import { useState } from 'react'
 
 import { BACKDROP_CAP, useBackdropCount } from '../../../hooks/use-backdrop-count'
 import { useStudioStore } from '../../../store/editor-store'
@@ -43,7 +42,10 @@ export function StatusBar() {
   const breakpoint = useStudioStore((state) => state.viewport.breakpoint)
   const motionPaused = useStudioStore((state) => state.viewport.motionPaused)
   const dirty = useStudioStore(selectors.selectDirty)
-  const [showFps, setShowFps] = useState(process.env.NODE_ENV === 'development')
+  // The toggle is store state, not local state: it is a preference the session keeps, and the
+  // command palette can reach it — STATE_MANAGEMENT.md § ui.
+  const showFps = useStudioStore((state) => state.ui.fpsVisible)
+  const setFpsVisible = useStudioStore((state) => state.setFpsVisible)
   const glass = useBackdropCount()
 
   return (
@@ -60,7 +62,7 @@ export function StatusBar() {
         aria-label="Frame rate meter"
         aria-pressed={showFps}
         className="ms-transition-control rounded-xs px-1 outline-none hover:text-foreground focus-visible:shadow-focus"
-        onClick={() => setShowFps((current) => !current)}
+        onClick={() => setFpsVisible(!showFps)}
         type="button"
       >
         {showFps ? <FpsMeter /> : 'fps'}

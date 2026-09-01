@@ -2,12 +2,13 @@ import bundleAnalyzer from '@next/bundle-analyzer'
 import type { NextConfig } from 'next'
 
 /**
- * The app ran without a config until now, and this one adds exactly one thing: the treemap
- * PERFORMANCE.md § Mandatory dynamic imports already names as the proof — "`pnpm analyze` produces
- * the treemap that proves it". The document prescribed the tool; this is the tool.
- *
- * It is off unless `ANALYZE=true`, so an ordinary `pnpm build` is byte-identical to what it was.
+ * Two switches, both off by default, so an ordinary `pnpm build` is byte-identical to what it was.
+ * `ANALYZE=true` produces the treemap PERFORMANCE.md § Mandatory dynamic imports names as the proof.
+ * `MS_INSTRUMENT=1` keeps the render counters and the store handle in a production build; declaring
+ * it here is what makes the value inlined whether or not it is set (ADR-315).
  */
-const config: NextConfig = {}
+const config: NextConfig = {
+  env: { MS_INSTRUMENT: process.env['MS_INSTRUMENT'] ?? '' },
+}
 
 export default bundleAnalyzer({ enabled: process.env['ANALYZE'] === 'true' })(config)

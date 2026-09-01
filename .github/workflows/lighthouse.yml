@@ -1,0 +1,44 @@
+# The Lighthouse gate from docs/DEVOPS.md § CI, in its own workflow because it is the slowest job in
+# the pipeline and the only one that needs a browser and a running server at the same time.
+#
+# Both presets, three runs per URL, median taken, asserted against docs/PERFORMANCE.md § Public pages.
+# The configuration is `lighthouserc.cjs`; the two legs differ only by `MS_LH_PRESET`.
+name: Lighthouse
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: lighthouse-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    strategy:
+      # Both legs always run: a desktop regression and a mobile one are different regressions, and
+      # stopping the second leg because the first failed hides half the answer.
+      fail-fast: false
+      matrix:
+        preset: [mobile, desktop]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: pnpm build
+      # Pinned rather than added to the manifest: this is a CI tool that never ships, and it brings a
+      # Chrome launcher and a report server with it — ENGINEERING_CONTRACT.md § 1.10.
+      - run: npx --yes @lhci/cli@0.15.1 autorun --config=./lighthouserc.cjs
+        env:
+          MS_LH_PRESET: ${{ matrix.preset }}
+      - if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: lighthouse-${{ matrix.preset }}
+          path: .lighthouseci
+          retention-days: 7

@@ -25,8 +25,7 @@ const nextId = (): NodeId => {
 
 const state = () => useStudioStore.getState()
 
-const canvasRenders = (): number =>
-  (window as unknown as { __canvasRenders?: number }).__canvasRenders ?? 0
+const canvasRenders = (): number => window.__renderCounts?.['canvas-root'] ?? 0
 
 const insert = (block: string): NodeId => {
   const id = nextId()

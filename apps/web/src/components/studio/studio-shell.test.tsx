@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { axe } from 'jest-axe'
 import { useRef } from 'react'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { PANEL_BOUNDS, PANEL_LAYOUT_KEY, PANEL_VARIABLE } from '../../hooks/panel-layout'
 import { useStudioStore } from '../../store/editor-store'
@@ -118,10 +118,22 @@ describe('StudioShell', () => {
   })
 
   describe('panel shortcuts', () => {
+    /*
+     * The keyboard map arrives in its own chunk (ADR-152), so `next/dynamic` resolves it after the
+     * first render and every shortcut test waits for it. Importing it here first puts it in the
+     * module cache: the wait is then a render rather than a transform of the chunk and its
+     * dependencies, which is what expired — twice — on a machine running the whole suite.
+     */
+    beforeAll(async () => {
+      await import('./shortcuts/shortcut-host')
+    })
+
+    const shortcutsMounted = (): Promise<HTMLElement> =>
+      screen.findByTestId('shortcut-host', {}, { timeout: 5000 })
+
     it('collapses the left panel on Mod+\\ and restores it', async () => {
       renderShell()
-      // The keyboard map arrives in its own chunk (ADR-152); this is it, mounted.
-      await screen.findByTestId('shortcut-host')
+      await shortcutsMounted()
 
       await togglePanelKey()
       expect(readVariable(PANEL_VARIABLE.left.track)).toBe('0px')
@@ -132,7 +144,7 @@ describe('StudioShell', () => {
 
     it('collapses the inspector on Mod+Alt+\\ and leaves the left panel alone', async () => {
       renderShell()
-      await screen.findByTestId('shortcut-host')
+      await shortcutsMounted()
 
       await togglePanelKey({ altKey: true })
 
@@ -142,7 +154,7 @@ describe('StudioShell', () => {
 
     it('keeps the collapsed panel out of the tab order', async () => {
       renderShell()
-      await screen.findByTestId('shortcut-host')
+      await shortcutsMounted()
 
       await togglePanelKey()
 
