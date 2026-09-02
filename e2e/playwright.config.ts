@@ -20,7 +20,12 @@ export default defineConfig({
   testIgnore: ['export-smoke/**'],
   fullyParallel: false,
   forbidOnly: CI,
-  retries: CI ? 2 : 0,
+  /*
+   * No retries anywhere — ADR-337. Five consecutive full runs produced zero flakes, and every flake
+   * this suite has ever produced was one defect wearing seven hats: a value read before the state
+   * that produces it had settled. A retry cannot tell that from noise, so it hid two of them in CI.
+   */
+  retries: 0,
   workers: 1,
   reporter: CI ? [['github'], ['list']] : [['list']],
   timeout: 90_000,

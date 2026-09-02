@@ -13674,3 +13674,64 @@ budget is only comparable to itself — ADR-280 — so they remain a local gate.
   and the fix if it does not is a cache to investigate rather than a matrix to shrink.
 - The performance suite is the one gate a pull request cannot see. It is named in TESTING.md
   § Commands, and prompt 60 is where the pipeline is assembled with per-job durations reported.
+
+## ADR-337 — The end-to-end suite runs without retries, because every flake it has had was a defect
+
+**Date** 2026-09-02 · **Prompt** 56 · **Status** Accepted
+
+### Question
+`playwright.config.ts` sets `retries: CI ? 2 : 0`. The number was written in prompt 05, before there
+was a suite to retry, and prompt 56 asks whether it is still earning its place.
+
+A retry buys one thing — a run that is not red because of noise — and costs one thing: a test that
+passes on the second attempt is reported as `flaky` and is otherwise indistinguishable from a pass.
+
+### Criterion
+Stated before the series was run: if five consecutive full runs on one commit produce **zero** flakes,
+the retries are not absorbing noise this suite produces, and what they can still absorb is a defect.
+Retries go to zero. If the series produces a flake, they stay at 2 and the flake is fixed first.
+
+### Measurement
+Twenty-two full runs across four series on one machine, three engines.
+
+| Series | Runs | Flakes | What they were |
+| --- | --- | --- | --- |
+| 1 and 2 (2026-09-01) | 10 | 5 | state read in the microtask after the action producing it |
+| 3 (2026-09-02) | 5 | 2 | the same, in `a11y/focus-restore` and `a11y/docs` |
+| 4 (2026-09-02) | 2 | 0 flakes, 1 **hard** failure | `flows/grab-effect` on WebKit, 4 out of 4 — not a flake |
+| 5 (2026-09-02, after the fixes) | 5 | **0** | — |
+
+The final series: 377 tests, 18 skipped, zero failures in each of five runs, 18.8 to 23.3 minutes per
+run on one worker.
+
+Seven defects, one shape: a value read before the state that produces it has settled. None was a slow
+machine, a cold cache or a network hiccup. Two of them were **hiding in CI behind the retries** — the
+`e2e (webkit, 1)` job on pull request #10 printed `2 flaky`, both in `a11y/focus-restore.spec.ts`,
+both the same missing wait; the job was green, the pull request was green, and the line went unread
+until this prompt went looking for it.
+
+The series also separated two things the old command conflated. `perf/**` measures the host — ADR-332
+measured a 27 % swing in `benchmarkIndex` inside one run — so a series that counts its results counts
+this machine's load. Series 5 runs the suite as CI runs it (`a11y editor export flows playground`),
+and the performance specs are measured on their own.
+
+### Decision
+`retries: 0`, on CI and locally alike.
+
+A retry cannot tell a race in the app from a race in the test, so it hides the only class of failure
+this suite actually produces. The two WebKit flakes are the argument in one line: the suite found the
+defect, the retry discarded the finding, and the same defect had to be found again by hand a day later.
+
+A red job for a real race is the outcome to want. It costs one re-run of a pull request; the
+alternative cost a session.
+
+### Consequences
+- A genuinely flaky run now blocks a pull request. That is the point, and the exposure is bounded: the
+  flakes this suite has produced all had one shape, and that shape has a known fix.
+- Infrastructure failures — a browser download, a runner evicted mid-run — now fail the job rather
+  than being retried away. They are distinguishable in the log, since they fail in `setup` rather than
+  in a test, and re-running a job is one click.
+- The `flaky` bucket in a Playwright report goes empty by construction. Anything that used to land
+  there now lands in `failed`, where it is read.
+- Reverting is one line, and the criterion for reverting is the one used here: five runs, count the
+  flakes. Not "it felt noisy".

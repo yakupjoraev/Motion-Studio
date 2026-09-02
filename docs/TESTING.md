@@ -320,8 +320,10 @@ browser session to find out:
   in a comment: compositing settles over a window, a scroll has a cadence, and "a hidden tab burns no
   frames for three seconds" is three seconds by construction. ADR-334.
 - `trace: 'retain-on-failure'`, `video: 'retain-on-failure'`, `screenshot: 'only-on-failure'`.
-- Retries: 2 in CI, 0 locally. A test needing retries locally is a broken test — fix it, do not
-  raise the retry count.
+- Retries: **none, anywhere** — ADR-337. Five consecutive full runs produced zero flakes, and every
+  flake this suite has produced was the same defect: a value read before the state that produces it
+  had settled. A retry cannot tell that from noise, and in CI it hid two of them behind a green
+  `flaky` line nobody read. A test that needs a retry is a broken test.
 
 ### Performance specs
 
