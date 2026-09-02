@@ -1,4 +1,4 @@
-import { type Page, expect, test } from '@playwright/test'
+import { type Locator, type Page, expect, test } from '@playwright/test'
 
 import { StudioPage } from '../fixtures/studio-page'
 
@@ -27,6 +27,10 @@ const focusedName = (page: Page): Promise<string> =>
     return `${element.tagName.toLowerCase()}:${element.getAttribute('aria-label') ?? element.textContent?.trim().slice(0, 24) ?? ''}`
   })
 
+/** Whether focus is anywhere inside a dialog — the trap's own contract, read off the live tree. */
+const focusIsInside = (dialog: Locator): Promise<boolean> =>
+  dialog.evaluate((node) => node.contains(document.activeElement))
+
 test.describe('the studio’s dialogs', () => {
   test.beforeEach(async ({ page }) => {
     const studio = new StudioPage(page)
@@ -51,7 +55,9 @@ test.describe('the studio’s dialogs', () => {
 
       await expect(dialog).toBeVisible()
       // Focus is inside: a dialog that opens without moving focus is a dialog a keyboard cannot use.
-      expect(await dialog.evaluate((node) => node.contains(document.activeElement))).toBe(true)
+      // Polled, because Radix moves focus in an effect after the content mounts — a read taken on
+      // the mount itself finds the focus the trigger still has.
+      await expect.poll(() => focusIsInside(dialog)).toBe(true)
 
       await page.keyboard.press('Escape')
       await expect(dialog).toBeHidden()
@@ -70,7 +76,7 @@ test.describe('the studio’s dialogs', () => {
     const dialog = page.getByRole('dialog', { name: 'Export' })
 
     await expect(dialog).toBeVisible()
-    expect(await dialog.evaluate((node) => node.contains(document.activeElement))).toBe(true)
+    await expect.poll(() => focusIsInside(dialog)).toBe(true)
 
     await page.keyboard.press('Escape')
     await expect(dialog).toBeHidden()
@@ -94,7 +100,13 @@ test.describe('the studio’s dialogs', () => {
     await page.keyboard.press('Escape')
     await expect(palette).toBeHidden()
 
-    expect(await focusedName(page)).not.toBe('BODY')
+    /*
+     * Named first, and polled: the return happens in the frame after the dialog unmounts (ADR-325),
+     * so a read taken on the hide finds `body`. It is kept beside `toBeFocused` because it is the
+     * message worth having — "focus is on the body" says the restore did not run, where "the canvas
+     * is not focused" does not say where focus went.
+     */
+    await expect.poll(() => focusedName(page)).not.toBe('BODY')
     await expect(canvas).toBeFocused({ timeout: 5000 })
   })
 })

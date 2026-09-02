@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright'
 import { type Browser, type Page, expect, test } from '@playwright/test'
 
-import { settled } from '../fixtures/settle'
+import { settled, stillness } from '../fixtures/settle'
 
 /**
  * `pnpm test:e2e:a11y` — ACCESSIBILITY.md § Landing, gallery, docs. The docs are checked in both
@@ -239,6 +239,7 @@ test.describe('searching the documentation', () => {
     await page.getByTestId('docs-search-trigger').click()
     await page.getByTestId('docs-search-input').waitFor()
     await settled(page)
+    await stillness(page, '[role="dialog"]')
 
     expect((await scan(page)).violations).toEqual([])
   })

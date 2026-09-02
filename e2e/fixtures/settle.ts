@@ -25,3 +25,32 @@ export async function settled(page: Page): Promise<void> {
       }),
   )
 }
+
+/**
+ * "This subtree has stopped moving" — for the scans and the measurements a transition invalidates.
+ *
+ * A dialog fades and scales in, and a colour read halfway through that is a composite neither state
+ * ever has: the docs search scan measured 4.46:1 against a 4.5 threshold once in five runs, on a
+ * text colour that passes in both the start state and the end state. Two frames of `settled` are
+ * enough for a commit and not for a 150 ms transition.
+ *
+ * Endless animations are excluded rather than waited for — a spinner or an aurora never finishes,
+ * and neither is what a scan is racing.
+ */
+export async function stillness(page: Page, selector: string): Promise<void> {
+  await page.waitForFunction((target) => {
+    const root = document.querySelector(target)
+
+    if (root === null) {
+      return false
+    }
+
+    return root
+      .getAnimations({ subtree: true })
+      .filter(
+        (animation) =>
+          animation.effect?.getComputedTiming().iterations !== Number.POSITIVE_INFINITY,
+      )
+      .every((animation) => animation.playState === 'finished' || animation.playState === 'idle')
+  }, selector)
+}
