@@ -73,20 +73,21 @@ describe('Navbar', () => {
     await screen.findByTestId('navbar-panel')
     await user.keyboard('{Escape}')
 
-    // Radix closes on the next frame, and a frame on the CI runner is not the frame on a laptop.
+    /*
+     * Radix reflects the close on a later tick, and how much later is a property of the machine.
+     * Locally it is under 100 ms — eight consecutive runs of this file — and on the shared runner,
+     * with the whole coverage pass competing for two cores, it has exceeded 5 s three times. The
+     * state itself is settled either way: the menu is closed or it is not, so a wider window cannot
+     * hide a real failure, it can only stop reporting a slow machine as one.
+     */
     await waitFor(
       () => {
         expect(trigger).toHaveAttribute('aria-expanded', 'false')
       },
-      { timeout: 5_000 },
+      { timeout: 15_000 },
     )
-    /*
-     * A budget for the whole test, not only for the wait inside it. `userEvent` puts a delay between
-     * every synthetic event it fires, so the click and the key press cost real time before the wait
-     * even starts — and on a loaded runner the two together have exceeded Vitest's five-second
-     * default twice, on pull requests that changed a GitHub Action and a Tailwind utility.
-     */
-  }, 20_000)
+    // The whole test, not only the wait: `userEvent` spends real time between every synthetic event.
+  }, 30_000)
 
   it('moves along the bar with the arrow keys', async () => {
     const user = userEvent.setup()

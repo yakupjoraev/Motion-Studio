@@ -16,7 +16,7 @@ const DIALOGS = [
 ] as const
 
 /**
- * The window a restored focus is waited in.
+ * The window a restored focus — and the close before it — is waited in.
  *
  * The restore itself is synchronous — `Dialog`'s `onCloseAutoFocus` calls `focus()` on the control it
  * recorded — and it was verified on WebKit to land within 3 s of the close, twice in a row. What
@@ -71,7 +71,7 @@ test.describe('the studio’s dialogs', () => {
       await expect.poll(() => focusIsInside(dialog)).toBe(true)
 
       await page.keyboard.press('Escape')
-      await expect(dialog).toBeHidden()
+      await expect(dialog).toBeHidden({ timeout: RESTORE_MS })
 
       // The menu item is gone with the menu, so the trigger that survives is the File button.
       await expect(file).toBeFocused({ timeout: RESTORE_MS })
@@ -90,7 +90,7 @@ test.describe('the studio’s dialogs', () => {
     await expect.poll(() => focusIsInside(dialog)).toBe(true)
 
     await page.keyboard.press('Escape')
-    await expect(dialog).toBeHidden()
+    await expect(dialog).toBeHidden({ timeout: RESTORE_MS })
     await expect(trigger).toBeFocused({ timeout: RESTORE_MS })
   })
 
@@ -109,7 +109,7 @@ test.describe('the studio’s dialogs', () => {
     await expect(palette).toBeVisible()
 
     await page.keyboard.press('Escape')
-    await expect(palette).toBeHidden()
+    await expect(palette).toBeHidden({ timeout: RESTORE_MS })
 
     /*
      * Named first, and polled: the return happens in the frame after the dialog unmounts (ADR-325),
