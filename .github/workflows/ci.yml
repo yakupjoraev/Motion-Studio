@@ -102,7 +102,9 @@ jobs:
       matrix:
         # firefox and webkit match the flows and the a11y specs only — `playwright.config.ts`.
         project: [chrome, firefox, webkit]
-        shard: [1, 2]
+        # Three parts rather than two — ADR-338: at two, the slowest job took 10.0 minutes against a
+        # contract of eight, while its sibling on the same engine finished the tests in 4.2.
+        shard: [1, 2, 3]
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
@@ -113,7 +115,7 @@ jobs:
       # Two workers, which the config does not set: `workers: 1` is there for the performance specs,
       # whose numbers are only comparable when nothing else is competing for the machine. This job
       # runs none of them, so the constraint is the runner's cores rather than a measurement.
-      - run: pnpm --filter e2e exec playwright test flows editor export playground a11y --project=${{ matrix.project }} --shard=${{ matrix.shard }}/2 --workers=2
+      - run: pnpm --filter e2e exec playwright test flows editor export playground a11y --project=${{ matrix.project }} --shard=${{ matrix.shard }}/3 --workers=2
       # The trace is the whole point of `retain-on-failure`: a red shard with no trace is a re-run.
       - if: failure()
         uses: actions/upload-artifact@v7

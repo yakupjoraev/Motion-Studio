@@ -13735,3 +13735,53 @@ alternative cost a session.
   there now lands in `failed`, where it is read.
 - Reverting is one line, and the criterion for reverting is the one used here: five runs, count the
   flakes. Not "it felt noisy".
+
+## ADR-338 — Each engine's end-to-end job is cut in three, because two left a ten-minute job
+
+**Date** 2026-09-02 · **Prompt** 56 · **Status** Accepted · **Refines** ADR-336
+
+### Question
+ADR-336 split the end-to-end job by engine and cut each engine in two, on the measurement available
+then: the slowest job was 8.8 minutes. Prompt 56's contract is a suite **under eight minutes with
+sharding**, and this prompt added waits — `networkidle` before a gesture on a block page, and a wait
+for a dialog's transitions before an axe scan — which cost wall-clock in exchange for the flakes they
+removed.
+
+### Criterion
+The contract's number, unchanged: the slowest end-to-end job under **8 minutes**. Sharding is the
+knob; the specs' own waits are not, because each one is there for a defect the suite found.
+
+### Measurement
+Commit `62408df`, six jobs, two shards per engine. Fixed overhead is 3.0 to 3.4 minutes in every job:
+`setup` 0.3–0.5, browser install 0.6–0.9, `pnpm build` 1.7–2.4.
+
+| Job | Testing | Total |
+| --- | --- | --- |
+| chrome 1 | **6.7 min** | **10.0 min** |
+| chrome 2 | 4.2 min | 7.3 min |
+| webkit 1 | 3.3 min | 6.6 min |
+| webkit 2 | 5.0 min | 7.9 min |
+| firefox 1 | 2.8 min | 5.9 min |
+| firefox 2 | 3.3 min | 6.2 min |
+
+Two observations, and the second is the one that decides. The contract is breached — 10.0 minutes.
+And the breach is not the engine's total work but the **division**: Chrome's two shards are 6.7 and
+4.2, a 1.6× imbalance, because Playwright divides the list of tests evenly and this list is not
+evenly expensive. `a11y/all-blocks` walks seventy-two blocks; `editor/selection` clicks four times.
+
+### Decision
+Three shards per engine, nine jobs. Chrome's 10.9 minutes of testing divides to ~3.6 per shard, which
+puts every job at roughly 6.5 to 7 minutes including the fixed 3.
+
+The division stays *within* an engine, which is what ADR-336 established and what this refines rather
+than reverses: a failure is still read as "WebKit is red", and no shard can draw work from two
+browsers at once.
+
+### Consequences
+- Nine jobs run `pnpm build`, up from six. Accepted for the same reason ADR-336 accepted it, and the
+  fix if the cost matters is Turbo's remote cache rather than a smaller matrix.
+- The imbalance inside an engine is reduced, not solved: at three shards Chrome's spread will still
+  follow whichever shard draws `all-blocks`. If a single spec ever exceeds a shard's whole budget, the
+  answer is to split that spec, not to add a fourth shard.
+- Fixed overhead is now 3 of every ~6.5 minutes — nearly half. That is the next thing to attack if
+  this contract tightens, and prompt 60 is where the pipeline is assembled with durations reported.

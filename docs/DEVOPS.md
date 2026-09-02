@@ -87,22 +87,23 @@ jobs:
       - uses: ./.github/actions/setup
       - run: pnpm test:compile      # tsc over every golden export
 
-  # Six jobs: one per engine, halved. The accessibility specs are in here rather than in a job of
-  # their own — `playwright.config.ts` matches them for all three engines, and a second job would run
-  # the same specs a second time. ADR-336 has why the split is by engine and not by test count.
+  # Nine jobs: one per engine, cut in three. The accessibility specs are in here rather than in a job
+  # of their own — `playwright.config.ts` matches them for all three engines, and a second job would
+  # run the same specs a second time. ADR-336 has why the split is by engine and not by test count;
+  # ADR-338 has why each engine is cut in three, measured rather than guessed.
   e2e:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         project: [chrome, firefox, webkit]
-        shard: [1, 2]
+        shard: [1, 2, 3]
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - run: pnpm --filter e2e exec playwright install --with-deps ${{ matrix.project }}
       - run: pnpm build
-      - run: pnpm --filter e2e exec playwright test flows editor export playground a11y --project=${{ matrix.project }} --shard=${{ matrix.shard }}/2 --workers=2
+      - run: pnpm --filter e2e exec playwright test flows editor export playground a11y --project=${{ matrix.project }} --shard=${{ matrix.shard }}/3 --workers=2
       - uses: actions/upload-artifact@v5
         if: failure()
         with:
