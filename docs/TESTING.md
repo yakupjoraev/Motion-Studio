@@ -258,12 +258,19 @@ e2e/
 │   └── theme-no-rerender.spec.ts
 └── fixtures/
     ├── documents/*.motion.json
-    ├── studio-page.ts            the shell: open, shortcuts, layers, canvas gestures
+    ├── studio-page.ts            the shell: open, shortcuts, panel tabs, viewport gestures
     ├── studio-palette.ts         the block palette and its three insertion paths
+    ├── studio-layers.ts          the layers tree: selection, focus, reorder, drag
+    ├── studio-canvas.ts          the artboard, the overlays, and what is painted on it
     ├── studio-theme-panel.ts     presets, scales, accent, and the variables they write
-    ├── studio-inspector.ts       generated controls, breakpoints, overflow
+    ├── studio-contrast-report.ts the repairs the theme surfaces, and the way to decline one
+    ├── studio-token-export.ts    the four token formats, and what each tab prints
+    ├── studio-inspector.ts       generated controls, breakpoints, overrides, overflow
     ├── studio-motion-panel.ts    preset cards and a preset's own parameters
+    ├── studio-file-menu.ts       File → New, File → Import, and the template picker
+    ├── studio-import-dialog.ts   a file's two outcomes: repaired and reported, or refused
     ├── export-page.ts            the export dialog
+    ├── gallery-page.ts           the catalogue and one block's detail page
     ├── playground-page.ts        the playground
     ├── settle.ts                 "the page has finished arriving", as an event
     └── measure.ts                the CDP readings the performance specs take
@@ -286,8 +293,9 @@ await studio.motion.applyPreset('Clip reveal')
 ```
 
 `StudioPage` itself owns what belongs to no panel: `open` / `openEmpty`, `press` with the modifier the
-shortcut registry is listening for, the layers tree, the canvas gestures, and the render counts the
-performance specs read.
+shortcut registry is listening for, the panel tabs, the viewport gestures — pan, zoom, marquee — and
+the render counts the performance specs read. Everything a spec addresses by name lives on a surface:
+`studio.layers`, `studio.canvas`, `studio.file`, `studio.theme.contrast`, `studio.theme.tokens`.
 
 Every spec goes through a page object. No raw selectors in specs — a chrome change then costs one
 file, not forty. Three things a page object is responsible for knowing, because each one cost a

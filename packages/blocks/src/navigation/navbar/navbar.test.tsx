@@ -68,6 +68,9 @@ describe('Navbar', () => {
     const trigger = requireAt(screen.getAllByTestId('navbar-trigger'), 0)
 
     await user.click(trigger)
+    // The dismiss layer subscribes when the panel mounts, so an Escape sent before it is in the DOM
+    // is a key press nothing is listening for — and the menu then stays open for good.
+    await screen.findByTestId('navbar-panel')
     await user.keyboard('{Escape}')
 
     // Radix closes on the next frame, and a frame on the CI runner is not the frame on a laptop.
@@ -138,6 +141,7 @@ describe('Navbar', () => {
     const trigger = screen.getByTestId('nav-drawer-trigger')
 
     await user.click(trigger)
+    await screen.findByTestId('nav-drawer')
     await user.keyboard('{Escape}')
 
     await waitFor(() => {
