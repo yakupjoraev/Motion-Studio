@@ -1,6 +1,11 @@
 'use client'
 
 import type { BlockDefinition, ControlDescriptor, NodeId } from '@motion-studio/schema'
+import type { ReactNode } from 'react'
+
+import { useStudioStore } from '../../../store/editor-store'
+import { ErrorBoundary } from '../../errors/error-boundary'
+import { SectionErrorChip } from '../../errors/section-error-chip'
 
 import { BlockSection } from './universal-sections/block-section'
 import {
@@ -27,6 +32,28 @@ const keep = (controls: readonly ControlDescriptor[], only: ReadonlySet<string> 
  * The whole inspector body, generated. There is no per-block code here and there is no place to put
  * any: the sections are canonical (ADR-110) and the rows come from the block's own metadata.
  */
+/**
+ * One boundary per section — ARCHITECTURE.md § Error boundaries: a control that throws collapses its
+ * own group to a chip and the rest of the panel keeps working.
+ *
+ * Per section rather than per panel because that is the difference between "the colour picker is
+ * broken" and "the inspector is broken": a generated control can fail on one prop's shape, and the
+ * other eight groups still edit the same node.
+ */
+function Section({ label, children }: { readonly label: string; readonly children: ReactNode }) {
+  return (
+    <ErrorBoundary
+      describeDocument={() => useStudioStore.getState().document ?? null}
+      fallback={({ report, reset }) => (
+        <SectionErrorChip onRetry={reset} report={report} section={label} />
+      )}
+      where={`inspector:${label}`}
+    >
+      {children}
+    </ErrorBoundary>
+  )
+}
+
 export function BlockInspector({ definition, nodeIds, only }: BlockInspectorProps) {
   return (
     <div className="flex w-full flex-col" data-testid="block-inspector">
@@ -41,24 +68,44 @@ export function BlockInspector({ definition, nodeIds, only }: BlockInspectorProp
 
         if (id === 'layout') {
           return (
-            <LayoutSection definition={definition} group={narrowed} key={id} nodeIds={nodeIds} />
+            <Section key={id} label={label}>
+              <LayoutSection definition={definition} group={narrowed} nodeIds={nodeIds} />
+            </Section>
           )
         }
 
         if (id === 'style') {
-          return <StyleSection group={narrowed} key={id} nodeIds={nodeIds} />
+          return (
+            <Section key={id} label={label}>
+              <StyleSection group={narrowed} nodeIds={nodeIds} />
+            </Section>
+          )
         }
 
         if (id === 'typography') {
-          return <TypographySection group={narrowed} key={id} nodeIds={nodeIds} />
+          return (
+            <Section key={id} label={label}>
+              <TypographySection group={narrowed} nodeIds={nodeIds} />
+            </Section>
+          )
         }
 
-        return <BlockSection group={narrowed} id={id} key={id} label={label} nodeIds={nodeIds} />
+        return (
+          <Section key={id} label={label}>
+            <BlockSection group={narrowed} id={id} label={label} nodeIds={nodeIds} />
+          </Section>
+        )
       })}
 
-      <MotionSection nodeIds={nodeIds} />
-      <EffectsSection nodeIds={nodeIds} />
-      <CodeSection nodeIds={nodeIds} />
+      <Section label="Motion">
+        <MotionSection nodeIds={nodeIds} />
+      </Section>
+      <Section label="Effects">
+        <EffectsSection nodeIds={nodeIds} />
+      </Section>
+      <Section label="Code">
+        <CodeSection nodeIds={nodeIds} />
+      </Section>
     </div>
   )
 }

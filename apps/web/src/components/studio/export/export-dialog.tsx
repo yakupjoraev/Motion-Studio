@@ -7,6 +7,8 @@ import dynamic from 'next/dynamic'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { useStudioStore } from '../../../store/editor-store'
+import { DialogErrorState } from '../../errors/dialog-error-state'
+import { ErrorBoundary } from '../../errors/error-boundary'
 
 import { CodeViewer } from './code-viewer'
 import { DownloadActions } from './download-actions'
@@ -88,6 +90,22 @@ export function ExportDialog() {
     copy(all, `Copied ${snapshot.files.length} files`)
   }, [copy, snapshot.files])
 
+  /**
+   * The escape hatch behind a failed export — `prompts/58` § The five boundaries.
+   *
+   * The document is JSON already, so this needs no printer, no worker and no IR: whatever broke in
+   * the generation, the thing the user came for is one clipboard write away.
+   */
+  const copyDocumentJson = useCallback(async (): Promise<void> => {
+    const document = useStudioStore.getState().document
+
+    await navigator.clipboard.writeText(JSON.stringify(document, null, 2))
+    notify({ title: 'Copied the document as JSON' })
+  }, [notify])
+
+  /** Re-runs the generation with the options that are already chosen. */
+  const regenerate = useCallback(() => setOptions({}), [setOptions])
+
   /** ACCESSIBILITY.md § Dialogs: closing returns focus to the trigger, which Radix does for us. */
   const selectNode = useCallback(
     (id: NodeId) => {
@@ -129,39 +147,60 @@ export function ExportDialog() {
         </>
       }
     >
-      <div className="grid min-h-[420px] grid-cols-[212px_1fr] gap-3" data-testid="export-dialog">
-        <div className="flex min-h-0 flex-col gap-3 overflow-y-auto border-border border-r pr-3">
-          <TargetSelector onChange={(target) => setOptions({ target })} value={resolved.target} />
-          <OptionsPanel onChange={setOptions} options={options} resolved={resolved} />
-        </div>
-
-        <div className="flex min-h-0 flex-col gap-2">
-          {snapshot.error === null ? (
-            <WarningsList onSelectNode={selectNode} warnings={snapshot.warnings} />
-          ) : (
-            <p className="rounded-sm bg-danger-muted px-2 py-1.5 text-2xs text-danger" role="alert">
-              {snapshot.error}
-            </p>
-          )}
-
-          <CodeViewer
-            file={selected}
-            onCopy={copyFile}
-            ready={selected !== null && formatted.has(selected.path)}
+      <ErrorBoundary
+        describeDocument={() => useStudioStore.getState().document ?? null}
+        fallback={({ report, reset }) => (
+          <DialogErrorState
+            onCopyJson={copyDocumentJson}
+            onRetry={reset}
+            report={report}
+            warnings={snapshot.warnings.map((warning) => warning.message)}
           />
+        )}
+        where="export-dialog"
+      >
+        <div className="grid min-h-[420px] grid-cols-[212px_1fr] gap-3" data-testid="export-dialog">
+          <div className="flex min-h-0 flex-col gap-3 overflow-y-auto border-border border-r pr-3">
+            <TargetSelector onChange={(target) => setOptions({ target })} value={resolved.target} />
+            <OptionsPanel onChange={setOptions} options={options} resolved={resolved} />
+          </div>
 
-          <div className="max-h-40 shrink-0">
-            <FileTree
-              files={snapshot.files}
-              formatted={snapshot.formatted}
+          <div className="flex min-h-0 flex-col gap-2">
+            {snapshot.error === null ? (
+              <WarningsList onSelectNode={selectNode} warnings={snapshot.warnings} />
+            ) : (
+              /*
+               * A printer that threw and a printer that reported a failure are the same thing to the
+               * user, so they get the same state: the warnings the IR had already raised, and the
+               * escape hatch that needs no printer at all — `prompts/58` § The five boundaries.
+               */
+              <DialogErrorState
+                onCopyJson={copyDocumentJson}
+                onRetry={regenerate}
+                report={snapshot.error}
+                warnings={snapshot.warnings.map((warning) => warning.message)}
+              />
+            )}
+
+            <CodeViewer
+              file={selected}
               onCopy={copyFile}
-              onSelect={setChosen}
-              pending={busy}
-              selected={selectedPath}
+              ready={selected !== null && formatted.has(selected.path)}
             />
+
+            <div className="max-h-40 shrink-0">
+              <FileTree
+                files={snapshot.files}
+                formatted={snapshot.formatted}
+                onCopy={copyFile}
+                onSelect={setChosen}
+                pending={busy}
+                selected={selectedPath}
+              />
+            </div>
           </div>
         </div>
-      </div>
+      </ErrorBoundary>
     </Dialog>
   )
 }

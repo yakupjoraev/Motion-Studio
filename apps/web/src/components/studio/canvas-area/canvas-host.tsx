@@ -7,6 +7,8 @@ import { type RefObject, useCallback, useMemo, useRef } from 'react'
 
 import { countRender } from '../../../lib/dev/render-counter'
 import { useStudioStore } from '../../../store/editor-store'
+import { CanvasErrorPanel } from '../../errors/canvas-error-panel'
+import { ErrorBoundary } from '../../errors/error-boundary'
 
 import { useArtboardResize } from './artboard-resize'
 import { useCanvasAutoPan } from './canvas-auto-pan'
@@ -76,36 +78,70 @@ export function CanvasHost() {
   }, [])
 
   return (
-    <MotionSchedulerProvider paused={motionPaused}>
-      <MotionSettingsProvider>
-        <CanvasAutoPan rootRef={island} />
-        {multiFrame ? (
-          <MultiFrameView />
-        ) : (
-          // The wrapper is what hears the artboard's own width transition finish — ADR-164.
-          <div className="h-full w-full" onTransitionEnd={artboard.onTransitionEnd} ref={island}>
-            <Canvas
-              artboardWidth={artboard.width}
-              breakpointName={breakpoint}
-              gridSize={grid.size as 4 | 8 | 16 | 24}
-              initialTransform={initialTransform}
-              menu={ports.menu}
-              motion={ports.motion}
-              onReady={onReady}
-              onTransformCommit={onTransformCommit}
-              renderNode={renderNode}
-              resize={ports.resize}
-              rootId={rootId}
-              scene={ports.scene}
-              selection={ports.selection}
-              showGrid={grid.enabled}
-              showRulers={rulers}
-              snapEnabled={guides.enabled}
-              snapThreshold={guides.snapThreshold}
-            />
-          </div>
-        )}
-      </MotionSettingsProvider>
-    </MotionSchedulerProvider>
+    /*
+     * The canvas root's boundary — ARCHITECTURE.md § Error boundaries. Inside the scheduler and the
+     * motion settings, so a fallback still paints in the studio's own theme, and outside the canvas
+     * itself, which is what it is here to catch: a viewport transform gone non-finite, a scene
+     * subscription throwing, an overlay that cannot measure.
+     */
+    <ErrorBoundary
+      describeDocument={() => useStudioStore.getState().document ?? null}
+      fallback={({ error, report, reset }) => (
+        <CanvasErrorPanel
+          message={
+            error instanceof Error && error.message !== ''
+              ? `${error.message}.`
+              : 'It threw while rendering.'
+          }
+          onResetViewport={() => {
+            /*
+             * The transform, not the document: zoom and pan are the viewport state a crash here is
+             * usually about, and the store has no single `resetViewport` because nothing else has
+             * ever needed one — these two calls are it.
+             */
+            const { setZoom, setPan } = useStudioStore.getState()
+
+            setZoom(1)
+            setPan({ x: 0, y: 0 })
+            reset()
+          }}
+          onRetry={reset}
+          report={report}
+        />
+      )}
+      where="canvas"
+    >
+      <MotionSchedulerProvider paused={motionPaused}>
+        <MotionSettingsProvider>
+          <CanvasAutoPan rootRef={island} />
+          {multiFrame ? (
+            <MultiFrameView />
+          ) : (
+            // The wrapper is what hears the artboard's own width transition finish — ADR-164.
+            <div className="h-full w-full" onTransitionEnd={artboard.onTransitionEnd} ref={island}>
+              <Canvas
+                artboardWidth={artboard.width}
+                breakpointName={breakpoint}
+                gridSize={grid.size as 4 | 8 | 16 | 24}
+                initialTransform={initialTransform}
+                menu={ports.menu}
+                motion={ports.motion}
+                onReady={onReady}
+                onTransformCommit={onTransformCommit}
+                renderNode={renderNode}
+                resize={ports.resize}
+                rootId={rootId}
+                scene={ports.scene}
+                selection={ports.selection}
+                showGrid={grid.enabled}
+                showRulers={rulers}
+                snapEnabled={guides.enabled}
+                snapThreshold={guides.snapThreshold}
+              />
+            </div>
+          )}
+        </MotionSettingsProvider>
+      </MotionSchedulerProvider>
+    </ErrorBoundary>
   )
 }

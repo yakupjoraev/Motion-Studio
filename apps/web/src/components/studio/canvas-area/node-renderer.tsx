@@ -94,7 +94,12 @@ export const NodeRenderer = memo(function NodeRenderer({ id, breakpoint }: NodeR
       {/* The node's effects are siblings of its markup, never a wrapper around it: a block must not
           learn that it has any, which is what keeps its export honest. */}
       <EffectStack effects={node.effects} registry={blockRegistry} />
-      <NodeErrorBoundary blockId={node.blockId} nodeName={node.name}>
+      <NodeErrorBoundary
+        blockId={node.blockId}
+        defaults={definition.defaults as Record<string, unknown>}
+        nodeId={id}
+        nodeName={node.name}
+      >
         {parsed.success ? (
           // The boundary is per node and so is this: a suspending node inside a tree-wide boundary
           // would unmount every sibling's DOM while it loaded.
