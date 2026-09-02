@@ -82,8 +82,14 @@ would be handed — it is not proof that a reader speaks it in a usable order, a
 without talking over itself. Two of the nine findings above (4 and 6) are exactly the kind of thing the
 tree shows; announcement *timing* is exactly the kind of thing it does not.
 
-The gap closes with one decision: install NVDA and run flow B under it. Half an hour, and it needs the
-owner's go-ahead to put software on the machine.
+**The owner's decision, 2026-09-02: the gap stays open and recorded.** NVDA is not to be installed on
+this machine, so flow B under a screen reader is not going to be run here and this document is where
+that is written down rather than quietly missing. The two checklist lines in
+[ACCESSIBILITY.md](docs/ACCESSIBILITY.md) § Manual checks stay unticked, because they are.
+
+What that leaves unproven is stated once, plainly: whether a reader speaks the studio's announcements
+in a usable order and at a usable moment. Everything structural about them is covered — the tree, the
+regions, the roles, `axe` on every route and all seventy-two blocks — and none of it is a substitute.
 
 ### 5. All four drag operations by keyboard ⚠️ two work, two do not exist
 
