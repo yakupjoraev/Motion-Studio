@@ -47,7 +47,7 @@
     "prepare": "lefthook install"
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.9.4",
+    "@biomejs/biome": "^2.5.11",
     "@motion-studio/blocks": "workspace:*",
     "@motion-studio/codegen": "workspace:*",
     "@motion-studio/motion": "workspace:*",
@@ -58,7 +58,7 @@
     "lefthook": "^1.13.6",
     "size-limit": "^13.0.3",
     "tsx": "^4.23.7",
-    "turbo": "^2.5.8",
-    "typescript": "~5.6.3"
+    "turbo": "^2.10.12",
+    "typescript": "~7.0.2"
   }
 }
