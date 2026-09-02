@@ -26,6 +26,8 @@
     "test:e2e:perf": "node scripts/build-instrumented.mjs && pnpm --filter e2e test:e2e:perf",
     "test:e2e:a11y": "pnpm --filter e2e test:e2e:a11y",
     "test:e2e:export": "pnpm --filter e2e test:e2e:export",
+    "test:visual": "pnpm --filter e2e exec playwright test -c visual.config.ts",
+    "update:baselines": "node scripts/update-baselines.mjs",
     "generate:tokens": "tsx packages/tokens/src/build/generate.ts",
     "generate:thumbnails": "node scripts/generate-thumbnails.mjs",
     "generate:fixtures": "tsx scripts/generate-fixtures.ts",

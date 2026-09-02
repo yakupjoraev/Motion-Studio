@@ -88,7 +88,7 @@
       "json": { "parser": { "allowComments": true } }
     },
     {
-      "include": ["scripts/**", "e2e/perf/**", "e2e/a11y/**"],
+      "include": ["scripts/**", "e2e/*.mjs", "e2e/perf/**", "e2e/a11y/**"],
       "linter": { "rules": { "suspicious": { "noConsole": "off" } } }
     }
   ]

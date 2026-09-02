@@ -56,7 +56,7 @@ export function FpsMeter() {
   // A plain span, deliberately: `<output>` has an implicit `status` role, and a live region that
   // re-announces a number twice a second is unusable with a screen reader running.
   return (
-    <span className="tabular-nums" ref={outputRef}>
+    <span className="tabular-nums" data-testid="status-fps" ref={outputRef}>
       — fps
     </span>
   )

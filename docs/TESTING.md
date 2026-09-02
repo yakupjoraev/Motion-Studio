@@ -364,9 +364,18 @@ Playwright screenshots, but narrowly scoped — visual tests are the flakiest th
 | Every theme preset on one reference block | Anything with a `data:` random or a date |
 | Export dialog | Anything with third-party content |
 
-Rules: reduced motion forced, fonts preloaded and awaited, fixed viewport, `maxDiffPixelRatio:
-0.01`, deterministic content only. Baselines are committed per platform and regenerated only via
-a labelled CI job, never locally — local font rendering differs and would churn the baselines.
+Rules: reduced motion forced, fonts preloaded and awaited, fixed viewport at 1440 × 900 and scale 1,
+deterministic content only. The tolerance is **`maxDiffPixels: 200` with `threshold: 0.05`** — a count
+chosen by measurement, not the 1 % ratio this document used to quote: one per cent of the frame is
+12 960 pixels, and a radius token rewrite moves 458 to 1832, so the ratio passed a change nobody would
+ship. ADR-340 has the numbers. Baselines are committed per platform and regenerated only via the
+`visual` workflow, never locally — local font rendering differs and would churn every file.
+
+Blocks are shot through the Storybook surface the thumbnail generator already uses
+(`thumbnail-block--preview`), so a block added to the registry is screenshotted without anybody
+writing a story for it. `node e2e/visual-review.mjs <dir>` lays the whole registry out as contact
+sheets, which is how the aggregate is read: seventy-two blocks side by side show what one at a time
+cannot.
 
 ## Commands
 

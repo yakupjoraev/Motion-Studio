@@ -1,0 +1,89 @@
+# Visual regression — docs/TESTING.md § Visual regression, prompt 57.
+#
+# **This job never blocks a merge, and that is deliberate.**
+#
+# A screenshot suite reports two different things with the same red: a regression nobody intended, and
+# a change somebody intended. Only a person can tell them apart, and the second is common — every
+# deliberate token or spacing change turns forty shots red at once. A blocking visual job therefore
+# asks authors to argue with CI about work they meant to do, and the way teams settle that argument is
+# by ignoring the job. So: it runs, it uploads the evidence, and it leaves the verdict to the reader.
+#
+# A legitimate visual change is not fought, it is regenerated: label the pull request `visual` and
+# dispatch this workflow with `update-baselines`, which regenerates in this same container and commits
+# the result. Baselines are never generated on a laptop — `scripts/update-baselines.mjs` says why.
+#
+# On pull requests it runs only when the `visual` label is present: most pull requests touch no
+# pixels, and the suite costs a build of both origins plus two hundred screenshots.
+name: Visual
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+  workflow_dispatch:
+    inputs:
+      update-baselines:
+        description: Regenerate the baselines and commit them
+        type: boolean
+        default: false
+
+concurrency:
+  group: visual-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+
+jobs:
+  visual:
+    # The label gate, written so a push to main and a manual dispatch are unaffected by it.
+    if: >-
+      github.event_name != 'pull_request' ||
+      contains(github.event.pull_request.labels.*.name, 'visual')
+    runs-on: ubuntu-latest
+    # Informational: a red shot is evidence for a person, not a veto — see the header.
+    continue-on-error: true
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+
+      # Chromium only, and one platform only. The baselines are `linux-chromium`; three engines ×
+      # 144 block shots would be maintenance without a matching yield.
+      - run: pnpm --filter e2e exec playwright install --with-deps chrome
+
+      # Both origins the suite screenshots: the Storybook that renders a block in isolation, and the
+      # studio itself.
+      - run: pnpm build:storybook
+      - run: pnpm build
+
+      - if: ${{ github.event_name == 'workflow_dispatch' && inputs.update-baselines }}
+        run: node scripts/update-baselines.mjs
+
+      - if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.update-baselines) }}
+        run: pnpm --filter e2e exec playwright test -c visual.config.ts
+
+      # Side by side: the baseline, the actual, and the diff, for every shot that moved.
+      - if: failure() || (success() && github.event_name == 'workflow_dispatch')
+        uses: actions/upload-artifact@v7
+        with:
+          name: visual-report
+          path: |
+            e2e/playwright-report
+            e2e/test-results
+          include-hidden-files: true
+          retention-days: 14
+
+      # Committed by git rather than by a third-party action: this is four commands, and a workflow
+      # with `contents: write` is the last place to add a dependency nobody reads.
+      - if: ${{ github.event_name == 'workflow_dispatch' && inputs.update-baselines }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add e2e/visual/snapshots
+          git diff --cached --quiet && echo "baselines unchanged" && exit 0
+          git commit -m "test: regenerate visual baselines"
+          git push

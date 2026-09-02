@@ -67,7 +67,17 @@ function Thumbnail({ blockId }: ThumbnailArgs) {
       className="flex min-h-screen w-full items-center justify-center bg-surface-0 px-10"
       data-thumbnail-ready={blockId}
     >
-      <div className="w-full">
+      {/*
+        `items-center` on the stage centres the row, not what is inside it: this wrapper is `w-full`,
+        so a block narrower than the frame — a badge, a stat, a breadcrumb trail — sat against the
+        left edge while the comment above promised it was centred. Seen once per block it reads as a
+        block that aligns left; seen as a contact sheet of seventy-two it is obviously the stage.
+
+        A column that centres its child restores what the comment claims, and leaves a full-width
+        block full width: `items-center` on a flex column shrinks the child to its content, and a
+        block that asks for `w-full` still takes the row.
+      */}
+      <div className="flex w-full flex-col items-center">
         <Suspense fallback={null}>
           {definition.category === 'effects' ? (
             /*

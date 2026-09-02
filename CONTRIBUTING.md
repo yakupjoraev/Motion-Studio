@@ -117,6 +117,31 @@ Two hard rules:
 3. Provide a reduced-motion fallback. A preset without one fails review.
 4. Add it to the preset catalogue table in [`docs/ANIMATION_SYSTEM.md`](docs/ANIMATION_SYSTEM.md).
 
+## Visual baselines
+
+The visual suite compares committed screenshots. **Never regenerate them locally:**
+
+```bash
+pnpm test:visual        # compare against the committed baselines
+pnpm update:baselines   # refuses to run outside CI, on purpose
+```
+
+A baseline is a rasterised image, so it follows the machine that took it — font files, hinting and
+subpixel positioning all differ between Windows, macOS and the Linux container CI runs. A set
+generated on a laptop matches that laptop and fails everywhere else, including the job that gates
+pull requests. The first person to regenerate locally would commit a set only they can pass, and the
+next person would "fix" it by regenerating on theirs.
+
+So one platform generates them and the same platform checks them. To take a legitimate visual change:
+
+1. push the branch and add the **`visual`** label, which runs the suite on the pull request;
+2. read the `visual-report` artifact — baseline, actual and diff, side by side, for every shot;
+3. if the change is intended, dispatch the **Visual** workflow with **`update-baselines`** ticked. It
+   regenerates in the test job's own container and commits the result to the branch.
+
+The job never blocks a merge. It reports; you decide. A blocking screenshot job is how teams end up
+ignoring screenshot jobs.
+
 ## Pull request checklist
 
 ```markdown

@@ -13838,3 +13838,69 @@ Both are needed: without the first, `body` wins; without the second, there is no
 - The listener now runs for the whole studio session rather than from the first dialog. It is one
   `focusin` handler storing one reference.
 - ADR-337 paid for itself on its first CI run. The retries had been hiding this since prompt 55.
+
+## ADR-340 — The screenshot tolerance is a pixel count chosen by measurement, not a ratio chosen in advance
+
+**Date** 2026-09-02 · **Prompt** 57 · **Status** Accepted
+
+### Question
+`prompts/57` and TESTING.md § Visual regression both specify `maxDiffPixelRatio: 0.01` — one per cent
+of the frame — described as "tolerant of antialiasing, intolerant of real change". The prompt then
+asks for that claim to be tested: change `--ms-radius-lg` from 12 to 16 and report how many block
+shots fail. The expected answer is "many".
+
+### Criterion
+Set before the numbers were taken, and both halves are required:
+
+1. a radius token change must fail **at least ten** block shots;
+2. three consecutive runs with no changes must fail **zero**.
+
+A threshold that misses the first is decoration. One that misses the second trains people to re-run.
+
+### Measurement
+The suite passed the token change on **all 144** block shots. Three separate causes, found in order,
+and the first two were defects in this config rather than in the threshold:
+
+1. **The frame was not the frame.** `devices['Desktop Chrome']` was spread *after* nothing and
+   *before* nothing — it sat in the project's `use` while `viewport` sat in the top-level one, so the
+   device's 1280 × 720 won and every shot was taken in a frame the config did not describe. Fixed by
+   moving `viewport` and `deviceScaleFactor` below the spread.
+2. **The radius that moved was not the radius the blocks use.** Cards are `rounded-xl`, so
+   `--ms-radius-lg` reaches almost nothing in the catalogue. The experiment was repeated on
+   `--ms-radius-xl`, 16 px → 22 px.
+3. **The tolerance was two orders out.** Decoding both PNGs and counting pixels that differ by more
+   than 12/765 in sum:
+
+| Block | Pixels changed | Share of frame |
+| --- | --- | --- |
+| bento-grid | 1832 | 0.14 % |
+| pricing-table | 1432 | 0.11 % |
+| feature-grid | 1374 | 0.11 % |
+| testimonial-card | 458 | 0.035 % |
+
+One per cent of a 1440 × 900 frame is 12 960 pixels — seven to twenty-eight times the change. The
+ratio could not have failed on a radius rewrite, a padding step, or a border going missing on a card.
+
+A count alone was still not enough: at Playwright's default `threshold: 0.2`, a near-white card on a
+near-white stage is "the same colour" and those pixels are never counted at all. `threshold: 0.05` is
+what makes them visible to the comparison.
+
+### Decision
+`maxDiffPixels: 200` with `threshold: 0.05`, replacing `maxDiffPixelRatio: 0.01`.
+
+Verified against both halves of the criterion: the radius change fails **16 shots**, and three
+consecutive full runs — 208 shots each — fail **zero**.
+
+A count rather than a ratio because that is what the number means. A control's shot is 192 px wide
+and a block's is 1440; "a fifth of a per cent" is a different tolerance in each, and the noise a
+threshold exists to absorb is a property of edges, not of area.
+
+### Consequences
+- A font or Chrome upgrade in the runner image will now turn the suite red, where 1 % might have
+  hidden it. That is the correct outcome — it is a real change to what ships — and the workflow's
+  answer is to regenerate the baselines, not to argue.
+- 200 pixels is two and a half times below the smallest real change measured. If a legitimate change
+  ever lands under it, the fix is to shoot the element rather than the frame, which raises the
+  signal's share instead of lowering the bar.
+- TESTING.md § Visual regression carried the 1 % figure. It is corrected there, with the number that
+  replaced it and why.

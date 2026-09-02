@@ -8,7 +8,8 @@
     "test:e2e:export": "playwright test -c export-smoke.config.ts",
     "test:e2e:perf": "playwright test perf",
     "test:e2e:a11y": "playwright test a11y",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test:visual": "playwright test -c visual.config.ts"
   },
   "devDependencies": {
     "@motion-studio/config": "workspace:*",
