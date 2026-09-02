@@ -16,7 +16,7 @@ const DIALOGS = [
 ] as const
 
 /**
- * The window a restored focus — and the close before it — is waited in.
+ * The window every focus reading in this file is given.
  *
  * The restore itself is synchronous — `Dialog`'s `onCloseAutoFocus` calls `focus()` on the control it
  * recorded — and it was verified on WebKit to land within 3 s of the close, twice in a row. What
@@ -68,7 +68,7 @@ test.describe('the studio’s dialogs', () => {
       // Focus is inside: a dialog that opens without moving focus is a dialog a keyboard cannot use.
       // Polled, because Radix moves focus in an effect after the content mounts — a read taken on
       // the mount itself finds the focus the trigger still has.
-      await expect.poll(() => focusIsInside(dialog)).toBe(true)
+      await expect.poll(() => focusIsInside(dialog), { timeout: RESTORE_MS }).toBe(true)
 
       await page.keyboard.press('Escape')
       await expect(dialog).toBeHidden({ timeout: RESTORE_MS })
@@ -87,7 +87,7 @@ test.describe('the studio’s dialogs', () => {
     const dialog = page.getByRole('dialog', { name: 'Export' })
 
     await expect(dialog).toBeVisible()
-    await expect.poll(() => focusIsInside(dialog)).toBe(true)
+    await expect.poll(() => focusIsInside(dialog), { timeout: RESTORE_MS }).toBe(true)
 
     await page.keyboard.press('Escape')
     await expect(dialog).toBeHidden({ timeout: RESTORE_MS })
@@ -117,7 +117,7 @@ test.describe('the studio’s dialogs', () => {
      * message worth having — "focus is on the body" says the restore did not run, where "the canvas
      * is not focused" does not say where focus went.
      */
-    await expect.poll(() => focusedName(page)).not.toBe('BODY')
+    await expect.poll(() => focusedName(page), { timeout: RESTORE_MS }).not.toBe('BODY')
     await expect(canvas).toBeFocused({ timeout: RESTORE_MS })
   })
 })
