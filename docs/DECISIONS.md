@@ -13785,3 +13785,56 @@ browsers at once.
   answer is to split that spec, not to add a fourth shard.
 - Fixed overhead is now 3 of every ~6.5 minutes — nearly half. That is the next thing to attack if
   this contract tightens, and prompt 60 is where the pipeline is assembled with durations reported.
+
+## ADR-339 — `body` is not the control that opened a dialog
+
+**Date** 2026-09-02 · **Prompt** 56 · **Status** Accepted · **Refines** ADR-325
+
+### Question
+ADR-325 gave the studio's dialogs a focus return of their own, because Radix restores to a `Trigger`
+these dialogs do not have. `Dialog` records what to return to in a layout effect: whatever
+`document.activeElement` is when it opens, unless that is inside another overlay, in which case it
+falls back to the last control seen outside one.
+
+With retries switched off (ADR-337), CI immediately failed on two of the five File-menu dialogs on
+WebKit — `Import a document` and `Version history` — waiting for focus to come back to the `File`
+button. The same two tests were the `2 flaky` line the retries had been swallowing for a week.
+
+### Measurement
+The failure is a race between two lazy things, and the numbers say which way it falls:
+
+- Every studio dialog is a chunk (ADR-313), so the dialog mounts *after* the menu item that opened it
+  has gone.
+- Radix's menu hands focus back to its own trigger when it closes. On Chrome and Firefox that lands
+  before the dialog mounts, so `activeElement` is the `File` button and the record is right.
+- On WebKit, on the two dialogs whose chunks arrive last, the dialog mounts first and `activeElement`
+  is **`body`**.
+
+`body` satisfied both conditions the code checked: it is an `HTMLElement`, and
+`body.closest('[data-ms-overlay]')` is null. So it was recorded as the opener, and on close focus was
+returned to `body` — which is precisely the failure ADR-325 was written to fix, reached by a different
+road.
+
+Locally the race never fell that way: three separate WebKit runs restored focus within 3 s, because a
+warm chunk arrives before the menu finishes closing. A hypothesis about a late listener was checked
+against that measurement and discarded before any code was written.
+
+### Decision
+Two changes, one defect.
+
+1. `Dialog` treats `body` as "nothing had focus" and falls back to the recorded control, rather than
+   returning focus to the document.
+2. `watchFocusReturn()` is called by `StudioShell` when the studio mounts, not by the first dialog
+   that happens to open. The record has to exist *before* the control that opens a dialog is focused,
+   and a lazy dialog installs its listener too late to see that.
+
+Both are needed: without the first, `body` wins; without the second, there is nothing to fall back to.
+
+### Consequences
+- The regression is covered by a unit test that fails without the fix: a dialog mounting already open
+  while focus sits on `body` — `packages/ui/src/dialog/dialog.test.tsx`. Verified red, then green.
+- `watchFocusReturn` becomes part of the package's public API, which is one more exported symbol and
+  the honest shape of the dependency: focus tracking belongs to the app's lifetime, not a dialog's.
+- The listener now runs for the whole studio session rather than from the first dialog. It is one
+  `focusin` handler storing one reference.
+- ADR-337 paid for itself on its first CI run. The retries had been hiding this since prompt 55.

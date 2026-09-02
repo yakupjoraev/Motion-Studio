@@ -49,6 +49,7 @@ export {
   dialogFooterStyles,
   dialogScrimStyles,
   dialogTitleStyles,
+  watchFocusReturn,
   type DialogProps,
   type DialogSize,
   type DialogStyleProps,

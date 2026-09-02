@@ -1,4 +1,5 @@
 export { Dialog } from './dialog'
+export { watchFocusReturn } from './focus-return'
 export {
   dialogBodyStyles,
   dialogContentStyles,

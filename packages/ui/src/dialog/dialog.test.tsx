@@ -7,6 +7,7 @@ import { Button } from '../button/index'
 import { expectNoViolations } from '../test/axe'
 
 import { Dialog } from './dialog'
+import { watchFocusReturn } from './focus-return'
 
 import type { DialogProps } from './dialog.types'
 
@@ -88,6 +89,46 @@ describe('Dialog', () => {
 
     opener.focus()
     await userEvent.click(opener)
+    await userEvent.keyboard('{Escape}')
+
+    expect(opener).toHaveFocus()
+  })
+
+  /**
+   * The studio's real shape, and the case a mounted-but-closed dialog does not cover: every studio
+   * dialog is lazy, so it enters the tree already open, and by then the menu that opened it has
+   * closed and handed focus to `body` on at least one engine. There is nothing left to read off
+   * `document.activeElement`, so the return has to come from the record kept before any of it.
+   */
+  it('returns focus to the opener when it mounts already open and focus has gone to the body', async () => {
+    watchFocusReturn()
+
+    render(<button type="button">Open from a menu</button>)
+
+    const opener = screen.getByRole('button', { name: 'Open from a menu' })
+
+    opener.focus()
+    expect(opener).toHaveFocus()
+
+    // The menu closes and the engine drops focus rather than restoring the trigger.
+    opener.blur()
+    expect(document.body).toHaveFocus()
+
+    // Only now does the dialog's chunk arrive, and it arrives open — which is how a lazy dialog
+    // driven by a store flag enters the tree.
+    function Lazy() {
+      const [open, setOpen] = useState(true)
+
+      return (
+        <Dialog description="One sentence." onOpenChange={setOpen} open={open} title="Lazy">
+          <p>Body</p>
+        </Dialog>
+      )
+    }
+
+    render(<Lazy />)
+
+    await screen.findByRole('dialog')
     await userEvent.keyboard('{Escape}')
 
     expect(opener).toHaveFocus()

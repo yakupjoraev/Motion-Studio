@@ -1,6 +1,6 @@
 'use client'
 
-import { ToastProvider } from '@motion-studio/ui'
+import { ToastProvider, watchFocusReturn } from '@motion-studio/ui'
 import { cn } from '@motion-studio/utils'
 import dynamic from 'next/dynamic'
 import { type ReactNode, useEffect, useState } from 'react'
@@ -93,6 +93,19 @@ export function StudioShell({ canvas }: StudioShellProps) {
       setExportMounted(true)
     }
   }, [exportOpen])
+
+  /*
+   * Focus tracking starts with the studio, not with the first dialog — ADR-339.
+   *
+   * Every studio dialog is lazy (ADR-313), so the listener a dialog installs itself is installed
+   * after the control that opened it was focused. Where the menu hands focus back to its trigger
+   * before the dialog mounts, `Dialog` reads the trigger off `document.activeElement` and the late
+   * listener costs nothing; where the two race the other way — WebKit on the two heaviest dialogs —
+   * `activeElement` is `body` by then and there is no record of what to return to.
+   */
+  useEffect(() => {
+    watchFocusReturn()
+  }, [])
 
   /** In memory before the button is pressed, which is what keeps the dialog instant. */
   useEffect(() => {

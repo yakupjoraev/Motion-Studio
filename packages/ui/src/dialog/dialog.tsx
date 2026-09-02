@@ -53,8 +53,15 @@ export function Dialog({
 
     const active = document.activeElement
 
+    /*
+     * `body` is not a control that opened anything — it is what an engine leaves behind when a menu
+     * closes without restoring its trigger, and returning focus to it is the very failure ADR-325
+     * exists to prevent. Treated as "nothing had focus", so the recorded control is used instead.
+     */
     previous.current =
-      active instanceof HTMLElement && active.closest('[data-ms-overlay]') === null
+      active instanceof HTMLElement &&
+      active !== document.body &&
+      active.closest('[data-ms-overlay]') === null
         ? active
         : focusReturnTarget()
   }, [visible])
