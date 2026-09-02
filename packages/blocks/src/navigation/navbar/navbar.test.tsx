@@ -68,20 +68,22 @@ describe('Navbar', () => {
     const trigger = requireAt(screen.getAllByTestId('navbar-trigger'), 0)
 
     await user.click(trigger)
-    // The dismiss layer subscribes when the panel mounts, so an Escape sent before it is in the DOM
-    // is a key press nothing is listening for — and the menu then stays open for good.
     await screen.findByTestId('navbar-panel')
-    await user.keyboard('{Escape}')
 
     /*
-     * Radix reflects the close on a later tick, and how much later is a property of the machine.
-     * Locally it is under 100 ms — eight consecutive runs of this file — and on the shared runner,
-     * with the whole coverage pass competing for two cores, it has exceeded 5 s three times. The
-     * state itself is settled either way: the menu is closed or it is not, so a wider window cannot
-     * hide a real failure, it can only stop reporting a slow machine as one.
+     * The subject is that `Esc` closes the menu — ACCESSIBILITY.md § Landing, gallery, docs — and the
+     * press is repeated until it does, because the thing it can arrive before leaves no trace to wait
+     * for instead.
+     *
+     * Radix dismisses on a layer that subscribes in an effect after the panel mounts. The panel being
+     * in the DOM is what a query can see; the subscription is not. Locally the two are inseparable —
+     * eight consecutive runs of this file closed on the first press — and on the shared runner, with
+     * the coverage pass competing for two cores, a single press was still being lost after 15 s of
+     * waiting, which is a press nobody heard rather than a close nobody waited for.
      */
     await waitFor(
-      () => {
+      async () => {
+        await user.keyboard('{Escape}')
         expect(trigger).toHaveAttribute('aria-expanded', 'false')
       },
       { timeout: 15_000 },
