@@ -23,7 +23,7 @@ test.describe('the clipboard', () => {
     const studio = new StudioPage(page)
     const before = await studio.nodeCount()
 
-    await studio.clickLayer(HEADING)
+    await studio.layers.click(HEADING)
     await studio.press('Mod+d')
 
     await expect.poll(() => studio.nodeCount()).toBe(before + 1)
@@ -35,21 +35,19 @@ test.describe('the clipboard', () => {
     const studio = new StudioPage(page)
     const before = await studio.nodeCount()
 
-    await studio.clickLayer(HEADING)
+    await studio.layers.click(HEADING)
     await studio.press('Mod+c')
     await studio.press('Mod+v')
 
     await expect.poll(() => studio.nodeCount()).toBe(before + 1)
-    // The announcer carries the command and its outcome — the wording is the store's, so the
-    // assertion is on the fact being announced rather than on a sentence a rewrite would break.
-    await expect(page.getByTestId('command-announcer')).toContainText('Paste')
+    await expect(studio.announcer()).toContainText('Paste')
   })
 
   test('cuts a node out and pastes it back', async ({ page }) => {
     const studio = new StudioPage(page)
     const before = await studio.nodeCount()
 
-    await studio.clickLayer(HEADING)
+    await studio.layers.click(HEADING)
     await studio.press('Mod+x')
     await expect.poll(() => studio.nodeCount()).toBe(before - 1)
 
@@ -67,7 +65,7 @@ test.describe('the clipboard', () => {
      * to put a container inside itself and there is no second container in this fixture to aim at, so
      * a paste here would be a no-op that made the assertion pass by measuring nothing.
      */
-    await studio.clickLayer('node_f002')
+    await studio.layers.click('node_f002')
     await studio.press('Mod+d')
 
     const duplicated = await studio.nodeCount()

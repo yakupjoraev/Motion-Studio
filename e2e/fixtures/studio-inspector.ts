@@ -91,6 +91,65 @@ export class StudioInspector {
       .waitFor({ timeout: 30_000 })
   }
 
+  /**
+   * One control as an element, for the assertions that are about the control rather than its value —
+   * the accessible description that says where an inherited value came from, above all.
+   *
+   * The roles are tried in the same order `setControl` writes them in, so a spec gets the widget the
+   * schema actually gave the prop without having to know which one that is.
+   *
+   * The panel is waited for first, like `setControl` waits for it: the controls are a chunk, and a
+   * lookup fired on the selection itself counts the roles in a skeleton and finds none.
+   */
+  async control(label: string): Promise<Locator> {
+    await this.ready()
+
+    for (const role of ['spinbutton', 'slider', 'textbox', 'combobox'] as const) {
+      const candidate = this.byRole(role, label)
+
+      if ((await candidate.count()) > 0) {
+        return candidate
+      }
+    }
+
+    throw new Error(`the inspector has no control labelled "${label}"`)
+  }
+
+  /**
+   * The responsive marker beside the control — RESPONSIVE_ENGINE.md § Editing semantics.
+   *
+   * Three states, and the third is an absence: `overridden` at the breakpoint that wrote the value,
+   * `inherited` above it, and no marker at all when what is on screen is the base value.
+   */
+  overrideMarker(): Locator {
+    return this.page.locator('[data-override]')
+  }
+
+  /** The custom-CSS chips a value sent from the playground lands on — PLAYGROUND.md § Send. */
+  customCssChips(): Locator {
+    return this.page.getByTestId('custom-css-chips')
+  }
+
+  /** The link out to the playground, which navigates client-side and keeps the selection alive. */
+  playgroundLink(): Locator {
+    return this.page.getByTestId('playground-link')
+  }
+
+  /** What the panel says it is editing — "Editing md and up". */
+  responsiveHeader(): Locator {
+    return this.page.getByTestId('responsive-header')
+  }
+
+  /**
+   * Drops the override at the current breakpoint.
+   *
+   * The button removes the key rather than writing the inherited value back: a key set to the base
+   * value is still an override, still draws the accent dot, and still emits a dead Tailwind class.
+   */
+  async resetControl(label: string): Promise<void> {
+    await this.page.getByRole('button', { name: `Reset ${label}` }).click()
+  }
+
   /** What a control currently reports, for a value that has to be read back rather than set. */
   async readControl(label: string): Promise<string> {
     for (const role of ['spinbutton', 'slider'] as const) {
@@ -128,7 +187,18 @@ export class StudioInspector {
 
     await group.getByRole('radio').first().waitFor()
     await this.page.locator(`[role="radio"][value="${breakpoint}"]`).click()
-    await expect(this.page.getByTestId('responsive-header')).toContainText(breakpoint)
+
+    /*
+     * The header states which breakpoint is being edited — except at `base`, where it is absent by
+     * design: an unconditional value needs no reminder. So the switch back is waited on the same
+     * way, by the line going away.
+     */
+    if (breakpoint === 'base') {
+      await expect(this.responsiveHeader()).toHaveCount(0)
+    } else {
+      await expect(this.responsiveHeader()).toContainText(breakpoint)
+    }
+
     await this.artboardSettled()
   }
 

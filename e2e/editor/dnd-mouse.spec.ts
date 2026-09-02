@@ -23,7 +23,7 @@ test.describe('dragging with the pointer', () => {
     const studio = new StudioPage(page)
     const before = await studio.nodeCount()
 
-    const canvas = await page.getByTestId('canvas-artboard').boundingBox()
+    const canvas = await studio.canvas.artboard().boundingBox()
 
     expect(canvas).not.toBeNull()
 
@@ -38,22 +38,22 @@ test.describe('dragging with the pointer', () => {
   test('reorders two siblings in the layers tree', async ({ page }) => {
     const studio = new StudioPage(page)
 
-    const before = await studio.layerNames()
+    const before = await studio.layers.names()
 
-    await studio.dragLayer(TEXT, HEADING)
+    await studio.layers.drag(TEXT, HEADING)
 
     // The names in tree order are the assertion: a drag that "worked" but dropped the row back where
     // it started leaves the document identical, and a count would not notice.
-    await expect.poll(() => studio.layerNames()).not.toEqual(before)
+    await expect.poll(() => studio.layers.names()).not.toEqual(before)
   })
 
   test('leaves the document alone when a drag is released where it began', async ({ page }) => {
     const studio = new StudioPage(page)
 
-    const before = await studio.layerNames()
+    const before = await studio.layers.names()
 
-    await studio.dragLayer(TEXT, TEXT)
+    await studio.layers.drag(TEXT, TEXT)
 
-    await expect.poll(() => studio.layerNames()).toEqual(before)
+    await expect.poll(() => studio.layers.names()).toEqual(before)
   })
 })

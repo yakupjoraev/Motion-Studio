@@ -25,10 +25,10 @@ test.describe('selecting nodes', () => {
   test('names one node, counts several, and says nothing about none', async ({ page }) => {
     const studio = new StudioPage(page)
 
-    await studio.clickLayer(HEADING)
+    await studio.layers.click(HEADING)
     await expect.poll(() => studio.selectionLabel()).toBe('Heading selected')
 
-    await studio.clickLayer(TEXT, ['Shift'])
+    await studio.layers.click(TEXT, ['Shift'])
     await expect.poll(() => studio.selectionLabel()).toBe('2 selected')
 
     // Esc clears the selection — SHORTCUTS.md § Global, the same key that closes an overlay. The
@@ -41,19 +41,19 @@ test.describe('selecting nodes', () => {
     const studio = new StudioPage(page)
     const modifier = await studio.modifier()
 
-    await studio.clickLayer(HEADING)
-    await studio.clickLayer(TEXT, ['Shift'])
+    await studio.layers.click(HEADING)
+    await studio.layers.click(TEXT, ['Shift'])
     await expect.poll(() => studio.selectionLabel()).toBe('2 selected')
 
     // Mod+Click toggles rather than replaces, which is the difference from a plain click.
-    await studio.clickLayer(TEXT, [modifier === 'Meta' ? 'Meta' : 'Control'])
+    await studio.layers.click(TEXT, [modifier === 'Meta' ? 'Meta' : 'Control'])
     await expect.poll(() => studio.selectionLabel()).toBe('Heading selected')
   })
 
   test('selects the level, which is the isolation and not the selected node', async ({ page }) => {
     const studio = new StudioPage(page)
 
-    await studio.clickLayer(HEADING)
+    await studio.layers.click(HEADING)
     await studio.press('Mod+a')
 
     /*
@@ -72,7 +72,7 @@ test.describe('selecting nodes', () => {
   test('walks to the parent and back down to a child', async ({ page }) => {
     const studio = new StudioPage(page)
 
-    await studio.clickLayer(HEADING)
+    await studio.layers.click(HEADING)
     await studio.press('Mod+Shift+ArrowUp')
     await expect.poll(() => studio.selectionLabel()).toBe('Grid selected')
 
@@ -83,12 +83,9 @@ test.describe('selecting nodes', () => {
   test('marks the selected row in the tree, and only that row', async ({ page }) => {
     const studio = new StudioPage(page)
 
-    await studio.clickLayer(GRID)
+    await studio.layers.click(GRID)
 
-    await expect(page.locator('[data-layer-row][data-selected="true"]')).toHaveCount(1)
-    await expect(page.locator(`[data-layer-row="${GRID}"]`)).toHaveAttribute(
-      'data-selected',
-      'true',
-    )
+    await expect(studio.layers.selectedRows()).toHaveCount(1)
+    await expect(studio.layers.row(GRID)).toHaveAttribute('data-selected', 'true')
   })
 })

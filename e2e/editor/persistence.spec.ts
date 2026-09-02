@@ -1,9 +1,10 @@
 import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 
-import { type Page, expect, test } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 
 import { settled } from '../fixtures/settle'
+import { StudioPage } from '../fixtures/studio-page'
 
 /**
  * The promise the whole subsystem exists to keep — `prompts/50`: "a crash, a refresh, or a bad file
@@ -23,135 +24,56 @@ const templateSlugs = (): readonly string[] =>
 const readTemplate = (slug: string): string =>
   readFileSync(join(TEMPLATES, `${slug}.motion.json`), 'utf8')
 
-const openStudio = async (page: Page): Promise<void> => {
-  await page.goto('/studio')
-  await page.waitForSelector('[data-testid="canvas-root"]')
-}
-
-const nodeCount = (page: Page): Promise<number> => page.locator('[data-node-id]').count()
-
-/**
- * The palette's own insert path: a double click, which is what `block-card` binds beside the drag.
- * Returns the node count afterwards, because that count is what every reload assertion compares to.
- */
-const insertFirstBlock = async (page: Page): Promise<number> => {
-  const before = await nodeCount(page)
-  const card = page.getByTestId('block-card').first()
-
-  await card.waitFor()
-  await card.dblclick()
-  await expect(page.locator('[data-node-id]')).toHaveCount(before + 1)
-
-  return before + 1
-}
-
-const openFileMenu = async (page: Page): Promise<void> => {
-  await page.getByRole('button', { name: 'File' }).click()
-}
-
-const chooseFile = async (page: Page, name: string, contents: string): Promise<void> => {
-  await openFileMenu(page)
-  await page.getByRole('menuitem', { name: 'Import a document' }).click()
-  await page.locator('input[type="file"]').setInputFiles({
-    name,
-    mimeType: 'application/json',
-    buffer: Buffer.from(contents, 'utf8'),
-  })
-}
-
-/**
- * The largest run of vertical space on the artboard where nothing is painted — no text leaf, no
- * border, no image. Two stacked sections add their paddings, and that is how a template acquires a
- * hole: it is invisible in the definition and obvious on the page.
- */
-const largestEmptyRun = (page: Page): Promise<number> =>
-  page.evaluate(() => {
-    const root = document.querySelector('[data-node-id]')
-
-    if (root === null) {
-      return 0
-    }
-
-    const scale = root.getBoundingClientRect().width / 1280
-    const origin = root.getBoundingClientRect().top
-
-    const spans = [...root.querySelectorAll('*')]
-      .filter((element) => {
-        const box = element.getBoundingClientRect()
-
-        if (box.height < 1 || box.width < 1) {
-          return false
-        }
-
-        const style = getComputedStyle(element)
-
-        if (style.visibility === 'hidden' || style.opacity === '0') {
-          return false
-        }
-
-        return (
-          (element.children.length === 0 && (element.textContent ?? '').trim().length > 0) ||
-          style.borderTopWidth !== '0px' ||
-          style.borderBottomWidth !== '0px' ||
-          element instanceof HTMLImageElement ||
-          element instanceof SVGElement
-        )
-      })
-      .map((element) => {
-        const box = element.getBoundingClientRect()
-
-        return { top: (box.top - origin) / scale, bottom: (box.bottom - origin) / scale }
-      })
-      .sort((left, right) => left.top - right.top)
-
-    let reach = 0
-    let worst = 0
-
-    for (const span of spans) {
-      worst = Math.max(worst, span.top - reach)
-      reach = Math.max(reach, span.bottom)
-    }
-
-    return Math.round(worst)
-  })
-
 test.describe('persistence', () => {
-  test('a debounced autosave survives a reload', async ({ page }) => {
-    await openStudio(page)
+  let studio: StudioPage
 
-    const expected = await insertFirstBlock(page)
+  test.beforeEach(async ({ page }) => {
+    studio = new StudioPage(page)
+
+    await studio.openEmpty()
+  })
+
+  /** One block in, and the count it left behind — what every reload assertion compares against. */
+  const insertOne = async (): Promise<number> => {
+    const before = await studio.canvas.count()
+
+    await studio.palette.insertFirst()
+    await studio.canvas.expectNodeCount(before + 1)
+
+    return before + 1
+  }
+
+  test('a debounced autosave survives a reload', async ({ page }) => {
+    const expected = await insertOne()
 
     // Past the two-second debounce, with a second of margin for the write itself.
     await settled(page)
     await page.reload()
-    await page.waitForSelector('[data-testid="canvas-root"]')
+    await studio.canvas.root().waitFor()
 
-    await expect(page.locator('[data-node-id]')).toHaveCount(expected)
+    await studio.canvas.expectNodeCount(expected)
   })
 
   test('a reload inside the debounce window loses nothing', async ({ page }) => {
-    await openStudio(page)
-
-    const expected = await insertFirstBlock(page)
+    const expected = await insertOne()
 
     // No wait: the unload lane is the only thing that can carry this edit — ADR-285.
     await page.reload()
-    await page.waitForSelector('[data-testid="canvas-root"]')
+    await studio.canvas.root().waitFor()
 
-    await expect(page.locator('[data-node-id]')).toHaveCount(expected)
+    await studio.canvas.expectNodeCount(expected)
   })
 
-  test('a valid .motion file opens', async ({ page }) => {
-    await openStudio(page)
-    await chooseFile(page, 'waitlist.motion.json', readTemplate('waitlist'))
+  test('a valid .motion file opens', async () => {
+    const dialog = await studio.file.importFile('waitlist.motion.json', readTemplate('waitlist'))
 
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await dialog.accept()
 
-    await expect(page.locator('[data-node-id]').first()).toBeVisible()
-    expect(await nodeCount(page)).toBeGreaterThan(1)
+    await expect(studio.canvas.nodes().first()).toBeVisible()
+    expect(await studio.canvas.count()).toBeGreaterThan(1)
   })
 
-  test('a file with orphans reports its repairs and still opens', async ({ page }) => {
+  test('a file with orphans reports its repairs and still opens', async () => {
     const source = JSON.parse(readTemplate('changelog'))
     const orphan = {
       ...source,
@@ -172,20 +94,19 @@ test.describe('persistence', () => {
       },
     }
 
-    await openStudio(page)
-    await chooseFile(page, 'orphaned.motion.json', JSON.stringify(orphan))
+    const dialog = await studio.file.importFile('orphaned.motion.json', JSON.stringify(orphan))
 
-    await expect(page.getByTestId('import-report')).toContainText('2 orphan blocks removed')
-    await expect(page.getByRole('button', { name: 'Download original' })).toBeVisible()
+    await expect(dialog.report()).toContainText('2 orphan blocks removed')
+    await expect(dialog.downloadOriginal()).toBeVisible()
 
-    await page.getByRole('button', { name: 'Continue' }).click()
+    await dialog.accept()
 
     // Usable afterwards, not merely loaded: the canvas takes a selection on the repaired document.
-    await page.locator('[data-node-id]').nth(1).click()
-    await expect(page.getByTestId('selection-chip')).toBeVisible()
+    await studio.canvas.selectNth(1)
+    await expect(studio.canvas.selectionChip()).toBeVisible()
   })
 
-  test('a file with a cycle is refused, with a reason and the file back', async ({ page }) => {
+  test('a file with a cycle is refused, with a reason and the file back', async () => {
     const source = JSON.parse(readTemplate('waitlist'))
     const [firstChild] = source.nodes[source.rootId].children
     const cyclic = {
@@ -196,33 +117,31 @@ test.describe('persistence', () => {
       },
     }
 
-    await openStudio(page)
-    const before = await nodeCount(page)
+    const before = await studio.canvas.count()
+    const dialog = await studio.file.importFile('cyclic.motion.json', JSON.stringify(cyclic))
 
-    await chooseFile(page, 'cyclic.motion.json', JSON.stringify(cyclic))
+    await expect(dialog.rejection()).toContainText('loop')
+    await expect(dialog.downloadOriginal()).toBeVisible()
+    await expect(dialog.continueButton()).toHaveCount(0)
 
-    await expect(page.getByTestId('import-rejection')).toContainText('loop')
-    await expect(page.getByRole('button', { name: 'Download original' })).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Continue' })).toHaveCount(0)
+    await dialog.tryAnotherFile()
+    await dialog.dismiss()
 
-    await page.getByRole('button', { name: 'Try another file' }).click()
-    await page.keyboard.press('Escape')
-
-    expect(await nodeCount(page)).toBe(before)
+    expect(await studio.canvas.count()).toBe(before)
   })
 
-  test('malformed JSON reads as an error and leaves the document alone', async ({ page }) => {
-    await openStudio(page)
+  test('malformed JSON reads as an error and leaves the document alone', async () => {
+    const expected = await insertOne()
+    const dialog = await studio.file.importFile(
+      'broken.motion.json',
+      '{\n  "version": 1,\n  oops\n}',
+    )
 
-    const expected = await insertFirstBlock(page)
+    await expect(dialog.rejection()).toContainText('Not valid JSON (line 3)')
 
-    await chooseFile(page, 'broken.motion.json', '{\n  "version": 1,\n  oops\n}')
+    await dialog.dismiss()
 
-    await expect(page.getByTestId('import-rejection')).toContainText('Not valid JSON (line 3)')
-
-    await page.keyboard.press('Escape')
-
-    await expect(page.locator('[data-node-id]')).toHaveCount(expected)
+    await studio.canvas.expectNodeCount(expected)
   })
 
   /**
@@ -233,23 +152,22 @@ test.describe('persistence', () => {
    */
   const MAX_EMPTY_RUN = 400
 
-  test('every shipped template opens, reads as a page, and can be edited', async ({ page }) => {
-    await openStudio(page)
-    await page.getByRole('radio', { name: 'XL — 1280 px' }).click()
+  test('every shipped template opens, reads as a page, and can be edited', async () => {
+    await studio.inspector.setBreakpoint('xl')
 
     for (const slug of templateSlugs()) {
-      await openFileMenu(page)
-      await page.getByRole('menuitem', { name: 'New' }).click()
-      await page.getByTestId(`template-${slug}`).click()
+      await studio.file.newFromTemplate(slug)
 
-      const node = page.locator('[data-node-id]').nth(1)
+      const node = studio.canvas.nodes().nth(1)
 
       await expect(node, `${slug} put nodes on the canvas`).toBeVisible()
 
-      await node.click()
-      await expect(page.getByTestId('selection-chip'), `${slug} is editable`).toBeVisible()
+      await studio.canvas.selectNth(1)
+      await expect(studio.canvas.selectionChip(), `${slug} is editable`).toBeVisible()
 
-      expect(await largestEmptyRun(page), `${slug} has a hole in it`).toBeLessThan(MAX_EMPTY_RUN)
+      expect(await studio.canvas.largestEmptyRun(), `${slug} has a hole in it`).toBeLessThan(
+        MAX_EMPTY_RUN,
+      )
     }
   })
 })

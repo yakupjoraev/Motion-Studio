@@ -17,7 +17,12 @@ export class StudioPalette {
   /** The Blocks tab, waited on being active rather than assumed to have switched. */
   async open(): Promise<void> {
     await this.page.getByRole('tab', { name: 'Blocks' }).click()
-    await this.page.getByRole('searchbox', { name: 'Search blocks' }).waitFor()
+    await this.searchBox().waitFor()
+  }
+
+  /** The palette's search box — the first stop a keyboard user reaches inside the panel. */
+  searchBox(): Locator {
+    return this.page.getByRole('searchbox', { name: 'Search blocks' })
   }
 
   /**
@@ -26,7 +31,7 @@ export class StudioPalette {
    * only honest signal that the filter has been applied.
    */
   async search(query: string): Promise<void> {
-    const box = this.page.getByRole('searchbox', { name: 'Search blocks' })
+    const box = this.searchBox()
 
     await box.fill(query)
     await expect.poll(() => this.count()).toBeGreaterThan(0)
@@ -57,6 +62,22 @@ export class StudioPalette {
   async insert(blockId: string): Promise<void> {
     await this.reveal(blockId)
     await this.card(blockId).dblclick()
+  }
+
+  /**
+   * Inserts whatever the palette offers first, for a spec that needs *a* block rather than a given
+   * one — persistence is about the document surviving, not about which block is in it. Answers with
+   * the id that went in, so the caller can say what it put there if an assertion fails.
+   */
+  async insertFirst(): Promise<string> {
+    await this.open()
+
+    const card = this.page.getByTestId('block-card').first()
+
+    await card.waitFor()
+    await card.dblclick()
+
+    return (await card.getAttribute('data-block-card')) ?? ''
   }
 
   /** The keyboard path: focus the card through the grid's roving tabindex, then `Enter`. */
@@ -124,7 +145,7 @@ export class StudioPalette {
   private async reveal(blockId: string): Promise<void> {
     await this.open()
 
-    const box = this.page.getByRole('searchbox', { name: 'Search blocks' })
+    const box = this.searchBox()
 
     for (const term of [blockId, ...blockId.split('-')]) {
       await box.fill(term)

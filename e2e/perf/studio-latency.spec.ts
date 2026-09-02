@@ -54,7 +54,7 @@ test.describe('the studio', () => {
     console.log(`  ${line}`)
 
     // The claim is that it responds, not only that it painted: a selection made now has to land.
-    await studio.selectLayer('node_f004')
+    await studio.layers.select('node_f004')
 
     expect(interactive).toBeLessThan(INTERACTIVE_BUDGET_MS)
   })

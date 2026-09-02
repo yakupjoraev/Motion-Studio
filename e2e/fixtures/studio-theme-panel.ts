@@ -1,4 +1,7 @@
-import { type Page, expect } from '@playwright/test'
+import { type Locator, type Page, expect } from '@playwright/test'
+
+import { StudioContrastReport } from './studio-contrast-report'
+import { StudioTokenExport } from './studio-token-export'
 
 /** The four discrete scales in `scale-controls`, by the glyph each option is labelled with. */
 const RADIUS_LABELS: Readonly<Record<string, string>> = {
@@ -18,8 +21,14 @@ const RADIUS_LABELS: Readonly<Record<string, string>> = {
 export class StudioThemePanel {
   private readonly page: Page
 
+  /** Two surfaces of their own: the repair report the panel shows, and the export dialog it opens. */
+  readonly contrast: StudioContrastReport
+  readonly tokens: StudioTokenExport
+
   constructor(page: Page) {
     this.page = page
+    this.contrast = new StudioContrastReport(page)
+    this.tokens = new StudioTokenExport(page)
   }
 
   async open(): Promise<void> {
@@ -73,6 +82,50 @@ export class StudioThemePanel {
     await field.press('Enter')
     await this.page.keyboard.press('Escape')
     await expect(field).toBeHidden()
+  }
+
+  /** One of the panel's sliders — hue shift, saturation — for a spec that reads its value back. */
+  slider(label: string): Locator {
+    return this.page.getByRole('slider', { name: label })
+  }
+
+  /**
+   * Drags a slider by hand, which is the gesture the keyboard path cannot stand in for: a drag is
+   * where a control that never writes the document commits nothing, and arrows would hide that.
+   *
+   * `whileHeld` runs with the button still down — the window in which a live preview has to have
+   * moved, and the document has not.
+   */
+  async dragSlider(
+    label: string,
+    pixels: number,
+    whileHeld?: () => Promise<void>,
+  ): Promise<string> {
+    const slider = this.slider(label)
+
+    // The panel scrolls, and a box read before the control is on screen points at empty chrome.
+    await slider.scrollIntoViewIfNeeded()
+
+    const box = await slider.boundingBox()
+
+    if (box === null) {
+      throw new Error(`the ${label} slider is not on screen`)
+    }
+
+    const y = box.y + box.height / 2
+
+    await this.page.mouse.move(box.x + box.width / 2, y)
+    await this.page.mouse.down()
+    await this.page.mouse.move(box.x + box.width / 2 + pixels, y, { steps: 20 })
+    await whileHeld?.()
+    await this.page.mouse.up()
+
+    return (await slider.getAttribute('aria-valuenow')) ?? ''
+  }
+
+  /** The panel's own tab, which carries the count of contrast notices as a badge. */
+  tab(): Locator {
+    return this.page.getByRole('tab', { name: 'Theme' })
   }
 
   /** One `--ms-*` variable off the root, which is where the engine resolves a theme to. */

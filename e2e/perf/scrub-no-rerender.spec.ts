@@ -11,7 +11,7 @@ test.describe('an inspector scrub', () => {
     const studio = new StudioPage(page)
 
     await studio.open('stress-200-nodes')
-    await studio.selectLayer(IMAGE)
+    await studio.layers.select(IMAGE)
   })
 
   test('does not re-render the canvas', async ({ page }) => {

@@ -40,6 +40,41 @@ export class PlaygroundPage {
     return this.page.getByTestId(`vertex-handle-${index}`)
   }
 
+  /** Every handle on the shape, which is what an insert and a delete are counted against. */
+  vertices(): Locator {
+    return this.page.getByTestId(/^vertex-handle-/)
+  }
+
+  /** Where a keyboard move is narrated — "Vertex 1, 30% 10%". */
+  vertexAnnouncement(): Locator {
+    return this.page.getByTestId('vertex-announcement')
+  }
+
+  /** Splits one edge, by the button the editor draws on its midpoint. */
+  async insertVertexOnEdge(edge: number): Promise<void> {
+    await this.page.getByRole('button', { name: `Insert a vertex on edge ${edge}` }).click()
+  }
+
+  /** Why `Send to selection` is unavailable, which the button itself cannot say. */
+  sendReason(): Locator {
+    return this.page.getByTestId('send-reason')
+  }
+
+  /** What the permalink button reports after a copy. */
+  copyStatus(): Locator {
+    return this.page.getByTestId('copy-status')
+  }
+
+  /** The support note beside a value the older engines do not take. */
+  compatibility(): Locator {
+    return this.page.getByRole('list', { name: 'Compatibility' })
+  }
+
+  /** CodeMirror's own underline on the offending range — the diagnostic in the gutter is a chunk. */
+  lintUnderline(): Locator {
+    return this.page.locator('.cm-lintRange-error').first()
+  }
+
   async write(property: string, value: string): Promise<void> {
     await this.editor(property).click()
     await this.page.keyboard.press('ControlOrMeta+a')

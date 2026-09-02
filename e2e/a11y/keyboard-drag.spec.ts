@@ -21,7 +21,7 @@ test.describe('operation 1 — a palette card into the canvas', () => {
     const studio = new StudioPage(page)
 
     await studio.open('responsive-grid')
-    await studio.selectLayer('node_f002')
+    await studio.layers.select('node_f002')
     await studio.openPanelTab('Blocks')
 
     const before = await studio.nodeCount()
@@ -107,7 +107,7 @@ test.describe('operation 3 — a layers row to another position', () => {
     const studio = new StudioPage(page)
 
     await studio.open('responsive-grid')
-    await studio.selectLayer('node_f003')
+    await studio.layers.select('node_f003')
 
     const order = (): Promise<string> =>
       page.evaluate(() =>
@@ -131,7 +131,7 @@ test.describe('operation 3 — a layers row to another position', () => {
     const studio = new StudioPage(page)
 
     await studio.open('responsive-grid')
-    await studio.selectLayer('node_f003')
+    await studio.layers.select('node_f003')
 
     await page.keyboard.press('Enter')
     await settled(page)

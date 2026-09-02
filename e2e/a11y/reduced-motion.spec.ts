@@ -132,7 +132,7 @@ test.describe('the studio under reduced motion', () => {
     const studio = new StudioPage(page)
 
     await studio.open('responsive-grid')
-    await studio.selectLayer('node_f002')
+    await studio.layers.select('node_f002')
 
     await expect(page.getByTestId('status-selection')).not.toHaveText('No selection')
     expect(await transformKeyframes(page)).toBe(0)

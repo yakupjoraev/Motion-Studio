@@ -20,7 +20,7 @@ test.describe('dragging a node', () => {
     const before = await studio.renderCount('canvas-root')
     let held = -1
 
-    await studio.dragLayer(DRAGGED, ONTO, async () => {
+    await studio.layers.drag(DRAGGED, ONTO, async () => {
       // The ghost is the proof that a drag is in flight rather than a pointer that merely moved.
       await expect(page.getByTestId('node-ghost')).toBeVisible()
       held = await studio.renderCount('canvas-root')

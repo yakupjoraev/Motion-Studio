@@ -1,6 +1,9 @@
 import type { CDPSession, Locator, Page } from '@playwright/test'
 
+import { StudioCanvas } from './studio-canvas'
+import { StudioFileMenu } from './studio-file-menu'
 import { StudioInspector } from './studio-inspector'
+import { StudioLayers } from './studio-layers'
 import { StudioMotionPanel } from './studio-motion-panel'
 import { StudioPalette } from './studio-palette'
 import { StudioThemePanel } from './studio-theme-panel'
@@ -45,6 +48,9 @@ export class StudioPage {
   readonly theme: StudioThemePanel
   readonly inspector: StudioInspector
   readonly motion: StudioMotionPanel
+  readonly canvas: StudioCanvas
+  readonly file: StudioFileMenu
+  readonly layers: StudioLayers
 
   constructor(page: Page) {
     this.page = page
@@ -52,6 +58,9 @@ export class StudioPage {
     this.theme = new StudioThemePanel(page)
     this.inspector = new StudioInspector(page)
     this.motion = new StudioMotionPanel(page)
+    this.canvas = new StudioCanvas(page)
+    this.file = new StudioFileMenu(page)
+    this.layers = new StudioLayers(page, (name) => this.openPanelTab(name))
   }
 
   /** Opens the studio on a committed fixture and waits for it to be on screen, not merely fetched. */
@@ -103,6 +112,16 @@ export class StudioPage {
     await this.page.getByRole('complementary', { name: 'Left panel' }).waitFor()
   }
 
+  /**
+   * Waits for the shortcut host to be in the DOM — the element the global key map is bound to.
+   *
+   * A shortcut pressed before it mounts is a key press nothing is listening for, which fails as a
+   * dialog that never opened rather than as a wait that was never made.
+   */
+  async shortcutsReady(): Promise<void> {
+    await this.page.getByTestId('shortcut-host').waitFor({ state: 'attached' })
+  }
+
   /** The document's undo, through the key that runs it. */
   async undo(): Promise<void> {
     await this.press('Mod+z')
@@ -118,7 +137,7 @@ export class StudioPage {
   }
 
   nodeCount(): Promise<number> {
-    return this.page.locator('[data-node-id]').count()
+    return this.canvas.count()
   }
 
   /**
@@ -131,14 +150,14 @@ export class StudioPage {
     return (await this.page.getByTestId('status-selection').textContent()) ?? ''
   }
 
-  /** A layers row, held with `Shift` or `Mod` to extend or toggle the selection — SHORTCUTS.md. */
-  async clickLayer(nodeId: string, modifiers?: ('Shift' | 'Control' | 'Meta')[]): Promise<void> {
-    await this.openPanelTab('Layers')
-
-    const row = this.page.locator(`[data-layer-row="${nodeId}"]`)
-
-    await row.scrollIntoViewIfNeeded()
-    await row.click(modifiers === undefined ? {} : { modifiers })
+  /**
+   * What the studio announces after a command — "Add Section. 5 blocks." (ADR-326).
+   *
+   * The wording is the store's, so a spec asserts on the fact being announced rather than on a
+   * sentence a rewrite would break.
+   */
+  announcer(): Locator {
+    return this.page.getByTestId('command-announcer')
   }
 
   /**
@@ -166,84 +185,12 @@ export class StudioPage {
       .waitFor()
   }
 
-  /** The layers tree: the one surface that selects a node at any depth in a single click. */
-  async selectLayer(nodeId: string): Promise<void> {
-    await this.openPanelTab('Layers')
-
-    const row = this.page.locator(`[data-layer-row="${nodeId}"]`)
-
-    await row.scrollIntoViewIfNeeded()
-    await row.click()
-    await this.page.locator(`[data-layer-row="${nodeId}"][data-selected="true"]`).waitFor()
-  }
-
   /**
-   * Selects a node by the name the layers tree shows for it.
-   *
-   * A spec composing a page has ids it never saw — `insertBlock` lets the store mint them — so the
-   * name is the only handle it has. `selectLayer` stays for the fixtures, whose ids are committed.
+   * Selects a node by the name the layers tree shows for it — the call `prompts/56` § Flow B makes.
+   * The tree is the surface that owns it; this is the shorthand a flow spec reads better with.
    */
   async selectNode(name: string): Promise<void> {
-    await this.openPanelTab('Layers')
-
-    /*
-     * Through the tree's own search box, not by scrolling to the row: the tree renders a virtual
-     * window, so a node forty rows down a sixty-node document is not in the DOM to be scrolled to.
-     * The filter is also what a person would reach for, which is the better reason.
-     */
-    const search = this.page.getByRole('searchbox', { name: 'Search layers' })
-
-    await search.fill(name)
-
-    const row = this.page.getByRole('treeitem', { name: new RegExp(name, 'i') }).first()
-
-    await row.scrollIntoViewIfNeeded()
-    await row.click()
-    await this.page.locator('[data-layer-row][data-selected="true"]').first().waitFor()
-    // Cleared, so the next call sees the whole tree rather than this call's filter.
-    await search.fill('')
-  }
-
-  /**
-   * The names the layers tree is showing, top to bottom — what a compose spec asserts it built.
-   *
-   * The panel is opened first: the tabs mount one panel at a time, so a tree nobody has switched to
-   * is not in the DOM at all and would answer an empty list rather than fail.
-   */
-  async layerNames(): Promise<string[]> {
-    await this.openPanelTab('Layers')
-    // The tree is a virtual window over the document — @tanstack/react-virtual measures the scroll
-    // container first and renders rows in the frame after that, so a read taken on the switch itself
-    // finds an empty list rather than a wrong one.
-    await this.page.locator('[data-layer-row]').first().waitFor()
-
-    return this.page
-      .locator('[data-layer-row]')
-      .evaluateAll((rows) => rows.map((row) => row.textContent?.trim() ?? ''))
-  }
-
-  /**
-   * A node drag happens in the layers tree — the canvas has no node drag of its own. `whileHeld`
-   * runs with the button still down, which is the window the re-render budget is about.
-   */
-  async dragLayer(
-    nodeId: string,
-    ontoNodeId: string,
-    whileHeld?: () => Promise<void>,
-  ): Promise<void> {
-    await this.openPanelTab('Layers')
-
-    const from = await boxOf(this.page.locator(`[data-layer-row="${nodeId}"]`), nodeId)
-    const onto = await boxOf(this.page.locator(`[data-layer-row="${ontoNodeId}"]`), ontoNodeId)
-    const x = from.x + from.width / 2
-
-    await this.page.mouse.move(x, from.y + from.height / 2)
-    await this.page.mouse.down()
-    // Past the 4 px activation first, then to the target: one long move can outrun the collision pass.
-    await this.page.mouse.move(x, from.y + from.height / 2 + 12, { steps: 5 })
-    await this.page.mouse.move(x, onto.y + onto.height / 2, { steps: 25 })
-    await whileHeld?.()
-    await this.page.mouse.up()
+    await this.layers.selectByName(name)
   }
 
   /**

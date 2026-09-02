@@ -1,4 +1,4 @@
-import { type Locator, type Page, expect } from '@playwright/test'
+import { type Download, type Locator, type Page, expect } from '@playwright/test'
 
 /**
  * The export dialog, as a spec talks to it — TESTING.md § Page objects. Every selector the six export
@@ -18,8 +18,53 @@ export class ExportPage {
    * "Exports as CSS" — and the role-and-text query then matches the chrome and the document at once.
    */
   async open(): Promise<void> {
-    await this.page.getByTestId('export-button').click()
-    await this.page.getByTestId('export-dialog').waitFor()
+    await this.trigger().click()
+    await this.frame().waitFor()
+  }
+
+  /** The chrome's own button, which is also where focus has to come back to when the dialog closes. */
+  trigger(): Locator {
+    return this.page.getByTestId('export-button')
+  }
+
+  /**
+   * The dialog's frame, by test id rather than by role: a spec that has just pressed the shortcut is
+   * waiting for this element, and the role query would also match a dialog the canvas opened.
+   */
+  frame(): Locator {
+    return this.page.getByTestId('export-dialog')
+  }
+
+  /** What the studio says after `Copy React` — the copy path outside the dialog. */
+  copiedToast(): Locator {
+    return this.page.getByText(/^Copied /)
+  }
+
+  /** One target's radio, for the assertion that the keyboard moved between them. */
+  targetRadio(name: string): Locator {
+    return this.page.getByRole('radio', { name: new RegExp(`^${name}`) })
+  }
+
+  /** One row of the generated tree, and the set of rows the viewer draws as selected. */
+  fileRow(path?: string): Locator {
+    return this.dialog().locator(
+      path === undefined ? '[data-file-row]' : `[data-file-row="${path}"]`,
+    )
+  }
+
+  selectedFileRows(): Locator {
+    return this.dialog().locator('[data-file-row][aria-selected="true"]')
+  }
+
+  /** Downloads the archive and answers with the download, which is what a spec unzips. */
+  async downloadZip(): Promise<Download> {
+    const download = this.page.waitForEvent('download')
+
+    await this.dialog()
+      .getByRole('button', { name: /Download \.zip/ })
+      .click()
+
+    return download
   }
 
   /** Everything is scoped to it: the canvas behind the dialog has Copy buttons of its own. */
@@ -55,7 +100,7 @@ export class ExportPage {
   async warmUp(): Promise<void> {
     await this.open()
     await this.page.keyboard.press('Escape')
-    await expect(this.page.getByTestId('export-dialog')).toBeHidden()
+    await expect(this.frame()).toBeHidden()
   }
 
   /**

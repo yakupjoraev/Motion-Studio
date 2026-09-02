@@ -33,7 +33,7 @@ test.describe('composing a page', () => {
     // still raise the count, so the layer names are checked too.
     await expect.poll(() => studio.nodeCount()).toBe(empty + PAGE.length)
 
-    const names = (await studio.layerNames()).join(' ').toLowerCase()
+    const names = (await studio.layers.names()).join(' ').toLowerCase()
 
     expect(names).toContain('navbar')
     expect(names).toContain('footer')
@@ -55,7 +55,7 @@ test.describe('composing a page', () => {
 
     // The canvas is the assertion, not the control: a headline that lands in the store and never
     // reaches the artboard is the failure this flow is looking for.
-    await expect(page.getByTestId('canvas-root')).toContainText('Ship faster')
+    await expect(studio.canvas.root()).toContainText('Ship faster')
 
     await studio.motion.open()
     await studio.motion.applyPreset('Clip reveal')
@@ -111,7 +111,7 @@ test.describe('composing a page', () => {
       await page.keyboard.press('Tab')
     }
 
-    await expect(page.getByRole('searchbox', { name: 'Search blocks' })).toBeFocused()
+    await expect(studio.palette.searchBox()).toBeFocused()
     await page.keyboard.type('hero')
 
     const card = await studio.palette.tabToFirstCard()
@@ -123,10 +123,10 @@ test.describe('composing a page', () => {
 
     // The export dialog has a shortcut, and a keyboard user who has just inserted a block is in the
     // palette — reaching the chrome's button by tabbing would be a different test with a worse name.
-    await studio.press('Mod+Shift+E')
-    await page.getByTestId('export-dialog').waitFor()
-
     const exportPage = new ExportPage(page)
+
+    await studio.press('Mod+Shift+E')
+    await exportPage.frame().waitFor()
 
     await exportPage.settled()
 

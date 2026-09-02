@@ -68,7 +68,7 @@ test.describe('the canvas announcer', () => {
   test('names the selection when the row is picked in the layers tree', async ({ page }) => {
     const studio = new StudioPage(page)
 
-    await studio.selectLayer('node_f003')
+    await studio.layers.select('node_f003')
 
     // The tree is the screen-reader path through the document — ACCESSIBILITY.md § Canvas — so a
     // selection made there has to announce exactly as a selection made on the canvas does.
@@ -94,7 +94,7 @@ test.describe('a keyboard drag', () => {
 
     // Clicked first so the roving tabindex is on this row, then `Enter`: ADR-136 gives `Space` to the
     // tree's own selection map and `Enter` to the drag activator.
-    await studio.selectLayer('node_f003')
+    await studio.layers.select('node_f003')
     await recordDragAnnouncements(page)
 
     /*
@@ -126,7 +126,7 @@ test.describe('a command’s result', () => {
     const studio = new StudioPage(page)
 
     await studio.open('responsive-grid')
-    await studio.selectLayer('node_f003')
+    await studio.layers.select('node_f003')
 
     const before = await studio.nodeCount()
 

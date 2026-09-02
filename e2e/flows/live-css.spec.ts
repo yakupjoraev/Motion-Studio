@@ -33,7 +33,7 @@ test.describe('the clip-path vertex editor', () => {
     await playground.vertex(0).focus()
     await page.keyboard.press('ArrowRight')
 
-    await expect(page.getByTestId('vertex-announcement')).toContainText(/^Vertex 1, /)
+    await expect(playground.vertexAnnouncement()).toContainText(/^Vertex 1, /)
   })
 
   test('splits an edge and drops a vertex, keeping the minimum', async ({ page }) => {
@@ -44,16 +44,16 @@ test.describe('the clip-path vertex editor', () => {
 
     await playground.vertex(0).waitFor()
 
-    const count = await page.getByTestId(/^vertex-handle-/).count()
+    const count = await playground.vertices().count()
 
-    await page.getByRole('button', { name: 'Insert a vertex on edge 1' }).click()
+    await playground.insertVertexOnEdge(1)
 
-    await expect(page.getByTestId(/^vertex-handle-/)).toHaveCount(count + 1)
+    await expect(playground.vertices()).toHaveCount(count + 1)
 
     await playground.vertex(0).focus()
     await page.keyboard.press('Delete')
 
-    await expect(page.getByTestId(/^vertex-handle-/)).toHaveCount(count)
+    await expect(playground.vertices()).toHaveCount(count)
   })
 })
 
@@ -91,10 +91,10 @@ test.describe('send to selection', () => {
     const playground = new PlaygroundPage(page)
 
     await studio.open('responsive-grid')
-    await page.locator('[data-node-id]').nth(1).click()
+    await studio.canvas.selectNth(1)
 
     // A client-side navigation, which is what keeps the selection alive across the route — ADR-279.
-    await page.getByTestId('playground-link').click()
+    await studio.inspector.playgroundLink().click()
     await playground.editor().waitFor()
 
     await expect(playground.sendButton()).toBeEnabled()
@@ -102,11 +102,11 @@ test.describe('send to selection', () => {
     await playground.sendButton().click()
     await page.goBack()
 
-    await expect(page.getByTestId('custom-css-chips')).toContainText('background')
+    await expect(studio.inspector.customCssChips()).toContainText('background')
 
     await studio.undo()
 
-    await expect(page.getByTestId('custom-css-chips')).toHaveCount(0)
+    await expect(studio.inspector.customCssChips()).toHaveCount(0)
   })
 
   test('is disabled with nothing selected and says why', async ({ page }) => {
@@ -115,7 +115,7 @@ test.describe('send to selection', () => {
     await playground.open()
 
     await expect(playground.sendButton()).toBeDisabled()
-    await expect(page.getByTestId('send-reason')).toContainText('Select one block')
+    await expect(playground.sendReason()).toContainText('Select one block')
   })
 })
 
@@ -128,8 +128,8 @@ test.describe('permalinks', () => {
     await playground.write('box-shadow', '0 12px 30px rgb(0 0 0 / 0.4)')
     await expect.poll(() => playground.computed('box-shadow')).toContain('12px')
 
-    await page.getByTestId('copy-permalink').click()
-    await expect(page.getByTestId('copy-status')).toContainText('Link copied.')
+    await playground.permalinkButton().click()
+    await expect(playground.copyStatus()).toContainText('Link copied.')
 
     const hash = new URL(page.url()).hash
     const fresh = await context.newPage()

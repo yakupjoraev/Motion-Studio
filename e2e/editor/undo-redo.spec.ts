@@ -36,9 +36,9 @@ test.describe('undo and redo', () => {
   test('undoes a control edit as one entry, not one per keystroke', async ({ page }) => {
     const studio = new StudioPage(page)
 
-    await studio.clickLayer(GRID)
+    await studio.layers.click(GRID)
 
-    const columns = page.getByRole('spinbutton', { name: 'Columns' })
+    const columns = await studio.inspector.control('Columns')
 
     await columns.waitFor()
 

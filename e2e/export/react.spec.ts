@@ -60,10 +60,11 @@ test('opening costs a render once the chunk is there', async ({ page }) => {
 
 test('Copy React on a selection puts one component on the clipboard', async ({ page }) => {
   const exportPage = new ExportPage(page)
+  const studio = new StudioPage(page)
 
-  await page.locator('[data-node-id]').nth(1).click()
+  await studio.canvas.selectNth(1)
   await page.keyboard.press('ControlOrMeta+Shift+KeyC')
-  await expect(page.getByText(/^Copied /)).toBeVisible({ timeout: 30_000 })
+  await expect(exportPage.copiedToast()).toBeVisible({ timeout: 30_000 })
 
   const copied = await exportPage.clipboard()
 
@@ -79,11 +80,7 @@ test('the archive holds the files the tree listed', async ({ page }) => {
   await exportPage.settled()
 
   const paths = await exportPage.paths()
-  const download = page.waitForEvent('download')
-
-  await page.getByRole('button', { name: /Download \.zip/ }).click()
-
-  const file = await download
+  const file = await exportPage.downloadZip()
   const stream = await file.createReadStream()
   const chunks: Buffer[] = []
 
@@ -125,11 +122,12 @@ test('an option toggle regenerates, and the dialog says how long it took', async
 
 test('the whole dialog is reachable from the keyboard, and gives focus back', async ({ page }) => {
   const exportPage = new ExportPage(page)
+  const studio = new StudioPage(page)
 
-  await page.getByTestId('shortcut-host').waitFor({ state: 'attached' })
-  await page.locator('[data-node-id]').first().click()
+  await studio.shortcutsReady()
+  await studio.canvas.selectNth(0)
 
-  const trigger = page.getByTestId('export-button')
+  const trigger = exportPage.trigger()
 
   await trigger.focus()
   await page.keyboard.press('ControlOrMeta+Shift+KeyE')
@@ -139,14 +137,14 @@ test('the whole dialog is reachable from the keyboard, and gives focus back', as
   // groups. Next.js is the second target, so one press is one target.
   await page.keyboard.press('Tab')
   await page.keyboard.press('ArrowDown')
-  await expect(page.getByRole('radio', { name: /^Next\.js/ })).toBeChecked()
+  await expect(exportPage.targetRadio('Next.js')).toBeChecked()
   await exportPage.settled()
 
-  const row = exportPage.dialog().locator('[data-file-row]').first()
+  const row = exportPage.fileRow().first()
 
   await row.focus()
   await page.keyboard.press('ArrowDown')
-  await expect(exportPage.dialog().locator('[data-file-row][aria-selected="true"]')).toHaveCount(1)
+  await expect(exportPage.selectedFileRows()).toHaveCount(1)
 
   await page.keyboard.press('Escape')
   await expect(exportPage.dialog()).toBeHidden()

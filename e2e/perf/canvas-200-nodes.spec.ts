@@ -105,7 +105,7 @@ test.describe('a 200-node document', () => {
     await studio.openPanelTab('Layers')
 
     const trace = await traceWhile(page, async () => {
-      await studio.dragLayer(DRAGGED, ONTO)
+      await studio.layers.drag(DRAGGED, ONTO)
     })
 
     report(info, 'drag', trace)
@@ -133,7 +133,7 @@ test.describe('a 200-node document', () => {
     await studio.openPanelTab('Layers')
 
     const drag = await traceWhile(page, async () => {
-      await studio.dragLayer(DRAGGED, ONTO)
+      await studio.layers.drag(DRAGGED, ONTO)
     })
 
     report(info, 'pan, 4×', pan)

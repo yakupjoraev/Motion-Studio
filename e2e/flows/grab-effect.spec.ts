@@ -1,16 +1,20 @@
 import { expect, test } from '@playwright/test'
 
+import { GalleryPage } from '../fixtures/gallery-page'
+
 /**
  * Flow A — PRODUCT.md § User flows: "a developer arrives, finds an effect, tunes it, copies the code,
  * and leaves in under 60 seconds." The spec walks it end to end on the block `prompts/52` names.
  */
-const DETAIL = '/blocks/aurora-background'
+const BLOCK = 'aurora-background'
 
 test.describe('grabbing an effect', () => {
   test('shows the preview without a scroll', async ({ page }) => {
-    await page.goto(DETAIL)
+    const gallery = new GalleryPage(page)
 
-    const preview = page.getByTestId('block-preview-stage')
+    await gallery.openBlock(BLOCK)
+
+    const preview = gallery.previewStage()
     await expect(preview).toBeVisible()
 
     // Above the fold means above the fold, not "reachable" — the box is inside the first viewport.
@@ -20,30 +24,23 @@ test.describe('grabbing an effect', () => {
     expect(box).not.toBeNull()
     expect(box?.y ?? 0).toBeLessThan(height)
 
-    await expect(page.getByTestId('copy-react').first()).toBeInViewport()
+    await expect(gallery.copyReact()).toBeInViewport()
   })
 
   test('changes two controls, and the preview and the URL both follow', async ({ page }) => {
-    await page.goto(DETAIL)
+    const gallery = new GalleryPage(page)
 
-    const controls = page.getByTestId('block-controls')
-    await expect(controls).toBeVisible()
+    await gallery.openBlock(BLOCK)
+    await expect(gallery.controls()).toBeVisible()
 
-    const blur = controls.getByRole('slider', { name: /blur/i })
-    await blur.focus()
-    for (let step = 0; step < 6; step += 1) {
-      await page.keyboard.press('ArrowLeft')
-    }
-
-    // The select is the studio's own control, which is a Radix combobox rather than a `<select>`.
-    await controls.getByRole('combobox', { name: /second tint/i }).click()
-    await page.getByRole('option', { name: 'success' }).click()
+    await gallery.stepSlider(/blur/i, 6, 'ArrowLeft')
+    await gallery.chooseOption(/second tint/i, 'success')
 
     await expect(page).toHaveURL(/blur=/)
     await expect(page).toHaveURL(/secondaryTint=success/)
 
     // The announcement is the only signal a screen reader gets that the picture changed.
-    await expect(page.getByTestId('preview-announcer')).not.toBeEmpty()
+    await expect(gallery.announcer()).not.toBeEmpty()
   })
 
   test('copies TypeScript that starts the way the exporter starts it', async ({
@@ -51,9 +48,11 @@ test.describe('grabbing an effect', () => {
     context,
     browserName,
   }) => {
-    await page.goto(DETAIL)
+    const gallery = new GalleryPage(page)
 
-    const button = page.getByTestId('copy-react').first()
+    await gallery.openBlock(BLOCK)
+
+    const button = gallery.copyReact()
     await button.click()
 
     /*
@@ -67,10 +66,7 @@ test.describe('grabbing an effect', () => {
      */
     await expect
       .poll(async () =>
-        [
-          await button.textContent(),
-          await page.locator('[aria-live="polite"]').first().textContent(),
-        ].join(' '),
+        [await button.textContent(), await gallery.liveRegion().textContent()].join(' '),
       )
       .toMatch(/Copied|would not give access/)
 
@@ -89,28 +85,30 @@ test.describe('grabbing an effect', () => {
   })
 
   test('restores a tuned block from its own URL in a fresh tab', async ({ page }) => {
-    await page.goto(`${DETAIL}?blur=32&secondaryTint=success`)
+    const gallery = new GalleryPage(page)
 
-    const controls = page.getByTestId('block-controls')
-    await expect(controls.getByRole('combobox', { name: /second tint/i })).toContainText('success')
-    await expect(controls.getByRole('slider', { name: /blur/i })).toHaveAttribute(
-      'aria-valuenow',
-      '32',
-    )
+    await gallery.openBlock(BLOCK, '?blur=32&secondaryTint=success')
+
+    await expect(gallery.select(/second tint/i)).toContainText('success')
+    await expect(gallery.slider(/blur/i)).toHaveAttribute('aria-valuenow', '32')
   })
 
   test('says so quietly when the URL carries a value the block cannot take', async ({ page }) => {
-    await page.goto(`${DETAIL}?blur=4000`)
+    const gallery = new GalleryPage(page)
 
-    await expect(page.getByTestId('rejected-params')).toContainText('blur')
+    await gallery.openBlock(BLOCK, '?blur=4000')
+
+    await expect(gallery.rejectedParams()).toContainText('blur')
     // And the block is still on the page, at its default.
-    await expect(page.getByTestId('block-preview-stage')).toBeVisible()
+    await expect(gallery.previewStage()).toBeVisible()
   })
 
   test('switches the preview theme without remounting the block', async ({ page }) => {
-    await page.goto(DETAIL)
+    const gallery = new GalleryPage(page)
 
-    const stage = page.getByTestId('block-preview-stage')
+    await gallery.openBlock(BLOCK)
+
+    const stage = gallery.previewStage()
     await expect(stage).toBeVisible()
 
     const before = await stage.evaluate((element) => {
@@ -122,7 +120,7 @@ test.describe('grabbing an effect', () => {
     })
     expect(before).toBe(true)
 
-    await page.getByRole('radio', { name: /paper/i }).click()
+    await gallery.setPreviewTheme(/paper/i)
 
     await expect(stage.locator('[data-remount-probe="kept"]')).toHaveCount(1)
   })
@@ -138,11 +136,11 @@ test.describe('grabbing an effect', () => {
 test('every block in the catalogue has a detail page that renders', async ({ page }) => {
   test.slow()
 
-  await page.goto('/blocks')
+  const gallery = new GalleryPage(page)
 
-  const ids = await page.$$eval('[data-block-card]', (cards) =>
-    cards.map((card) => card.getAttribute('data-block-card') ?? ''),
-  )
+  await gallery.openCatalogue()
+
+  const ids = await gallery.blockIds()
 
   expect(ids.length).toBeGreaterThan(60)
 
@@ -169,16 +167,13 @@ test('every block in the catalogue has a detail page that renders', async ({ pag
   })
 
   for (const id of ids) {
-    const response = await page.goto(`/blocks/${id}`)
+    const response = await gallery.openBlock(id)
 
     expect(response?.status(), `${id} responds`).toBe(200)
     // Scoped to the page's own header: a preview brings the component's headings with it, which
     // ACCESSIBILITY.md § Landing, gallery, docs allows and ADR-303 explains.
-    await expect(
-      page.locator('main > header').getByRole('heading', { level: 1 }),
-      `${id} has a heading`,
-    ).toBeVisible()
-    await expect(page.getByTestId('block-source'), `${id} shows its source`).toBeVisible()
+    await expect(gallery.heading(), `${id} has a heading`).toBeVisible()
+    await expect(gallery.source(), `${id} shows its source`).toBeVisible()
   }
 
   expect(failures).toEqual([])
