@@ -15,6 +15,17 @@ const DIALOGS = [
   { item: 'Version history', title: 'Version history' },
 ] as const
 
+/**
+ * The window a restored focus is waited in.
+ *
+ * The restore itself is synchronous — `Dialog`'s `onCloseAutoFocus` calls `focus()` on the control it
+ * recorded — and it was verified on WebKit to land within 3 s of the close, twice in a row. What
+ * needs the room is the *reading*: a single locator read on this machine's WebKit has been measured
+ * at 3.3 s under load, so a 5 s budget buys one or two polls and fails a restore that worked. The
+ * same two tests were the `2 flaky` line CI printed and nobody read.
+ */
+const RESTORE_MS = 15_000
+
 /** What the accessibility tree would call the focused element, for a failure message worth reading. */
 const focusedName = (page: Page): Promise<string> =>
   page.evaluate(() => {
@@ -63,7 +74,7 @@ test.describe('the studio’s dialogs', () => {
       await expect(dialog).toBeHidden()
 
       // The menu item is gone with the menu, so the trigger that survives is the File button.
-      await expect(file).toBeFocused({ timeout: 5000 })
+      await expect(file).toBeFocused({ timeout: RESTORE_MS })
     })
   }
 
@@ -80,7 +91,7 @@ test.describe('the studio’s dialogs', () => {
 
     await page.keyboard.press('Escape')
     await expect(dialog).toBeHidden()
-    await expect(trigger).toBeFocused({ timeout: 5000 })
+    await expect(trigger).toBeFocused({ timeout: RESTORE_MS })
   })
 
   test('the command palette gives focus back to what had it', async ({ page }) => {
@@ -107,6 +118,6 @@ test.describe('the studio’s dialogs', () => {
      * is not focused" does not say where focus went.
      */
     await expect.poll(() => focusedName(page)).not.toBe('BODY')
-    await expect(canvas).toBeFocused({ timeout: 5000 })
+    await expect(canvas).toBeFocused({ timeout: RESTORE_MS })
   })
 })
