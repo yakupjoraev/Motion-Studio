@@ -1,5 +1,14 @@
 import { type Locator, type Page, type Response, expect } from '@playwright/test'
 
+import { settled } from './settle'
+
+declare global {
+  interface Window {
+    /** Installed by `watchCopyAnswer`: every answer the copy button has given, in order. */
+    __copyAnswers?: string[]
+  }
+}
+
 /**
  * The public catalogue and one block's detail page — `prompts/52`, PRODUCT.md § User flows A.
  *
@@ -71,9 +80,66 @@ export class GalleryPage {
     return this.page.getByTestId('copy-react').first()
   }
 
-  /** Any live region on the page, for the copy that answers in words rather than in the button. */
-  liveRegion(): Locator {
-    return this.page.locator('[aria-live="polite"]').first()
+  /**
+   * Waits for the page to have finished arriving before it is driven, which on this route is not the
+   * same as being on screen.
+   *
+   * A detail page is server-rendered, so every control is in the DOM and clickable while the chunks
+   * that make it work are still downloading — and this is the heaviest hydration in the app: ADR-332
+   * measured 885 ms of script evaluation here against 180 ms on the index. A gesture aimed at that
+   * window waits on a main thread that is busy, which is where the 21.8 s click below came from.
+   */
+  async interactive(): Promise<void> {
+    await settled(this.page)
+  }
+
+  /** Presses `Copy React` once the page can hear it. */
+  async copySource(): Promise<void> {
+    await this.interactive()
+    await this.copyReact().click()
+  }
+
+  /**
+   * Starts recording what the copy button and its live region say, and must be called before the
+   * press.
+   *
+   * The button's answer is deliberately temporary — `CopyButton` returns to rest after two seconds,
+   * because a label stuck on "Copied" is a lie by the time it is read. That makes the answer
+   * unreadable by polling on a slow engine: a WebKit click on this route took **21.8 s** to return
+   * in one measured run, with a `textContent` read costing a further 3.3 s, so the first poll landed
+   * long after the answer had gone. An observer installed first sees it whether it lasted two
+   * seconds or twenty.
+   */
+  async watchCopyAnswer(): Promise<void> {
+    await this.page.evaluate(() => {
+      const seen: string[] = []
+
+      window.__copyAnswers = seen
+
+      const read = (): void => {
+        for (const node of document.querySelectorAll(
+          '[data-testid="copy-react"], [aria-live="polite"]',
+        )) {
+          const text = node.textContent?.trim() ?? ''
+
+          if (text !== '' && !seen.includes(text)) {
+            seen.push(text)
+          }
+        }
+      }
+
+      read()
+      new MutationObserver(read).observe(document.body, {
+        characterData: true,
+        childList: true,
+        subtree: true,
+      })
+    })
+  }
+
+  /** Everything the button and its live region have said since the watch started. */
+  async copyAnswer(): Promise<string> {
+    return this.page.evaluate(() => (window.__copyAnswers ?? []).join(' | '))
   }
 
   slider(name: RegExp | string): Locator {

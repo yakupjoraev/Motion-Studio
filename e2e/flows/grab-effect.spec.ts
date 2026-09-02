@@ -32,6 +32,8 @@ test.describe('grabbing an effect', () => {
 
     await gallery.openBlock(BLOCK)
     await expect(gallery.controls()).toBeVisible()
+    // Server-rendered controls are clickable before they are wired up — see `interactive`.
+    await gallery.interactive()
 
     await gallery.stepSlider(/blur/i, 6, 'ArrowLeft')
     await gallery.chooseOption(/second tint/i, 'success')
@@ -52,22 +54,21 @@ test.describe('grabbing an effect', () => {
 
     await gallery.openBlock(BLOCK)
 
-    const button = gallery.copyReact()
-    await button.click()
-
     /*
      * The button answers, either way — which is the cross-browser assertion, and the one the
      * component was written for: "a browser can refuse clipboard access outright, and a button that
-     * then does nothing is worse than one that says it could not."
+     * then does nothing is worse than one that says it could not." Which of the two answers arrives
+     * is the browser's business: WebKit under automation has refused the write before, and there is
+     * no permission Playwright can grant it.
      *
-     * WebKit under automation is that browser: `writeText` rejects, there is no permission Playwright
-     * can grant it, and the button correctly stays as it was while the live region says why. Asserting
-     * "Copied" on three engines was asserting that one of them would stop refusing.
+     * Watched rather than polled, because the answer lasts two seconds and a WebKit click on this
+     * route has taken longer than that to return — see `watchCopyAnswer`.
      */
+    await gallery.watchCopyAnswer()
+    await gallery.copySource()
+
     await expect
-      .poll(async () =>
-        [await button.textContent(), await gallery.liveRegion().textContent()].join(' '),
-      )
+      .poll(() => gallery.copyAnswer(), { timeout: 30_000 })
       .toMatch(/Copied|would not give access/)
 
     if (browserName !== 'chromium') {
@@ -110,6 +111,7 @@ test.describe('grabbing an effect', () => {
 
     const stage = gallery.previewStage()
     await expect(stage).toBeVisible()
+    await gallery.interactive()
 
     const before = await stage.evaluate((element) => {
       const node = element.querySelector('[data-ms-effect]') ?? element.firstElementChild
