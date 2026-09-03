@@ -1,0 +1,28 @@
+# DEVOPS.md § Docker. `docker compose up --build` is the whole setup a reader needs: no toolchain, no
+# environment file, no database. `--profile dev` adds Storybook, which is a development surface and is
+# therefore not in the default profile.
+services:
+  web:
+    build:
+      context: .
+      target: runner
+    image: motion-studio:local
+    ports: ['3000:3000']
+    healthcheck:
+      # The same command the image's own HEALTHCHECK runs, so `docker compose ps` and `docker ps`
+      # agree about what healthy means.
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:3000/api/health']
+      interval: 30s
+      timeout: 3s
+      start_period: 10s
+    restart: unless-stopped
+
+  storybook:
+    build:
+      context: .
+      # The builder stage: Storybook is served from source, so it needs the workspace rather than the
+      # standalone bundle.
+      target: builder
+    command: pnpm dev:storybook --host 0.0.0.0
+    ports: ['6006:6006']
+    profiles: [dev]

@@ -1,0 +1,38 @@
+# What the build context does not need. Every entry here is a directory that would otherwise be sent
+# to the daemon and then thrown away — the demos alone are 16 MB of GIF.
+node_modules
+**/node_modules
+.next
+**/.next
+.turbo
+**/.turbo
+storybook-static
+**/storybook-static
+coverage
+**/coverage
+test-results
+**/test-results
+playwright-report
+**/playwright-report
+.lighthouseci
+
+.git
+.github
+.vscode
+.idea
+
+# Tests and their fixtures: the image runs the app, and `e2e` is not installed into it anyway.
+e2e
+**/*.test.ts
+**/*.test.tsx
+**/__golden__
+
+# Documentation and the assets it carries.
+docs
+prompts
+*.md
+!README.md
+
+.env
+.env.*
+*.log
