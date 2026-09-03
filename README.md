@@ -120,7 +120,10 @@ pnpm stats               # the numbers in Project stats, counted
 
 <div align="center">
 
-![Fifteen packages in seven layers: utils, tokens and icons at the top, then schema and theme, motion and hooks, ui and editor, blocks, canvas and dnd, codegen, and apps/web at the bottom](docs/assets/architecture.svg)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/architecture-dark.svg">
+  <img alt="Fifteen packages in seven layers: utils, tokens and icons at the top, then schema and theme, motion and hooks, ui and editor, blocks, canvas and dnd, codegen, and apps/web at the bottom" src="docs/assets/architecture.svg" width="560">
+</picture>
 
 </div>
 

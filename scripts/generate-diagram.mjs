@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * `docs/assets/architecture.svg` — the README's copy of the dependency graph.
+ * `docs/assets/architecture{,-dark}.svg` — the README's copy of the dependency graph.
  *
  *   pnpm generate:diagram
  *
@@ -9,11 +9,14 @@
  * fifteen boxes and fifteen edges would be wrong within a month — the one thing a generated asset is
  * for is that it cannot drift.
  *
- * The page's SVG paints through `--ms-color-*` variables, which resolve to nothing in a file opened
- * on its own. So both themes are read out of the live document and written into the file as a
- * `<style>` block: light on `:root`, dark under `prefers-color-scheme`. GitHub renders a README's SVG
- * in an `<img>`, where a media query inside the file still applies — so the diagram follows the
- * reader's own system theme rather than being legible in one of them.
+ * **Two files, with the colours resolved into the attributes.** The page paints through
+ * `--ms-color-*` variables, which resolve to nothing in a file opened on its own, and GitHub strips
+ * `<style>` out of an SVG before serving it — so a single file with a `prefers-color-scheme` block
+ * would render as an unpainted skeleton in the one place this asset exists for. The README pairs
+ * them in a `<picture>`, which is GitHub's own supported way to ship a themed image.
+ *
+ * Colours are converted to `#rrggbb` on the way out: the tokens are `oklch()`, and a canvas is the
+ * cheapest correct converter — the browser doing the rendering is the one doing the maths.
  */
 import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, join, relative, resolve } from 'node:path'
@@ -22,7 +25,7 @@ import { fileURLToPath } from 'node:url'
 import { playwright } from './demos/record.mjs'
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
-const OUT = join(ROOT, 'docs', 'assets', 'architecture.svg')
+const OUT_DIR = join(ROOT, 'docs', 'assets')
 
 const PORT = process.env['PORT'] ?? '3000'
 const ORIGIN = `http://localhost:${PORT}`
@@ -41,31 +44,45 @@ const VARIABLES = [
   '--ms-font-mono',
 ]
 
-/**
- * The values as the page has them now — the public routes are pinned dark (ADR-318), so this is the
- * dark palette without touching anything.
- */
-const readCurrent = (page) =>
+/** The values as the page has them now, with every colour normalised to hex by the browser. */
+const readPalette = (page) =>
   page.evaluate((names) => {
     const styles = getComputedStyle(document.documentElement)
+    const context = document.createElement('canvas').getContext('2d')
     const values = {}
 
     for (const name of names) {
-      values[name] = styles.getPropertyValue(name).trim()
+      const value = styles.getPropertyValue(name).trim()
+
+      if (name.includes('font')) {
+        values[name] = value
+        continue
+      }
+
+      /*
+       * Painted and read back rather than taken off `fillStyle`, which keeps `oklch()` as written.
+       * One pixel through the canvas is the browser's own conversion to sRGB — which is what an SVG
+       * viewer twelve years old also has to understand.
+       */
+      context.fillStyle = '#000000'
+      context.fillStyle = value
+      context.fillRect(0, 0, 1, 1)
+
+      const [red, green, blue] = context.getImageData(0, 0, 1, 1).data
+
+      values[name] =
+        `#${[red, green, blue].map((part) => part.toString(16).padStart(2, '0')).join('')}`
     }
 
     return values
   }, VARIABLES)
 
 /**
- * The light palette, which this page never displays on its own.
- *
- * Through the stored preference rather than by setting the attribute: the public routes are pinned
- * dark (ADR-318) and `ThemeBoot` puts `data-color-mode` back within about 200 ms, so every version of
- * this that flipped the attribute read the dark palette back. A stored mode is the one input the boot
- * script honours (ADR-322), so the page arrives light and stays light.
+ * The light palette, which the public routes never display: they are pinned dark (ADR-318), and
+ * `ThemeBoot` puts `data-color-mode` back within about 200 ms if it is changed by hand. A stored
+ * preference is the one input the boot script honours (ADR-322), so the page arrives light instead.
  */
-const readLight = async (page, origin) => {
+const openLight = async (page, origin) => {
   await page.addInitScript(() => {
     window.localStorage.setItem('ms-color-mode', 'light')
   })
@@ -75,30 +92,36 @@ const readLight = async (page, origin) => {
     undefined,
     { timeout: 15_000 },
   )
-
-  return readCurrent(page)
 }
 
-const declarations = (values) =>
-  Object.entries(values)
-    .map(([name, value]) => `    ${name}: ${value};`)
-    .join('\n')
+/** Every `var(--x)` replaced by the palette's value for it, so the file needs no stylesheet. */
+const resolveVariables = (markup, palette) =>
+  markup.replace(/var\((--[a-z0-9-]+)\)/g, (whole, name) => palette[name] ?? whole)
+
+const openingTag = (tag, palette, size) => {
+  const viewBox = /viewBox="([^"]+)"/.exec(tag)?.[1] ?? `0 0 ${size.width} ${size.height}`
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size.width}" height="${size.height}" viewBox="${viewBox}" role="img" aria-label="Motion Studio dependency graph"><title>Motion Studio dependency graph</title><rect width="100%" height="100%" fill="${palette['--ms-color-surface-1']}"/>`
+}
+
+const svgOf = (markup, palette, size) =>
+  `${resolveVariables(markup, palette).replace(/^<svg[^>]*>/, (tag) =>
+    openingTag(tag, palette, size),
+  )}\n`
 
 const { chromium } = playwright(ROOT)
 
 const browser = await chromium.launch({ channel: 'chrome' })
-const page = await browser.newPage({ viewport: { width: 1280, height: 900 } })
 
 try {
-  await page.goto(`${ORIGIN}/docs/architecture`, { waitUntil: 'domcontentloaded' })
+  const dark = await browser.newPage({ viewport: { width: 1280, height: 900 } })
 
-  const svg = page.locator('[aria-label="Dependency graph"] svg')
+  await dark.goto(`${ORIGIN}/docs/architecture`, { waitUntil: 'domcontentloaded' })
+
+  const svg = dark.locator('[aria-label="Dependency graph"] svg')
 
   await svg.waitFor({ timeout: 30_000 })
 
-  const dark = await readCurrent(page)
-  const light = await readLight(page, ORIGIN)
-  const markup = await svg.evaluate((node) => node.outerHTML)
   const size = await svg.evaluate((node) => ({
     width: Number(node.getAttribute('width')),
     height: Number(node.getAttribute('height')),
@@ -107,42 +130,27 @@ try {
   /*
    * `aria-hidden` and `role="presentation"` are right inside the docs page, where a list beside the
    * picture carries the same information. On its own the file is the only thing there, so it gets a
-   * title instead — which is what a screen reader announces for an `<img>` of it.
+   * title and a label instead — which is what a reader hears for an `<img>` of it.
    */
-  const styled = markup
-    // The page's own attributes go: `class` and `style` mean nothing in a file, and the two that are
-    // rewritten below would otherwise appear twice.
-    .replace(/^<svg[^>]*>/, (tag) => {
-      const viewBox = /viewBox="([^"]+)"/.exec(tag)?.[1] ?? `0 0 ${size.width} ${size.height}`
+  const markup = (await svg.evaluate((node) => node.outerHTML)).replace(
+    /\s(aria-hidden|role|class|style)="[^"]*"/g,
+    '',
+  )
+  const darkPalette = await readPalette(dark)
 
-      return (
-        `<svg xmlns="http://www.w3.org/2000/svg" width="${size.width}" height="${size.height}" ` +
-        `viewBox="${viewBox}" role="img" aria-label="Motion Studio dependency graph">`
-      )
-    })
-    .replace(
-      />/,
-      `>
-  <title>Motion Studio dependency graph</title>
-  <style>
-  :root {
-${declarations(light)}
-    --ms-diagram-surface: ${light['--ms-color-surface-1']};
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-${declarations(dark)}
-      --ms-diagram-surface: ${dark['--ms-color-surface-1']};
-    }
-  }
-  </style>
-  <rect width="100%" height="100%" fill="var(--ms-diagram-surface)" />`,
-    )
+  const light = await browser.newPage({ viewport: { width: 1280, height: 900 } })
 
-  await mkdir(dirname(OUT), { recursive: true })
-  await writeFile(OUT, `${styled}\n`, 'utf8')
+  await openLight(light, ORIGIN)
 
-  console.log(`${relative(ROOT, OUT)} — ${size.width} × ${size.height}, both colour modes inline`)
+  const lightPalette = await readPalette(light)
+
+  await mkdir(OUT_DIR, { recursive: true })
+  await writeFile(join(OUT_DIR, 'architecture.svg'), svgOf(markup, lightPalette, size), 'utf8')
+  await writeFile(join(OUT_DIR, 'architecture-dark.svg'), svgOf(markup, darkPalette, size), 'utf8')
+
+  console.log(
+    `${relative(ROOT, OUT_DIR)}: architecture.svg + architecture-dark.svg — ${size.width} × ${size.height}`,
+  )
 } finally {
   await browser.close()
 }
