@@ -27,6 +27,21 @@ const config: NextConfig = {
         output: 'standalone' as const,
         // The workspace root, not `apps/web`: the trace has to reach the packages the app imports.
         outputFileTracingRoot: join(import.meta.dirname, '..', '..'),
+        /*
+         * Three things the trace picks up that the server never executes, measured in the image:
+         * 16 MB of sharp's glibc binaries (the image is Alpine, which uses the musl build beside
+         * them), 8.5 MB of TypeScript, and 2.5 MB of `caniuse-lite`. Together they are a fifth of
+         * the image, and none of them is reachable from a request — the healthcheck and the landing
+         * page in `ci.yml` are what prove that rather than this comment.
+         */
+        outputFileTracingExcludes: {
+          '**/*': [
+            '**/@img/sharp-libvips-linux-x64/**',
+            '**/@img/sharp-linux-x64/**',
+            '**/typescript/**',
+            '**/caniuse-lite/**',
+          ],
+        },
       }
     : {}),
 }
