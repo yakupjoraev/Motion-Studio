@@ -4,7 +4,8 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**", "storybook-static/**"]
+      "outputs": [".next/**", "!.next/cache/**", "dist/**", "storybook-static/**"],
+      "env": ["ANALYZE", "MS_INSTRUMENT", "MS_STANDALONE", "NEXT_TELEMETRY_DISABLED"]
     },
     "lint": { "dependsOn": ["^build"] },
     "typecheck": { "dependsOn": ["^build"], "outputs": ["*.tsbuildinfo"] },
