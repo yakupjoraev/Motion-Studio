@@ -273,6 +273,13 @@ document:
 - **No `--host` on `dev:storybook`.** It is a turbo task, and turbo exits on the unknown flag before
   Storybook ever sees it. Storybook 8.6 already listens on every interface.
 
+**The image serves no test fixtures, and an e2e run must not be pointed at it.** `/fixtures/[name]`
+reads `e2e/fixtures/documents` from the working tree, and `.dockerignore` leaves `e2e` out on
+purpose, so every `?fixture=` name answers 404 in a container. Playwright's config reuses a server
+already on the port, which makes the mistake easy to make and hard to read: the three specs that
+open a fixture time out waiting for `html[data-fixture]` while everything that builds its document
+by clicking passes. Run the suite against `pnpm --filter web start`, as the config intends.
+
 The size the budget refers to is the one CI prints. It is not what `docker image inspect
 --format '{{.Size}}'` reports on a machine using Docker Desktop's containerd image store — there the
 field is the **compressed** size, roughly a third of it. Locally, read `docker images`, which prints
