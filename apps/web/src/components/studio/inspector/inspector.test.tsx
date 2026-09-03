@@ -1,6 +1,6 @@
 import { commands } from '@motion-studio/editor'
 import { type NodeId, blockId, createEmptyDocument, nodeId } from '@motion-studio/schema'
-import { act, render, screen, within } from '@testing-library/react'
+import { act, cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -47,6 +47,20 @@ beforeAll(async () => {
    * fast the host is.
    */
   await Promise.all([import('./block-inspector'), import('@motion-studio/ui/controls')])
+
+  /*
+   * The chunk those two do not reach: `ControlRenderer` is a `Suspense` boundary over a
+   * `lazy(() => import('./control-fields'))`, and the fields are twenty-six components with their
+   * Radix packages behind them. The package's `exports` map has no path to that module and a test
+   * may not deep-import across a package boundary — ENGINEERING_CONTRACT § 1.3 — so it is warmed the
+   * way the application reaches it: by rendering one, once, inside this hook's own minute.
+   */
+  const warm = insert('heading')
+
+  act(() => state().select([warm]))
+  render(<Inspector />)
+  await screen.findByRole('textbox', { name: 'Text' }, { timeout: 55_000 })
+  cleanup()
 }, 60_000)
 
 beforeEach(() => {

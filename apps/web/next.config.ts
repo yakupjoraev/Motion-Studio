@@ -38,7 +38,10 @@ const config: NextConfig = {
           '**/*': [
             '**/@img/sharp-libvips-linux-x64/**',
             '**/@img/sharp-linux-x64/**',
-            '**/typescript/**',
+            // Scoped to the package: `**/typescript/**` also matched `next/dist/lib/typescript`,
+            // which the server loads on start — the container died with "Cannot find module
+            // '../../lib/typescript/required-packages'".
+            '**/node_modules/typescript/**',
             '**/caniuse-lite/**',
           ],
         },
