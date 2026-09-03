@@ -14105,3 +14105,56 @@ this repository edits after the fact — and this record is the answer to it.
   both use. Both are product decisions, not packaging ones, and neither is taken here.
 - The size step prints the breakdown on every run, so the next time this number moves, the reason is
   in the log rather than in an investigation.
+
+## ADR-345 — Storybook gets its own image stage, and the dev profile is checked in CI
+
+**Date** 2026-09-03 · **Prompt** 60 · **Status** Accepted
+
+### Question
+`docker compose --profile dev up` had never been run — Docker had no engine on this machine until
+WSL2 was installed. The first run failed, and it failed for two independent reasons. Both had been
+in `DEVOPS.md` § Docker and in `compose.yaml` since the file was written, and nothing in the
+repository could have said so: CI builds `target: runner` and never touches the dev profile.
+
+1. The `storybook` service built `target: builder`, whose install is `pnpm install --filter web...`.
+   That filter is deliberate — it keeps three Playwright browsers out of the image — and it also
+   prunes the workshop workspace, so `apps/storybook` has no `node_modules` and the container dies
+   on `sh: storybook: not found`.
+2. The command was `pnpm dev:storybook --host 0.0.0.0`. `dev:storybook` is `turbo dev
+   --filter=workshop`, so the trailing flag is turbo's to parse, and turbo exits 1 printing its own
+   usage. The flag never reached Storybook in any form.
+
+### Measurement
+Is `--host` needed at all? Measured rather than reasoned: the stage below, run with plain
+`pnpm dev:storybook` and `-p 6011:6006`, answers `http://localhost:6011/` with 200 from the host.
+Storybook 8.6 already listens on every interface, so the correct fix for the second failure is to
+delete the flag, not to find a syntax that forwards it.
+
+The alternative to a second stage is widening the shared install to `--filter web... --filter
+workshop...`. Measured cost of that: Storybook's dependency set — `storybook`, `vite`, nine addons —
+lands on the path **every** image build takes, including the `docker` job whose 249 MB number is a
+gate, for a surface no runtime serves. The dedicated stage is paid only by `--profile dev`.
+
+### Decision
+A `storybook` stage that installs `--filter workshop...` and is used by the compose service, and
+`command: pnpm dev:storybook` with no flag. The runtime path is untouched: `deps` → `builder` →
+`runner` still install exactly what the app needs.
+
+CI builds the stage and asks the running Storybook for `/index.json` — 654 entries on this commit.
+Not because the prompt's job list asks for it, but because this defect is the argument: a documented
+entry point was broken from the day it was written, and the only reason it stayed broken is that
+nothing ran it. A deliverable nothing exercises is a claim, not a feature.
+
+### Consequences
+- `--profile dev` costs its own install. Measured on this machine with the pnpm store already warm:
+  66 s to build the stage, 71 s for `docker compose --profile dev up -d --build` to have both
+  containers serving. It is a development surface; that is the right side of the trade to pay on.
+- The `docker` job grows by the storybook stage build and one HTTP request — the duration it adds is
+  in the job log for the commit that introduced it.
+- Two numbers in `DEVOPS.md` § Docker were wrong in the same way — written from the specification
+  rather than from a run. The section now carries the compose file that was actually executed.
+- The local image size is not the CI number and cannot be compared to it. With Docker Desktop's
+  containerd image store, `docker image inspect --format '{{.Size}}'` returns the **compressed**
+  size — 86 MB here — where CI's classic store returns the uncompressed sum, 249 MB. `docker images`
+  prints both, as `CONTENT SIZE` and `DISK USAGE`. The budget in this document is the CI metric; a
+  reader checking it locally should read the job log, not `inspect`.

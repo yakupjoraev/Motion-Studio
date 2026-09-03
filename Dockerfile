@@ -34,6 +34,20 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1 MS_STANDALONE=1
 RUN pnpm build --filter=web
 
+# `--profile dev` only, and it gets its own install rather than a share of the one above: `deps`
+# prunes to `--filter web...`, which leaves the workshop workspace without a `node_modules` and the
+# `storybook` binary missing. Widening that filter would put Storybook's dependencies on the path
+# every image build takes, including the one CI measures, for a surface the runtime never serves.
+FROM base AS storybook
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY apps/storybook/package.json apps/storybook/
+COPY packages packages
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile --filter workshop... --ignore-scripts
+COPY . .
+ENV NEXT_TELEMETRY_DISABLED=1
+EXPOSE 6006
+
 # Not `base`: the runner needs Node and nothing else, and `base` carries corepack's pnpm shims for
 # stages that install. A runtime image should hold the runtime.
 FROM node:22-alpine AS runner

@@ -208,7 +208,16 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN pnpm build --filter=web
 
-FROM base AS runner
+# `--profile dev` only, and its own install: the filter above prunes the workshop workspace away.
+FROM base AS storybook
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY apps/storybook/package.json apps/storybook/
+COPY packages packages
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store     pnpm install --frozen-lockfile --filter workshop... --ignore-scripts
+COPY . .
+EXPOSE 6006
+
+FROM node:22-alpine AS runner
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000
 RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
@@ -230,8 +239,8 @@ services:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
       interval: 30s
   storybook:
-    build: { context: ., target: builder }
-    command: pnpm dev:storybook --host 0.0.0.0
+    build: { context: ., target: storybook }
+    command: pnpm dev:storybook
     ports: ["6006:6006"]
     profiles: [dev]
 ```
@@ -259,6 +268,15 @@ document:
 - **`COPY --from=deps /app ./`, not just `/app/node_modules`.** pnpm puts a `node_modules` beside
   every workspace package; with only the root one, `pnpm build --filter=web` stops at "Local
   package.json exists, but node_modules missing".
+- **Storybook builds from its own stage, not from `builder`.** `--filter web...` prunes the workshop
+  workspace, so `builder` has no `storybook` binary to run. ADR-345.
+- **No `--host` on `dev:storybook`.** It is a turbo task, and turbo exits on the unknown flag before
+  Storybook ever sees it. Storybook 8.6 already listens on every interface.
+
+The size the budget refers to is the one CI prints. It is not what `docker image inspect
+--format '{{.Size}}'` reports on a machine using Docker Desktop's containerd image store — there the
+field is the **compressed** size, roughly a third of it. Locally, read `docker images`, which prints
+`CONTENT SIZE` and `DISK USAGE` separately.
 
 `output: 'standalone'` is set in `apps/web/next.config.ts`; without it there is no `server.js` to
 run and the runner stage copies nothing.

@@ -20,9 +20,12 @@ services:
   storybook:
     build:
       context: .
-      # The builder stage: Storybook is served from source, so it needs the workspace rather than the
-      # standalone bundle.
-      target: builder
-    command: pnpm dev:storybook --host 0.0.0.0
+      # Its own stage, not `builder`: Storybook is served from source, and `builder`'s install is
+      # pruned to the app. See the stage comment in the Dockerfile.
+      target: storybook
+    # No `--host`: `dev:storybook` is a turbo task, so a trailing flag is turbo's to parse and it
+    # exits on an unknown one. Storybook 8.6 already listens on every interface — measured, the port
+    # answers from the host without it.
+    command: pnpm dev:storybook
     ports: ['6006:6006']
     profiles: [dev]

@@ -190,6 +190,26 @@ jobs:
       - if: always()
         run: docker rm -f web
 
+      # `--profile dev` is a documented entry point, and it was broken from the day it was written
+      # because nothing ran it — ADR-345. It is checked here rather than trusted.
+      - name: The dev profile serves Storybook
+        run: |
+          docker compose --profile dev up -d --build storybook
+          for attempt in $(seq 1 60); do
+            if curl -fsS http://localhost:6006/index.json > /tmp/index.json; then
+              node -e 'const n=Object.keys(require("/tmp/index.json").entries).length;
+                       console.log(`storybook entries: ${n}`);
+                       process.exit(n > 0 ? 0 : 1)'
+              exit $?
+            fi
+            sleep 3
+          done
+          echo 'storybook never answered /index.json'
+          docker compose --profile dev logs storybook
+          exit 1
+      - if: always()
+        run: docker compose --profile dev down -v
+
 # Lighthouse has its own workflow — `.github/workflows/lighthouse.yml`, prompt 54.
 #
 # Jobs still to come, each with the prompt that creates what it tests:
