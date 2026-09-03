@@ -1,5 +1,5 @@
-# What the build context does not need. Every entry here is a directory that would otherwise be sent
-# to the daemon and then thrown away — the demos alone are 16 MB of GIF.
+# What the build context does not need. Every entry is something that would otherwise be sent to the
+# daemon and then thrown away.
 node_modules
 **/node_modules
 .next
@@ -27,11 +27,15 @@ e2e
 **/*.test.tsx
 **/__golden__
 
-# Documentation and the assets it carries.
-docs
+# `docs/` is **not** here, and that is the point: it is the content of the `/docs` route, read at
+# build time by `generateStaticParams`. Excluding it fails the image build with "docs/ was not found
+# above the working directory", which is a sentence about a missing directory rather than about a
+# missing feature — so it is worth the comment.
+#
+# Its assets are another matter: 16 MB of demo GIFs that only the README links to.
+docs/assets
+
 prompts
-*.md
-!README.md
 
 .env
 .env.*
