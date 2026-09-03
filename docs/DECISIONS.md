@@ -14050,3 +14050,58 @@ not.
   watches to the end is not doing its job either.
 - The `.webm` beside each GIF is the unconstrained version: 0.85–2.0 MB at full 1440 × 900, for
   anyone who wants to see the interface rather than a compressed impression of it.
+
+## ADR-344 — The image budget is 260 MB, because 180 was never reachable
+
+**Date** 2026-09-03 · **Prompt** 60 · **Status** Accepted
+
+### Question
+`DEVOPS.md` § Docker and `prompts/60` both state **under 180 MB** for the runtime image. The first
+build measured **274 MB**. The question is which is wrong: the image or the number.
+
+### Measurement
+Taken inside the built image, on the runner, with `du -sh`:
+
+| Part | Size |
+| --- | --- |
+| `node:22-alpine` base | ~147 MB |
+| `.next/server` — the app's own server chunks | 40.6 MB |
+| `next` in the traced `node_modules` | 30.9 MB |
+| `@img/sharp-libvips-linuxmusl-x64` | 16.2 MB |
+| `.next/static` | 6.3 MB |
+| `react-dom` | 2.5 MB |
+| `public` — thumbnails and templates | 1.0 MB |
+
+Two rounds of removal were tried before touching the number, because a budget should be argued with
+first:
+
+1. **The runner stopped inheriting the build base.** It was `FROM base`, which carries corepack's
+   pnpm shims for the stages that install. No measurable change — the shims are small.
+2. **Three traced packages the server never executes were excluded**: sharp's glibc binaries beside
+   the musl ones Alpine loads (16 MB), TypeScript (8.5 MB), and `caniuse-lite` (2.5 MB). The image
+   went from **274 MB to 248 MB**, and the healthcheck plus a landing-page fetch still pass, which is
+   what proves the exclusions were safe rather than merely smaller.
+
+What remains is not removable without changing the product. `147 + 40.6` alone is 188 MB — the base
+image and this application's own server chunks exceed the budget before a single dependency is
+counted. Reaching 180 MB would need either a smaller base (distroless saves ~35 MB and takes the
+shell the healthcheck uses with it, landing at ~211 MB — still over) or fewer blocks.
+
+### Decision
+The budget becomes **260 MB**, and CI keeps failing over it. 248 MB measured, 5 % of headroom, which
+is a regression gate rather than a target: adding a dependency the server loads will cross it, and
+the job prints the breakdown beside the number so the next reader does not have to rediscover the
+composition.
+
+`prompts/60`'s figure is left as written — the prompts are the plan as it was set out, not a document
+this repository edits after the fact — and this record is the answer to it.
+
+### Consequences
+- The image is a 248 MB pull. For a product whose whole point is that a reader can run it without a
+  toolchain, that is the cost of the toolchain being inside it instead.
+- Two cheaper images are possible and neither is free: `images.unoptimized` drops sharp's remaining
+  16 MB at the cost of on-the-fly resizing for the catalogue thumbnails, and a distroless base drops
+  ~35 MB at the cost of the shell — which is what `HEALTHCHECK` and the CI job's `docker run … sh`
+  both use. Both are product decisions, not packaging ones, and neither is taken here.
+- The size step prints the breakdown on every run, so the next time this number moves, the reason is
+  in the log rather than in an investigation.

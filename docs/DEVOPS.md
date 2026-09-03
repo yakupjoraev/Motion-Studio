@@ -239,7 +239,11 @@ services:
 `docker compose up --build` gives a running app. That is the whole point — a reader can run the
 project without installing a toolchain, and `docker compose --profile dev up` adds Storybook.
 
-Image target: **under 180 MB**. Checked in CI so it does not drift.
+Image budget: **under 260 MB**, checked in CI so it does not drift, with the breakdown printed beside
+the number on every run. ADR-344 has the measurement that replaced the original 180 MB: the base
+image and this application's own server chunks are 188 MB before a single dependency is counted, and
+two rounds of removal — a slimmer runner stage, then excluding three traced packages the server never
+executes — took the image from 274 MB to 248 MB rather than to 180.
 
 Three details in the file above are load-bearing and were each wrong in an earlier version of this
 document:
