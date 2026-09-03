@@ -12,10 +12,17 @@ import { reactConfig } from '@motion-studio/config/vitest/react'
 //
 // The setup list is written out rather than appended to: `mergeConfig` replaces the array, and the
 // shared React setup has to keep running beside this app's own.
+//
+// `app/**` joins the include for the route error boundaries only. They are the exception to "the
+// routes are covered by Playwright": `global-error.tsx` renders when the root layout threw, and the
+// only way to reach it in a browser is to break the layout on purpose, in a build, for one spec.
 export default mergeConfig(
   reactConfig,
   defineConfig({
     esbuild: { jsx: 'automatic' },
-    test: { setupFiles: ['@motion-studio/config/vitest/setup-react', './src/test/setup.ts'] },
+    test: {
+      include: ['src/**/*.test.{ts,tsx}', 'app/**/*.test.{ts,tsx}'],
+      setupFiles: ['@motion-studio/config/vitest/setup-react', './src/test/setup.ts'],
+    },
   }),
 )

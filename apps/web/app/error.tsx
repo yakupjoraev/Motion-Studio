@@ -22,7 +22,6 @@ export interface RouteErrorProps {
 export default function RouteError({ error, reset }: RouteErrorProps) {
   const report = formatErrorReport({
     error,
-    appVersion: '1.0.0',
     ...(error.digest === undefined ? {} : { code: error.digest }),
     document: null,
     ...(typeof navigator === 'undefined' ? {} : { userAgent: navigator.userAgent }),

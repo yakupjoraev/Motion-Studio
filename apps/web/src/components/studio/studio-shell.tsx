@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic'
 import { type ReactNode, useEffect, useState } from 'react'
 
 import { RenderCounter } from '../../lib/dev/render-counter'
+import { watchGestures } from '../../lib/errors/watch-gestures'
 import { useStudioStore } from '../../store/editor-store'
 import { CommandAnnouncer } from './command-announcer'
 
@@ -106,6 +107,9 @@ export function StudioShell({ canvas }: StudioShellProps) {
   useEffect(() => {
     watchFocusReturn()
   }, [])
+
+  /** What the user did last, for a crash report — `prompts/58` § Error report. */
+  useEffect(() => watchGestures(), [])
 
   /** In memory before the button is pressed, which is what keeps the dialog instant. */
   useEffect(() => {

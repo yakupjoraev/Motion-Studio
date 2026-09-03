@@ -20,10 +20,20 @@ export interface ErrorReportInput {
   readonly blockId?: string
   readonly nodeId?: string
   readonly document?: Pick<MotionDocument, 'nodes' | 'theme'> | null
-  readonly appVersion: string
+  /** Overridable so a test can pin the line; every caller in the app takes the default. */
+  readonly appVersion?: string
   /** Injected, because `navigator` is absent on the server and stubbed in tests. */
   readonly userAgent?: string
 }
+
+/**
+ * The product's version, in one place because two boundaries print it and a report that disagrees
+ * with itself about which build crashed is worse than one that does not say.
+ *
+ * Not read from `package.json`: the workspace manifests are all `0.0.0` — this is a private monorepo
+ * that does not publish — and a report saying "Motion Studio 0.0.0" tells a reader nothing.
+ */
+export const APP_VERSION = '1.0.0'
 
 const errorLine = (error: unknown): string => {
   if (error instanceof Error) {
@@ -87,7 +97,7 @@ export function formatErrorReport(input: ErrorReportInput): string {
   const gesture = lastOf('gesture')
 
   const lines = [
-    `Motion Studio ${input.appVersion}`,
+    `Motion Studio ${input.appVersion ?? APP_VERSION}`,
     errorLine(input.error),
     input.code === undefined ? null : `Code: ${input.code}`,
     input.blockId === undefined ? null : `Block: ${input.blockId}`,

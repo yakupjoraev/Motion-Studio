@@ -2,6 +2,8 @@
 
 import { type EditorStore, commands, createEditorStore } from '@motion-studio/editor'
 
+import { describeBatch, describeCommand } from '../lib/errors/describe-command'
+import { recordCommand } from '../lib/errors/error-context'
 import { deferredBlockRegistry } from './block-registry'
 
 /**
@@ -17,6 +19,32 @@ export const useStudioStore: EditorStore = createEditorStore({
   registry: deferredBlockRegistry,
   now: () => Date.now(),
 })
+
+/**
+ * The command half of the error context — `prompts/58` § Error report.
+ *
+ * Wrapped here rather than inside the store for the same reason the store is built here: naming the
+ * command a crash report should quote is a question about this application, and `packages/editor`
+ * must stay a library that a host without an error reporter can use.
+ *
+ * Recorded **before** the command runs, so the command that threw is the one the report names.
+ */
+function recordDispatchedCommands(store: EditorStore): void {
+  const { dispatch, dispatchBatch } = store.getState()
+
+  store.setState({
+    dispatch(command) {
+      recordCommand(describeCommand(command))
+      dispatch(command)
+    },
+    dispatchBatch(batch, label, coalesceKey) {
+      recordCommand(describeBatch(batch))
+      dispatchBatch(batch, label, coalesceKey)
+    },
+  })
+}
+
+recordDispatchedCommands(useStudioStore)
 
 // A handle for the browser console and for the perf specs, which script edits through it. Both
 // operands are build-time constants, so an ordinary production build has no such global — ADR-315.

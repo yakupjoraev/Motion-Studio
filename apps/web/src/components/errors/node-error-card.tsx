@@ -15,6 +15,8 @@ export interface NodeErrorCardProps {
   readonly onResetProps: () => void
   readonly onSelect: () => void
   readonly onDelete: () => void
+  /** For the block that throws again after a reset: stop rendering it, keep it in the document. */
+  readonly onReplace: () => void
 }
 
 /**
@@ -34,6 +36,7 @@ export function NodeErrorCard({
   onResetProps,
   onSelect,
   onDelete,
+  onReplace,
 }: NodeErrorCardProps) {
   return (
     <div
@@ -51,6 +54,9 @@ export function NodeErrorCard({
         </Button>
         <Button onClick={onSelect} size="sm" variant="ghost">
           Select
+        </Button>
+        <Button onClick={onReplace} size="sm" variant="ghost">
+          Replace with a placeholder
         </Button>
         <Button onClick={onDelete} size="sm" variant="ghost">
           Delete block

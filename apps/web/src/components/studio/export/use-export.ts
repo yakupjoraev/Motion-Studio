@@ -115,6 +115,12 @@ export function useExport(open: boolean): UseExportResult {
 
     let cancelled = false
     const started = performance.now()
+    /**
+     * Held outside the run so a failure can still report what the IR had already flagged —
+     * `prompts/58` § The five boundaries asks the export's error state to carry the warning list,
+     * and a formatter that throws on the fourth file must not take the first three's warnings with it.
+     */
+    let current: ExportSnapshot | null = null
 
     setSnapshot(PENDING)
 
@@ -146,7 +152,8 @@ export function useExport(open: boolean): UseExportResult {
         }
 
         const paths = printed.files.map((file) => file.path)
-        let current: ExportSnapshot = {
+
+        current = {
           status: resolved.format ? 'streaming' : 'ready',
           files: printed.files,
           formatted: resolved.format ? [] : paths,
@@ -215,6 +222,9 @@ export function useExport(open: boolean): UseExportResult {
         setSnapshot({
           ...PENDING,
           status: 'failed',
+          // No files: a run that threw wrote nothing, and offering half a project is worse than
+          // offering none. The warnings are kept because they are the closest thing to a cause.
+          warnings: current?.warnings ?? [],
           error: error instanceof Error ? error.message : String(error),
         })
       }

@@ -2,11 +2,12 @@
 
 import { commands } from '@motion-studio/editor'
 import type { NodeId } from '@motion-studio/schema'
-import type { ReactNode } from 'react'
+import { type ReactNode, useState } from 'react'
 
 import { useStudioStore } from '../../../store/editor-store'
 import { ErrorBoundary } from '../../errors/error-boundary'
 import { NodeErrorCard } from '../../errors/node-error-card'
+import { NodePlaceholder } from '../../errors/node-placeholder'
 
 export interface NodeErrorBoundaryProps {
   readonly blockId: string
@@ -37,6 +38,13 @@ export function NodeErrorBoundary({
   children,
 }: NodeErrorBoundaryProps) {
   /**
+   * ADR-341. Local, and deliberately not a command: the block that throws on every render is the one
+   * the card cannot fix, and the way out must not cost the user the props it holds. Unmounting the
+   * boundary with it is what makes "try the block again" a clean second attempt.
+   */
+  const [replaced, setReplaced] = useState(false)
+
+  /**
    * Every prop back to its default in **one** history entry: a reset the user cannot undo in one
    * press is a second thing to recover from — `prompts/58` § Recovery.
    */
@@ -46,6 +54,21 @@ export function NodeErrorBoundary({
     )
 
     useStudioStore.getState().dispatchBatch(batch, `Reset ${nodeName}`)
+  }
+
+  const select = (): void => {
+    useStudioStore.getState().select([nodeId])
+  }
+
+  if (replaced) {
+    return (
+      <NodePlaceholder
+        blockId={blockId}
+        nodeName={nodeName}
+        onRestore={() => setReplaced(false)}
+        onSelect={select}
+      />
+    )
   }
 
   return (
@@ -60,12 +83,13 @@ export function NodeErrorBoundary({
           onDelete={() => {
             useStudioStore.getState().dispatch(commands.removeNodes({ ids: [nodeId] }))
           }}
+          onReplace={() => setReplaced(true)}
           onResetProps={() => {
             resetProps()
             // Cleared after the command, so the node re-renders against the props it just got.
             reset()
           }}
-          onSelect={() => useStudioStore.getState().select([nodeId])}
+          onSelect={select}
           report={report}
         />
       )}

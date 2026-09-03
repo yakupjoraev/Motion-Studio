@@ -1,9 +1,11 @@
 'use client'
 
+import { useToast } from '@motion-studio/ui'
 import { useEffect, useRef } from 'react'
 
+import { downloadText } from '../../../lib/documents/download'
 import { readLastOpenId, writeLastOpenId } from '../../../lib/storage/document-index'
-import { loadDocument } from '../../../lib/storage/document-store'
+import { loadDocument, loadRawDocument } from '../../../lib/storage/document-store'
 import { flushPending } from '../../../lib/storage/pending-write'
 import { useStudioStore } from '../../../store/editor-store'
 
@@ -20,6 +22,7 @@ export const isFixtureSession = (): boolean =>
  */
 export function useDocumentSession(): void {
   const restored = useRef(false)
+  const notify = useToast()
 
   useEffect(() => {
     if (restored.current || isFixtureSession()) {
@@ -29,6 +32,23 @@ export function useDocumentSession(): void {
     restored.current = true
 
     let live = true
+
+    /**
+     * A stored document the schema rejects is the one restore failure a user can see and not
+     * understand: the studio opens empty and says nothing, so their last session looks deleted. It is
+     * not — the bytes are still in IndexedDB, and this hands them over.
+     */
+    const reportUnreadable = (id: string, raw: unknown): void => {
+      notify({
+        title: 'Your last document could not be opened',
+        description: 'It is still stored in this browser. Download it, then start from a new one.',
+        tone: 'danger',
+        action: {
+          label: 'Download it',
+          onClick: () => downloadText(JSON.stringify(raw, null, 2), `${id}.motion.json`),
+        },
+      })
+    }
 
     const run = async (): Promise<void> => {
       /*
@@ -45,10 +65,28 @@ export function useDocumentSession(): void {
 
       const stored = await loadDocument(id)
 
-      if (stored !== undefined && live) {
-        useStudioStore.getState().replaceDocument(stored.document)
-        writeLastOpenId(id)
+      if (!live) {
+        return
       }
+
+      if (stored === undefined) {
+        /*
+         * Two different failures answer `undefined`, and only one is worth a toast: a record that is
+         * there and unreadable, versus a last-open id pointing at a document that was deleted. The
+         * second is ordinary — the studio opens a new document, which is what the user asked for by
+         * deleting the old one.
+         */
+        const raw = await loadRawDocument(id)
+
+        if (live && raw !== undefined) {
+          reportUnreadable(id, raw)
+        }
+
+        return
+      }
+
+      useStudioStore.getState().replaceDocument(stored.document)
+      writeLastOpenId(id)
     }
 
     void run().catch(() => undefined)
@@ -56,5 +94,5 @@ export function useDocumentSession(): void {
     return () => {
       live = false
     }
-  }, [])
+  }, [notify])
 }

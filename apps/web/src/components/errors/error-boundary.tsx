@@ -28,8 +28,6 @@ interface ErrorBoundaryState {
   readonly error: unknown
 }
 
-const APP_VERSION = '1.0.0'
-
 /**
  * The base every boundary in the app is built from — ARCHITECTURE.md § Error boundaries.
  *
@@ -70,7 +68,6 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   private report(error: unknown): string {
     return formatErrorReport({
       error,
-      appVersion: APP_VERSION,
       ...(this.props.blockId === undefined ? {} : { blockId: this.props.blockId }),
       ...(this.props.nodeId === undefined ? {} : { nodeId: this.props.nodeId }),
       document: this.props.describeDocument?.() ?? null,

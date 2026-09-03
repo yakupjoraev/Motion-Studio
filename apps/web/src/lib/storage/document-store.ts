@@ -59,6 +59,17 @@ export function listDocumentIds(): Promise<readonly string[]> {
 }
 
 /**
+ * The record as it was stored, schema and all — the escape hatch for a document the schema rejects.
+ *
+ * `loadDocument` returning `undefined` means the stored bytes are not a document this build can use;
+ * it does not mean they are worthless. A user whose last session will not open is owed the bytes, and
+ * this is the only function that hands them over unparsed.
+ */
+export async function loadRawDocument(id: string): Promise<unknown> {
+  return get<unknown>(STORES.documents, id)
+}
+
+/**
  * Deletes the snapshots with the document: a ring buffer with no document is unreachable storage.
  *
  * It returns them, which is what makes the delete undoable *whole*. A `Deleted "Landing"` toast whose
