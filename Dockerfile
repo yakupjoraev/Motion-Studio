@@ -34,7 +34,10 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1 MS_STANDALONE=1
 RUN pnpm build --filter=web
 
-FROM base AS runner
+# Not `base`: the runner needs Node and nothing else, and `base` carries corepack's pnpm shims for
+# stages that install. A runtime image should hold the runtime.
+FROM node:22-alpine AS runner
+WORKDIR /app
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000
 RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001
 # The standalone output carries its own pruned `node_modules`; `static` and `public` are the two

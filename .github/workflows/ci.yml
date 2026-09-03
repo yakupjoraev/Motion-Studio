@@ -150,6 +150,16 @@ jobs:
           # layer is cold every time.
           cache-from: type=gha
           cache-to: type=gha,mode=max
+      # What the image is made of, printed whether or not it fits: a number over budget is only
+      # actionable with the breakdown beside it.
+      - name: What is in it
+        run: |
+          docker run --rm --entrypoint sh motion-studio:ci -c '
+            du -sh /app/* 2>/dev/null | sort -h
+            echo "--- the traced node_modules, top ten ---"
+            du -sh /app/node_modules/* 2>/dev/null | sort -h | tail -10
+          '
+
       - name: Report the size, and fail over budget
         run: |
           bytes=$(docker image inspect motion-studio:ci --format '{{.Size}}')
