@@ -14149,8 +14149,10 @@ nothing ran it. A deliverable nothing exercises is a claim, not a feature.
 - `--profile dev` costs its own install. Measured on this machine with the pnpm store already warm:
   66 s to build the stage, 71 s for `docker compose --profile dev up -d --build` to have both
   containers serving. It is a development surface; that is the right side of the trade to pay on.
-- The `docker` job grows by the storybook stage build and one HTTP request — the duration it adds is
-  in the job log for the commit that introduced it.
+- The `docker` job grows by the storybook stage build and one HTTP request: **0.7 → 4.4 min**,
+  measured on the commit that introduced it. It has no wall-clock cost, because the pipeline is as
+  long as `quality` — 9.1 min on the same run — and the stage build has no `type=gha` cache, which
+  is where those minutes are if they ever need to come back.
 - Two numbers in `DEVOPS.md` § Docker were wrong in the same way — written from the specification
   rather than from a run. The section now carries the compose file that was actually executed.
 - The local image size is not the CI number and cannot be compared to it. With Docker Desktop's
