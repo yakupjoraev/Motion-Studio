@@ -33,6 +33,8 @@
     "generate:fixtures": "tsx scripts/generate-fixtures.ts",
     "generate:templates": "tsx scripts/generate-templates.ts",
     "generate:docs-index": "tsx scripts/generate-docs-index.ts",
+    "generate:demos": "node scripts/generate-demos.mjs",
+    "generate:diagram": "node scripts/generate-diagram.mjs",
     "generate:landing": "tsx scripts/generate-landing-export.ts",
     "measure:export": "tsx scripts/measure-export.ts",
     "golden:update": "pnpm --filter @motion-studio/codegen golden:update",
@@ -45,6 +47,7 @@
     "check:secrets": "node scripts/check-secrets.mjs",
     "size-limit": "size-limit",
     "measure:routes": "node scripts/measure-routes.mjs",
+    "stats": "tsx scripts/stats.ts",
     "check:commit-msg": "node scripts/check-commit-msg.mjs",
     "prepare": "lefthook install"
   },

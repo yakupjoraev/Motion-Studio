@@ -316,6 +316,21 @@ Docker image to GHCR, and upload the Storybook static build as an artifact.
 Versioning: the app is `apps/web`'s version. Packages are versioned together (fixed mode) — they
 are not published to npm in v1, so independent versioning would be ceremony without benefit.
 
+### Before the tag
+
+Two generated artefacts are the ones that rot silently, because nothing fails when they are stale —
+a README showing an interface the product no longer has is worse than a README showing none:
+
+```bash
+pnpm build && PORT=3000 pnpm --filter web start   # in another shell
+pnpm generate:demos      # the four README GIFs, re-recorded against this build
+pnpm generate:diagram    # docs/assets/architecture.svg, from the docs page
+pnpm stats               # the numbers in the README's Project stats
+```
+
+Read the four numbers `stats` prints against the README and correct any that moved. The demo run
+fails if a GIF lands over 3 MB, which is the only automatic check these have.
+
 ## Deploy
 
 Vercel, `apps/web`.

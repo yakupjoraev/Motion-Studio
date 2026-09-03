@@ -13992,3 +13992,61 @@ that a `renameNode` whose label contains the name is described as `renameNode`.
 - A gesture is under the same rule, and the listener that records them applies it: a printable key
   with no modifier is recorded as `type`, without the character — `watch-gestures.ts`.
 - The safety of the report no longer depends on every future label staying free of document text.
+
+## ADR-343 — A demo GIF's width is whatever fits under 3 MB, and the encoder walks down to find it
+
+**Date** 2026-09-03 · **Prompt** 59 · **Status** Accepted
+
+### Question
+`prompts/59` § `generate-demos.mjs` asks for two things about each demo: **1200 px wide** and
+**under 3 MB**. On this product's own recordings the two are not both achievable, so the prompt's
+numbers had to be treated as what they are — one requirement and one preference — and which is which
+had to be settled before any encoding was tuned.
+
+### Criterion
+Set before the numbers were taken: the size cap is the requirement, because it is the one with a
+consequence outside this repository — GitHub serves a README's images to every visitor, and a 5 MB
+GIF above the fold is a page that loads visibly late on a phone. Width is the preference, and it is
+spent to buy the cap. A demo may not drop below **8 fps** or **720 px**, because past either it stops
+reading as an interface being used.
+
+### Measurement
+Two clips, both encoded through `palettegen`/`paletteuse`:
+
+| Clip | Encoding | Size |
+| --- | --- | --- |
+| `grab-effect`, 10.2 s aurora | 1200 px, 13 fps, 200 colours, bayer dither | 8.0 MB |
+| same | 1000 px, 10 fps, 64 colours, no dither | 3.0 MB |
+| `compose-page`, 23.7 s studio | 900 px, 9 fps, 48 colours, no dither | 4.5 MB |
+| same | 800 px, 8 fps, 48 colours | 3.4 MB |
+| same | 720 px, 8 fps, 64 colours | 2.9 MB |
+
+Two things the numbers say that guesswork would not have:
+
+1. **Dithering is the most expensive setting by a wide margin.** It turns a smooth gradient into
+   noise, and noise is exactly what an LZW-packed GIF cannot compress. Dropping it is worth more
+   than dropping a third of the frame rate, and costs less to look at.
+2. **Content matters more than duration.** A continuously animated background differs in every pixel
+   of every frame, so inter-frame compression has nothing to remove. Swapping `hero-aurora` for
+   `hero-centered` in the composition demo was tried for this reason and moved almost nothing —
+   because the studio's own chrome is dense and the pointer moves across all of it — while cutting
+   the clip from 33 s to 21 s moved it a lot.
+
+### Decision
+`toGif` walks a ladder of seven encodings from the prompt's own numbers downwards, stopping at the
+first that lands under 3 MB, and the run **fails** if the last rung does not. Width is given up
+before frame rate: a demo that stutters reads as a broken product; a smaller one reads as a smaller
+one.
+
+The four shipped demos land at 1000–1200 px, 8–13 fps, 2.5–2.9 MB. `live-css` gets the prompt's full
+1200 px because its sandbox is mostly flat colour; `compose-page` gets 720 px because the studio is
+not.
+
+### Consequences
+- The GIFs in the README are not all the same width. That is visible and it is the honest outcome:
+  each is as large as its own content allows within the cap.
+- A demo that grows past ~25 seconds will fall off the bottom of the ladder and fail the run. That
+  is the intended pressure — the prompt asks for a 20 second headline demo, and a demo nobody
+  watches to the end is not doing its job either.
+- The `.webm` beside each GIF is the unconstrained version: 0.85–2.0 MB at full 1440 × 900, for
+  anyone who wants to see the interface rather than a compressed impression of it.
