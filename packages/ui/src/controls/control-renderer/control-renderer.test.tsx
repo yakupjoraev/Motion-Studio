@@ -1,7 +1,7 @@
 import { CONTROL_KINDS, type ControlDescriptor, type ControlKind } from '@motion-studio/schema'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { expectNoViolations } from '../../test/axe'
 import { ControlRow } from '../control-row/index'
@@ -10,6 +10,17 @@ import { gradientToCss } from '../gradient-field/index'
 
 import { ControlRenderer } from './control-renderer'
 import { asGradient } from './gradient-control'
+
+/*
+ * Every field below `ControlRenderer` is a `lazy()` — `control-fields` splits twenty-six components
+ * and their Radix packages out of the panel's first chunk. The axe sweep renders all of them in one
+ * test, so on a cold Vite cache it pays for that transform inside its own five seconds: it fitted on
+ * a developer machine and timed out on the runner. Warming them here pays it in a hook that has a
+ * minute, and leaves the test measuring accessibility rather than the host.
+ */
+beforeAll(async () => {
+  await import('./control-fields')
+}, 60_000)
 
 const descriptor = (
   kind: ControlKind,
