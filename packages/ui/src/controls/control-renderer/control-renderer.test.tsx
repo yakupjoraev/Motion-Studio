@@ -173,12 +173,16 @@ describe('ControlRenderer', () => {
     expect(await screen.findByRole('spinbutton')).toHaveAttribute('aria-valuenow', '0')
   })
 
-  it('is axe clean across every kind', async () => {
-    for (const kind of CONTROL_KINDS) {
-      const { container, unmount } = renderKind(kind)
+  /*
+   * One test per kind rather than one loop over all of them. Twenty-five axe scans in a single test
+   * take longer than a test's own five seconds on a runner half the speed of a developer machine —
+   * and a red "is axe clean across every kind" says nothing about which kind. Split, each scan has
+   * its own budget and a failure names the control.
+   */
+  it.each([...CONTROL_KINDS])('is axe clean: %s', async (kind) => {
+    const { container, unmount } = renderKind(kind)
 
-      await expectNoViolations(container)
-      unmount()
-    }
+    await expectNoViolations(container)
+    unmount()
   })
 })
