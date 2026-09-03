@@ -190,20 +190,20 @@ Multi-stage, standalone Next output, non-root.
 
 ```dockerfile
 # syntax=docker/dockerfile:1.7
-FROM node:20-alpine AS base
+FROM node:22-alpine AS base
 RUN corepack enable
 WORKDIR /app
 
 FROM base AS deps
+# The manifests only, so a source change does not reinstall. `--filter` prunes the graph to what the
+# app needs: the end-to-end package pulls three browsers, which no image should carry.
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY apps/web/package.json apps/web/
-COPY packages/*/package.json packages/
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install --frozen-lockfile
+COPY packages packages
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store     pnpm install --frozen-lockfile --filter web...
 
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/packages ./packages
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN pnpm build --filter=web
@@ -216,8 +216,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
 USER nextjs
 EXPOSE 3000
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s \
-  CMD wget -qO- http://localhost:3000/api/health || exit 1
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s   CMD wget -qO- http://localhost:3000/api/health || exit 1
 CMD ["node", "apps/web/server.js"]
 ```
 
@@ -241,6 +240,21 @@ services:
 project without installing a toolchain, and `docker compose --profile dev up` adds Storybook.
 
 Image target: **under 180 MB**. Checked in CI so it does not drift.
+
+Three details in the file above are load-bearing and were each wrong in an earlier version of this
+document:
+
+- **`node:22`, not `node:20`.** `engines.node` is `>=22.18` (ADR-330 raised it: `size-limit` 13
+  requires it), so a Node 20 base fails at `pnpm install` rather than at run time.
+- **`COPY packages packages`, not `COPY packages/*/package.json packages/`.** Docker's `COPY` flattens
+  a glob into the destination directory, so the second form copies fourteen manifests over each other
+  and leaves one file named `packages`. Copying the directory keeps the workspace shape pnpm needs to
+  resolve `workspace:*`.
+- **`--filter web...`** prunes the install to the app and what it depends on. Without it the image
+  build installs `e2e`, which downloads three browsers.
+
+`output: 'standalone'` is set in `apps/web/next.config.ts`; without it there is no `server.js` to
+run and the runner stage copies nothing.
 
 ## Lighthouse CI
 
