@@ -156,8 +156,10 @@ jobs:
         run: |
           docker run --rm --entrypoint sh motion-studio:ci -c '
             du -sh /app/* 2>/dev/null | sort -h
-            echo "--- the traced node_modules, top ten ---"
-            du -sh /app/node_modules/* 2>/dev/null | sort -h | tail -10
+            echo "--- inside apps ---"
+            du -sh /app/apps/web/.next/* /app/apps/web/public 2>/dev/null | sort -h
+            echo "--- the ten heaviest traced packages ---"
+            du -sh /app/node_modules/.pnpm/* 2>/dev/null | sort -h | tail -10
           '
 
       - name: Report the size, and fail over budget
