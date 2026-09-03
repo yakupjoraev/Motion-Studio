@@ -293,6 +293,17 @@ packages/<name>/
 The rule behind all of them: **a crash must never lose the user's document.** Every boundary
 offers a way to get the JSON out.
 
+The download reads three lanes in order — the live store, the last IndexedDB autosave, the
+`beforeunload` localStorage lane — because the case it exists for is the one where the store is what
+broke. `global-error.tsx` reads the third lane by hand: it renders when the root layout threw, so
+importing the storage module would be a second thing that can fail while handling a failure.
+
+Recovery beyond reporting, where a fix exists: invalid props reset to their defaults in one history
+entry; a canvas transform resets; a block that throws on every render is replaced by a placeholder,
+which is a render decision rather than an edit — the node keeps its props and the file is unchanged
+(ADR-341). A crash report names the command's type and the prop path, never the command's label,
+which is user-visible text and may quote the document (ADR-342).
+
 ## Testing seams (by design)
 
 The architecture is arranged so the hard parts test without a browser:

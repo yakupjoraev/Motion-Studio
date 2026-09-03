@@ -13904,3 +13904,91 @@ threshold exists to absorb is a property of edges, not of area.
   signal's share instead of lowering the bar.
 - TESTING.md § Visual regression carried the 1 % figure. It is corrected there, with the number that
   replaced it and why.
+
+## ADR-341 — "Replace with a placeholder" is a render the user chose, not an edit to the document
+
+**Date** 2026-09-03 · **Prompt** 58 · **Status** Accepted
+
+### Question
+`prompts/58` § Recovery asks for one action per failure that has a fix, and lists "a block that
+consistently throws → replace with a placeholder so the rest of the document is editable". The node
+card already offers `Reset to defaults` and `Delete block`, so the question is what the third action
+does that those two do not — and, since the wording says *replace*, whether it changes the document.
+
+The failure it is for is real and is not covered by the other two: a block whose props are valid and
+whose render throws anyway — a bad slot child, a font that fails to measure, a bug in the block —
+throws again the moment the boundary is reset, and it throws on every subsequent render of the
+canvas. `Delete block` ends that, at the cost of the user's content.
+
+### Options
+1. **A command.** Swap the node for a real block from the registry — a `container` or a `spacer` —
+   through `dispatch`, so it is undoable like any edit.
+2. **A render decision, local to the boundary.** Stop rendering the block and draw a placeholder in
+   its place. The node, its props and its children stay exactly as they are.
+
+### Decision
+Option 2. `NodeErrorBoundary` holds the flag; nothing is dispatched.
+
+The prompt's own reason for the action decides it: *"so the rest of the document is editable"*. The
+goal is a canvas that stops crashing, not a document that has changed. Option 1 reaches that goal by
+destroying what the user is trying to save — a swap to a `container` drops every prop the block held,
+and it does so in the one situation where the user has already been told their work is safe. It also
+writes to the file: an export taken after the swap no longer contains the block, so a document
+recovered from a crash would differ from the document that crashed.
+
+Option 2 costs the block nothing. The node keeps its props, the layers tree still lists it, the
+inspector still edits it, an export still emits it, and `Try the block again` re-mounts the boundary
+for a clean second attempt — which is what makes this reversible without an undo entry.
+
+### Consequences
+- The flag is per mount. A reload renders the block again, which is correct: the placeholder is a
+  statement about this session, and a fix shipped in the meantime should get its chance.
+- Nothing in the `.motion` file records that a block was placeheld, so a document exported from a
+  session with one is byte-identical to the same document without. That is the point, and it is also
+  why the placeholder says the block still holds the content — a user who cannot see the block needs
+  to be told it is still in the file.
+- `Delete block` keeps its place in the card. This does not replace it: a block the user no longer
+  wants should leave the document, and that is an edit, undoable, through a command.
+
+## ADR-342 — A crash report names the command's type, never its label
+
+**Date** 2026-09-03 · **Prompt** 58 · **Status** Accepted
+
+### Question
+`error-context.ts` records the last dispatched command so the report can say what was happening. The
+obvious string to record is the command's `label`, which is what the undo menu shows and reads well
+in a report: `Add Section`, `Reset Pricing table`.
+
+`prompts/58` § Error report also states the constraint the report is built around: **no document
+content**, because the report is a clipboard payload for a public issue and the document is the
+user's unreleased work. `format-error-report.ts` honours that for the document itself — counts and a
+theme id, never a value. The question is whether a label honours it too.
+
+### Measurement
+A label is specified as user-visible text (`command.types.ts`: *"shown in the undo tooltip"*), and
+two of the labels this app produces quote the document verbatim:
+
+| Command | Label |
+| --- | --- |
+| `renameNode` | `Rename to ${payload.name}` — the name the user typed |
+| the node boundary's reset batch | `Reset ${nodeName}` — the block's name in the layers tree |
+
+So recording labels would have put the user's own words into the report on the exact path that
+promises not to. The other twenty-odd labels are safe today, which is worse rather than better: the
+rule would hold by coincidence and break the next time a label is written to read well.
+
+### Decision
+The report records `command.type`, plus the payload's `path` when it has one:
+`setProp plans[2].price` — which is the line the prompt's example asks for. A batch records its shape
+(`batch setProp ×3`), never the label it was dispatched under.
+
+A type is a literal in the source and cannot carry anything from a document. A prop path is a key
+from the block's schema, for the same reason. `describe-command.ts` owns both, and its test asserts
+that a `renameNode` whose label contains the name is described as `renameNode`.
+
+### Consequences
+- The report is slightly less readable to a user and considerably more useful to a maintainer: `Set
+  Background` names no prop, `setProp background.from` names the one that broke.
+- A gesture is under the same rule, and the listener that records them applies it: a printable key
+  with no modifier is recorded as `type`, without the character — `watch-gestures.ts`.
+- The safety of the report no longer depends on every future label staying free of document text.

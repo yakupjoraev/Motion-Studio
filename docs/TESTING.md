@@ -139,6 +139,13 @@ Vitest, `jsdom`, Testing Library. `<name>.test.tsx`.
 - **`userEvent`, not `fireEvent`.** It dispatches the real event sequence, including focus.
 - **No mocking of our own modules.** If a component needs a store, give it a real test store. If
   it needs a registry, give it the fake one. Mocking our own code tests the mock.
+  - **One exception: fault injection.** An error boundary's subject is a failure, and a failure has
+    to come from somewhere — a block that throws while rendering, a store that throws when read, a
+    printer that throws mid-run, a storage lane that refuses. Those are stubbed at the module seam,
+    because the alternative is shipping a way to break the app on purpose. The rule that replaces
+    the one being bent: **stub only the module whose failure is the subject, never the module whose
+    behaviour is being asserted.** A test of the node boundary may make the block throw; it may not
+    stub the boundary, the card, or the download button.
 - **Every interactive component gets an axe assertion.**
 
 ```tsx

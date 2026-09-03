@@ -283,6 +283,10 @@ export function serializeDocument(doc: MotionDocument): string {
   Restoring is a command, so it is undoable.
 - A failed write shows a persistent (not auto-dismissing) toast with a download action. Losing
   work silently is the one unacceptable failure mode.
+- A failed **read** is reported the same way. A stored record this build's schema rejects would
+  otherwise open an empty studio and say nothing, which reads as "my last session is gone"; the
+  restore raises a toast instead and offers the stored bytes as they are, unparsed. A last-open id
+  pointing at a document that was deleted stays silent — nothing failed there.
 
 ## Templates
 
