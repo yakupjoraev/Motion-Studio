@@ -118,7 +118,10 @@ jobs:
       # Two workers, which the config does not set: `workers: 1` is there for the performance specs,
       # whose numbers are only comparable when nothing else is competing for the machine. This job
       # runs none of them, so the constraint is the runner's cores rather than a measurement.
-      - run: pnpm --filter e2e exec playwright test flows editor export playground a11y --project=${{ matrix.project }} --shard=${{ matrix.shard }}/3 --workers=2
+      # The directories, with the separator: a bare `export` is a regular expression over the path and
+      # matches `visual/export-dialog.spec.ts` as well. The config ignores `visual/**` too — one of
+      # the two would do, and both together mean neither can be quietly undone.
+      - run: pnpm --filter e2e exec playwright test flows/ editor/ export/ playground/ a11y/ --project=${{ matrix.project }} --shard=${{ matrix.shard }}/3 --workers=2
       # The trace is the whole point of `retain-on-failure`: a red shard with no trace is a re-run.
       - if: failure()
         uses: actions/upload-artifact@v7

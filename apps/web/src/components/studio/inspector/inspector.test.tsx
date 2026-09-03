@@ -38,7 +38,15 @@ const insert = (block: string, parentId = root()): NodeId => {
  * Warming it here pays the same cost where it belongs, and mirrors the shell, which prefetches it.
  */
 beforeAll(async () => {
-  await import('./block-inspector')
+  /*
+   * Both, and for the same reason. `block-inspector` is a `dynamic()` chunk; the controls under it
+   * are an ordinary import of `@motion-studio/ui/controls`, which is twenty-six field components and
+   * their Radix packages — a transform Vitest also does on first use, and one a test's own five
+   * seconds does not always cover. It fitted on this machine and did not on the runner, which is the
+   * definition of a timeout that should have been a warm-up: the test would have been asserting how
+   * fast the host is.
+   */
+  await Promise.all([import('./block-inspector'), import('@motion-studio/ui/controls')])
 }, 60_000)
 
 beforeEach(() => {

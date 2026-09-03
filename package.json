@@ -48,11 +48,14 @@
     "size-limit": "size-limit",
     "measure:routes": "node scripts/measure-routes.mjs",
     "stats": "tsx scripts/stats.ts",
+    "changeset": "changeset",
+    "release:version": "changeset version",
     "check:commit-msg": "node scripts/check-commit-msg.mjs",
     "prepare": "lefthook install"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
+    "@changesets/cli": "^3.0.1",
     "@motion-studio/blocks": "workspace:*",
     "@motion-studio/codegen": "workspace:*",
     "@motion-studio/motion": "workspace:*",

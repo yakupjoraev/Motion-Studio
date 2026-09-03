@@ -16,8 +16,17 @@ const ORIGIN = `http://localhost:${PORT}`
  */
 export default defineConfig({
   testDir: '.',
-  // The exported page has its own config and its own server — `export-smoke.config.ts`.
-  testIgnore: ['export-smoke/**'],
+  /*
+   * Two suites have their own config, their own server and their own baselines, and neither belongs
+   * to a run of this one: `export-smoke.config.ts` builds and serves an exported project, and
+   * `visual.config.ts` compares screenshots against baselines stored under `visual/snapshots`.
+   *
+   * `visual/**` is ignored here rather than merely unlisted because a positional filter is a regular
+   * expression over the whole path: `pnpm exec playwright test export` — which is what CI runs to
+   * mean the `export/` directory — also matches `visual/export-dialog.spec.ts`, and that spec then
+   * looks for a baseline this config puts somewhere else and writes a new one instead of failing.
+   */
+  testIgnore: ['export-smoke/**', 'visual/**'],
   fullyParallel: false,
   forbidOnly: CI,
   /*

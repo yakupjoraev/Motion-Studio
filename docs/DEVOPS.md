@@ -203,7 +203,7 @@ COPY packages packages
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store     pnpm install --frozen-lockfile --filter web...
 
 FROM base AS builder
-COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app ./
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN pnpm build --filter=web
@@ -252,6 +252,9 @@ document:
   resolve `workspace:*`.
 - **`--filter web...`** prunes the install to the app and what it depends on. Without it the image
   build installs `e2e`, which downloads three browsers.
+- **`COPY --from=deps /app ./`, not just `/app/node_modules`.** pnpm puts a `node_modules` beside
+  every workspace package; with only the root one, `pnpm build --filter=web` stops at "Local
+  package.json exists, but node_modules missing".
 
 `output: 'standalone'` is set in `apps/web/next.config.ts`; without it there is no `server.js` to
 run and the runner stage copies nothing.

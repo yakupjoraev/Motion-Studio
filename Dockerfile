@@ -24,7 +24,10 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile --filter web... --ignore-scripts
 
 FROM base AS builder
-COPY --from=deps /app/node_modules ./node_modules
+# The whole installed tree, not just the root `node_modules`: pnpm puts a `node_modules` beside every
+# workspace package, and `pnpm build --filter=web` refuses to run in a package that has none.
+COPY --from=deps /app ./
+# Source over the top. `node_modules` is in `.dockerignore`, so this cannot undo the install above.
 COPY . .
 # `MS_STANDALONE` is what turns on `output: 'standalone'` — see `apps/web/next.config.ts` for why it
 # is a flag rather than the default.
