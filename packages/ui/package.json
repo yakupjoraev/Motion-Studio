@@ -39,7 +39,7 @@
     "@radix-ui/react-toggle-group": "^1.1.19",
     "@radix-ui/react-tooltip": "^1.2.16",
     "class-variance-authority": "^0.7.1",
-    "motion": "^11.18.2",
+    "motion": "^13.1.1",
     "react-aria": "^3.51.0",
     "react-stately": "^3.49.0"
   },

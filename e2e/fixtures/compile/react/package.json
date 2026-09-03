@@ -5,7 +5,7 @@
   "description": "Host project for scripts/verify-export-compile.mjs: a React export is pasted into somebody's project, so the harness supplies one — Tailwind, Motion, and next/image for the image component the export can emit.",
   "dependencies": {
     "gsap": "^3.15.0",
-    "motion": "^11.18.2",
+    "motion": "^13.1.1",
     "next": "^15.5.4",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"

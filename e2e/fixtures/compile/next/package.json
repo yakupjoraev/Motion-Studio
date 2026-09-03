@@ -5,7 +5,7 @@
   "description": "Host project for scripts/verify-export-compile.mjs: the dependencies an exported Next project declares, installed, so tsc reads the real types rather than none.",
   "dependencies": {
     "gsap": "^3.15.0",
-    "motion": "^11.18.2",
+    "motion": "^13.1.1",
     "next": "^15.5.4",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
