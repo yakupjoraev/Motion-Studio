@@ -379,18 +379,32 @@ fails if a GIF lands over 3 MB, which is the only automatic check these have.
 
 ## Deploy
 
-Vercel, `apps/web`.
+Vercel, `apps/web`, driven by `deploy.yml` rather than by Vercel's own Git integration.
 
 | Environment | Trigger | URL |
 | --- | --- | --- |
-| Production | Push to `main` (after all checks) | `motion-studio.dev` |
-| Preview | Every PR | `pr-<n>-motion-studio.vercel.app` |
-| Storybook | Push to `main` | `storybook.motion-studio.dev` |
+| Production | Push to `main` | `motion-studio-y3dev.vercel.app` |
+| Preview | Every PR | `motion-studio-<hash>-y3dev.vercel.app`, posted as a comment |
 
-- Build command `pnpm build --filter=web`, output `apps/web/.next`.
+No custom domain is registered, so those are the URLs the project serves. Storybook is not hosted
+anywhere: `release.yml` uploads its build as a release artifact, and hosting it is a roadmap entry.
+
+- Three secrets and one variable: `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, and
+  `VERCEL_ENABLED=true`. Every job is skipped without the variable, which is what a fork's pull
+  request sees. **The token has to be a full-account one** — a token scoped to the team carries no
+  user context, and the CLI will not start with it (`Error: User not found`, measured on two).
+- Two settings live in the project rather than in the repository, because Vercel has no file for
+  them: **Root Directory `apps/web`** and **Node.js Version 22.x** — the version the gates run.
+  Everything expressible in a file is in `apps/web/vercel.json`, including the install command,
+  which passes `--ignore-scripts` for the reason the Dockerfile does. ADR-346 has both stories.
+- Build command and output directory are auto-detected: Vercel finds Turbo and runs `turbo run
+  build`, which is the build this repository already has. A hand-written command would be a second
+  definition of it, free to drift.
 - No environment variables required to run. The app has no backend and no secrets — if a build
   ever starts needing a secret, that is an architectural change requiring a decision, not a
   config addition.
+- Deployments are public — SSO protection is off, so the preview link in a comment opens for whoever
+  is reading the pull request.
 - Preview comments post the Lighthouse scores and the bundle delta so a regression is visible in
   the PR without opening a dashboard.
 
