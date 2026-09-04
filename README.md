@@ -154,7 +154,7 @@ The project is specified before it is built. Every subsystem has a document, and
 ## Tech stack
 
 Next.js 15 · React 19 · TypeScript 5.6 (strict) · Tailwind CSS v4 · Zustand + Immer ·
-Motion (Framer Motion) · GSAP · dnd-kit · Radix + React Aria · shadcn/ui · Zod ·
+Motion (Framer Motion) · dnd-kit · Radix + React Aria · shadcn/ui · Zod ·
 TanStack Query/Table · Storybook 8 · Vitest · Playwright · Biome · Turborepo · pnpm.
 
 Rationale per choice, including the ones that were rejected:

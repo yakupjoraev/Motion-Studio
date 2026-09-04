@@ -78,12 +78,13 @@ Declarative variants map cleanly onto our data-driven `MotionPreset` model, and 
 animations are the best available. Used for: entrance, hover, tap, layout, exit, and
 `useScroll`-driven progress.
 
-### GSAP 3
-Only where Motion is the wrong tool: long scroll-scrubbed timelines with pinning, complex
-sequenced choreography, and SplitText-style character reveals. Loaded dynamically, never in the
-initial bundle. Every GSAP usage must be justified in a comment naming what Motion could not do.
+### No second animation library
+GSAP was here until 2026-09-04 for three presets — a pinned horizontal track, a scrubbed multi-key
+timeline, and a split-text reveal. Its "no charge" grant forbids use in tools that let people build
+visual animations without code, which is this product, so it is gone: ADR-349 has what replaced each
+one. Adding another animation library needs that decision reopened, not a new dependency line.
 
-Rule: **do not mix both on one element.** Ownership per element is exclusive.
+Rule: **do not mix two engines on one element.** Ownership per element is exclusive.
 
 ### Lenis (optional, scroll)
 Smooth scroll for the landing page only, and disabled under `prefers-reduced-motion`. Never in
@@ -229,19 +230,19 @@ Every dependency's licence was read, not assumed — `pnpm licenses list` on 202
 graph: **460 MIT, 22 Apache-2.0, 18 ISC, 11 BSD**, plus dual grants that include a permissive option
 (`jszip` MIT-or-GPL, `pako` MIT-and-Zlib, `opener` WTFPL-or-MIT, `biome` MIT-or-Apache).
 
-Five are not the permissive default, and this project redistributes generated component source, so
+Four are not the permissive default, and this project redistributes generated component source, so
 each one needed an answer rather than a shrug:
 
 | Dependency | Licence | What it means here |
 | --- | --- | --- |
-| `gsap` | Vendor "no charge" licence, **not OSI** | Runtime, and it reaches an export. The grant forbids use in tools that let users build visual animations without code — see `AUDIT.md` § F1, which is open |
 | `ffmpeg-static` | GPL-3.0-or-later | `devDependencies`, invoked as an external binary by `pnpm generate:demos` and the thumbnail generator. Nothing links against it and its output — a GIF — is not a derivative work of the encoder |
 | `axe-core`, `@axe-core/playwright` | MPL-2.0 | Test-only. MPL is file-level copyleft: it reaches modified copies of *its* files, and we modify none |
 | `lightningcss` | MPL-2.0 | Build-time, through Tailwind. Same reasoning, and worth knowing it is what adds the `-webkit-` prefixes the glass needs in Safari |
 | `@img/sharp-win32-x64` | Apache-2.0 AND LGPL-3.0-or-later | A platform binary pulled in on Windows only. Not in the container image (the trace excludes sharp) and not redistributed |
 
-An export never carries any of these except `gsap`, and only when the document uses one of the three
-presets that need it — `collect-motion.ts` is where that mapping lives.
+An export never carries any of these. The only dependencies a generated project can gain are
+`motion` and `next`, both MIT — `collect-motion.ts` is where that mapping lives, and it is a
+two-entry table on purpose.
 
 ## Adding a dependency
 

@@ -23,9 +23,16 @@ someone opens the repo and concludes the author can build systems, not pages.
 
 ## 1. Non-negotiables
 
-1. **TypeScript strict. Zero `any`.** No `@ts-ignore`, no `as unknown as`. If types fight you,
-   the model is wrong — fix the model.
-2. **No file over 300 lines.** Split by responsibility, not by size.
+1. **TypeScript strict. Zero `any`.** No `@ts-ignore`. No cast that launders a type this
+   repository declares — if types fight you, the model is wrong, so fix the model. `as unknown as`
+   is permitted in exactly two places, because there it describes the world instead of hiding it:
+   a seam onto an untyped host global (`window`, a worker's `self`), and a test that hands a
+   function the shape its types forbid in order to assert what it does with it. Both name the
+   reason in a comment. Anywhere else it is a defect (ADR-348).
+2. **No file over 300 lines.** Split by responsibility, not by size. Three kinds are exempt,
+   because splitting them splits one subject rather than one responsibility: a test file, a file
+   that is a table of data with no logic, and a package's barrel. The exemption is that list and
+   nothing else — a file outside it is over the line or it is not (ADR-347).
 3. **Every package is a real package.** Own `package.json`, own `tsconfig.json`, explicit
    `exports`. No deep imports across package boundaries (`@motion-studio/ui/src/...` is banned).
 4. **Public API is barrel-only.** Each package exports through `src/index.ts`.

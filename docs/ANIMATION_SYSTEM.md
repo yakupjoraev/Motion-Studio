@@ -15,7 +15,7 @@ codegen able to emit the animation as source.
 ## The model
 
 ```
-MotionSpec (document)  ──resolve──►  ResolvedMotion  ──apply──►  Motion / GSAP / CSS
+MotionSpec (document)  ──resolve──►  ResolvedMotion  ──apply──►  Motion / CSS
    preset id                            variants
    parameters                           transition
    channel                              listeners
@@ -55,7 +55,7 @@ export interface MotionPreset<P extends PresetParams = PresetParams> {
   readonly id: MotionPresetId
   readonly name: string
   readonly channel: MotionChannel
-  readonly engine: 'motion' | 'gsap' | 'css'
+  readonly engine: 'motion' | 'css'
   readonly paramsSchema: ZodType<P>
   readonly defaults: P
   readonly controls: readonly ControlDescriptor[]   // drives the inspector
@@ -147,8 +147,8 @@ only way a user can develop intuition for these numbers.
 | `scroll-rotate` | Rotate by progress | `degrees` |
 | `sticky-stack` | Cards stack and scale as they pin | `offset`, `scaleStep` |
 | `progress-bar` | Width from page progress | `axis` |
-| `horizontal-scroll` | Pinned horizontal track (GSAP) | `distance`, `snap` |
-| `scroll-timeline` | Multi-keyframe scrub (GSAP) | `keyframes[]` |
+| `horizontal-scroll` | Track travels sideways as the section is scrolled past | `distance`, `snap` |
+| `scroll-timeline` | Multi-keyframe scrub against scroll progress | `keyframes[]` |
 | `marquee` | Infinite loop, speed-modulated by scroll | `speed`, `direction`, `pauseOnHover` |
 
 ### Hover (`channel: 'hover'`)
@@ -263,7 +263,6 @@ export function MotionNode({ spec, children, className }: MotionNodeProps) {
   const resolved = useResolvedMotion(spec, { reduced, scale })
 
   if (resolved.engine === 'css') return <CssMotion resolved={resolved} className={className}>{children}</CssMotion>
-  if (resolved.engine === 'gsap') return <GsapMotion resolved={resolved} className={className}>{children}</GsapMotion>
   return <FramerMotion resolved={resolved} className={className}>{children}</FramerMotion>
 }
 ```
@@ -277,7 +276,11 @@ tested in `node`.
 | --- | --- |
 | `css` | Hover, press, and simple continuous effects expressible as a transition/keyframes. Cheapest — no JS on the interaction path. |
 | `motion` | Entrance, exit, layout, spring physics, in-view triggers, gesture variants. The default. |
-| `gsap` | Scroll-scrubbed timelines with pinning, multi-element choreography, character splitting. Dynamically imported. |
+
+**There is no third engine.** A scroll-scrubbed timeline is `css` too: the preset emits its own
+`@keyframes`, the rule holds the animation at `animation-play-state: paused`, and the shared scroll
+bus seeks it with a negative `animation-delay`. That is the whole mechanism, it costs no library, and
+it is why the engine list is two rows long (ADR-349).
 
 **One engine owns an element.** Never animate the same property from two engines — they fight
 over `transform` and the result is nondeterministic. The resolver validates this and throws in

@@ -164,7 +164,7 @@ Each node's motion specs produce `MotionCodegenFragment`s (see
 - Collects fragments and dedupes by content hash.
 - Hoists shared variant/transition objects to module constants: eight `fade-up` sections emit
   **one** `const fadeUp = {...}` referenced eight times.
-- Collects imports (`motion/react`, GSAP plugins).
+- Collects imports (`motion/react`, `react`).
 - Collects keyframes and custom properties into the stylesheet.
 - Emits reduced-motion handling: a `useReducedMotion()` call and a conditional variant, or a
   `@media (prefers-reduced-motion: reduce)` block for CSS-engine presets. **The export honours
@@ -369,7 +369,7 @@ one-line comment stating which mode produced it.
 #### Motion
 
 CSS-engine presets translate directly: their fragments already produced classes and keyframes, and
-`buildIR` already put both in the stylesheet. Motion-engine and GSAP presets are approximated or
+`buildIR` already put both in the stylesheet. Motion-engine presets are approximated or
 omitted by `printers/html/approximate-motion.ts`, which reads `IRElement.motion` — the preset ids
 pass 4 recorded (ADR-239) — and never the baked attributes.
 
@@ -502,7 +502,7 @@ The export dialog shows a warning list before the code. Categories:
 | `missing-alt` | "3 images have no alt text." |
 | `contrast` | "Accent on surface-1 is 3.4:1 — below AA for body text." |
 | `unsupported` | "`particles` requires WebGL and is omitted from the HTML export." |
-| `dependency` | "Adds `gsap@^3.12` (~60 kB gzip)." |
+| `dependency` | "Adds `motion@^11.18.2` (~34 kB gzip)." |
 | `perf` | "6 blur animations may drop frames on low-end devices." |
 | `a11y` | "`hero-video` has no captions track." |
 

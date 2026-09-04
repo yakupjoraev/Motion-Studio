@@ -147,7 +147,6 @@ The block definitions (69.4 KiB) and `motion` (34.7 KiB) are no longer in it.
 | --- | --- | --- |
 | `@motion-studio/codegen` | 45 kB | Export dialog opens |
 | `prettier` standalone + plugins | 180 kB | Export with formatting |
-| `gsap` + `ScrollTrigger` | 60 kB | A GSAP-backed preset renders |
 | CodeMirror 6 (CSS setup) | 110 kB | Playground or the code panel |
 | Colour picker | 18 kB | A colour control opens |
 | `jszip` | 28 kB | Zip download |

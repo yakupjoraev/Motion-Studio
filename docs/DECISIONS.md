@@ -14239,3 +14239,145 @@ would not apply. `apps/web/package.json` declares no `engines`, so the setting h
   cannot honour that. It is disconnected: `vercel git disconnect`. `deploy.yml` is the only path to
   a deployment, which is also why its `report` job is worth fixing rather than replacing with the
   platform's comment.
+
+## ADR-347 — § 1.2 exempts a test, a data table and a barrel, and nothing else
+
+**Date** 2026-09-04 · **Prompt** 61 · **Status** Accepted
+
+### Question
+The release audit counted 20 tracked files over the contract's 300-line limit: 9 test files, 3 files
+that are tables of data, 1 package barrel (`packages/blocks/src/index.ts`, 440 lines) and 7 files of
+ordinary implementation. § 1.2 as written has no exemption, so all 20 were violations, and the rule
+could not be amended after the count without becoming the banned fourth way — a threshold chosen to
+match the number it was measured against (§ 9).
+
+### Escalated
+Three options were put to the owner: amend § 1.2 with a stated exemption and split the seven
+implementation files; split all 20 against the grain of the other three kinds; or split the seven and
+leave thirteen as a recorded violation of a rule the repository does not follow.
+
+Owner decided on 2026-09-04: **amend the rule, split the seven.** Their reason: a test file is one
+subject, a barrel is as long as its export list, and a table of block templates is as long as the
+table — the rule as written makes all three a violation, and the answer to that is a stated exemption
+rather than a refactor that serves the counter.
+
+### Decision
+§ 1.2 names three exempt kinds — a test file, a file that is a table of data with no logic, and a
+package's barrel — and says that the exemption is that list and nothing else. The seven
+implementation files are split by responsibility in this session.
+
+### Consequences
+- Accepted: the exemption is a closed list, so it cannot absorb the next long file by argument. A
+  file outside the list is over the line or it is not, which is the property the rule had before and
+  keeps.
+- Accepted: it does not make a 459-line test easy to read. The exemption says splitting it would
+  split one subject across two files, not that its length is a virtue.
+- Accepted: a barrel is exempt because its length is the size of the package's public API. If a
+  barrel needs splitting, the package does.
+- The count is now a fact anyone can re-derive: `git ls-files | xargs wc -l`, minus those three
+  kinds, must produce nothing over 300.
+
+## ADR-348 — § 1.1 bans a cast that launders our own types, not every cast
+
+**Date** 2026-09-04 · **Prompt** 61 · **Status** Accepted
+
+### Question
+§ 1.1 banned `as unknown as` outright. The audit found 22 occurrences: 19 in tests, where the cast is
+the subject — a function is handed the shape its types forbid, to assert what it does with it — and
+two in production code, both seams onto an untyped host global:
+
+- `apps/web/src/store/editor-store.ts` — `(window as unknown as { studio?: unknown }).studio`, the
+  instrumentation handle behind `MS_INSTRUMENT` (ADR-315).
+- `apps/web/src/components/studio/export/format.worker.ts` — `self as unknown as
+  DedicatedWorkerGlobalScope`, the standard way to type a worker's global in a DOM-typed project.
+
+Neither covers for a wrong model of ours: both describe a global this repository does not declare.
+The rule and the code disagreed, and the honest fix is a sentence in the rule — which is the owner's
+to approve, not a session's to assume.
+
+### Escalated
+Options: clarify § 1.1 so the two seams and the test case are legal; leave the rule literal and carry
+the two as a recorded violation; or remove both casts behind hand-written `declare` types.
+
+Owner decided on 2026-09-04: **clarify the rule.**
+
+### Decision
+§ 1.1 now bans a cast that launders a type this repository declares, and permits `as unknown as` in
+exactly two places, each naming its reason in a comment: a seam onto an untyped host global, and a
+test feeding a function a shape its types forbid. `CODE_STANDARDS.md` § Required comments carries the
+comment obligation.
+
+### Consequences
+- Accepted: "our own types" cannot be checked by a lint rule, so this one rests on review. The
+  comment requirement is what makes a reviewer able to disagree with a specific cast.
+- Accepted: the permitted list is two entries and will be argued at some point. The argument has to
+  produce a superseding entry here, not a third `as unknown as` with a longer comment.
+- Avoided: `declare global` blocks for a debug handle and a worker global, which would put a type
+  this project maintains in front of two things it does not own.
+
+## ADR-349 — GSAP is removed; there are two engines, and the scrub is a paused CSS animation
+
+**Date** 2026-09-04 · **Prompt** 61 · **Status** Accepted
+
+### Question
+`gsap` is not OSI-licensed. Its "standard no charge" grant forbids use in "tools that allow users to
+build visual animations without code" — a description of this product. Three presets of 51 declared
+`engine: 'gsap'` (`horizontal-scroll`, `scroll-timeline`, `text-reveal`) and `collect-motion.ts`
+shipped the dependency into a user's export as well. This is the one audit finding that cannot ship
+(AUDIT.md § F1).
+
+### Escalated
+Options: rewrite the three presets without GSAP; keep it and record the risk as the owner's judgement
+about their own exposure; or ask GSAP for written clarification and wait.
+
+Owner decided on 2026-09-04: **remove it.**
+
+### Criterion (set before the rewrite)
+A replacement keeps what the studio actually shows today and what the export actually compiles today.
+Concretely: the same properties animate against the same progress in the studio, and
+`compile-exports` stays green with the same targets. A replacement that changes what a user sees is a
+different preset, not a replacement, and would need its own entry.
+
+### Measurement
+Read out of the code before touching it. `GsapMotion` **never pinned and never split**: it built a
+paused `gsap.timeline`, seeked it from the shared scroll bus for the two scroll presets, and played it
+once on intersection for `text-reveal`. `ScrollTrigger` and `SplitText` appeared only in generated
+source. So the runtime obligation is two things — interpolate stops against page-scroll progress, and
+play one entrance when the element arrives — and the pinning obligation belongs to the export alone.
+
+The reason GSAP was reached for in the first place still holds and is why the scrub is not native:
+`animation-timeline: scroll()` is supported in Chrome and **not** in Firefox or WebKit, probed on the
+deployment on 2026-09-04 (AUDIT.md § Cross-browser).
+
+### Decision
+The engine union is `'css' | 'motion'`. `GsapMotion` is deleted.
+
+- `horizontal-scroll` → `css`. `translate3d` from `--ms-scroll-progress`, the same shape `parallax`
+  has had since prompt 32.
+- `scroll-timeline` → `css`. The preset emits its own `@keyframes`; the rule holds it at
+  `animation-play-state: paused` and the shared bus seeks it with
+  `animation-delay: calc(-1s * var(--ms-scroll-progress))`. A negative delay on a paused animation is
+  a seek, so an arbitrary multi-stop sequence scrubs with no library and no per-frame JavaScript
+  beyond the one custom property the bus already writes.
+- `text-reveal` → `motion`. `hidden` / `visible` variants under `whileInView`, which is what the
+  element did before through a timeline played once.
+- Export. `horizontal-scroll` pins with `position: sticky` and a `margin-bottom` runway — the runway
+  is what `ScrollTrigger` used to insert as a pin spacer — and drives the track from `useScroll` /
+  `useTransform`; `snap` quantises progress by the child count measured on mount, which is what
+  `snap: 1 / (children.length - 1)` did. `scroll-timeline` emits one `useTransform` per property.
+  `text-reveal` emits a `splitText` helper: words and characters by wrapping, lines by grouping words
+  on their `offsetTop` and regrouping on resize.
+
+### Consequences
+- Accepted: the export's line splitting is our ~30 lines instead of a maintained plugin. It regroups
+  on resize, which is the case that made a hand-rolled split wrong before; it does not claim to
+  handle vertical writing modes.
+- Accepted: `snap` needs the child count, so the export measures it in an effect rather than printing
+  a constant. That is one `useState` in generated code, and it is honest about why it is there.
+- Accepted: the studio's horizontal track travels but does not pin, exactly as it did with GSAP. The
+  pin is an export-side property of the section, and the studio's canvas is not a page scroller.
+- Avoided: a 60 kB lazily-loaded chunk, a third engine on the element, and a licence that forbids the
+  product it ships in. `PERFORMANCE.md` loses that dynamic-import row; the studio's first load does
+  not move, because the chunk was never in it.
+- The export's dependency table is now two entries — `motion` and `next`, both MIT. An export can no
+  longer add a non-OSI dependency to someone else's project.

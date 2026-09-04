@@ -251,7 +251,7 @@ state.version += 1
 
 Required comments:
 - Non-obvious algorithms (snapping, IR dedupe, patch coalescing) — a short paragraph at the top.
-- Every GSAP usage — what Motion could not do.
+- Every `as unknown as` — which host global it describes, per contract § 1.1.
 - Every `@ts-expect-error` — the upstream issue.
 - Every performance workaround — what was measured.
 
