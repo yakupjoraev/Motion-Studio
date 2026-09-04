@@ -151,4 +151,18 @@ export class StudioCanvas {
   async expectNodeCount(expected: number): Promise<void> {
     await expect(this.nodes()).toHaveCount(expected)
   }
+
+  /**
+   * The element a css-engine preset wrapped, addressed by the class the preset gave it.
+   *
+   * The class is the product's own contract — a preset's `className` is what its `@keyframes` select
+   * and what the export prints — so a spec about a css preset is a spec about that class. `^=` rather
+   * than an exact match, because a preset whose keyframes differ per parameters names its animation
+   * after a digest of them (ADR-349).
+   */
+  motionWrapper(className: string): Locator {
+    return this.page
+      .locator(`[data-node-id] [class^="${className}"], [data-node-id][class^="${className}"]`)
+      .first()
+  }
 }

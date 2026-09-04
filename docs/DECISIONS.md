@@ -14381,3 +14381,60 @@ The engine union is `'css' | 'motion'`. `GsapMotion` is deleted.
   not move, because the chunk was never in it.
 - The export's dependency table is now two entries — `motion` and `next`, both MIT. An export can no
   longer add a non-OSI dependency to someone else's project.
+
+## ADR-350 — A preset card's preview cannot be a pointer target
+
+**Date** 2026-09-05 · **Prompt** 61 · **Status** Accepted
+
+### Question
+Applying a preset from the motion panel worked for some cards and silently did nothing for others.
+No error, no toast, no console message: the click landed, the document did not change, and the card
+stayed `aria-pressed="false"`. It was found while writing the studio spec for the two presets ADR-349
+rewrote, and it is not those presets' fault — `Parallax`, `Scroll fade` and `Lift` behave the same.
+
+### Cause (verified in the session)
+The whole pointer sequence, logged in the browser on the card that failed:
+
+```
+pointerdown → SPAN[preset-preview-tile]
+mousedown   → SPAN[preset-preview-tile]
+pointerup   → SPAN[preset-preview-tile]
+mouseup     → SPAN[preset-preview-tile]
+(no click)
+```
+
+and on a card that worked:
+
+```
+pointerdown → BUTTON[preset-card]   …   click → BUTTON[preset-card]
+```
+
+`PresetCard` plays its preview on `onPointerEnter` **and** on `onFocus`, and playing means
+incrementing `playKey`, which remounts `MotionNode` — that is how an entrance replays (ADR-100). A
+press inside the preview focuses the button, so the remount happens *between* `mousedown` and
+`mouseup`: the element the press landed on is gone by the release, and a browser fires no `click`
+when its `mousedown` target has been removed. Whether a card applied therefore depended on whether
+the pointer happened to be over the 32-pixel tile or over the padding around it — the tile is most of
+a card, so most of a card was dead.
+
+Two measurements pinned it rather than one, because "the click does not work" has three plausible
+causes and only one of them is this: dispatching the same command through the instrumentation handle
+applied it (`store.dispatch(commands.setMotion(...))` → the scroll spec lands), and
+`document.elementsFromPoint` showed no overlay over the card before or during the press. So the
+command, the schema and the layout were all fine, and the event was the thing missing.
+
+### Decision
+The preview subtree is `pointer-events: none` — both the `MotionNode` wrapper and the tile. The
+preview is `aria-hidden` decoration; the button is the only thing in a card a pointer has business
+hitting, and with the tile out of the way `mousedown` and `mouseup` both land on the button whatever
+the preview does in between.
+
+### Consequences
+- Every preset in the catalogue is now applicable with a mouse. Before this, the scroll channel was
+  effectively unreachable by pointer — nine presets — and several others were a coin flip.
+- Accepted: `onFocus` still plays the preview, so a keyboard user still sees one, and the remount it
+  causes no longer costs anything because nothing is pointing at the remounted element.
+- `e2e/editor/scroll-presets.spec.ts` is the regression: it applies both rewritten presets from the
+  panel by clicking their cards, and it failed on exactly this before the fix.
+- Not chosen: dropping `onFocus` from the play triggers. It would have fixed the symptom by removing
+  a keyboard affordance, and the preview being clickable was the actual defect.

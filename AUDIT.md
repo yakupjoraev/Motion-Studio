@@ -2,7 +2,7 @@
 
 ## Summary
 
-**15 findings: 10 resolved, 5 documented as limitations, none open.**
+**16 findings: 11 resolved, 5 documented as limitations, none open.**
 
 The blocking one was GSAP: its licence forbids use in tools that let people build visual animations
 without writing code, which is a description of this product (F1). The owner's answer on 2026-09-04
@@ -287,6 +287,28 @@ This is the same defect as F7 one level up. F7 was numbers in documents drifting
 is the tool those numbers are copied from, reporting a figure it did not measure. `scripts/stats.ts`
 now strips ANSI escapes and runs the child process with `NO_COLOR`, and the numbers in this document
 and in the README come from the fixed run: 8,273 unit tests in 460 files.
+
+### F16 — most of a preset card could not be clicked [severity: major] — **fixed**
+
+Found while writing the studio spec for F1's rewrite, and older than it: applying a preset from the
+motion panel worked on some cards and silently did nothing on others — no error, no toast, no console
+message. Nine scroll presets were effectively unreachable with a mouse, and several others were a
+coin flip.
+
+A card plays its preview on focus as well as on hover, and playing remounts the preview (ADR-100: an
+entrance replays by mounting again). A press inside the preview focuses the button, so the remount
+lands between `mousedown` and `mouseup`, and a browser fires no `click` when the element its press
+landed on has been removed. Whether a card applied came down to whether the pointer was over the
+32-pixel tile or the padding around it.
+
+Fixed: the preview subtree is `pointer-events: none`, which is what an `aria-hidden` decoration
+should always have been. ADR-350 carries the event logs that pinned it, and
+`e2e/editor/scroll-presets.spec.ts` is the regression — it applies both rewritten presets by clicking
+their cards, which is what failed before.
+
+This one is also a comment on the audit itself: the acceptance criteria were checked against 422
+end-to-end runs, and none of them applied a preset by clicking a card in a channel below the fold.
+The suite covers `magnetic`, whose card happens to sit where the pointer misses the tile.
 
 ## Verified clean
 
