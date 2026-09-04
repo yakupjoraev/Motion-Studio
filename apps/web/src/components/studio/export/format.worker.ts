@@ -27,6 +27,11 @@ export type FormatReply =
       readonly warnings: readonly IRWarning[]
     }
 
+/**
+ * A DOM-typed project types `self` as `Window`, and inside a worker it is not one. The cast is the
+ * one contract § 1.1 permits: it describes the host global this file actually runs in, rather than
+ * laundering a type of ours (ADR-348).
+ */
 const scope = self as unknown as DedicatedWorkerGlobalScope
 
 scope.addEventListener('message', (event: MessageEvent<FormatRequest>) => {

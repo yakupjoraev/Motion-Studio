@@ -2,11 +2,13 @@
 
 ## Summary
 
-**14 findings: 7 fixed, 5 documented as limitations, 2 escalated to the owner.**
+**15 findings: 10 resolved, 5 documented as limitations, none open.**
 
-One finding is blocking and cannot be resolved from inside the repository: GSAP's licence forbids
-its use in tools that let people build visual animations without writing code, which is a
-description of this product (F1). Three of the 51 motion presets depend on it.
+The blocking one was GSAP: its licence forbids use in tools that let people build visual animations
+without writing code, which is a description of this product (F1). The owner's answer on 2026-09-04
+was to remove it, and it is gone — the two scroll presets and the split-text reveal run on the
+platform now, verified in all three engines. The other two escalations were answered the same day:
+the line limit gained a stated exemption (F5) and the cast rule now says what it means (F6).
 
 The rest of the audit came out better than a project this size has a right to expect. Every contract
 non-negotiable greps clean except two — file length and one banned cast. The block and preset
@@ -36,42 +38,52 @@ Two checks are now tests, so the two divergences this audit found by hand cannot
 
 ## Findings
 
-### F1 — GSAP's licence forbids exactly this kind of product [severity: blocking]
+### F1 — GSAP's licence forbids exactly this kind of product [severity: blocking] — **resolved**
 
-**What.** `gsap` is a runtime dependency of `packages/motion` and `packages/codegen`. Its licence is
-not OSI — `pnpm licenses list` reports it as `Standard 'no charge' license:
+**What.** `gsap` was a runtime dependency of `packages/motion` and `packages/codegen`. Its licence is
+not OSI — `pnpm licenses list` reported it as `Standard 'no charge' license:
 https://gsap.com/standard-license`. Verified at the source on 2026-09-04: the no-charge grant covers
 commercial projects, but it **forbids use in "tools that allow users to build visual animations
 without code"** competing with Webflow's capabilities. Motion Studio is a visual editor whose motion
-panel exists so a user can animate without writing code.
+panel exists so a user can animate without writing code. It also reached the user:
+`collect-motion.ts` mapped the import onto a `gsap ^3.15.0` dependency, so an export using one of
+those presets added a non-OSI dependency to somebody else's project.
 
-**Where.** Three presets of 51 declare `engine: 'gsap'` — `horizontal-scroll` and `scroll-timeline`
-(`packages/motion/src/presets/scroll/gsap-scroll.ts`) and `text-reveal`
-(`packages/motion/src/presets/entrance/text-reveal.ts`). `collect-motion.ts` maps the import onto a
-`gsap ^3.15.0` dependency, so an export that uses one of those presets ships the dependency to the
-user as well.
+**Escalated and answered.** Three options were put to the owner — remove it, keep it and record the
+risk, or ask GSAP for written clarification. The owner chose to remove it on 2026-09-04. ADR-349
+carries the reasoning; the short version is that the applier never did the two things GSAP was there
+for:
 
-**Why GSAP is there at all**, measured rather than assumed: CSS scroll-driven animations
-(`animation-timeline: scroll()`) are supported in Chrome and **not** in Firefox or WebKit — probed on
-the deployment on 2026-09-04. The two scroll presets need a timeline those engines do not have.
+- `GsapMotion` built a paused `gsap.timeline` and seeked it from the shared scroll bus. It never
+  pinned and never split text — `ScrollTrigger` and `SplitText` appeared only in generated source.
+- So `horizontal-scroll` and `scroll-timeline` are `css` presets now: the first translates its
+  children against `--ms-scroll-progress`, the second prints its own `@keyframes`, holds them at
+  `animation-play-state: paused` and seeks them with a negative `animation-delay`. `text-reveal` is a
+  `motion` preset, and the export carries a `splitText` of its own — words and characters by
+  wrapping, lines by measuring every word's top edge before moving any of them, re-measured on resize.
 
-**Impact.** A licence problem in a public repository is the one finding that cannot ship, and this
-one is not about attribution — it is about permitted use. The repository's own rule (ADR-144) is
-stricter than licences are, precisely because this product redistributes component source.
+**Measured, because the reason GSAP was reached for is a browser-support fact.**
+`e2e/verify-scrub.mjs` drives the emitted CSS in Chrome, Firefox and WebKit and reads computed values
+back. All three agree, in the numbers that matter:
 
-**Resolution: escalated.** Three options, with their real costs:
+| Progress | Opacity | Timeline transform | Track transform |
+| --- | --- | --- | --- |
+| 0 | 0.000 | none | none |
+| 0.25 | 0.500 | `translateY(-10px)` | `translateX(-400px)` |
+| 0.5 | 1.000 | `translateY(-20px)` | `translateX(-800px)` |
+| 1 | 1.000 | `translateY(-40px)` | `translateX(-1600px)` |
 
-1. **Remove GSAP.** Rewrite the two scroll presets on `IntersectionObserver` + rAF (which the
-   scheduler already has for `continuous`) and `text-reveal` on Motion. Cost: two preset
-   implementations, one codegen fragment path, their golden fixtures, and a measured comparison —
-   ScrollTrigger's pinning is the part with no cheap equivalent. Estimate: one focused session.
-2. **Keep GSAP and record the risk** as an owner decision: a portfolio artifact that is not sold and
-   does not compete with Webflow. This is a judgement about intent, and the licence text is about
-   capability.
-3. **Ask GSAP/Webflow** for written clarification and record the answer.
+The opacity column is the carry-forward working: the sequence fades in over the first half and then
+lifts without fading back out, which is what CSS would have done with a property missing from the
+last keyframe. After scrolling 600 px the pinned card sits at `top: 0` in all three engines and the
+page has no horizontal overflow — `overflow-x: clip` clips without making the window a scroll
+container, which `overflow: hidden` would have done, taking the sticky children out of the page's
+scrollport.
 
-I cannot pick between these — option 2 is the owner's call about their own exposure, and option 1
-spends a session on a rewrite the owner may not want. Nothing else in the audit is blocked by it.
+The dependency is out of both manifests, out of the compile fixtures, out of `DEPENDENCIES` in
+`collect-motion.ts`, and out of the dynamic-import table in `PERFORMANCE.md`. An export can now add
+`motion` or `next` and nothing else, both MIT. The studio's first load did not move — the chunk was
+lazy — but the 0.4 KiB of headroom in F11 is 1.1 KiB now.
 
 ### F2 — the MIT notice for vendored shadcn/ui source did not exist [severity: major] — **fixed**
 
@@ -105,9 +117,9 @@ would have said so had they stopped being correct.
 Fixed: `apps/web/src/lib/docs/catalogue-parity.test.ts` asserts the per-category counts, their total
 against `blockRegistry`, and every channel's preset ids against `PRESETS`.
 
-### F5 — 20 tracked files are over 300 lines [severity: major] — **escalated**
+### F5 — 20 tracked files are over 300 lines [severity: major] — **resolved**
 
-Contract § 1.2 says "No file over 300 lines", with no exemption for tests or data. Counted on
+Contract § 1.2 said "No file over 300 lines", with no exemption for tests or data. Counted on
 `5cd05e7` with `git ls-files`:
 
 | Kind | Count | Largest |
@@ -117,20 +129,32 @@ Contract § 1.2 says "No file over 300 lines", with no exemption for tests or da
 | Barrels | 1 | `packages/blocks/src/index.ts` (440) |
 | Implementation | 7 | `packages/canvas/src/canvas.tsx` (371) |
 
-The seven implementation files are genuinely splittable and the work is ordinary: `canvas.tsx` 371,
-`build-ir.ts` 321, `control-fields.tsx` 309, `pricing-table.markup.ts` 307, `validate.ts` 302, plus
-`presets.ts` 349 and `token-groups.tsx` 320 which are closer to data.
+The rule as written made all four kinds a violation, and it could not be amended after the count
+without becoming the banned fourth way. **Escalated and answered on 2026-09-04:** § 1.2 gains a
+stated exemption for a test file, a table of data with no logic, and a package's barrel — ADR-347,
+written before the code — and the implementation files are split.
 
-The other 13 are the interesting half, and this is what needs the owner: a test file is one subject,
-a barrel is as long as the export list, and a table of block templates is as long as the table. The
-rule as written makes all three violations. Either the rule gains a stated exemption — which must be
-a decision recorded before the code, not after, or it is the banned fourth way in a lab coat — or
-thirteen files get split against their grain. **I am not choosing between amending the contract and
-a 13-file refactor.** The seven implementation files I would split on the owner's word.
+Eight were split, not seven. `scripts/generate-thumbnails.mjs` (355) is filed above under data and it
+is not data: it is a script with logic, so the exemption does not cover it. Its capture stage now sits
+beside the clip and browser helpers it already used, and the generator was re-run for one block
+against the committed output — identical bytes, which is what its determinism contract asks for.
 
-### F6 — `as unknown as` in two production files [severity: major] — **documented**
+| File | Was | Is | Cut at |
+| --- | --- | --- | --- |
+| `schema/document/validate.ts` | 302 | 71 | codes, structural invariants, registry invariants |
+| `blocks/pricing-table/pricing-table.markup.ts` | 307 | 66 | one file per part, mirroring the components |
+| `ui/control-renderer/control-fields.tsx` | 309 | 241 | the `lazy` list, the prop groups, the switch |
+| `canvas/canvas.tsx` | 371 | 225 | props, the measured-geometry handle, the live region |
+| `codegen/ir/build-ir.ts` | 321 | 231 | naming, component props, hoist placement |
+| `web/playground/presets.ts` | 349 | 30 | one file per property group |
+| `storybook/docs/token-groups.tsx` | 320 | 10 | a barrel over one file per kind of token |
+| `scripts/generate-thumbnails.mjs` | 355 | 228 | the capture stage |
 
-Contract § 1.1 bans it outright. 22 occurrences in 18 files; 19 are in tests, where the cast is the
+What is left over 300 is the thirteen the exemption names: nine tests, three data tables, one barrel.
+
+### F6 — `as unknown as` in two production files [severity: major] — **resolved**
+
+Contract § 1.1 banned it outright. 22 occurrences in 18 files; 19 are in tests, where the cast is the
 point (feeding a function a shape the types forbid, to assert it survives). Two are in production
 code:
 
@@ -140,9 +164,11 @@ code:
   DedicatedWorkerGlobalScope`, the standard way to type a worker's global in a DOM-typed project.
 
 Both are seams onto untyped host globals, which is the one place a cast is not covering for a wrong
-model. Recorded rather than fixed, because the honest fix is a sentence in the contract — § 1.1
-should say what it means: no cast that launders **our** types. That sentence is the owner's to
-approve, so it is here rather than in the document.
+model. **Escalated and answered on 2026-09-04:** § 1.1 now bans a cast that launders a type this
+repository declares, and permits `as unknown as` in exactly two places — a host-global seam, and a
+test feeding a function a shape its types forbid — each naming its reason in a comment (ADR-348).
+Both production casts carry that comment, and `CODE_STANDARDS.md` § Required comments carries the
+obligation, where the GSAP line used to be.
 
 ### F7 — measured numbers in README and PERFORMANCE.md had drifted [severity: minor] — **fixed**
 
@@ -206,10 +232,14 @@ it: a `knip.json` tuned until the output is empty is a report about the configur
 ### F11 — the studio bundle has 0.4 KiB of headroom [severity: minor] — **documented**
 
 249.6 KiB against 250 KiB, on the CI run that gates it. Not a violation and not new — ADR-312 and
-ADR-313 brought it down from 369.7 KiB — but the margin is now smaller than the difference between
-two builds of the same commit (0.3–0.6 KiB, measured locally versus CI). The next lazily-loaded
-surface that is not lazy enough turns the gate red. Recorded rather than acted on, because the budget
-is the contract's and moving it is forbidden by § 9.
+ADR-313 brought it down from 369.7 KiB — but the margin was smaller than the difference between two
+builds of the same commit (0.3–0.6 KiB, measured locally versus CI). The next lazily-loaded surface
+that is not lazy enough turns the gate red. Recorded rather than acted on, because the budget is the
+contract's and moving it is forbidden by § 9.
+
+Removing GSAP took `GsapMotion` out of the studio chunk with it: **248.9 KiB, 1.1 KiB of headroom**,
+measured by `pnpm size-limit` on 2026-09-04 after F1. Better, and still inside the difference between
+two builds — the finding stands as a thing to watch rather than a thing that was fixed.
 
 ### F12 — `DECISIONS.md` cannot be checked mechanically [severity: minor] — **documented**
 
@@ -244,6 +274,19 @@ menu items (`dropdown.styles.ts`, `select.styles.ts`) where keyboard position is
 never take focus: the snap-guide label and the toast **viewport**. The viewport is the one worth
 naming, because Radix can focus it programmatically (its `F8` hotkey); nothing in the product does,
 and no axe run or keyboard spec has found it.
+
+### F15 — `pnpm stats` could report zero and pass [severity: major] — **fixed**
+
+Found while refreshing the numbers above: `pnpm stats` printed **`Unit tests 0 in 0 files`** for a
+repository with 8,273 of them. The counter runs `pnpm test` and parses Vitest's summary line, and
+Turbo replays a cached task's log verbatim — including the colour codes the log was captured with.
+`Test Files\s+(\d+) passed` does not match `Test Files ESC[2m ESC[1mESC[32m460 passed`, so both
+counts fell to zero, and nothing failed: a zero is a number.
+
+This is the same defect as F7 one level up. F7 was numbers in documents drifting from the code; this
+is the tool those numbers are copied from, reporting a figure it did not measure. `scripts/stats.ts`
+now strips ANSI escapes and runs the child process with `NO_COLOR`, and the numbers in this document
+and in the README come from the fixed run: 8,273 unit tests in 460 files.
 
 ## Verified clean
 
@@ -291,8 +334,12 @@ Firefox and WebKit against `motion-studio-y3dev.vercel.app`.
 The WebKit row is the one the prompt warned about, and it resolves in the product's favour: WebKit
 rejects the unprefixed property name, but every rule that declares `backdrop-filter` in the shipped
 CSS also declares `-webkit-backdrop-filter` — checked by parsing the production stylesheet, 0 rules
-without the sibling. The glass survives Safari. The `animation-timeline` row is why GSAP is in the
-dependency graph at all, which makes F1 a product decision rather than a cleanup.
+without the sibling. The glass survives Safari.
+
+The `animation-timeline` row is why GSAP was in the dependency graph at all, and it is still red — the
+replacement does not use a native scroll timeline. It seeks a paused animation from the one scroll
+listener the scheduler already runs, which every engine supports: `e2e/verify-scrub.mjs` measures it
+in all three (F1).
 
 Not covered: a real Safari on macOS, and a real Windows High Contrast Mode. Both are recorded gaps
 from prompt 55 and neither is available on this machine.
@@ -319,8 +366,7 @@ observations, neither worth a fix:
 | Pipeline is 9m43s, not under 8 minutes warm | `quality` holds it — 8,259 unit tests | `prompts/60` § Done when |
 | No custom domain; Storybook is not hosted | Domain is a purchase; hosting Storybook is a roadmap item | `DEVOPS.md` § Deploy |
 | 13 transitive advisories | All in dev/build paths, unreachable at runtime; fixes are queued major upgrades | F8 |
-| 20 files over 300 lines | Escalated, F5 | Contract § 1.2 |
-| GSAP licence | Escalated, F1 | — |
+| 13 files over 300 lines | The exemption ADR-347 states: nine tests, three data tables, one barrel | Contract § 1.2 |
 
 ## Metrics
 
@@ -330,13 +376,14 @@ The final numbers, all counted on 2026-09-04.
 | --- | --- |
 | Blocks | 72 — effects 13, marketing 12, content 9, interactive 9, layout 7, hero 6, navigation 6, data 5, forms 5 |
 | Motion presets | 51 — entrance 13, hover 11, scroll 9, continuous 8, cursor 5, exit 5 |
-| Unit tests | 8,259 in 459 files |
+| Animation engines | 2 — `css` and `motion` (ADR-349) |
+| Unit tests | 8,273 in 460 files |
 | End-to-end tests | 200 in 41 specs, 422 runs across three engines |
 | Screenshot baselines | 208 |
 | ADRs | 347 |
 | Documents | 29 in `docs/`, plus README, CONTRIBUTING, this file |
 | Coverage — editor / schema / codegen / motion | 99.5 / 95.9 / 96.7 / 95.7 % lines |
-| Studio first-load JS | 249.6 KiB gzip, budget 250 |
+| Studio first-load JS | **248.9 KiB** gzip local `size-limit` after F1, budget 250. The gate's own number is a CI run: 249.6 KiB before F1, re-measured on the next push |
 | Landing first-load JS | 106.9 KiB gzip, budget 120 |
 | Lighthouse — landing, mobile | 96 / 100 / 100 / 100 |
 | Container image | 249 MB, budget 260 |

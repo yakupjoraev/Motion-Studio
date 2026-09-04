@@ -27,13 +27,22 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 
 const json = process.argv.includes('--json')
 
+/**
+ * Colour is stripped before anything is parsed. Turbo replays a cached task's log verbatim, and a log
+ * captured from a colour terminal carries `[2m` between "Test Files" and the count — which is
+ * how `Unit tests 0 in 0 files` was printed by a repository with 8,273 of them. A counter that can
+ * report zero without failing is worse than no counter.
+ */
+const ANSI = new RegExp(`${String.fromCodePoint(27)}\\[[0-9;]*m`, 'g')
+
 const run = (command: string, args: readonly string[]): string =>
   execFileSync(command, [...args], {
     cwd: ROOT,
     encoding: 'utf8',
     maxBuffer: 64 * 1024 * 1024,
     shell: process.platform === 'win32',
-  })
+    env: { ...process.env, FORCE_COLOR: '0', NO_COLOR: '1' },
+  }).replace(ANSI, '')
 
 /** Blocks by category, which is also the palette's grouping — COMPONENT_LIBRARY.md § Catalogue. */
 const blocks = (): Record<string, number> => {

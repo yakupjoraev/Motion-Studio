@@ -48,6 +48,9 @@ recordDispatchedCommands(useStudioStore)
 
 // A handle for the browser console and for the perf specs, which script edits through it. Both
 // operands are build-time constants, so an ordinary production build has no such global — ADR-315.
+//
+// The cast is the one contract § 1.1 permits: `window` does not declare `studio` and should not, so
+// this describes a host global rather than laundering a type of ours (ADR-348).
 if (
   (process.env.NODE_ENV !== 'production' || process.env.MS_INSTRUMENT === '1') &&
   typeof window !== 'undefined'
