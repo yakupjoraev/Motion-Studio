@@ -75,15 +75,13 @@ export {
   createEmptyDocument,
   type CreateEmptyOptions,
 } from './document/create-empty'
+export { validateDocument, type ValidateOptions } from './document/validate'
 export {
   DOCUMENT_ERROR_CODES,
-  validateDocument,
-  validateProps,
   type DocumentError,
   type DocumentErrorCode,
-  type PropValidationReport,
-  type ValidateOptions,
-} from './document/validate'
+} from './document/validate.errors'
+export { validateProps, type PropValidationReport } from './document/validate-registry'
 export {
   REPAIR_KINDS,
   repairDocument,

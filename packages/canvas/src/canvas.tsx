@@ -2,25 +2,11 @@
 
 import type { NodeId } from '@motion-studio/schema'
 import { cn } from '@motion-studio/utils'
-import { type ReactNode, useCallback, useEffect, useId, useMemo, useRef } from 'react'
+import { useCallback, useId, useRef } from 'react'
 
+import type { CanvasProps } from './canvas.props'
 import { CANVAS_ROOT_CLASS, MARQUEE_CLASS } from './canvas.styles'
-import type {
-  CanvasHandle,
-  CanvasMenuPort,
-  CanvasMotionPort,
-  CanvasResizePort,
-  CanvasScene,
-  CanvasSelectionPort,
-} from './canvas.types'
-import {
-  type CanvasRect,
-  FIT_PADDING,
-  type ViewportTransform,
-  canvasRect,
-  canvasRectToScreen,
-  screenRectToCanvas,
-} from './coords/index'
+import { type CanvasRect, canvasRect } from './coords/index'
 import { useHitTest } from './hit/use-hit-test'
 import { useMarquee } from './hit/use-marquee'
 import { CanvasContextMenu } from './overlays/context-menu'
@@ -30,65 +16,23 @@ import { useMotionPlayback } from './overlays/use-motion-playback'
 import { RectCacheContext, useRectCache } from './rects/use-rect-cache'
 import { Artboard } from './scene/artboard'
 import { DEFAULT_GRID_SIZE } from './scene/grid'
-import type { GridSize } from './scene/grid'
 import { Scene } from './scene/scene'
-import {
-  SelectionAnnouncer,
-  describeSelection,
-  useAnnouncer,
-} from './selection/selection-announcer'
+import { SelectionAnnouncer, describeSelection } from './selection/selection-announcer'
 import { useCanvasSelection } from './selection/use-canvas-selection'
 import { useKeyboardSelection } from './selection/use-keyboard-selection'
+import { useSelectionAnnouncements } from './selection/use-selection-announcements'
 import { DistanceLabels } from './snap/guides/distance-labels'
 import { SnapGuides } from './snap/guides/snap-guides'
 import { UserGuides } from './snap/guides/user-guides'
 import { Rulers } from './snap/rulers/rulers'
-import type { CanvasGuidePort } from './snap/snap.types'
 import { SnapContext, useSnap } from './snap/use-snap'
-import { revealPan } from './viewport/reveal'
+import { useCanvasHandle } from './use-canvas-handle'
 import { usePan } from './viewport/use-pan'
 import { type ViewportHandle, useViewport } from './viewport/use-viewport'
 import { useZoom } from './viewport/use-zoom'
 import { ViewportProvider } from './viewport/viewport-context'
 
-export interface CanvasProps {
-  readonly rootId: NodeId
-  /** The seam: the canvas renders what it is handed and imports neither `editor` nor `blocks`. */
-  readonly renderNode: (id: NodeId) => ReactNode
-  /** ADR-077. State in, by getter, so a document edit re-renders nodes and not the canvas. */
-  readonly scene: CanvasScene
-  /** Intent out. Every method is a store command in the application that mounts this. */
-  readonly selection: CanvasSelectionPort
-  /** Canvas units — the width of the breakpoint being previewed. */
-  readonly artboardWidth: number
-  readonly className?: string | undefined
-  readonly showGrid?: boolean | undefined
-  readonly gridSize?: GridSize | undefined
-  readonly initialTransform?: ViewportTransform | undefined
-  /** Called once per gesture, with the transform the store should record. */
-  readonly onTransformCommit?: ((transform: ViewportTransform) => void) | undefined
-  readonly showRulers?: boolean | undefined
-  /** ADR-087. The list plus its three intents; the canvas stores none of it. */
-  readonly guides?: CanvasGuidePort | undefined
-  /** Screen pixels, from `viewport.guides.snapThreshold`. Defaults to the 4 of CANVAS.md. */
-  readonly snapThreshold?: number | undefined
-  /** `viewport.guides.enabled`. */
-  readonly snapEnabled?: boolean | undefined
-  /** The breakpoint the artboard width belongs to, shown on the frame. */
-  readonly breakpointName?: string | undefined
-  /** PRODUCT.md § 3. Absent means no right-click menu, which is what a read-only canvas wants. */
-  readonly menu?: CanvasMenuPort | undefined
-  /** Where a finished resize goes. Absent means the handles have nothing to commit to. */
-  readonly resize?: CanvasResizePort | undefined
-  /** ADR-100. `Mod+P` and `Mod+Shift+P` do nothing without it. */
-  readonly motion?: CanvasMotionPort | undefined
-  /**
-   * Called with the handle on mount and with `null` on unmount. It is how a host answers questions
-   * that need measured geometry — "does the new frame still fit?" — without holding a ref into the
-   * canvas's internals.
-   */
-  readonly onReady?: ((handle: CanvasHandle | null) => void) | undefined
-}
+export type { CanvasProps } from './canvas.props'
 
 /**
  * What `role="application"` obliges the canvas to say — every key it takes over, in the order a
@@ -152,100 +96,10 @@ export function Canvas({
 
   const cache = useRectCache({ rootRef: viewport.rootRef, scene })
 
-  /**
-   * The transform the cache's rects were measured under — ADR-091 in the other direction. An overlay
-   * converts a cached rect to canvas units with the transform of the moment it was read; a host asking
-   * "where is this node now" needs the rect converted back out under the *current* one, or every
-   * answer is stale by whatever the scene has panned since. Measured: 24 px, which was a drop landing
-   * one position off the indicator (ADR-183).
-   */
-  const measured = useRef({ at: viewport.current(), bounds: viewport.viewportRect() })
+  useCanvasHandle({ cache, documentRect, onReady, viewport })
 
-  useEffect(
-    () =>
-      cache.subscribe(() => {
-        measured.current = { at: viewport.current(), bounds: viewport.viewportRect() }
-      }),
-    [cache, viewport],
-  )
-
-  const handle = useMemo<CanvasHandle>(
-    () => ({
-      documentRect,
-      viewportRect: viewport.viewportRect,
-      nodeRect(id) {
-        const screen = cache.get(id)
-
-        if (screen === undefined) {
-          return undefined
-        }
-
-        const { at, bounds } = measured.current
-
-        return canvasRectToScreen(
-          screenRectToCanvas(screen, at, bounds),
-          viewport.current(),
-          viewport.viewportRect(),
-        )
-      },
-      transform: viewport.current,
-      fitDocument: () => viewport.fitTo(documentRect()),
-      panBy: (dx, dy) => viewport.panBy(dx, dy),
-      remeasure() {
-        cache.invalidate()
-        cache.refresh()
-      },
-      reveal(id) {
-        const rect = cache.get(id)
-
-        if (rect === undefined) {
-          return false
-        }
-
-        const { dx, dy } = revealPan(rect, viewport.viewportRect(), FIT_PADDING)
-
-        if (dx !== 0 || dy !== 0) {
-          viewport.panBy(dx, dy)
-          // One gesture, one commit: the store hears the new transform once, as it does after a drag.
-          viewport.commit()
-        }
-
-        return true
-      },
-    }),
-    [cache, documentRect, viewport],
-  )
-
-  useEffect(() => {
-    onReady?.(handle)
-
-    return () => onReady?.(null)
-  }, [handle, onReady])
-
-  const announcer = useAnnouncer()
+  const announcer = useSelectionAnnouncements(scene, rootId)
   const helpId = useId()
-
-  /*
-   * Every selection change, whatever made it — ACCESSIBILITY.md § Canvas asks for a live region "on
-   * every change", and the three gesture paths that announce for themselves are not every change: the
-   * layers tree, an insert from the palette and an undo all write the selection through the store and
-   * used to arrive in silence (ADR-326).
-   */
-  useEffect(() => {
-    let previous = scene.selectedIds().join(',')
-
-    return scene.subscribe(() => {
-      const current = scene.selectedIds().join(',')
-
-      if (current === previous) {
-        return
-      }
-
-      previous = current
-      announcer.announce(describeSelection(scene, rootId))
-    })
-  }, [announcer, rootId, scene])
-
   const snap = useSnap({ viewport, thresholdPx: snapThreshold, enabled: snapEnabled })
 
   const hitContext = useCallback(

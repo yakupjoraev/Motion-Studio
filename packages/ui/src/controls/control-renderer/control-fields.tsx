@@ -1,5 +1,5 @@
 import { assertNever } from '@motion-studio/utils'
-import { type ReactElement, type ReactNode, Suspense, lazy } from 'react'
+import type { ReactElement } from 'react'
 
 import { ScrubField } from '../scrub-field/index'
 import { SegmentedField } from '../segmented-field/index'
@@ -25,64 +25,29 @@ import {
 } from './coerce'
 import type { ControlRendererProps } from './control-renderer.types'
 import {
+  AlignField,
+  ColorField,
+  CssField,
+  Deferred,
+  FontField,
+  GradientControl,
+  IconControl,
+  ImageField,
+  LinkField,
+  ListControl,
+  RadiusField,
+  RichTextField,
+  ShadowField,
+  SpacingField,
+} from './deferred-fields'
+import {
   optionBoolean,
   optionNumber,
   optionString,
   segmentedOptions,
   selectOptions,
 } from './descriptor-options'
-
-/**
- * PERFORMANCE.md § Bundle, and the `/studio` first-load budget of the contract. The switch below
- * names every control kind, so a static import of each would put the colour maths, the shadow stack
- * editor, the gradient track and the whole icon registry in the panel's first chunk — 70 kB gzip of
- * controls a heading never renders. The eight kinds the common inspector actually draws stay static;
- * everything else is a chunk that arrives when a block first declares it.
- */
-const ColorField = lazy(() =>
-  import('../color-field/index').then((module) => ({ default: module.ColorField })),
-)
-const AlignField = lazy(() =>
-  import('../align-field/index').then((module) => ({ default: module.AlignField })),
-)
-const CssField = lazy(() =>
-  import('../css-field/index').then((module) => ({ default: module.CssField })),
-)
-const FontField = lazy(() =>
-  import('../font-field/index').then((module) => ({ default: module.FontField })),
-)
-const GradientControl = lazy(() =>
-  import('./gradient-control').then((module) => ({ default: module.GradientControl })),
-)
-const IconControl = lazy(() =>
-  import('./icon-control').then((module) => ({ default: module.IconControl })),
-)
-const ImageField = lazy(() =>
-  import('../image-field/index').then((module) => ({ default: module.ImageField })),
-)
-const LinkField = lazy(() =>
-  import('../link-field/index').then((module) => ({ default: module.LinkField })),
-)
-const ListControl = lazy(() =>
-  import('./list-control').then((module) => ({ default: module.ListControl })),
-)
-const RadiusField = lazy(() =>
-  import('../radius-field/index').then((module) => ({ default: module.RadiusField })),
-)
-const RichTextField = lazy(() =>
-  import('../rich-text-field/index').then((module) => ({ default: module.RichTextField })),
-)
-const ShadowField = lazy(() =>
-  import('../shadow-field/index').then((module) => ({ default: module.ShadowField })),
-)
-const SpacingField = lazy(() =>
-  import('../spacing-field/index').then((module) => ({ default: module.SpacingField })),
-)
-
-/** One skeleton for every deferred control: the row keeps its height while the chunk arrives. */
-const Deferred = ({ children }: { readonly children: ReactNode }): ReactElement => (
-  <Suspense fallback={<span className="h-7 w-full rounded-xs bg-surface-2" />}>{children}</Suspense>
-)
+import { boundsProps, commonProps, textProps } from './field-props'
 
 /**
  * One `switch` over `ControlDescriptor.kind`, exhaustive by `assertNever`: adding a kind to
@@ -93,45 +58,12 @@ const Deferred = ({ children }: { readonly children: ReactNode }): ReactElement 
  * 40 of them.
  */
 export function ControlFields(props: ControlRendererProps): ReactElement {
-  const { descriptor, value, onChange, onCommit, slot, disabled, mixed } = props
+  const { descriptor, value } = props
 
-  const common = {
-    label: descriptor.label,
-    // A handler that takes `unknown` satisfies a control that hands it a string: the parameter is
-    // contravariant, so no cast is needed in either direction.
-    onChange,
-    onCommit,
-    ...(slot ?? {}),
-    ...(disabled === undefined ? {} : { disabled }),
-    ...(mixed === undefined ? {} : { mixed: (slot?.mixed ?? false) || mixed }),
-  }
+  const common = commonProps(props)
 
-  const bounds = {
-    ...(optionNumber(descriptor, 'min') === undefined
-      ? {}
-      : { min: optionNumber(descriptor, 'min') }),
-    ...(optionNumber(descriptor, 'max') === undefined
-      ? {}
-      : { max: optionNumber(descriptor, 'max') }),
-    ...(optionNumber(descriptor, 'step') === undefined
-      ? {}
-      : { step: optionNumber(descriptor, 'step') }),
-    ...(optionString(descriptor, 'unit') === undefined
-      ? {}
-      : { unit: optionString(descriptor, 'unit') }),
-    ...(optionNumber(descriptor, 'precision') === undefined
-      ? {}
-      : { precision: optionNumber(descriptor, 'precision') }),
-  }
-
-  const text = {
-    ...(optionNumber(descriptor, 'maxLength') === undefined
-      ? {}
-      : { maxLength: optionNumber(descriptor, 'maxLength') }),
-    ...(optionString(descriptor, 'placeholder') === undefined
-      ? {}
-      : { placeholder: optionString(descriptor, 'placeholder') }),
-  }
+  const bounds = boundsProps(descriptor)
+  const text = textProps(descriptor)
 
   switch (descriptor.kind) {
     case 'text':

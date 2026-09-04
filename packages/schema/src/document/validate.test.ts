@@ -5,7 +5,9 @@ import { nodeId } from '../ids/ids'
 import { doc, fakeRegistry, node, resetFactories, tree, treeId } from '../test/factories'
 
 import type { MotionDocument } from './document.types'
-import { DOCUMENT_ERROR_CODES, validateDocument, validateProps } from './validate'
+import { validateDocument } from './validate'
+import { validateProps } from './validate-registry'
+import { DOCUMENT_ERROR_CODES } from './validate.errors'
 
 const codes = (document: MotionDocument, registry?: ReturnType<typeof fakeRegistry>): string[] => {
   const result = validateDocument(document, registry === undefined ? {} : { registry })

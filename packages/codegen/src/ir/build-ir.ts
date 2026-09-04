@@ -1,4 +1,4 @@
-import type { BlockRegistry, MotionDocument, Node, NodeId } from '@motion-studio/schema'
+import type { MotionDocument, Node, NodeId } from '@motion-studio/schema'
 import { walk } from '@motion-studio/schema'
 import { MotionStudioError } from '@motion-studio/utils'
 
@@ -6,23 +6,17 @@ import { type ExportOptions, resolveOptions } from '../options.types'
 import type { IRWarning } from '../warnings'
 
 import { type Accumulator, accumulator, buildElement } from './build-element'
-import type {
-  BuildIRInput,
-  CodegenIR,
-  ComponentName,
-  HoistedConst,
-  IRComponent,
-  IRModule,
-  IRProp,
-  IRRule,
-  IRTheme,
-} from './ir.types'
+import type { BuildIRInput, CodegenIR, IRComponent, IRModule, IRRule, IRTheme } from './ir.types'
 import { collectImports } from './passes/collect-imports'
 import { createMotionCollector } from './passes/collect-motion'
-import { type ComponentUnit, detectComponents } from './passes/detect-components'
+import { propsFor } from './passes/component-props'
+import { detectComponents } from './passes/detect-components'
 import { createAssetCollector } from './passes/handle-assets'
-import { fileNameFor, toComponentName, uniqueName } from './passes/name-components'
+import { fileNameFor, nameUnits } from './passes/name-components'
+import { MOTION_MODULE_PATH, motionSpecifier, placeHoisted } from './passes/place-hoisted'
 import { pruneDependencies, pruneImports, referencedNames } from './passes/prune-imports'
+
+export { MOTION_MODULE_PATH } from './passes/place-hoisted'
 
 /**
  * `buildIR` — EXPORT_ENGINE.md § buildIR. Six passes, orchestrated here, and nothing decided twice:
@@ -44,12 +38,6 @@ export const CODEGEN_ERROR_CODES = {
  */
 const GUESSES_ARE_BOTH_WRONG =
   "'never' ships a page that throws in the browser; 'always' costs every Server Component in the tree."
-
-/** Where a shared variant object lives once eight sections reference it. */
-export const MOTION_MODULE_PATH = 'lib/motion.ts'
-
-const motionSpecifier = (options: ExportOptions): string =>
-  options.target === 'next' ? '@/lib/motion' : './lib/motion'
 
 function rootFor(
   document: MotionDocument,
@@ -81,66 +69,6 @@ export function toIRTheme(config: MotionDocument['theme']): IRTheme {
     motionScale: config.motionScale,
     config,
   }
-}
-
-/**
- * Names are assigned in document order, which is what makes them stable: the same document produces
- * the same list on every run, so a re-export is a diff a reader can read.
- */
-function nameUnits(
-  units: readonly ComponentUnit[],
-  document: MotionDocument,
-  registry: BlockRegistry,
-): ReadonlyMap<NodeId, ComponentName> {
-  const taken = new Set<string>()
-  const names = new Map<NodeId, ComponentName>()
-
-  units.forEach((unit, index) => {
-    const node = document.nodes[unit.source]
-    const blockName =
-      node === undefined ? 'Section' : (registry.get(node.blockId)?.name ?? 'Section')
-    const candidate = toComponentName(node?.name ?? '', `${blockName} ${index + 1}`)
-    const name = uniqueName(candidate, taken)
-
-    taken.add(name)
-    names.set(unit.source, name)
-  })
-
-  return names
-}
-
-const typeOf = (value: unknown): IRProp['type'] => {
-  switch (typeof value) {
-    case 'number':
-      return 'number'
-    case 'boolean':
-      return 'boolean'
-    case 'string':
-      return 'string'
-    default:
-      return 'json'
-  }
-}
-
-function propsFor(unit: ComponentUnit, document: MotionDocument): readonly IRProp[] {
-  const first = document.nodes[unit.source]
-
-  if (first === undefined) {
-    return []
-  }
-
-  return unit.propNames.map((name) => {
-    const value = first.props[name]
-
-    return {
-      name,
-      type: typeOf(value),
-      defaultValue:
-        typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean'
-          ? { kind: 'literal' as const, value }
-          : { kind: 'expression' as const, code: JSON.stringify(value ?? null) },
-    }
-  })
 }
 
 const ruleKey = (rule: IRRule): string =>
@@ -198,26 +126,14 @@ export function buildIR(input: BuildIRInput): CodegenIR {
     )
   }
 
-  const usage = new Map<string, number>()
-
-  for (const draft of drafts) {
-    for (const name of new Set(draft.into.hoisted)) {
-      usage.set(name, (usage.get(name) ?? 0) + 1)
-    }
-  }
-
-  const hoistOf = (name: string): HoistedConst =>
-    motion.hoisted.get(name) ?? { name, code: `const ${name} = {}` }
-
-  /*
-   * ADR-259: a fragment may hoist a statement rather than a declaration — a call that registers
-   * something rather than naming a value. There is nothing to export and nothing to import, so it
-   * stays in every file that needs it, which is where a person would put it.
-   */
-  const declares = (name: string): boolean => hoistOf(name).code.startsWith('const ')
-  const shared = new Set(
-    [...usage].filter(([name, count]) => count > 1 && declares(name)).map(([name]) => name),
-  )
+  const {
+    shared,
+    hoistOf,
+    module: motionModule,
+  } = placeHoisted({
+    perComponent: drafts.map((draft) => draft.into.hoisted),
+    hoisted: motion.hoisted,
+  })
 
   const components: IRComponent[] = drafts.map((draft) => {
     const own = [...new Set(draft.into.hoisted)].filter((name) => !shared.has(name))
@@ -266,14 +182,8 @@ export function buildIR(input: BuildIRInput): CodegenIR {
     }
   }
 
-  if (shared.size > 0) {
-    const consts = [...shared].sort().map(hoistOf)
-
-    modules.set(MOTION_MODULE_PATH, {
-      path: MOTION_MODULE_PATH,
-      named: consts.map((entry) => entry.name),
-      source: consts.map((entry) => `export ${entry.code}`).join('\n\n'),
-    })
+  if (motionModule !== undefined) {
+    modules.set(MOTION_MODULE_PATH, motionModule)
   }
 
   const rules = new Map<string, IRRule>()

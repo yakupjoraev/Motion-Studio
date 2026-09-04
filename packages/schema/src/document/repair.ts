@@ -5,7 +5,7 @@ import type { BlockRegistry } from '../registry/registry.types'
 
 import type { MotionDocument, Node } from './document.types'
 import { reachableIds } from './traverse'
-import { DOCUMENT_ERROR_CODES, type DocumentError } from './validate'
+import { DOCUMENT_ERROR_CODES, type DocumentError } from './validate.errors'
 
 /** FILE_FORMAT.md § Repair vs reject, as codes. One per row of the table that is recoverable. */
 export const REPAIR_KINDS = {

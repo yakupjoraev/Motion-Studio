@@ -1,8 +1,11 @@
+import type { BlockRegistry, MotionDocument, NodeId } from '@motion-studio/schema'
 import { BLOCK_CATEGORIES } from '@motion-studio/schema'
 import { kebab, pascal } from '@motion-studio/utils'
 
 import { hash } from '../../hash'
 import type { ComponentName } from '../ir.types'
+
+import type { ComponentUnit } from './detect-components'
 
 /**
  * Pass 2 — EXPORT_ENGINE.md § Naming. Four guarantees: a valid JS identifier, PascalCase, unique
@@ -156,3 +159,29 @@ export function uniqueName(candidate: ComponentName, taken: ReadonlySet<string>)
 /** `hero-section.tsx`. The kebab-case of the component name, and the language's own extension. */
 export const fileNameFor = (name: ComponentName, language: 'ts' | 'js'): string =>
   `${kebab(name)}.${language === 'ts' ? 'tsx' : 'jsx'}`
+
+/**
+ * Names are assigned in document order, which is what makes them stable: the same document produces
+ * the same list on every run, so a re-export is a diff a reader can read.
+ */
+export function nameUnits(
+  units: readonly ComponentUnit[],
+  document: MotionDocument,
+  registry: BlockRegistry,
+): ReadonlyMap<NodeId, ComponentName> {
+  const taken = new Set<string>()
+  const names = new Map<NodeId, ComponentName>()
+
+  units.forEach((unit, index) => {
+    const node = document.nodes[unit.source]
+    const blockName =
+      node === undefined ? 'Section' : (registry.get(node.blockId)?.name ?? 'Section')
+    const candidate = toComponentName(node?.name ?? '', `${blockName} ${index + 1}`)
+    const name = uniqueName(candidate, taken)
+
+    taken.add(name)
+    names.set(unit.source, name)
+  })
+
+  return names
+}

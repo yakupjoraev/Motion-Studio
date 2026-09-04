@@ -7,7 +7,7 @@ import { doc, fakeRegistry, node, resetFactories, tree, treeId } from '../test/f
 import type { MotionDocument } from './document.types'
 import { REPAIR_KINDS, repairDocument } from './repair'
 import { validateDocument } from './validate'
-import { DOCUMENT_ERROR_CODES } from './validate'
+import { DOCUMENT_ERROR_CODES } from './validate.errors'
 
 const repaired = (document: MotionDocument, registry?: ReturnType<typeof fakeRegistry>) => {
   const result = repairDocument(document, registry === undefined ? {} : { registry })
