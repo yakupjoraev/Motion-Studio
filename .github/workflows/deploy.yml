@@ -90,7 +90,11 @@ jobs:
           "
 
       - name: The bundle, against the budgets
-        run: pnpm build && pnpm size-limit --json > /tmp/size.json
+        # `--silent`, or pnpm's own `> motion-studio@0.0.0 size-limit` banner lands in the file and
+        # the comment step dies parsing it. `|| true`, because the gate is `size-limit` in `ci.yml`
+        # and here the numbers are a report: the run that broke a budget is the one whose comment is
+        # worth reading, and the table has a ❌ column for exactly that row.
+        run: pnpm build && (pnpm --silent size-limit --json > /tmp/size.json || true)
 
       - name: Comment
         uses: actions/github-script@v7
