@@ -11,6 +11,14 @@ const desktop = process.env.MS_LH_PRESET === 'desktop'
 const port = process.env.PORT ?? '3000'
 const origin = `http://localhost:${port}`
 
+/**
+ * `deploy.yml` § report measures a deployment that is already serving, so that leg starts no server
+ * and asserts nothing — its numbers go in the pull request's comment. Set as a variable rather than
+ * passed as `--url`, because a flag does not stop this file from starting a server it has no build
+ * for, which is how the job failed the first time it ran.
+ */
+const previewUrl = process.env.MS_LH_URL
+
 /** The four public routes. `/studio` is held to its budgets by `size-limit` and `e2e/perf` instead. */
 const routes = ['/', '/blocks', '/blocks/section', '/docs']
 
@@ -29,20 +37,26 @@ const timings = {
   'total-blocking-time': ['error', { maxNumericValue: 200 }],
 }
 
-module.exports = {
-  ci: {
-    collect: {
+// `devtools` — the browser is throttled for real rather than a fast run being extrapolated.
+// ADR-319 has the measurement that made the difference load-bearing.
+const settings = desktop
+  ? { preset: 'desktop', throttlingMethod: 'devtools' }
+  : { throttlingMethod: 'devtools' }
+
+const collect = previewUrl
+  ? { url: [previewUrl], numberOfRuns: 1, settings }
+  : {
       startServerCommand: 'pnpm --filter web start',
       startServerReadyPattern: 'Ready in',
       startServerReadyTimeout: 120000,
       url: routes.map((route) => `${origin}${route}`),
       numberOfRuns: 3,
-      // `devtools` — the browser is throttled for real rather than a fast run being extrapolated.
-      // ADR-319 has the measurement that made the difference load-bearing.
-      settings: desktop
-        ? { preset: 'desktop', throttlingMethod: 'devtools' }
-        : { throttlingMethod: 'devtools' },
-    },
+      settings,
+    }
+
+module.exports = {
+  ci: {
+    collect,
     // No `preset`: these seven are the rows of PERFORMANCE.md § Public pages, and nothing else.
     assert: { assertions: { ...scores, ...timings } },
     upload: { target: 'filesystem', outputDir: './.lighthouseci' },

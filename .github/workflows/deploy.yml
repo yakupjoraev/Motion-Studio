@@ -71,11 +71,12 @@ jobs:
       - uses: ./.github/actions/setup
 
       - name: Lighthouse on the preview
+        # `MS_LH_URL` rather than `--url`: the flag leaves `lighthouserc.cjs` free to start a local
+        # server, which this job has no build for.
+        env:
+          MS_LH_URL: ${{ needs.deploy.outputs.url }}
         run: |
-          npx --yes @lhci/cli@0.15.1 collect \
-            --url="${{ needs.deploy.outputs.url }}" \
-            --numberOfRuns=1 \
-            --settings.throttlingMethod=devtools
+          npx --yes @lhci/cli@0.15.1 collect
           node -e "
             const { readdirSync, readFileSync } = require('node:fs')
             const file = readdirSync('.lighthouseci').find((name) => /^lhr-\d+\.json$/.test(name))

@@ -406,7 +406,11 @@ anywhere: `release.yml` uploads its build as a release artifact, and hosting it 
 - Deployments are public — SSO protection is off, so the preview link in a comment opens for whoever
   is reading the pull request.
 - Preview comments post the Lighthouse scores and the bundle delta so a regression is visible in
-  the PR without opening a dashboard.
+  the PR without opening a dashboard. Those scores are a deployment's, not the gate's: the gate is
+  the `Lighthouse` workflow against a local `next start`, and the two are not comparable. On a
+  `vercel.app` host **SEO reads 60 rather than 100**, because Vercel serves every deployment URL
+  with `X-Robots-Tag: noindex` and `is-crawlable` is the one audit that fails. Read the comment for
+  movement between pushes, not against `PERFORMANCE.md`.
 
 ## Git hooks
 
