@@ -379,7 +379,9 @@ fails if a GIF lands over 3 MB, which is the only automatic check these have.
 
 ## Deploy
 
-Vercel, `apps/web`, driven by `deploy.yml` rather than by Vercel's own Git integration.
+Vercel, `apps/web`, driven by `deploy.yml`. **The Git integration is disconnected on purpose**: with
+it connected the platform deploys every push itself, which both duplicates the build and puts a
+commit in production before a single gate has run.
 
 | Environment | Trigger | URL |
 | --- | --- | --- |
