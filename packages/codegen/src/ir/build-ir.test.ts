@@ -173,8 +173,8 @@ describe('a producer that frames the element its descriptor names', () => {
 })
 
 /**
- * ADR-259. A GSAP preset hoists `gsap.registerPlugin(ScrollTrigger)`, which declares nothing: the
- * shared module would have printed `export gsap.registerPlugin(ScrollTrigger)`.
+ * ADR-259. A fragment may hoist a statement rather than a declaration, and a statement declares
+ * nothing: the shared module would have printed `export document.documentElement...`.
  */
 describe('a hoisted statement', () => {
   const statement = spec('scroll-parallax')
@@ -198,7 +198,9 @@ describe('a hoisted statement', () => {
       entry.hoisted.map((constant) => constant.code),
     )
 
-    expect(codes.filter((code) => code === 'gsap.registerPlugin(ScrollTrigger)')).toHaveLength(2)
+    expect(
+      codes.filter((code) => code === "document.documentElement.dataset.msScroll = 'on'"),
+    ).toHaveLength(2)
   })
 })
 

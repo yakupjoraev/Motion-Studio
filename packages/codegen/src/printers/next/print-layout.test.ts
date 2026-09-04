@@ -165,13 +165,13 @@ describe('package.json', () => {
   })
 
   it('carries the accumulated dependencies beside the framework', () => {
-    const ir = { ...irWith(base), dependencies: { gsap: '^3.15.0' } }
+    const ir = { ...irWith(base), dependencies: { motion: '^11.18.2' } }
     const manifest: unknown = JSON.parse(printPackageJson(ir, resolveOptions({ target: 'next' })))
 
     expect(manifest).toMatchObject({
       name: 'landing-page',
       scripts: { dev: 'next dev', build: 'next build', start: 'next start' },
-      dependencies: { gsap: '^3.15.0', next: '^15.5.4' },
+      dependencies: { motion: '^11.18.2', next: '^15.5.4' },
     })
   })
 

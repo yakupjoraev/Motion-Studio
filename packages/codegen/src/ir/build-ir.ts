@@ -210,9 +210,9 @@ export function buildIR(input: BuildIRInput): CodegenIR {
     motion.hoisted.get(name) ?? { name, code: `const ${name} = {}` }
 
   /*
-   * ADR-259: a fragment may hoist a statement rather than a declaration — `gsap.registerPlugin(...)`
-   * is the case, and it registers a plugin rather than naming a value. There is nothing to export and
-   * nothing to import, so it stays in every file that needs it, which is where a person would put it.
+   * ADR-259: a fragment may hoist a statement rather than a declaration — a call that registers
+   * something rather than naming a value. There is nothing to export and nothing to import, so it
+   * stays in every file that needs it, which is where a person would put it.
    */
   const declares = (name: string): boolean => hoistOf(name).code.startsWith('const ')
   const shared = new Set(

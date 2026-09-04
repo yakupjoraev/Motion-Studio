@@ -7,22 +7,9 @@ import { MotionSchedulerProvider, useScheduler } from '../scheduler/scheduler-co
 import type { ScrollSource } from '../scheduler/scroll-bus'
 import { registry, spec } from '../test/presets'
 
+import { CssMotion } from './css-motion'
 import { FramerMotion, settledVariant } from './framer-motion'
-import { GsapMotion } from './gsap-motion'
 import { MotionNode } from './motion-node'
-
-const timeline = {
-  set: vi.fn().mockReturnThis(),
-  to: vi.fn().mockReturnThis(),
-  progress: vi.fn().mockReturnThis(),
-  kill: vi.fn(),
-}
-
-const gsapSet = vi.fn()
-
-vi.mock('gsap', () => ({
-  gsap: { timeline: () => timeline, set: (...args: unknown[]) => gsapSet(...args) },
-}))
 
 /** A source the test drives by hand, standing in for a window or a scrolling panel. */
 const source = () => {
@@ -53,11 +40,6 @@ class ObserverStub {
 
 beforeEach(() => {
   clearResolutionCache()
-  gsapSet.mockClear()
-  timeline.set.mockClear()
-  timeline.to.mockClear()
-  timeline.kill.mockClear()
-  timeline.progress.mockClear()
   vi.stubGlobal('IntersectionObserver', ObserverStub)
 })
 
@@ -236,15 +218,20 @@ describe('settledVariant', () => {
   })
 })
 
-describe('GsapMotion', () => {
+describe('CssMotion drives a scrubbed timeline', () => {
+  /** ADR-349: the scrub is one custom property, and this is the wire the bus writes it through. */
   const scrub = {
-    engine: 'gsap',
-    variants: { start: { y: 0 }, end: { y: -80 } },
+    engine: 'css',
+    className: 'ms-scroll-timeline-test',
+    properties: ['transform'],
+    cssVars: { '--ms-scroll-progress': '0' },
     transition: { duration: 0 },
     listeners: [{ event: 'scroll', variant: 'end' }],
+    keyframes:
+      '@keyframes ms-scroll-timeline-test { 0% { opacity: 0 } } .ms-scroll-timeline-test { animation: ms-scroll-timeline-test 1s linear paused both; animation-delay: calc(-1s * var(--ms-scroll-progress, 0)) }',
   } as const
 
-  it('loads the library on first use and scrubs the timeline from the shared scroll bus', async () => {
+  it('writes the scroll progress the paused animation is seeked by', () => {
     const frames: ((time: number) => void)[] = []
 
     vi.stubGlobal('requestAnimationFrame', (callback: (time: number) => void) =>
@@ -256,16 +243,15 @@ describe('GsapMotion', () => {
 
     render(
       <MotionSchedulerProvider source={scrollSource}>
-        <GsapMotion resolved={scrub}>
-          <span>parallax</span>
-        </GsapMotion>
+        <CssMotion resolved={scrub}>
+          <span>timeline</span>
+        </CssMotion>
       </MotionSchedulerProvider>,
     )
 
-    await waitFor(() => expect(timeline.set).toHaveBeenCalled())
+    const wrapper = screen.getByText('timeline').parentElement
 
-    expect(timeline.set.mock.calls[0]?.[1]).toEqual({ transform: 'translateY(0px)' })
-    expect(timeline.to.mock.calls[0]?.[1]).toMatchObject({ transform: 'translateY(-80px)' })
+    expect(wrapper?.style.getPropertyValue('--ms-scroll-progress')).toBe('0')
 
     state.offset = 500
 
@@ -277,34 +263,26 @@ describe('GsapMotion', () => {
       }
     })
 
-    expect(timeline.progress).toHaveBeenCalledWith(0.5)
+    expect(wrapper?.style.getPropertyValue('--ms-scroll-progress')).toBe('0.5')
   })
 
-  it('clears the inline styles it wrote when it stops driving the element', async () => {
-    const { scrollSource } = source()
-    const view = render(
+  it('emits its keyframes beside the element and stops subscribing when it is inactive', () => {
+    const { scrollSource, state } = source()
+
+    render(
       <MotionSchedulerProvider source={scrollSource}>
-        <GsapMotion resolved={scrub}>
-          <span>parallax</span>
-        </GsapMotion>
+        <CssMotion active={false} resolved={scrub}>
+          <span>paused</span>
+        </CssMotion>
       </MotionSchedulerProvider>,
     )
 
-    await waitFor(() => expect(timeline.set).toHaveBeenCalled())
+    const wrapper = screen.getByText('paused').parentElement
 
-    view.unmount()
-
-    expect(gsapSet).toHaveBeenCalledWith(expect.anything(), { clearProps: 'all' })
-  })
-
-  it('shows the end state and loads nothing while it is inactive', () => {
-    render(
-      <GsapMotion active={false} resolved={scrub}>
-        <span>parallax</span>
-      </GsapMotion>,
-    )
-
-    expect(screen.getByText('parallax').parentElement?.style.transform).toBe('translateY(-80px)')
+    expect(wrapper?.querySelector('style')?.textContent).toContain('animation-delay')
+    expect(wrapper?.style.animationPlayState).toBe('paused')
+    // Nothing subscribed, so nothing attached a listener to the source.
+    expect(state.listener).toBeNull()
   })
 })
 
@@ -327,11 +305,15 @@ describe('MotionNode and the caps', () => {
       </MotionSchedulerProvider>,
     )
 
-    const wrappers = screen.getAllByText('heavy').map((child) => child.parentElement)
+    // Exactly one of the four is held at its end state; the other three animate, so they carry no
+    // static transform of their own. Which one is capped is the scheduler's business, not the test's.
+    await waitFor(() => {
+      const held = screen
+        .getAllByText('heavy')
+        .map((child) => child.parentElement?.style.transform)
+        .filter((transform) => transform === 'translateY(-80px)')
 
-    await waitFor(() => expect(wrappers[3]?.style.transform).toBe('translateY(-80px)'))
-
-    // The first three animate, so they carry no static transform of their own.
-    expect(wrappers[0]?.style.transform).toBe('')
+      expect(held).toHaveLength(1)
+    })
   })
 })

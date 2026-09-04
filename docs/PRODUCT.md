@@ -156,7 +156,7 @@ See [ANIMATION_SYSTEM.md](ANIMATION_SYSTEM.md). Requirements:
 - Global reduced-motion toggle in the studio previews the reduced variant without changing the
   document.
 - Presets are data. `MotionPreset` → resolved config → Motion (`variants`/`transition`) or a
-  GSAP timeline. The block never hard-codes an animation.
+  stylesheet the preset wrote. The block never hard-codes an animation.
 
 ## 6. Playground
 

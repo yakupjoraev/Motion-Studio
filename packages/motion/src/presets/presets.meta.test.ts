@@ -69,11 +69,11 @@ describe('the catalogue', () => {
     }
   })
 
-  it('uses GSAP for exactly the presets that need what Motion cannot do', () => {
-    const gsap = PRESETS.filter((preset) => preset.engine === 'gsap').map((preset) => preset.id)
+  it('runs the whole catalogue on the two engines the document names', () => {
+    const engines = [...new Set(PRESETS.map((preset) => preset.engine))].sort()
 
-    // The count is the specification, not a guideline — prompt 32 § Engine selection.
-    expect(gsap).toEqual(['text-reveal', 'horizontal-scroll', 'scroll-timeline'])
+    // ANIMATION_SYSTEM.md § Engine selection is two rows long, and ADR-349 is why there is no third.
+    expect(engines).toEqual(['css', 'motion'])
   })
 })
 

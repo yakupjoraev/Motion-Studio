@@ -33,7 +33,6 @@ if (!existsSync(MANIFEST)) {
 const MARKERS = [
   ['@motion-studio/codegen', 'printReactComponent'],
   ['prettier', 'prettier/standalone'],
-  ['gsap', 'ScrollTrigger'],
   ['CodeMirror 6', '@codemirror/view'],
   ['colour picker', 'react-stately'],
   ['jszip', 'JSZip'],

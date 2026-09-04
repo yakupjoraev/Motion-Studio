@@ -8,11 +8,10 @@ import { ON_SCROLL } from './progress'
 /**
  * Cards that pin and scale as the next one arrives.
  *
- * **`position: sticky` plus a scale driven by the shared scroll bus, engine `css`. GSAP is not
- * permitted here** — prompt 32 decides it, and the criterion is that `ScrollTrigger` pinning is only
- * needed where an element must be pinned outside native sticky semantics. This is entirely inside
- * them, so GSAP would add 60 kB and a second engine on the element for behaviour the platform
- * already provides.
+ * **`position: sticky` plus a scale driven by the shared scroll bus, engine `css`.** Prompt 32 asked
+ * whether a pinned stack needs a timeline library, and the answer was that this one is entirely
+ * inside native sticky semantics: a second engine on the element would buy behaviour the platform
+ * already provides. ADR-349 later removed the alternative altogether.
  */
 export const stickyStack = definePreset({
   id: 'sticky-stack',

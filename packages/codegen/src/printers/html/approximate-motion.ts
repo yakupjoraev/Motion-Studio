@@ -4,8 +4,8 @@ import { type IRWarning, warning } from '../../warnings'
 import type { ScriptFeature } from './print-scripts'
 
 /**
- * Motion-engine and GSAP presets, translated into what a file with no build step can actually run —
- * prompt 44's approximation table, and ADR-239 for where the preset id comes from.
+ * Motion-engine presets, translated into what a file with no build step can actually run — prompt 44's
+ * approximation table, and ADR-239 for where the preset id comes from.
  *
  * Every row either translates faithfully, approximates and says what it lost, or omits and says why.
  * There is no fourth outcome: a silent downgrade is the failure this file exists to prevent, and it is
@@ -84,8 +84,6 @@ function fallback(entry: IRElementMotion): Approximation {
       return {}
     case 'motion':
       return reveal(undefined, 'approximated: the Motion transition becomes a CSS transition')
-    case 'gsap':
-      return { note: 'omitted: requires GSAP' }
   }
 }
 

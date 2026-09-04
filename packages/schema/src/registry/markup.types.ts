@@ -30,7 +30,7 @@ export interface MarkupExpression {
  */
 export interface MarkupMotion {
   readonly presetId: string
-  readonly engine: 'css' | 'motion' | 'gsap'
+  readonly engine: 'css' | 'motion'
   readonly channel: string
 }
 

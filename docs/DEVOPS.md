@@ -475,7 +475,7 @@ updates:
       next:       { patterns: ["next", "@next/*"] }
       testing:    { patterns: ["vitest", "@vitest/*", "@playwright/*", "@testing-library/*"] }
       tooling:    { patterns: ["@biomejs/*", "turbo", "typescript"] }
-      motion:     { patterns: ["motion", "gsap"] }
+      motion:     { patterns: ["motion"] }
   - package-ecosystem: github-actions
     directory: /
     schedule: { interval: monthly }

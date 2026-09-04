@@ -44,7 +44,7 @@ export interface ListenerSpec {
  * output of a preset. `properties` is the one field the document's shape does not name — ADR-140.
  */
 export interface ResolvedMotion {
-  readonly engine: 'css' | 'motion' | 'gsap'
+  readonly engine: 'css' | 'motion'
   readonly variants?: Readonly<Record<string, TargetProperties>>
   readonly transition?: TransitionConfig
   readonly listeners?: readonly ListenerSpec[]
@@ -52,9 +52,9 @@ export interface ResolvedMotion {
   readonly className?: string
   readonly keyframes?: string
   /**
-   * Properties this resolution animates that no variant names — a class or a GSAP timeline. Composition
-   * compares property sets, and a preset that animates through a stylesheet has to say so or it looks
-   * like it animates nothing.
+   * Properties this resolution animates that no variant names — a class or its own `@keyframes`.
+   * Composition compares property sets, and a preset that animates through a stylesheet has to say so
+   * or it looks like it animates nothing.
    */
   readonly properties?: readonly string[]
 }

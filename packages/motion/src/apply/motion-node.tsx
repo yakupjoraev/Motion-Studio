@@ -10,7 +10,6 @@ import { useScheduler } from '../scheduler/scheduler-context'
 
 import { CssMotion } from './css-motion'
 import { FramerMotion } from './framer-motion'
-import { GsapMotion } from './gsap-motion'
 import { type NodeMotion, useResolvedMotion } from './use-resolved-motion'
 
 export interface MotionNodeProps {
@@ -72,14 +71,6 @@ export function MotionNode({
 
   const active = !paused && !capped
   const { resolved } = composed
-
-  if (resolved.engine === 'gsap') {
-    return (
-      <GsapMotion active={active} className={className} resolved={resolved}>
-        {children}
-      </GsapMotion>
-    )
-  }
 
   if (resolved.engine === 'css') {
     return (

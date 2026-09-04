@@ -1,6 +1,6 @@
 /**
  * The motion a document stores, as opposed to the motion an engine runs. ANIMATION_SYSTEM.md puts the
- * pipeline as `MotionSpec (document) → ResolvedMotion → Motion / GSAP / CSS`; only the first of those
+ * pipeline as `MotionSpec (document) → ResolvedMotion → Motion / CSS`; only the first of those
  * three is a document shape, so only the first lives here. `packages/motion` owns the rest and reads
  * these types rather than redeclaring them — the dependency runs schema → motion, never back.
  */

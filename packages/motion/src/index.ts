@@ -105,7 +105,6 @@ export type {
 export { MotionNode, assertOneEngine, type MotionNodeProps } from './apply/motion-node'
 export { CssMotion, type CssMotionProps } from './apply/css-motion'
 export { FramerMotion, type FramerMotionProps } from './apply/framer-motion'
-export { GsapMotion, type GsapMotionProps } from './apply/gsap-motion'
 export { toStyle, toTransition } from './apply/to-style'
 export { useResolvedMotion, type NodeMotion } from './apply/use-resolved-motion'
 export { useWillChange, type WillChangeHandle } from './apply/use-will-change'

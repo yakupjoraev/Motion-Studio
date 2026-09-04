@@ -257,7 +257,6 @@ Dynamic imports, non-negotiable:
 
 - `packages/codegen` — only on export
 - `prettier` standalone — only on export
-- GSAP + ScrollTrigger — only when a GSAP-backed preset is used
 - CodeMirror — only in the playground and the code panel
 - Colour picker — only when a colour control opens
 - `jszip` — only on "download as zip"

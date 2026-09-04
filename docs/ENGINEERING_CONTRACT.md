@@ -133,7 +133,7 @@ See `docs/STATE_MANAGEMENT.md`.
 | Canvas interaction | 60 fps with 200 nodes |
 | Inspector slider drag | zero React re-render of canvas subtree |
 
-Heavy modules (codegen, GSAP timelines, Monaco/CodeMirror, colour picker) are **dynamically
+Heavy modules (codegen, prettier, Monaco/CodeMirror, colour picker) are **dynamically
 imported**. Never in the initial studio chunk.
 
 ## 7. Before you say "done"

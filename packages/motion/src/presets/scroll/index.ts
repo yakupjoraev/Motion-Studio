@@ -1,8 +1,9 @@
 import type { MotionPreset } from '../../model/preset.types'
 
-import { horizontalScroll, scrollTimeline } from './gsap-scroll'
+import { horizontalScroll } from './horizontal-scroll'
 import { marquee } from './marquee'
 import { parallax, progressBar, scrollFade, scrollRotate, scrollScale } from './progress'
+import { scrollTimeline } from './scroll-timeline'
 import { stickyStack } from './sticky-stack'
 
 export {

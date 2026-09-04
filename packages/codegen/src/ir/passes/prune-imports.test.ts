@@ -88,7 +88,7 @@ describe('pruneDependencies', () => {
 
   it('reads the package out of a scoped subpath', () => {
     expect(packageOf('@radix-ui/react-accordion/dist')).toBe('@radix-ui/react-accordion')
-    expect(packageOf('gsap/dist/ScrollTrigger')).toBe('gsap')
+    expect(packageOf('motion/react')).toBe('motion')
   })
 
   it('has no package for a relative or aliased path', () => {

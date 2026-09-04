@@ -81,7 +81,7 @@ describe('approximateMotion', () => {
     ['scale-in', 'motion', 'approximation', 'spring physics → bezier'],
     ['sticky-stack', 'css', 'approximation', 'no scale interpolation'],
     ['particles', 'motion', 'unsupported', 'requires WebGL'],
-    ['scroll-timeline', 'gsap', 'unsupported', 'requires a scroll timeline'],
+    ['scroll-timeline', 'css', 'unsupported', 'requires a scroll timeline'],
     ['typewriter', 'motion', 'unsupported', 'per-character script'],
   ])('names what %s lost', (presetId, engine, code, fragment) => {
     const result = approximateMotion(
@@ -96,12 +96,13 @@ describe('approximateMotion', () => {
 
   it('degrades a preset the table does not name, by engine, and says so', () => {
     const motion = approximateMotion(irWith(element([preset('brand-new-entrance', 'motion')])))
-    const gsap = approximateMotion(irWith(element([preset('brand-new-scroll', 'gsap')])))
+    const css = approximateMotion(irWith(element([preset('brand-new-scroll', 'css')])))
 
     expect(motion.warnings[0]?.message).toContain('becomes a CSS transition')
     expect([...motion.classNames.values()][0]).toEqual([REVEAL_CLASS])
-    expect(gsap.warnings[0]?.code).toBe('unsupported')
-    expect(gsap.warnings[0]?.message).toContain('requires GSAP')
+    // A css preset put its classes and keyframes in the stylesheet already, so there is nothing left
+    // to approximate and nothing to warn about.
+    expect(css.warnings).toEqual([])
   })
 
   it('warns once per preset, not once per element', () => {

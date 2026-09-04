@@ -163,7 +163,7 @@ describe('the element', () => {
     const result = collector().collect(node('node_a', { entrance: spec('scroll-parallax') }))
 
     expect(result.tagPrefix).toBeUndefined()
-    expect(result.hooks).toEqual(['useGsapParallax(ref)'])
+    expect(result.hooks).toEqual(['useScrollProgress(ref)'])
   })
 })
 
@@ -186,16 +186,16 @@ describe('dependencies', () => {
     expect(collect.warnings.filter((entry) => entry.code === 'dependency')).toHaveLength(1)
   })
 
-  it('collects a GSAP import only when a GSAP preset is present', () => {
-    const withoutGsap = collector()
+  it('collects a dependency only when a preset that needs one is present', () => {
+    const cssOnly = collector()
 
-    withoutGsap.collect(node('node_a', { entrance: fadeUp() }))
-    expect(withoutGsap.dependencies['gsap']).toBeUndefined()
+    cssOnly.collect(node('node_a', { entrance: spec('shine') }))
+    expect(cssOnly.dependencies['motion']).toBeUndefined()
 
-    const withGsap = collector()
+    const withMotion = collector()
 
-    withGsap.collect(node('node_a', { entrance: spec('scroll-parallax') }))
-    expect(withGsap.dependencies['gsap']).toBe('^3.15.0')
+    withMotion.collect(node('node_a', { entrance: fadeUp() }))
+    expect(withMotion.dependencies['motion']).toBe('^11.18.2')
   })
 })
 

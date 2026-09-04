@@ -40,9 +40,9 @@ const CHOICES = [
       'The exported code has to be Tailwind, so the studio writes what it emits. Tokens generate the `@theme` block.',
   },
   {
-    name: 'Motion + GSAP',
+    name: 'Motion 11',
     reason:
-      'Motion for component transitions; GSAP only where a timeline earns its 60 kB, loaded when a preset needs it.',
+      'One animation library, no second one. A scroll-scrubbed timeline is a paused CSS animation the shared bus seeks.',
   },
   {
     name: 'dnd-kit',

@@ -17,7 +17,7 @@ updates:
       tooling:
         patterns: ['@biomejs/*', 'turbo', 'typescript']
       motion:
-        patterns: ['motion', 'gsap']
+        patterns: ['motion']
 
   - package-ecosystem: github-actions
     directory: /

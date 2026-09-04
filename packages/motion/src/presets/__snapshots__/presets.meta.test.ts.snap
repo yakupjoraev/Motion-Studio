@@ -678,39 +678,34 @@ exports[`gradient-shift > emits a codegen fragment that names its imports 1`] = 
 
 exports[`horizontal-scroll > emits a codegen fragment that names its imports 1`] = `
 {
-  "helpers": [
-    {
-      "name": "registerScrollTrigger",
-      "source": "gsap.registerPlugin(ScrollTrigger)",
-    },
+  "classNames": [
+    "ms-hscroll",
   ],
+  "css": ".ms-hscroll { --ms-hscroll-distance: 1600px; display: flex; align-items: flex-start; height: calc(100vh + 1600px); overflow-x: clip }
+.ms-hscroll > * { position: sticky; top: 0; flex: 0 0 auto; transform: translate3d(calc(var(--ms-hscroll-distance) * -1 * var(--ms-scroll-progress, 0)), 0, 0) }",
   "hooks": [
-    "const trackRef = useRef<HTMLElement | null>(null)",
+    "const trackRef = useRef<HTMLDivElement | null>(null)",
+    "const { scrollYProgress } = useScroll({ target: trackRef, offset: ['start start', 'end end'] })",
     "useEffect(() => {
   const track = trackRef.current
-  if (track === null) return
-  const tween = gsap.to(track, {
-    x: -1600,
-    ease: 'none',
-    scrollTrigger: {
-      trigger: track.parentElement,
-      pin: true,
-      scrub: 1,
-      end: '+=1600',
-    },
+
+  if (track === null || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    return
+  }
+
+  return scrollYProgress.on('change', (progress) => {
+    track.style.setProperty(
+      '--ms-scroll-progress',
+      String(progress),
+    )
   })
-  return () => { tween.scrollTrigger?.kill(); tween.kill() }
-}, [])",
+}, [scrollYProgress])",
   ],
   "imports": [
     {
-      "default": "gsap",
-      "from": "gsap",
-    },
-    {
-      "from": "gsap/ScrollTrigger",
+      "from": "motion/react",
       "named": [
-        "ScrollTrigger",
+        "useScroll",
       ],
     },
     {
@@ -723,7 +718,7 @@ exports[`horizontal-scroll > emits a codegen fragment that names its imports 1`]
   ],
   "wrapper": {
     "props": {
-      "ref": "{(node) => { trackRef.current = node }}",
+      "ref": "{trackRef}",
     },
     "tag": "div",
   },
@@ -1112,35 +1107,37 @@ exports[`scroll-scale > emits a codegen fragment that names its imports 1`] = `
 
 exports[`scroll-timeline > emits a codegen fragment that names its imports 1`] = `
 {
-  "helpers": [
-    {
-      "name": "registerScrollTrigger",
-      "source": "gsap.registerPlugin(ScrollTrigger)",
-    },
+  "classNames": [
+    "ms-scroll-timeline-42k1vx",
   ],
+  "css": "@keyframes ms-scroll-timeline-42k1vx {
+  0% { opacity: 0 }
+  50% { opacity: 1 }
+  100% { opacity: 1; transform: translateY(-40px) }
+}
+.ms-scroll-timeline-42k1vx { animation: ms-scroll-timeline-42k1vx 1s linear paused both; animation-delay: calc(-1s * var(--ms-scroll-progress, 0)) }",
   "hooks": [
-    "const timelineRef = useRef<HTMLElement | null>(null)",
+    "const timelineRef = useRef<HTMLDivElement | null>(null)",
+    "const { scrollYProgress } = useScroll({ target: timelineRef, offset: ['start end', 'end start'] })",
+    "const scrubbedProgress = useSpring(scrollYProgress, { visualDuration: 1, bounce: 0 })",
     "useEffect(() => {
   const element = timelineRef.current
-  if (element === null) return
-  const timeline = gsap.timeline({
-    scrollTrigger: { trigger: element, scrub: 1, start: 'top bottom', end: 'bottom top' },
+
+  if (element === null || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    return
+  }
+
+  return scrubbedProgress.on('change', (progress) => {
+    element.style.setProperty('--ms-scroll-progress', String(progress))
   })
-  timeline.to(element, {"opacity":0}) // at-0
-  timeline.to(element, {"opacity":1}) // at-0.5
-  timeline.to(element, {"y":-40}) // at-1
-  return () => { timeline.scrollTrigger?.kill(); timeline.kill() }
-}, [])",
+}, [scrubbedProgress])",
   ],
   "imports": [
     {
-      "default": "gsap",
-      "from": "gsap",
-    },
-    {
-      "from": "gsap/ScrollTrigger",
+      "from": "motion/react",
       "named": [
-        "ScrollTrigger",
+        "useScroll",
+        "useSpring",
       ],
     },
     {
@@ -1153,7 +1150,7 @@ exports[`scroll-timeline > emits a codegen fragment that names its imports 1`] =
   ],
   "wrapper": {
     "props": {
-      "ref": "{(node) => { timelineRef.current = node }}",
+      "ref": "{timelineRef}",
     },
     "tag": "div",
   },
@@ -1298,42 +1295,122 @@ exports[`sticky-stack > emits a codegen fragment that names its imports 1`] = `
 
 exports[`text-reveal > emits a codegen fragment that names its imports 1`] = `
 {
-  "css": ".ms-split { display: inline-block; overflow: hidden }",
+  "classNames": [
+    "ms-text-reveal",
+  ],
+  "css": ".ms-split { display: block; overflow: hidden }
+.ms-text-reveal-visible .ms-split { animation: ms-text-reveal 700ms cubic-bezier(0.22, 1, 0.36, 1) both }
+@keyframes ms-text-reveal { from { transform: translateY(110%); opacity: 0 } to { transform: translateY(0); opacity: 1 } }",
   "helpers": [
     {
-      "name": "registerSplitText",
-      "source": "gsap.registerPlugin(SplitText)",
+      "name": "splitText",
+      "source": "const splitText = (element: HTMLElement, source: string, by: 'line' | 'word' | 'char'): HTMLElement[] => {
+  // The whole string stays readable to a screen reader; the pieces are decoration.
+  element.setAttribute('aria-label', source)
+  element.textContent = ''
+
+  const units = by === 'char' ? Array.from(source) : source.split(/\\s+/).filter((word) => word !== '')
+  const parts: HTMLElement[] = []
+
+  for (const [index, unit] of units.entries()) {
+    if (unit.trim() === '') {
+      element.append(' ')
+      continue
+    }
+
+    if (index > 0 && by !== 'char') {
+      element.append(' ')
+    }
+
+    parts.push(appendPart(element, unit))
+  }
+
+  if (by !== 'line') {
+    return parts
+  }
+
+  const tops = parts.map((part) => part.offsetTop)
+
+  element.textContent = ''
+
+  const lines: HTMLElement[] = []
+  let previous: number | undefined
+  let line: HTMLElement | undefined
+
+  for (const [index, part] of parts.entries()) {
+    if (line === undefined || tops[index] !== previous) {
+      line = appendPart(element, '')
+      lines.push(line)
+      previous = tops[index]
+    } else {
+      line.append(' ')
+    }
+
+    line.append(part.textContent ?? '')
+  }
+
+  return lines
+}",
+    },
+    {
+      "name": "appendPart",
+      "source": "const appendPart = (element: HTMLElement, text: string): HTMLElement => {
+  const part = document.createElement('span')
+
+  part.className = 'ms-split'
+  part.setAttribute('aria-hidden', 'true')
+  part.textContent = text
+  element.append(part)
+
+  return part
+}",
     },
   ],
   "hooks": [
-    "const splitRef = useRef<HTMLElement | null>(null)",
+    "const splitRef = useRef<HTMLDivElement | null>(null)",
     "useEffect(() => {
   const element = splitRef.current
-  if (element === null) return
-  // The split replaces the text with per-line spans, so the label is read off it first.
-  element.setAttribute('aria-label', element.textContent ?? '')
-  const split = new SplitText(element, { type: 'lines', linesClass: 'ms-split' })
-  const tween = gsap.from(split.lines, {
-    yPercent: 110,
-    opacity: 0,
-    duration: 0.7,
-    stagger: 0.06,
-    scrollTrigger: { trigger: element, once: true },
-  })
-  return () => { tween.kill(); split.revert() }
+
+  if (element === null || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    return
+  }
+
+  const source = element.textContent ?? ''
+  const split = () => {
+    // The stagger, as one delay per part: each waits for the ones before it.
+    for (const [index, part] of splitText(element, source, 'line').entries()) {
+      part.style.animationDelay = \`\${index * 60}ms\`
+    }
+  }
+
+  split()
+
+  // The reveal starts when the text arrives, once, and the class is what the stylesheet keys off.
+  const arrival = new IntersectionObserver(
+    (entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        element.classList.add('ms-text-reveal-visible')
+        arrival.disconnect()
+      }
+    },
+    { threshold: 0.3 },
+  )
+
+  arrival.observe(element)
+
+  // Lines are a measurement, so they are re-measured when the container's width changes.
+  const resize = new ResizeObserver(() => split())
+
+  resize.observe(element)
+
+  return () => {
+    arrival.disconnect()
+    resize.disconnect()
+    element.textContent = source
+  }
 }, [])",
   ],
   "imports": [
-    {
-      "default": "gsap",
-      "from": "gsap",
-    },
-    {
-      "from": "gsap/SplitText",
-      "named": [
-        "SplitText",
-      ],
-    },
     {
       "from": "react",
       "named": [
@@ -1344,7 +1421,7 @@ exports[`text-reveal > emits a codegen fragment that names its imports 1`] = `
   ],
   "wrapper": {
     "props": {
-      "ref": "{(node) => { splitRef.current = node }}",
+      "ref": "{splitRef}",
     },
     "tag": "div",
   },

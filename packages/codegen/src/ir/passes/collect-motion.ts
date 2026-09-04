@@ -46,8 +46,6 @@ export const EMPTY_MOTION: NodeMotion = {
 export const DEPENDENCIES: Readonly<Record<string, readonly [string, string]>> = {
   'motion/react': ['motion', '^11.18.2'],
   motion: ['motion', '^11.18.2'],
-  gsap: ['gsap', '^3.15.0'],
-  'gsap/dist/ScrollTrigger': ['gsap', '^3.15.0'],
   'next/image': ['next', '^15.5.4'],
 }
 

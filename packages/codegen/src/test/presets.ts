@@ -40,7 +40,7 @@ const SHINE_CSS = '@keyframes ms-shine {\n  to { background-position: 200% 0; }\
 
 interface FixturePreset {
   readonly id: string
-  readonly engine: 'css' | 'motion' | 'gsap'
+  readonly engine: 'css' | 'motion'
   readonly fragment: (
     params: Readonly<Record<string, number | string | boolean>>,
   ) => MotionCodegenFragment
@@ -69,12 +69,14 @@ const PRESETS: readonly FixturePreset[] = [
   },
   {
     id: 'scroll-parallax',
-    engine: 'gsap',
-    /** The GSAP shape: a plugin registration, which is a statement rather than a declaration. */
+    engine: 'css',
+    /** A hoist that is a statement rather than a declaration — the shape ADR-259 is about. */
     fragment: () => ({
-      imports: [{ from: 'gsap', named: ['gsap', 'ScrollTrigger'] }],
-      hooks: ['useGsapParallax(ref)'],
-      helpers: [{ name: 'registerScrollTrigger', source: 'gsap.registerPlugin(ScrollTrigger)' }],
+      imports: [],
+      hooks: ['useScrollProgress(ref)'],
+      helpers: [
+        { name: 'markScrollDriven', source: "document.documentElement.dataset.msScroll = 'on'" },
+      ],
     }),
   },
 ]

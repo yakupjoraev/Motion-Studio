@@ -94,23 +94,23 @@ export const parallax = definePreset({
   id: 'parallax',
   name: 'Parallax',
   channel: 'scroll',
-  engine: 'gsap',
+  engine: 'motion',
   paramsSchema: z.object({ distance: z.number().default(80) }),
   defaults: { distance: 80 },
   controls: [{ path: 'distance', kind: 'number', label: 'Distance' }],
   capabilities: { composableWith: ['cursor'], gpuHeavy: true, cost: 'moderate' },
   resolve: (params) => ({
-    engine: 'gsap',
+    engine: 'motion',
     variants: { start: { y: 0 }, end: { y: -params.distance } },
     transition: { duration: 0 },
     listeners: [{ event: 'scroll', variant: 'end' }],
   }),
   resolveReduced: (params) => ({
-    engine: 'gsap',
+    engine: 'motion',
     variants: { start: { y: 0 }, end: { y: -params.distance } },
     transition: { duration: 0 },
   }),
-  codegen: () => ({ imports: [{ from: 'gsap', default: 'gsap' }] }),
+  codegen: () => ({ imports: [{ from: 'motion/react', named: ['motion'] }] }),
 })
 
 export const spotlight = definePreset({
