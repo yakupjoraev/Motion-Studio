@@ -14232,3 +14232,10 @@ would not apply. `apps/web/package.json` declares no `engines`, so the setting h
   `is-crawlable`, because Vercel serves every `vercel.app` deployment with `X-Robots-Tag: noindex`.
   The comment is for movement between pushes; `PERFORMANCE.md`'s budgets are asserted against a
   local `next start`, where the same page scores 100.
+- The comment step also revealed that the project had Vercel's Git integration connected — the first
+  pull request carried two preview deployments, one from `deploy.yml` and one the platform made on
+  its own, and the second commented ahead of any check finishing. `prompts/60` § Deploy says
+  production follows a push to `main` *after all checks*, and an integration that publishes on push
+  cannot honour that. It is disconnected: `vercel git disconnect`. `deploy.yml` is the only path to
+  a deployment, which is also why its `report` job is worth fixing rather than replacing with the
+  platform's comment.
