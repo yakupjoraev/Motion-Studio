@@ -14160,3 +14160,64 @@ nothing ran it. A deliverable nothing exercises is a claim, not a feature.
   size — 86 MB here — where CI's classic store returns the uncompressed sum, 249 MB. `docker images`
   prints both, as `CONTENT SIZE` and `DISK USAGE`. The budget in this document is the CI metric; a
   reader checking it locally should read the job log, not `inspect`.
+
+## ADR-346 — The deployment's root is `apps/web`, and its install runs no lifecycle scripts
+
+**Date** 2026-09-04 · **Prompt** 60 · **Status** Accepted
+
+### Question
+`deploy.yml` had never run. It is skipped without `VERCEL_ENABLED`, and the repository had no Vercel
+credentials until the owner created the project — so the deploy path was a specification, exactly as
+the dev compose profile was before ADR-345. The first real deployment failed twice, and neither
+failure was visible from the workflow or from `DEVOPS.md`.
+
+1. With the project's Root Directory at the repository root, the build never starts: `No Next.js
+   version detected. Make sure your package.json has "next" in either "dependencies" or
+   "devDependencies"`. The framework preset is resolved against the `package.json` in the root
+   directory, and `next` belongs to `apps/web`, not to the workspace root. A `buildCommand` and an
+   `outputDirectory` pointing into `apps/web` do not move that lookup.
+2. With the root corrected, `pnpm install` exits 1 on the build host: the workspace's `prepare`
+   script is `lefthook install`, the host has no `.git`, and lefthook exits 128 with
+   `fatal: not a git repository`.
+
+### Measurement
+Root Directory `apps/web`: Vercel detects Turbo, runs `turbo run build`, reports "Running build in 1
+packages", and finishes in 2m00s. On the resulting deployment all seven routes answer 200 —
+`/api/health`, `/`, `/blocks`, `/blocks/section`, `/docs`, `/studio`, `/playground`, the same list
+the `docker` job checks. `/_next/image?url=/thumbnails/accordion-dark.webp&w=640&q=75` answers 200
+with a converted body, which is what proves the install change did not cost image optimisation.
+
+The second failure has an answer already decided in this repository: `Dockerfile` installs with
+`--ignore-scripts` because the only postinstall in the graph is lefthook's and a container has no
+git. The build host is that case again. The alternative — making `prepare` conditional on a `.git`
+directory — changes every environment's install to fix one, and `pnpm-workspace.yaml` already limits
+lifecycle scripts to four packages (`sharp`, `esbuild`, `lefthook`, `ffmpeg-static`), none of which
+the deployment needs: sharp 0.34 ships its Linux binaries as separate packages, and the image
+request above is the evidence.
+
+### Decision
+Root Directory `apps/web` and Node.js Version `22.x` are project settings, because neither can be
+expressed in a file. `apps/web/vercel.json` carries what can: the framework preset and
+`installCommand: pnpm install --frozen-lockfile --ignore-scripts`. Build command and output
+directory stay auto-detected — Vercel's Turbo detection runs the build this repository already has,
+and writing the command by hand would be a second definition of it that can drift.
+
+22.x is the version the gates run: `.nvmrc` is 22.20.0 and the image is `node:22-alpine` (ADR-330).
+The setting only takes effect because the root directory moved. Vercel reads `engines` from the root
+directory's `package.json`, and the workspace root's `>=22.18` is an open range, which the platform
+resolves to the newest major — it selected 24.x and printed a warning saying the project setting
+would not apply. `apps/web/package.json` declares no `engines`, so the setting holds.
+
+### Consequences
+- `vercel build` cannot be run to completion on this machine. It writes the serverless functions and
+  then fails with `EPERM: operation not permitted, symlink` inside `.vercel/output/functions` — the
+  same Windows symlink restriction that keeps `output: 'standalone'` behind a flag
+  (`apps/web/next.config.ts`). The deploy path is verified on Linux: in CI, or by letting Vercel
+  build from a `vercel deploy` without `--prebuilt`.
+- A CLI deployment from this repository needs `--archive=tgz`. Without it the upload is refused:
+  `files should NOT have more than 15000 items, received 18215`. CI does not hit this, because
+  `--prebuilt` uploads `.vercel/output` rather than the working tree.
+- `DEVOPS.md` § Deploy claimed `motion-studio.dev` and `storybook.motion-studio.dev`. Neither domain
+  is registered, and no workflow deploys Storybook anywhere — `release.yml` uploads it as an
+  artifact. The section now carries the URLs the project serves; a custom domain is the owner's
+  purchase to make, and hosting Storybook is a roadmap entry, not a silent omission.
