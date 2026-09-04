@@ -52,7 +52,7 @@ field metric, and a lab reading of it needs interactions, which a page load has 
 
 | Metric | Budget | Measured | Kept by |
 | --- | --- | --- | --- |
-| First-load JS | ≤ 250 kB gzip | **246.3 KiB** — ADR-312 and ADR-313 took it there from 369.7 | `size-limit` |
+| First-load JS | ≤ 250 kB gzip | **249.6 KiB** — ADR-312 and ADR-313 took it there from 369.7 | `size-limit` |
 | Time to interactive canvas | ≤ 1.2 s on a mid-range laptop | **499 ms** on the 200-node fixture | `studio-latency` |
 | Pan | 60 fps with 200 nodes | p95 **16.8 ms**, 0 long tasks | `canvas-200-nodes` |
 | Zoom | 60 fps with 200 nodes | p95 **16.8 ms**, worst 31.6 | `canvas-200-nodes` |
@@ -106,10 +106,14 @@ Two metrics, because these four budgets were written as two different things (AD
 
 | Entry | Metric | Budget | Measured |
 | --- | --- | --- | --- |
-| `landing first-load JS` | every chunk `/` loads | 120 KiB | 106.3 KiB |
-| `studio first-load JS` | every chunk `/studio` loads | 250 KiB | 245.9 KiB |
-| `playground route chunk` | the chunks only `/playground` loads | 90 KiB | 43.3 KiB |
+| `landing first-load JS` | every chunk `/` loads | 120 KiB | 106.9 KiB |
+| `studio first-load JS` | every chunk `/studio` loads | 250 KiB | 249.6 KiB |
+| `playground route chunk` | the chunks only `/playground` loads | 90 KiB | 44.9 KiB |
 | `blocks route chunk` | the chunks only `/blocks` loads | 140 KiB | 10.6 KiB |
+
+The measured column is a CI run — the one the gate prints, taken on 2026-09-04. A local build reads
+0.3–0.6 KiB lower on the two first-load entries; the budget is the same either way, and the run that
+decides is the runner's.
 
 `/blocks/[slug]` (154.4 KiB) and `/docs` (106.9 KiB) are reported by `pnpm measure:routes` and gated by
 neither, because no document gives them a number.

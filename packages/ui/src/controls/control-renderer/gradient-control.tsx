@@ -10,7 +10,7 @@ import { asString } from './coerce'
 export const asGradient = (value: unknown): Gradient =>
   gradientFromCss(asString(value)) ?? { kind: 'linear', angle: 180, stops: [] }
 
-export type GradientControlProps = Omit<ValueControlProps<unknown>, 'value'> & {
+type GradientControlProps = Omit<ValueControlProps<unknown>, 'value'> & {
   readonly value: unknown
 }
 

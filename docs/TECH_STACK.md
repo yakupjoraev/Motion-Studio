@@ -223,6 +223,26 @@ modes, and adds no dependency.
 | tRPC / Prisma / any DB | No backend. Local-first |
 | Sentry / analytics | No telemetry, by design |
 
+## Licences
+
+Every dependency's licence was read, not assumed — `pnpm licenses list` on 2026-09-04 over the whole
+graph: **460 MIT, 22 Apache-2.0, 18 ISC, 11 BSD**, plus dual grants that include a permissive option
+(`jszip` MIT-or-GPL, `pako` MIT-and-Zlib, `opener` WTFPL-or-MIT, `biome` MIT-or-Apache).
+
+Five are not the permissive default, and this project redistributes generated component source, so
+each one needed an answer rather than a shrug:
+
+| Dependency | Licence | What it means here |
+| --- | --- | --- |
+| `gsap` | Vendor "no charge" licence, **not OSI** | Runtime, and it reaches an export. The grant forbids use in tools that let users build visual animations without code — see `AUDIT.md` § F1, which is open |
+| `ffmpeg-static` | GPL-3.0-or-later | `devDependencies`, invoked as an external binary by `pnpm generate:demos` and the thumbnail generator. Nothing links against it and its output — a GIF — is not a derivative work of the encoder |
+| `axe-core`, `@axe-core/playwright` | MPL-2.0 | Test-only. MPL is file-level copyleft: it reaches modified copies of *its* files, and we modify none |
+| `lightningcss` | MPL-2.0 | Build-time, through Tailwind. Same reasoning, and worth knowing it is what adds the `-webkit-` prefixes the glass needs in Safari |
+| `@img/sharp-win32-x64` | Apache-2.0 AND LGPL-3.0-or-later | A platform binary pulled in on Windows only. Not in the container image (the trace excludes sharp) and not redistributed |
+
+An export never carries any of these except `gsap`, and only when the document uses one of the three
+presets that need it — `collect-motion.ts` is where that mapping lives.
+
 ## Adding a dependency
 
 Answer these in the PR body. If any answer is weak, do not add it.

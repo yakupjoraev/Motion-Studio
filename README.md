@@ -24,8 +24,9 @@ You compose on the canvas, tune the props in a generated inspector, and take the
 source. There is no runtime to install, no account, and nothing of this project is left in the code
 it prints.
 
-It is built as a product rather than as a demo: 8,235 unit tests, 408 end-to-end tests across three
-browsers, budgets enforced in CI, and a document for every subsystem in [`docs/`](docs/).
+It is built as a product rather than as a demo: 8,259 unit tests, 200 end-to-end tests across three
+browsers, 208 screenshot baselines, budgets enforced in CI, and a document for every subsystem in
+[`docs/`](docs/).
 
 ## Why it exists
 
@@ -165,11 +166,12 @@ Rationale per choice, including the ones that were rejected:
 | --- | --- | --- |
 | Blocks | 72 | 13 of them effect layers, across nine categories |
 | Motion presets | 51 | entrance 13, hover 11, scroll 9, continuous 8, cursor 5, exit 5 |
-| Unit tests | 8,235 | in 458 files |
-| End-to-end tests | 408 | in 46 specs; 630 runs across the three browser projects |
+| Unit tests | 8,259 | in 459 files |
+| End-to-end tests | 200 | in 41 specs; 422 runs across the three browser projects |
+| Screenshot baselines | 208 | a separate suite and a separate config — `e2e/visual.config.ts` |
 | Coverage — editor / schema / codegen | 99.5 % / 95.9 % / 96.7 % | lines; branch floors are enforced per package in CI |
-| Studio first-load JS | 247.6 KiB gzip | budget 250 KiB, enforced by `size-limit` |
-| Landing first-load JS | 106.5 KiB gzip | budget 120 KiB |
+| Studio first-load JS | 249.4 KiB gzip | budget 250 KiB, enforced by `size-limit` |
+| Landing first-load JS | 106.6 KiB gzip | budget 120 KiB |
 | Lighthouse — landing, mobile | 96 / 100 / 100 / 100 | performance · accessibility · best practices · SEO |
 
 Every number above is counted rather than remembered: `pnpm stats` prints the first six from the

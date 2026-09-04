@@ -75,8 +75,8 @@ Notation: `Mod` = `Cmd` on macOS, `Ctrl` elsewhere. Resolved at runtime; never h
 | Shortcut | Action |
 | --- | --- |
 | `↑ ↓ ← →` | Nudge 1 px |
-| `Shift` + arrows | Nudge 10 px |
-| `Alt` + arrows | Nudge by grid size |
+| `Shift+↑ ↓ ← →` | Nudge 10 px |
+| `Alt+↑ ↓ ← →` | Nudge by grid size |
 | `Mod+Alt+←` `→` | Decrease / increase width by 1 |
 | `Mod+Alt+↑` `↓` | Decrease / increase height by 1 |
 

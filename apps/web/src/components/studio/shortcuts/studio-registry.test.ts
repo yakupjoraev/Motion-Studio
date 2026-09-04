@@ -1,102 +1,91 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
 import { ShortcutConflictError, createShortcutRegistry, findConflicts } from '@motion-studio/hooks'
 import { describe, expect, it } from 'vitest'
 
 import type { StudioShortcut } from './shortcut.types'
 import { STUDIO_SHORTCUTS, studioShortcuts } from './studio-registry'
 
-/** Every table row of SHORTCUTS.md that names a key. Pointer gestures are the canvas's, not bindings. */
-const DOCUMENTED_KEYS = [
-  'mod+k',
-  'mod+z',
-  'mod+shift+z',
-  'mod+y',
-  'mod+s',
-  'mod+o',
-  'mod+shift+e',
-  'mod+,',
-  'mod+/',
-  'mod+\\',
-  'mod+alt+\\',
-  'mod+.',
-  'f2',
-  'escape',
-  'mod+a',
-  'mod+shift+a',
-  'tab',
-  'shift+tab',
-  'enter',
-  'mod+shift+up',
-  'mod+shift+down',
-  'mod+d',
-  'mod+c',
-  'mod+x',
-  'mod+v',
-  'mod+shift+v',
-  'mod+alt+v',
-  'delete',
-  'backspace',
-  'mod+g',
-  'mod+shift+g',
-  'mod+shift+h',
-  'mod+shift+l',
-  'mod+]',
-  'mod+[',
-  'mod+alt+]',
-  'mod+alt+[',
-  'up',
-  'down',
-  'left',
-  'right',
-  'shift+up',
-  'shift+down',
-  'alt+up',
-  'alt+down',
-  'mod+alt+left',
-  'mod+alt+right',
-  'mod+alt+up',
-  'mod+alt+down',
-  'alt+a',
-  'alt+d',
-  'alt+h',
-  'alt+w',
-  'alt+s',
-  'alt+v',
-  'alt+shift+h',
-  'alt+shift+v',
-  'space',
-  'mod+=',
-  'mod+-',
-  'mod+0',
-  'shift+1',
-  'shift+2',
-  "mod+'",
-  "mod+shift+'",
-  'mod+r',
-  'mod+p',
-  'mod+shift+p',
-  'mod+1',
-  'mod+2',
-  'mod+3',
-  'mod+4',
-  'mod+5',
-  'mod+6',
-  'mod+shift+m',
-  'alt+1',
-  'alt+2',
-  'alt+3',
-  'alt+4',
-  'alt+5',
-  'mod+f',
-  'mod+shift+f',
-  'mod+backspace',
-  'alt+backspace',
-  'mod+up',
-  'mod+down',
-  'mod+enter',
-  'mod+shift+s',
-  'mod+shift+c',
-  'mod+shift+k',
-] as const
+/**
+ * SHORTCUTS.md is **read**, not transcribed. A key list copied into this file cannot fail when the
+ * document changes, and that is the only failure worth having here: the reference sheet, the command
+ * palette and that table all claim to describe this one registry.
+ */
+const DOCUMENT = readFileSync(
+  join(import.meta.dirname, '../../../../../../docs/SHORTCUTS.md'),
+  'utf8',
+)
+
+/** Pointer gestures belong to the canvas, and a lone modifier in the table is a hold, not a binding. */
+const GESTURE = /click|drag|scroll|wheel|hover/
+const HOLD = new Set(['shift', 'alt', 'mod', 'ctrl', 'cmd'])
+const ARROWS: Record<string, string> = { '↑': 'up', '↓': 'down', '←': 'left', '→': 'right' }
+
+const canonical = (token: string): string =>
+  token
+    .trim()
+    .toLowerCase()
+    .replace(/[↑↓←→]/g, (arrow) => ARROWS[arrow] ?? arrow)
+    .replace(/^esc$/, 'escape')
+
+/**
+ * The document writes chords the way a reader wants them, not the way a parser does, and all three
+ * shorthands are load-bearing for its legibility:
+ *
+ * - `Mod+Alt+←` `→` — the second span is a continuation and inherits the first one's modifiers.
+ * - `↑ ↓ ← →` — four bare keys in one span.
+ * - `Mod+1` … `Mod+6` — a range, with the four entries between them left implied.
+ */
+const expand = (column: string): readonly string[] => {
+  const spans = [...column.matchAll(/`([^`]+)`/g)].map((match) => match[1] ?? '')
+  const keys: string[] = []
+  let chord = ''
+
+  for (const span of spans) {
+    for (const token of span.split(/\s+/).filter(Boolean)) {
+      const key = canonical(token)
+
+      if (key.length === 0) continue
+
+      if (key.includes('+')) {
+        chord = key.slice(0, key.lastIndexOf('+') + 1)
+        keys.push(key)
+      } else {
+        keys.push(chord + key)
+      }
+    }
+  }
+
+  if (!column.includes('…') || keys.length !== 2) return keys
+
+  const [first = '', last = ''] = keys
+  const from = Number(first.slice(first.lastIndexOf('+') + 1))
+  const to = Number(last.slice(last.lastIndexOf('+') + 1))
+
+  if (!Number.isInteger(from) || !Number.isInteger(to) || to <= from) return keys
+
+  const prefix = first.slice(0, first.lastIndexOf('+') + 1)
+
+  return Array.from({ length: to - from + 1 }, (_, index) => `${prefix}${from + index}`)
+}
+
+/** The first column of every table row, which is where the document puts the chord. */
+const documentedKeys = (): readonly string[] => {
+  const keys = new Set<string>()
+
+  for (const line of DOCUMENT.split(/\r?\n/)) {
+    if (!line.startsWith('|')) continue
+
+    for (const key of expand(line.split('|')[1] ?? '')) {
+      if (GESTURE.test(key) || HOLD.has(key)) continue
+
+      keys.add(key)
+    }
+  }
+
+  return [...keys]
+}
 
 describe('the studio registry', () => {
   it('builds without a conflict, which is the startup assertion', () => {
@@ -104,11 +93,12 @@ describe('the studio registry', () => {
     expect(findConflicts(STUDIO_SHORTCUTS)).toEqual([])
   })
 
-  it('registers every key SHORTCUTS.md documents', () => {
-    const registered = new Set(studioShortcuts.list().map((shortcut) => shortcut.keys))
-    const missing = DOCUMENTED_KEYS.filter((keys) => !registered.has(keys))
+  it('registers exactly the keys SHORTCUTS.md documents, in both directions', () => {
+    const registered = studioShortcuts.list().map((shortcut) => shortcut.keys)
+    const documented = documentedKeys()
 
-    expect(missing).toEqual([])
+    expect(documented.filter((keys) => !registered.includes(keys))).toEqual([])
+    expect(registered.filter((keys) => !documented.includes(keys))).toEqual([])
   })
 
   it('gives every entry a label, so the sheet and the palette can name it', () => {

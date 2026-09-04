@@ -15,7 +15,7 @@ export const asIconName = (value: unknown): IconName | '' => {
   return NAMES.has(name) ? (name as IconName) : ''
 }
 
-export type IconControlProps = Omit<ValueControlProps<unknown>, 'value'> & {
+type IconControlProps = Omit<ValueControlProps<unknown>, 'value'> & {
   readonly value: unknown
 }
 
