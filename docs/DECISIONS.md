@@ -14221,3 +14221,14 @@ would not apply. `apps/web/package.json` declares no `engines`, so the setting h
   is registered, and no workflow deploys Storybook anywhere — `release.yml` uploads it as an
   artifact. The section now carries the URLs the project serves; a custom domain is the owner's
   purchase to make, and hosting Storybook is a roadmap entry, not a silent omission.
+- The `report` job failed on its first run for a third reason, and `--url` was not enough to fix it:
+  `lhci collect` reads `lighthouserc.cjs` regardless, so it ran that file's `startServerCommand` and
+  died on `Could not find a production build in the '.next' directory`. The config now has a leg
+  keyed on `MS_LH_URL` that starts no server, asserts nothing, and runs once — the shape the comment
+  needs. The deployment's URL reaches the workflow intact; the JSON the CLI prints for an agent is
+  not what it prints on a runner.
+- A deployment's Lighthouse scores are not the gate's. Measured on the production URL: performance
+  89, accessibility 100, best practices 100, **SEO 60** — and the only failing audit is
+  `is-crawlable`, because Vercel serves every `vercel.app` deployment with `X-Robots-Tag: noindex`.
+  The comment is for movement between pushes; `PERFORMANCE.md`'s budgets are asserted against a
+  local `next start`, where the same page scores 100.
