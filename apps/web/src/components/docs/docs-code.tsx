@@ -1,5 +1,6 @@
 import { type TokenKind, tokenize } from '@motion-studio/blocks/highlight'
 
+import type { Dictionary } from '../../lib/i18n/dictionary'
 import { CopyButton } from '../gallery/detail/copy-button'
 
 import { parseFence } from './docs-fence'
@@ -18,6 +19,8 @@ export interface DocsCodeProps {
   readonly source: string
   /** Position in the document, so each region's accessible name is unique on the page. */
   readonly ordinal: number
+  /** The shell's words. The sample itself is code, and code is not translated. */
+  readonly copy: Dictionary['docs']
 }
 
 /**
@@ -25,11 +28,13 @@ export interface DocsCodeProps {
  * because at 320 px it scrolls, and everything past its right edge is otherwise unreachable from a
  * keyboard (ADR-298).
  */
-export function DocsCode({ info, source, ordinal }: DocsCodeProps) {
+export function DocsCode({ info, source, ordinal, copy }: DocsCodeProps) {
   const fence = parseFence(info)
   const lines = source.split('\n')
   const highlighted = new Set(fence.highlight)
-  const name = fence.filename ?? `${fence.label} sample ${ordinal}`
+  const name =
+    fence.filename ??
+    copy.codeSampleName.replace('{label}', fence.label).replace('{ordinal}', String(ordinal))
 
   return (
     <figure className="my-6 overflow-hidden rounded-lg border border-border bg-surface-1">
@@ -44,8 +49,10 @@ export function DocsCode({ info, source, ordinal }: DocsCodeProps) {
         )}
         <span className="ml-auto">
           <CopyButton
-            announcement="Code sample copied to the clipboard"
-            label="Copy"
+            announcement={copy.copyCodeAnnouncement}
+            copiedLabel={copy.copyCode}
+            failedLabel={copy.copyCode}
+            label={copy.copyCode}
             testId="docs-code-copy"
             text={source}
             tone="quiet"

@@ -3,11 +3,16 @@ import { describe, expect, it } from 'vitest'
 
 import { neighboursOf } from '../../lib/docs/build-nav'
 import { readDocs } from '../../lib/docs/read-docs'
+import { en } from '../../lib/i18n/dictionaries/en'
+import { DocsDictionary } from '../../lib/i18n/surfaces'
 
 import { DocsBreadcrumbs } from './docs-breadcrumbs'
 import { DocsPager } from './docs-pager'
 import { DocsSidebar } from './docs-sidebar'
 import { DocsToc } from './docs-toc'
+
+/** The table of contents is a client component, so it reads its two words from the provider. */
+const withDocs = (node: React.ReactNode) => <DocsDictionary value={en.docs}>{node}</DocsDictionary>
 
 describe('DocsSidebar', () => {
   it('lists every document and marks the current one, with no JavaScript needed to do it', () => {
@@ -45,7 +50,7 @@ describe('DocsToc', () => {
   it('lists the h2 and h3 headings and nothing deeper', () => {
     const entry = readDocs().find((doc) => doc.slug === 'canvas')
 
-    render(<DocsToc headings={entry?.headings ?? []} />)
+    render(withDocs(<DocsToc headings={entry?.headings ?? []} />))
 
     const expected = (entry?.headings ?? []).filter(
       (heading) => heading.depth === 2 || heading.depth === 3,
@@ -56,7 +61,9 @@ describe('DocsToc', () => {
   })
 
   it('renders nothing for a document with no sections', () => {
-    const { container } = render(<DocsToc headings={[{ depth: 1, text: 'X', slug: 'x' }]} />)
+    const { container } = render(
+      withDocs(<DocsToc headings={[{ depth: 1, text: 'X', slug: 'x' }]} />),
+    )
 
     expect(container).toBeEmptyDOMElement()
   })

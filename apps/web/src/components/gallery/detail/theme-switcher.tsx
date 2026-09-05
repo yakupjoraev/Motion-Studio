@@ -3,6 +3,8 @@
 import { PRESETS, type PresetId } from '@motion-studio/theme'
 import { Segmented } from '@motion-studio/ui'
 
+import { useGallery } from '../../../lib/i18n/surfaces'
+
 /** Five of the ten, chosen so the row shows the range: two studio themes and three that are not. */
 export const PREVIEW_THEMES = ['studio-dark', 'studio-light', 'paper', 'brutal', 'nord'] as const
 
@@ -33,9 +35,11 @@ export interface ThemeSwitcherProps {
  * ADR-306 is what makes the claim true of a block's utility *classes* and not only its variables.
  */
 export function ThemeSwitcher({ value, onChange }: ThemeSwitcherProps) {
+  const copy = useGallery().detail
+
   return (
     <Segmented
-      aria-label="Preview theme"
+      aria-label={copy.previewTheme}
       onValueChange={(next) => {
         if (isTheme(next)) {
           onChange(next)

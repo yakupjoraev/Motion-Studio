@@ -3,6 +3,10 @@
 import { type TokenKind, tokenize } from '@motion-studio/blocks/highlight'
 import { useMemo } from 'react'
 
+import { useLocale } from '../../../lib/i18n/locale-context'
+import { formatPlural } from '../../../lib/i18n/plural'
+import { useGallery } from '../../../lib/i18n/surfaces'
+
 /** ADR-124's five colours, as token-backed classes. `plain` inherits and needs none. */
 const TOKEN_CLASS: Readonly<Record<TokenKind, string>> = {
   comment: 'text-foreground-muted',
@@ -31,6 +35,8 @@ export interface SourceViewProps {
  * repeated here. The ring is drawn inside the box because the figure that wraps it is clipped.
  */
 export function SourceView({ contents, path }: SourceViewProps) {
+  const { locale } = useLocale()
+  const copy = useGallery().detail
   const lines = useMemo(() => contents.split('\n').map((line) => tokenize(line, 'tsx')), [contents])
 
   return (
@@ -40,7 +46,7 @@ export function SourceView({ contents, path }: SourceViewProps) {
           {path}
         </span>
         <span className="font-mono text-2xs text-foreground-muted uppercase tracking-[0.14em]">
-          {lines.length} lines · react
+          {formatPlural(locale, lines.length, copy.lineCount)}
         </span>
       </figcaption>
 

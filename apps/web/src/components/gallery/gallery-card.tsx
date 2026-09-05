@@ -1,5 +1,9 @@
+import { blockDescription, blockName, registryCopy } from '@motion-studio/blocks/i18n'
 import type { BlockDefinition } from '@motion-studio/schema'
 import Link from 'next/link'
+
+import { localeHref } from '../../lib/i18n/locale-href'
+import { getRequestLocale } from '../../lib/i18n/request-locale'
 
 import { CardPreview } from './card-preview'
 import { slotFill } from './slot-fill'
@@ -24,6 +28,9 @@ export interface GalleryCardProps {
  * `data-block-card` is what the search filters on — `hide-rule.tsx`.
  */
 export function GalleryCard({ definition }: GalleryCardProps) {
+  const locale = getRequestLocale()
+  const copy = registryCopy(locale)
+
   return (
     <article
       className="group relative flex h-full flex-col gap-3 rounded-xl border border-border bg-surface-1 p-3 transition-colors focus-within:border-border-strong hover:border-border-strong"
@@ -43,14 +50,16 @@ export function GalleryCard({ definition }: GalleryCardProps) {
         <h3 className="font-medium text-sm tracking-tight">
           <Link
             className="rounded-sm outline-none after:absolute after:inset-0 after:rounded-xl focus-visible:after:shadow-focus"
-            href={`/blocks/${definition.id}`}
+            href={localeHref(locale, `/blocks/${definition.id}`)}
             prefetch={false}
           >
-            {definition.name}
+            {blockName(copy, definition.id, definition.name)}
           </Link>
         </h3>
 
-        <p className="text-foreground-muted text-xs leading-snug">{definition.description}</p>
+        <p className="text-foreground-muted text-xs leading-snug">
+          {blockDescription(copy, definition.id, definition.description)}
+        </p>
 
         <ul className="flex flex-wrap gap-1.5 pt-1">
           {definition.tags.slice(0, 3).map((tag) => (

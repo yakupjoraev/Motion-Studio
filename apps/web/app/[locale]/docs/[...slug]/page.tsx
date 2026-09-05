@@ -8,9 +8,10 @@ import { DocsShell } from '../../../../src/components/docs/docs-shell'
 import { neighboursOf } from '../../../../src/lib/docs/build-nav'
 import { plainText } from '../../../../src/lib/docs/frontmatter'
 import { INDEX_FILE, findDoc, readDocs } from '../../../../src/lib/docs/read-docs'
+import { setRequestLocale } from '../../../../src/lib/i18n/request-locale'
 
 interface PageProps {
-  readonly params: Promise<{ readonly slug: readonly string[] }>
+  readonly params: Promise<{ readonly slug: readonly string[]; readonly locale: string }>
 }
 
 /**
@@ -38,7 +39,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function DocPage({ params }: PageProps) {
-  const { slug } = await params
+  const { slug, locale } = await params
+
+  setRequestLocale(locale)
+
   const entry = findDoc(slug.join('/'))
 
   if (entry === undefined || entry.fileName === INDEX_FILE) {

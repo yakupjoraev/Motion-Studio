@@ -3,6 +3,7 @@
 import type { BlockCategory, BlockId, UnknownProps } from '@motion-studio/schema'
 import { type ReactNode, useCallback, useState } from 'react'
 
+import { useGallery } from '../../../lib/i18n/surfaces'
 import { useBlockState } from '../use-block-state'
 
 import { BlockControls } from './block-controls'
@@ -43,6 +44,7 @@ export function BlockWorkbench({
   sourceOfDefaults,
   children,
 }: BlockWorkbenchProps) {
+  const copy = useGallery().detail
   const state = useBlockState(id, category, defaults)
   const source = useSource(id, state.props, sourceOfDefaults, state.modified)
   const [width, setWidth] = useState<PreviewWidth>('xl')
@@ -80,7 +82,13 @@ export function BlockWorkbench({
             {/* `prompts/52` § Sixty seconds: the copy button is in the first screenful, not below
                 the listing it copies. */}
             <span className="sm:ml-auto">
-              <CopyButton label="Copy React" text={source.source.contents} />
+              <CopyButton
+                announcement={copy.copyAnnouncement}
+                copiedLabel={copy.copied}
+                failedLabel={copy.copyFailed}
+                label={copy.copyReact}
+                text={source.source.contents}
+              />
             </span>
           </div>
 
@@ -107,14 +115,16 @@ export function BlockWorkbench({
 
         <aside className="flex min-w-0 flex-col rounded-xl border border-border bg-surface-1">
           <header className="flex items-center justify-between gap-3 border-border-subtle border-b px-3 py-2.5">
-            <h2 className="font-mono text-2xs uppercase tracking-[0.14em]">{name} · props</h2>
+            <h2 className="font-mono text-2xs uppercase tracking-[0.14em]">
+              {name} · {copy.propsPanel}
+            </h2>
             <button
               className="rounded-sm px-1.5 py-0.5 font-mono text-2xs text-foreground-muted uppercase tracking-[0.12em] outline-none transition-colors hover:text-foreground focus-visible:shadow-focus disabled:opacity-40"
               disabled={!state.modified}
               onClick={state.reset}
               type="button"
             >
-              Reset
+              {copy.reset}
             </button>
           </header>
 

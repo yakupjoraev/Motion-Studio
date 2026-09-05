@@ -1,0 +1,30 @@
+import type { Dictionary } from '../../dictionary'
+
+export const docs: Dictionary['docs'] = {
+  metaTitle: 'Документация — Motion Studio',
+  metaDescription:
+    'Спецификация, по которой собран продукт: 28 документов, решения за ними и маршруты чтения.',
+  indexEyebrow: 'Спецификация',
+  breadcrumbRoot: 'Документация',
+  breadcrumbLabel: 'Хлебные крошки',
+  sidebarLabel: 'Документация',
+  tocLabel: 'На этой странице',
+  pagerLabel: 'Предыдущий и следующий документ',
+  previous: 'Назад',
+  next: 'Вперёд',
+  calloutLabel: 'Примечание',
+  searchTrigger: 'Поиск',
+  searchTitle: 'Поиск по документации',
+  searchDescription: 'Поиск по всем документам и разделам по названию.',
+  searchPlaceholder: 'Введите документ или раздел…',
+  searchListLabel: 'Документация',
+  searchFailed: 'Индекс поиска не загрузился. Все документы по-прежнему в боковой панели.',
+  searchLoading: 'Загружаем индекс…',
+  searchEmpty: 'Ничего не найдено по «{query}».',
+  copyCode: 'Копировать',
+  copyCodeCopied: 'Скопировано',
+  copyCodeFailed: 'Браузер не дал доступ к буферу обмена',
+  copyCodeAnnouncement: 'Фрагмент кода скопирован в буфер обмена',
+  codeSampleName: '{label}, пример {ordinal}',
+  englishBodies: 'Тексты документов пока на английском. Интерфейс вокруг них — на русском.',
+}

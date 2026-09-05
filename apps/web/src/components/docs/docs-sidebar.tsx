@@ -2,6 +2,7 @@ import Link from 'next/link'
 
 import { buildNav } from '../../lib/docs/build-nav'
 import { plainText } from '../../lib/docs/frontmatter'
+import { getRequestDictionary } from '../../lib/i18n/request-locale'
 
 export interface DocsSidebarProps {
   /** `''` is the index. Server-rendered so `aria-current` is in the HTML — ADR-309. */
@@ -16,10 +17,11 @@ const LINK_CLASS =
   'flex min-h-7 items-center rounded-sm px-2 font-mono text-2xs outline-none transition-colors focus-visible:shadow-focus'
 
 export function DocsSidebar({ current }: DocsSidebarProps) {
+  const { docs } = getRequestDictionary()
   const groups = buildNav()
 
   return (
-    <nav aria-label="Documentation" className="flex flex-col gap-4">
+    <nav aria-label={docs.sidebarLabel} className="flex flex-col gap-4">
       <Link
         aria-current={current === '' ? 'page' : undefined}
         className={`${LINK_CLASS} ${

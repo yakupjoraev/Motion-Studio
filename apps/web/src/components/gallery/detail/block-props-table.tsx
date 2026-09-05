@@ -1,7 +1,11 @@
 import type { PropRow } from '@motion-studio/schema'
 
+import type { Dictionary } from '../../../lib/i18n/dictionary'
+
 export interface BlockPropsTableProps {
   readonly rows: readonly PropRow[]
+  /** The table's own words. A prop's name, type and default are code, and stay as they are. */
+  readonly copy: Dictionary['gallery']['detail']
 }
 
 /**
@@ -11,9 +15,9 @@ export interface BlockPropsTableProps {
  * A real `<table>` with a real header row, because it is one: a screen reader that announces "Prop,
  * blur, Type, number 24…160" has said what a sighted reader sees, and a grid of divs cannot.
  */
-export function BlockPropsTable({ rows }: BlockPropsTableProps) {
+export function BlockPropsTable({ rows, copy }: BlockPropsTableProps) {
   if (rows.length === 0) {
-    return <p className="text-foreground-muted text-sm">This block takes no props.</p>
+    return <p className="text-foreground-muted text-sm">{copy.propsEmpty}</p>
   }
 
   /*
@@ -24,7 +28,7 @@ export function BlockPropsTable({ rows }: BlockPropsTableProps) {
    */
   return (
     <div
-      aria-label="Props"
+      aria-label={copy.propsRegion}
       className="overflow-x-auto rounded-xl border border-border focus-visible:-outline-offset-2 focus-visible:outline-2 focus-visible:outline-accent-ring"
       data-testid="props-table"
       // biome-ignore lint/a11y/useSemanticElements: the semantic element would wrap the table in a <section>, which is a landmark this page does not want a fifth of
@@ -35,10 +39,10 @@ export function BlockPropsTable({ rows }: BlockPropsTableProps) {
       <table className="w-full border-collapse text-left text-sm">
         <thead>
           <tr className="border-border-subtle border-b bg-surface-1">
-            <Th>Prop</Th>
-            <Th>Type</Th>
-            <Th>Default</Th>
-            <Th>Description</Th>
+            <Th>{copy.propColumn}</Th>
+            <Th>{copy.typeColumn}</Th>
+            <Th>{copy.defaultColumn}</Th>
+            <Th>{copy.descriptionColumn}</Th>
           </tr>
         </thead>
         <tbody>
@@ -49,7 +53,7 @@ export function BlockPropsTable({ rows }: BlockPropsTableProps) {
                 {row.responsive ? (
                   <span
                     className="ml-2 rounded-full border border-border-subtle px-1.5 py-0.5 text-2xs text-foreground-muted uppercase tracking-[0.1em]"
-                    title="Can be set per breakpoint"
+                    title={copy.responsiveTitle}
                   >
                     bp
                   </span>

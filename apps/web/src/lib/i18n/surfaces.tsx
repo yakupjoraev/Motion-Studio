@@ -10,9 +10,17 @@ import type { Dictionary } from './dictionary'
  */
 const navContext = createDictionaryContext<Dictionary['nav']>('nav')
 const landingContext = createDictionaryContext<Dictionary['landing']>('landing')
+const galleryContext = createDictionaryContext<Dictionary['gallery']>('gallery')
+const docsContext = createDictionaryContext<Dictionary['docs']>('docs')
 
 export const NavDictionary = navContext.Provider
 export const useNav = navContext.use
 
 export const LandingDictionary = landingContext.Provider
 export const useLanding = landingContext.use
+
+export const GalleryDictionary = galleryContext.Provider
+export const useGallery = galleryContext.use
+
+export const DocsDictionary = docsContext.Provider
+export const useDocs = docsContext.use

@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react'
 
 import type { SearchIndex } from '../../lib/docs/build-search-index'
 import { slugify } from '../../lib/docs/headings'
+import { useDocs } from '../../lib/i18n/surfaces'
 import { PaletteCombobox } from '../palette/palette-combobox'
 import { fuzzyScore } from '../studio/command-palette/fuzzy-match'
 
@@ -72,6 +73,7 @@ export interface DocsSearchDialogProps {
  */
 export function DocsSearchDialog({ onClose }: DocsSearchDialogProps) {
   const router = useRouter()
+  const copy = useDocs()
   const [index, setIndex] = useState<SearchIndex | null>(null)
   const [failed, setFailed] = useState(false)
   const [query, setQuery] = useState('')
@@ -137,7 +139,7 @@ export function DocsSearchDialog({ onClose }: DocsSearchDialogProps) {
 
   return (
     <Dialog
-      description="Search every document and every section by name."
+      description={copy.searchDescription}
       onOpenChange={(open) => {
         if (!open) {
           onClose()
@@ -145,7 +147,7 @@ export function DocsSearchDialog({ onClose }: DocsSearchDialogProps) {
       }}
       open
       size="lg"
-      title="Search the documentation"
+      title={copy.searchTitle}
     >
       <PaletteCombobox
         active={active}
@@ -154,20 +156,20 @@ export function DocsSearchDialog({ onClose }: DocsSearchDialogProps) {
         empty={
           <p className="p-4 text-center text-foreground-muted text-xs">
             {failed
-              ? 'The search index did not load. Every document is still in the sidebar.'
+              ? copy.searchFailed
               : index === null
-                ? 'Loading the index…'
-                : `Nothing matches “${query}”.`}
+                ? copy.searchLoading
+                : copy.searchEmpty.replace('{query}', query)}
           </p>
         }
-        inputLabel="Search the documentation"
+        inputLabel={copy.searchTitle}
         inputTestId="docs-search-input"
         listHeight={LIST_HEIGHT}
         listId="docs-search-listbox"
-        listLabel="Documentation"
+        listLabel={copy.searchListLabel}
         listTestId="docs-search-listbox"
         onPick={pick}
-        placeholder="Type a document or a section…"
+        placeholder={copy.searchPlaceholder}
         query={query}
         setActive={setActive}
         setQuery={(value) => {

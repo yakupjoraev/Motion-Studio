@@ -1,5 +1,8 @@
 import Link from 'next/link'
 
+import { localeHref } from '../../lib/i18n/locale-href'
+import { getRequestDictionary, getRequestLocale } from '../../lib/i18n/request-locale'
+
 export interface DocsBreadcrumbsProps {
   readonly group: string | undefined
   readonly fileName: string
@@ -7,16 +10,18 @@ export interface DocsBreadcrumbsProps {
 
 /** The group is not a page, so it is text rather than a link — a breadcrumb that goes nowhere is worse. */
 export function DocsBreadcrumbs({ group, fileName }: DocsBreadcrumbsProps) {
+  const { docs } = getRequestDictionary()
+
   return (
-    <nav aria-label="Breadcrumb">
+    <nav aria-label={docs.breadcrumbLabel}>
       <ol className="flex flex-wrap items-center gap-2 font-mono text-2xs text-foreground-muted uppercase tracking-[0.14em]">
         <li>
           <Link
             className="rounded-sm outline-none transition-colors hover:text-foreground focus-visible:shadow-focus"
-            href="/docs"
+            href={localeHref(getRequestLocale(), '/docs')}
             prefetch={false}
           >
-            Docs
+            {docs.breadcrumbRoot}
           </Link>
         </li>
         {group === undefined ? null : (

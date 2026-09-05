@@ -2,6 +2,8 @@
 
 import { Suspense, lazy, useEffect, useState } from 'react'
 
+import { useDocs } from '../../lib/i18n/surfaces'
+
 /**
  * `React.lazy` and not `next/dynamic`: with `ssr: false` the dynamic wrapper renders `null` while its
  * chunk loads, so the first `⌘K` opens nothing (ADR-295). Suspense renders the fallback instead.
@@ -14,6 +16,7 @@ const DocsSearchDialog = lazy(async () => ({
 }))
 
 export function DocsSearch() {
+  const docs = useDocs()
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
@@ -37,7 +40,7 @@ export function DocsSearch() {
         onClick={() => setOpen(true)}
         type="button"
       >
-        <span className="text-xs">Search</span>
+        <span className="text-xs">{docs.searchTrigger}</span>
         <kbd className="rounded-[3px] border border-border-subtle bg-surface-2 px-1 font-mono text-[10px] text-foreground-muted">
           ⌘K
         </kbd>

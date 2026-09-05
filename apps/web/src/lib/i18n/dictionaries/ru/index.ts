@@ -1,6 +1,8 @@
 import type { Dictionary } from '../../dictionary'
 
+import { docs } from './docs'
 import { errors } from './errors'
+import { gallery } from './gallery'
 import { landing } from './landing'
 import { nav } from './nav'
 
@@ -12,4 +14,6 @@ export const ru: Dictionary = {
   nav,
   errors,
   landing,
+  gallery,
+  docs,
 }

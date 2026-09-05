@@ -1,3 +1,5 @@
+import { useGallery } from '../../../lib/i18n/surfaces'
+
 export interface RejectedNoticeProps {
   readonly paths: readonly string[]
 }
@@ -10,9 +12,13 @@ export interface RejectedNoticeProps {
  * mistake and cannot fix it, so the page names what it ignored and gets on with showing the block.
  */
 export function RejectedNotice({ paths }: RejectedNoticeProps) {
+  const copy = useGallery().detail
+
   if (paths.length === 0) {
     return null
   }
+
+  const sentence = paths.length === 1 ? copy.rejectedOne : copy.rejectedMany
 
   return (
     <p
@@ -20,8 +26,7 @@ export function RejectedNotice({ paths }: RejectedNoticeProps) {
       aria-live="polite"
       data-testid="rejected-params"
     >
-      The link set {paths.join(', ')} to {paths.length === 1 ? 'a value' : 'values'} this block does
-      not take. {paths.length === 1 ? 'It is' : 'They are'} showing the default instead.
+      {sentence.replace('{paths}', paths.join(', '))}
     </p>
   )
 }
