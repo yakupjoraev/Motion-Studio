@@ -2,6 +2,8 @@ import type { A11yNotes } from '@motion-studio/schema'
 
 export interface BlockA11yNotesProps {
   readonly a11y: A11yNotes
+  /** The word "Role" in the current language. The role's own value is an ARIA token, not prose. */
+  readonly roleLabel: string
 }
 
 /**
@@ -13,12 +15,12 @@ export interface BlockA11yNotesProps {
  * generated a sentence per block would produce seventy-two identical sentences and call it
  * documentation.
  */
-export function BlockA11yNotes({ a11y }: BlockA11yNotesProps) {
+export function BlockA11yNotes({ a11y, roleLabel }: BlockA11yNotesProps) {
   return (
     <div className="flex flex-col gap-3">
       {a11y.role === undefined ? null : (
         <p className="font-mono text-2xs text-foreground-muted uppercase tracking-[0.14em]">
-          Role · <span className="text-foreground">{a11y.role}</span>
+          {roleLabel} · <span className="text-foreground">{a11y.role}</span>
         </p>
       )}
 

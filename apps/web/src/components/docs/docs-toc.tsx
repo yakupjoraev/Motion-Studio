@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 
 import { plainText } from '../../lib/docs/frontmatter'
 import type { DocHeading } from '../../lib/docs/headings'
+import { useDocs } from '../../lib/i18n/surfaces'
 
 export interface DocsTocProps {
   readonly headings: readonly DocHeading[]
@@ -21,6 +22,7 @@ export interface DocsTocProps {
  * Nothing animates and nothing moves; the only change is which link carries `aria-current`.
  */
 export function DocsToc({ headings }: DocsTocProps) {
+  const docs = useDocs()
   const shown = headings.filter((heading) => heading.depth === 2 || heading.depth === 3)
   const [current, setCurrent] = useState<string | null>(shown[0]?.slug ?? null)
 
@@ -59,7 +61,7 @@ export function DocsToc({ headings }: DocsTocProps) {
   }
 
   return (
-    <nav aria-label="On this page" className="flex flex-col gap-2">
+    <nav aria-label={docs.tocLabel} className="flex flex-col gap-2">
       <p className="font-mono text-2xs text-foreground-muted uppercase tracking-[0.14em]">
         On this page
       </p>

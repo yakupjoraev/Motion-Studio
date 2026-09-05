@@ -3,6 +3,8 @@
 import { BREAKPOINTS } from '@motion-studio/schema'
 import { Segmented } from '@motion-studio/ui'
 
+import { useGallery } from '../../../lib/i18n/surfaces'
+
 /** Three of the six — a phone, a tablet and a desktop. The other three answer the same question. */
 export const PREVIEW_WIDTHS = ['base', 'md', 'xl'] as const
 
@@ -33,9 +35,11 @@ export interface ViewportSwitcherProps {
  * paragraph forbidding, and the paragraph is about more than the fields.
  */
 export function ViewportSwitcher({ value, onChange }: ViewportSwitcherProps) {
+  const copy = useGallery().detail
+
   return (
     <Segmented
-      aria-label="Preview width"
+      aria-label={copy.previewWidth}
       onValueChange={(next) => {
         if (isWidth(next)) {
           onChange(next)

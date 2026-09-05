@@ -1,5 +1,7 @@
 'use client'
 
+import { useGallery } from '../../../lib/i18n/surfaces'
+
 import { CopyButton } from './copy-button'
 import { SourceView } from './source-view'
 import type { SourceState } from './use-source'
@@ -14,11 +16,19 @@ export interface SourcePanelProps {
  * the visitor who wants to read it first should not have to scroll back up.
  */
 export function SourcePanel({ state }: SourcePanelProps) {
+  const copy = useGallery().detail
+
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="font-display text-xl tracking-tight">The code it prints</h2>
-        <CopyButton label="Copy React" text={state.source.contents} />
+        <h2 className="font-display text-xl tracking-tight">{copy.sourceHeading}</h2>
+        <CopyButton
+          announcement={copy.copyAnnouncement}
+          copiedLabel={copy.copied}
+          failedLabel={copy.copyFailed}
+          label={copy.copyReact}
+          text={state.source.contents}
+        />
       </div>
 
       {state.failed ? (
@@ -26,7 +36,7 @@ export function SourcePanel({ state }: SourcePanelProps) {
           aria-live="polite"
           className="rounded-md border border-warning/40 bg-warning-muted/30 px-3 py-2 text-sm"
         >
-          The exporter did not load, so this is the source for the block&rsquo;s defaults.
+          {copy.exporterFallback}
         </p>
       ) : null}
 

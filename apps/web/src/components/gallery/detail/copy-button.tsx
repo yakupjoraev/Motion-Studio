@@ -9,7 +9,11 @@ export interface CopyButtonProps {
   readonly label: string
   /** `quiet` is the docs' code fences: one per sample, so it cannot carry the accent. */
   readonly tone?: CopyTone
-  readonly announcement?: string
+  readonly announcement: string
+  /** What the button says for two seconds after a successful copy. */
+  readonly copiedLabel: string
+  /** What a screen reader hears when the clipboard refused. */
+  readonly failedLabel: string
   readonly testId?: string
 }
 
@@ -31,7 +35,9 @@ export function CopyButton({
   text,
   label,
   tone = 'accent',
-  announcement = 'Component source copied to the clipboard',
+  announcement,
+  copiedLabel,
+  failedLabel,
   testId = 'copy-react',
 }: CopyButtonProps) {
   const [state, setState] = useState<'idle' | 'copied' | 'failed'>('idle')
@@ -61,12 +67,12 @@ export function CopyButton({
         onClick={copy}
         type="button"
       >
-        {state === 'copied' ? 'Copied' : label}
+        {state === 'copied' ? copiedLabel : label}
       </button>
 
       <span aria-live="polite" className="sr-only">
         {state === 'copied' ? announcement : ''}
-        {state === 'failed' ? 'The browser would not give access to the clipboard' : ''}
+        {state === 'failed' ? failedLabel : ''}
       </span>
     </>
   )

@@ -1,5 +1,8 @@
+import { categoryName, registryCopy } from '@motion-studio/blocks/i18n'
 import { blockRegistry } from '@motion-studio/blocks/registry'
 import { BLOCK_CATEGORIES, type BlockCategory } from '@motion-studio/schema'
+
+import { getRequestLocale } from '../../lib/i18n/request-locale'
 
 import { GalleryCard } from './gallery-card'
 
@@ -13,6 +16,8 @@ const CATEGORIES = Object.keys(BLOCK_CATEGORIES) as readonly BlockCategory[]
  * by when nothing under it matched.
  */
 export function GalleryGrid() {
+  const copy = registryCopy(getRequestLocale())
+
   return (
     <div className="flex flex-col gap-14">
       {CATEGORIES.map((category) => {
@@ -32,7 +37,7 @@ export function GalleryGrid() {
               className="border-border-subtle border-b pb-3 font-mono text-2xs text-foreground-muted uppercase tracking-[0.18em]"
               id={`category-${category}`}
             >
-              {BLOCK_CATEGORIES[category]}
+              {categoryName(copy, category, BLOCK_CATEGORIES[category])}
               <span className="ml-2 tabular-nums">{blocks.length}</span>
             </h2>
 

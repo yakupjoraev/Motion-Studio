@@ -1,4 +1,6 @@
+import { docs } from './docs'
 import { errors } from './errors'
+import { gallery } from './gallery'
 import { landing } from './landing'
 import { nav } from './nav'
 
@@ -11,4 +13,6 @@ export const en = {
   nav,
   errors,
   landing,
+  gallery,
+  docs,
 }

@@ -3,6 +3,9 @@
 import type { BlockCategory } from '@motion-studio/schema'
 import { useDeferredValue, useMemo, useState } from 'react'
 
+import { useLocale } from '../../lib/i18n/locale-context'
+import { formatPlural } from '../../lib/i18n/plural'
+import { useGallery } from '../../lib/i18n/surfaces'
 import { fuzzyScore } from '../studio/command-palette/fuzzy-match'
 
 import { CategoryChips } from './category-chips'
@@ -12,6 +15,8 @@ import { HideRule } from './hide-rule'
 export interface GallerySearchProps {
   readonly index: readonly GalleryEntry[]
   readonly counts: Readonly<Record<string, number>>
+  /** The category names, in the current language — see `CategoryChips`. */
+  readonly categoryLabels: Readonly<Record<BlockCategory, string>>
 }
 
 /**
@@ -25,7 +30,9 @@ export interface GallerySearchProps {
  * The matcher is the command palette's, not a second one. A catalogue that ranked "aur" differently
  * in the gallery than in the palette would be two products wearing one name.
  */
-export function GallerySearch({ index, counts }: GallerySearchProps) {
+export function GallerySearch({ index, counts, categoryLabels }: GallerySearchProps) {
+  const { locale } = useLocale()
+  const copy = useGallery()
   const [query, setQuery] = useState('')
   const [categories, setCategories] = useState<ReadonlySet<BlockCategory>>(new Set())
   const deferred = useDeferredValue(query)
@@ -40,13 +47,13 @@ export function GallerySearch({ index, counts }: GallerySearchProps) {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-3">
         <label className="flex-1" htmlFor="gallery-search">
-          <span className="sr-only">Search the catalogue</span>
+          <span className="sr-only">{copy.searchLabel}</span>
           <input
             autoComplete="off"
             className="h-10 w-full rounded-md border border-border bg-surface-1 px-3 text-sm outline-none placeholder:text-foreground-muted focus-visible:shadow-focus"
             id="gallery-search"
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search 72 blocks by name, tag or description"
+            placeholder={copy.searchPlaceholder}
             type="search"
             value={query}
           />
@@ -56,11 +63,21 @@ export function GallerySearch({ index, counts }: GallerySearchProps) {
           aria-live="polite"
           className="font-mono text-2xs text-foreground-muted uppercase tracking-[0.14em]"
         >
-          {filtered ? `${visible.size} of ${index.length} blocks` : `${index.length} blocks`}
+          {filtered
+            ? formatPlural(locale, visible.size, copy.blockCountFiltered).replace(
+                '{total}',
+                String(index.length),
+              )
+            : formatPlural(locale, index.length, copy.blockCount)}
         </p>
       </div>
 
-      <CategoryChips counts={counts} onChange={setCategories} selected={categories} />
+      <CategoryChips
+        counts={counts}
+        labels={categoryLabels}
+        onChange={setCategories}
+        selected={categories}
+      />
 
       <HideRule ids={visible} sections={sectionsWith(index, visible)} total={index.length} />
     </div>

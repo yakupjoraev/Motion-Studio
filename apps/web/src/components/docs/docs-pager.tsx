@@ -1,6 +1,7 @@
 import Link from 'next/link'
 
 import type { Neighbours } from '../../lib/docs/build-nav'
+import { getRequestDictionary } from '../../lib/i18n/request-locale'
 
 const CARD_CLASS =
   'flex flex-1 flex-col gap-1 rounded-lg border border-border bg-surface-1 px-4 py-3 outline-none transition-colors hover:border-border-strong focus-visible:shadow-focus'
@@ -11,16 +12,18 @@ const CARD_CLASS =
  * was meant to be read.
  */
 export function DocsPager({ previous, next }: Neighbours) {
+  const { docs } = getRequestDictionary()
+
   if (previous === undefined && next === undefined) {
     return null
   }
 
   return (
-    <nav aria-label="Previous and next document" className="mt-12 flex flex-col gap-3 sm:flex-row">
+    <nav aria-label={docs.pagerLabel} className="mt-12 flex flex-col gap-3 sm:flex-row">
       {previous === undefined ? null : (
         <Link className={CARD_CLASS} href={previous.href} prefetch={false} rel="prev">
           <span className="font-mono text-2xs text-foreground-muted uppercase tracking-[0.14em]">
-            Previous
+            {docs.previous}
           </span>
           <span className="font-mono text-sm">{previous.fileName}</span>
         </Link>
@@ -34,7 +37,7 @@ export function DocsPager({ previous, next }: Neighbours) {
           rel="next"
         >
           <span className="font-mono text-2xs text-foreground-muted uppercase tracking-[0.14em]">
-            Next
+            {docs.next}
           </span>
           <span className="font-mono text-sm">{next.fileName}</span>
         </Link>

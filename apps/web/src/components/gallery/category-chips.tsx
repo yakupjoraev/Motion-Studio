@@ -3,6 +3,11 @@
 import { BLOCK_CATEGORIES, type BlockCategory } from '@motion-studio/schema'
 
 export interface CategoryChipsProps {
+  /**
+   * The nine category names in the current language. Nine strings rather than the registry's whole
+   * table: the table is 40 kB, and a chip row needs the headings and nothing else.
+   */
+  readonly labels: Readonly<Record<BlockCategory, string>>
   readonly counts: Readonly<Record<string, number>>
   readonly selected: ReadonlySet<BlockCategory>
   readonly onChange: (next: ReadonlySet<BlockCategory>) => void
@@ -15,7 +20,7 @@ const CATEGORIES = Object.keys(BLOCK_CATEGORIES) as readonly BlockCategory[]
  * checkbox group: each chip is a switch on the grid beside it, and a screen reader that says
  * "Effects, pressed" has said the whole state.
  */
-export function CategoryChips({ counts, selected, onChange }: CategoryChipsProps) {
+export function CategoryChips({ labels, counts, selected, onChange }: CategoryChipsProps) {
   const toggle = (category: BlockCategory): void => {
     const next = new Set(selected)
 
@@ -46,7 +51,7 @@ export function CategoryChips({ counts, selected, onChange }: CategoryChipsProps
             onClick={() => toggle(category)}
             type="button"
           >
-            {BLOCK_CATEGORIES[category]}
+            {labels[category] ?? BLOCK_CATEGORIES[category]}
             <span className="ml-1.5 tabular-nums">{counts[category] ?? 0}</span>
           </button>
         )

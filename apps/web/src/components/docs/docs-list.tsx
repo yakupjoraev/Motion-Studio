@@ -1,5 +1,7 @@
 import type { Token, Tokens } from 'marked'
 
+import { getRequestDictionary } from '../../lib/i18n/request-locale'
+
 import { DocsCode } from './docs-code'
 import { DocsInline } from './docs-inline'
 import type { Ordinals } from './docs-ordinals'
@@ -73,6 +75,7 @@ function ItemBlocks({
         if (isCode(token)) {
           return (
             <DocsCode
+              copy={getRequestDictionary().docs}
               info={token.lang}
               key={key}
               ordinal={ordinals.nextCode()}

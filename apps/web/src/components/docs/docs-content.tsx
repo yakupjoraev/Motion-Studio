@@ -2,8 +2,10 @@ import type { Token } from 'marked'
 
 import type { DocHeading } from '../../lib/docs/headings'
 
+import { getRequestDictionary } from '../../lib/i18n/request-locale'
 import { ArchitectureDiagram, isDependencyGraphFence } from './architecture-diagram'
 import { DocsCallout } from './docs-callout'
+
 import { DocsCode } from './docs-code'
 import { DocsHeading } from './docs-heading'
 import { DocsInline } from './docs-inline'
@@ -23,6 +25,7 @@ export interface DocsContentProps {
  * exists, which is what lets a heading carry an anchor and a table carry `scope`.
  */
 export function DocsContent({ tokens, headings }: DocsContentProps) {
+  const copy = getRequestDictionary().docs
   const ordinals = createOrdinals()
   let heading = 0
 
@@ -46,6 +49,7 @@ export function DocsContent({ tokens, headings }: DocsContentProps) {
             <ArchitectureDiagram key={key} />
           ) : (
             <DocsCode
+              copy={copy}
               info={token.lang}
               key={key}
               ordinal={ordinals.nextCode()}
