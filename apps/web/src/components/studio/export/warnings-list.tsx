@@ -4,6 +4,8 @@ import type { IRWarning, WarningCode } from '@motion-studio/codegen'
 import { ExternalLinkIcon, WarningIcon } from '@motion-studio/icons'
 import type { NodeId } from '@motion-studio/schema'
 import { Badge, Button, Collapsible } from '@motion-studio/ui'
+import type { Dictionary } from '../../../lib/i18n/dictionary'
+import { useStudio } from '../../../lib/i18n/studio-surface'
 
 export interface WarningsListProps {
   readonly warnings: readonly IRWarning[]
@@ -22,15 +24,15 @@ const ORDER: readonly WarningCode[] = [
   'perf',
 ]
 
-const TITLES: Readonly<Record<WarningCode, string>> = {
-  approximation: 'Approximated',
-  'missing-alt': 'Missing alt text',
-  contrast: 'Contrast',
-  unsupported: 'Not carried over',
-  dependency: 'Dependencies',
-  perf: 'Performance',
-  a11y: 'Accessibility',
-}
+const titles = (copy: Dictionary['studio']['export']): Readonly<Record<WarningCode, string>> => ({
+  approximation: copy.warningApproximation,
+  'missing-alt': copy.warningMissingAlt,
+  contrast: copy.warningContrast,
+  unsupported: copy.warningUnsupported,
+  dependency: copy.warningDependency,
+  perf: copy.warningPerf,
+  a11y: copy.warningA11y,
+})
 
 /** The docs site serves `docs/`; the link is the section the warning names. */
 const href = (link: string): string => `/docs/${link.replace(/^docs\//, '')}`
@@ -40,13 +42,14 @@ const href = (link: string): string => `/docs/${link.replace(/^docs\//, '')}`
  * line rather than disappearing: "no warnings" is information, and an empty space is not.
  */
 export function WarningsList({ warnings, onSelectNode }: WarningsListProps) {
+  const { export: copy } = useStudio()
   if (warnings.length === 0) {
     return (
       <p
         className="px-2 py-1.5 text-2xs text-foreground-subtle"
         data-testid="export-warnings-empty"
       >
-        No warnings.
+        {copy.noWarnings}
       </p>
     )
   }
@@ -65,7 +68,7 @@ export function WarningsList({ warnings, onSelectNode }: WarningsListProps) {
           trigger={
             <span className="flex min-w-0 items-center gap-2">
               <WarningIcon className="text-warning" size={14} />
-              <span className="truncate font-medium text-xs">{TITLES[code]}</span>
+              <span className="truncate font-medium text-xs">{titles(copy)[code]}</span>
               <Badge tone="warning">{entries.length}</Badge>
             </span>
           }
@@ -84,7 +87,7 @@ export function WarningsList({ warnings, onSelectNode }: WarningsListProps) {
                     size="sm"
                     variant="ghost"
                   >
-                    Select it
+                    {copy.selectIt}
                   </Button>
                 )}
 
@@ -94,7 +97,7 @@ export function WarningsList({ warnings, onSelectNode }: WarningsListProps) {
                   rel="noreferrer"
                   target="_blank"
                 >
-                  Docs
+                  {copy.docs}
                   <ExternalLinkIcon aria-hidden size={12} />
                 </a>
               </li>

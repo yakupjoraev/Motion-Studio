@@ -1,7 +1,7 @@
 import { commands } from '@motion-studio/editor'
 import { createEmptyDocument } from '@motion-studio/schema'
-import { act, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { act, screen, waitFor } from '../../../test/render'
 
 import { SNAPSHOT_LIMIT, takeSnapshot } from '../../../lib/storage/document-store'
 import { useStudioStore } from '../../../store/editor-store'
@@ -39,7 +39,7 @@ describe('the version history dialog', () => {
 
     expect(rows).toHaveLength(SNAPSHOT_LIMIT)
     expect(rows[0]).toHaveTextContent('Latest')
-    expect(rows[0]).toHaveTextContent('1 blocks')
+    expect(rows[0]).toHaveTextContent('1 block')
   })
 
   it('restores a version as an undoable command', async () => {

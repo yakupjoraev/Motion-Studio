@@ -3,6 +3,7 @@
 import { Button, Dialog, Input, Label } from '@motion-studio/ui'
 import { type FormEvent, useState } from 'react'
 
+import { useStudio } from '../../../lib/i18n/studio-surface'
 import { useStudioStore } from '../../../store/editor-store'
 
 import { useDocuments } from './documents-context'
@@ -13,6 +14,7 @@ import { useDocuments } from './documents-context'
  * the whole difference between this and a rename.
  */
 export function SaveAsDialog() {
+  const { documents: copy } = useStudio()
   const open = useStudioStore((state) => state.ui.activeDialog === 'save-as')
   const setActiveDialog = useStudioStore((state) => state.setActiveDialog)
   const currentName = useStudioStore((state) => state.document.meta.name)
@@ -31,15 +33,15 @@ export function SaveAsDialog() {
 
   return (
     <Dialog
-      description="The copy becomes the open document. The original keeps everything it has."
+      description={copy.saveAsDescription}
       onOpenChange={(next) => setActiveDialog(next ? 'save-as' : null)}
       open={open}
       size="sm"
-      title="Save as"
+      title={copy.saveAsTitle}
     >
       <form className="flex flex-col gap-3" onSubmit={submit}>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="save-as-name">Name</Label>
+          <Label htmlFor="save-as-name">{copy.name}</Label>
           <Input
             autoFocus
             id="save-as-name"
@@ -50,10 +52,10 @@ export function SaveAsDialog() {
         </div>
         <div className="flex justify-end gap-2">
           <Button onClick={() => setActiveDialog(null)} size="sm" type="button" variant="secondary">
-            Cancel
+            {copy.cancel}
           </Button>
           <Button size="sm" type="submit" variant="primary">
-            Save a copy
+            {copy.saveCopy}
           </Button>
         </div>
       </form>

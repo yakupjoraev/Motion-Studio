@@ -6,6 +6,7 @@ import { DENSITY, Skeleton } from '@motion-studio/ui'
 import { cn } from '@motion-studio/utils'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { type KeyboardEvent, useCallback, useMemo, useRef, useState } from 'react'
+import { useStudio } from '../../../lib/i18n/studio-surface'
 
 export interface FileTreeProps {
   readonly files: readonly ExportFile[]
@@ -32,6 +33,7 @@ export const formatSize = (bytes: number): string =>
  * rendered rows are twelve of twenty-five.
  */
 export function FileTree({ files, formatted, selected, onSelect, onCopy, pending }: FileTreeProps) {
+  const { export: copy } = useStudio()
   const scrollRef = useRef<HTMLDivElement>(null)
   const [focused, setFocused] = useState<string | null>(null)
   const done = useMemo(() => new Set(formatted), [formatted])
@@ -92,7 +94,7 @@ export function FileTree({ files, formatted, selected, onSelect, onCopy, pending
         ))}
       </div>
     ) : (
-      <p className="p-2 text-2xs text-foreground-subtle">No files.</p>
+      <p className="p-2 text-2xs text-foreground-subtle">{copy.noFiles}</p>
     )
   }
 
@@ -100,7 +102,7 @@ export function FileTree({ files, formatted, selected, onSelect, onCopy, pending
     <div className="flex min-h-0 flex-col">
       <div className="flex items-baseline justify-between px-2 pb-1">
         <span className="font-medium text-2xs text-foreground-subtle uppercase tracking-wide">
-          Files
+          {copy.files}
         </span>
         <span className="text-2xs text-foreground-subtle tabular-nums">
           {files.length} · {formatSize(total)}
@@ -109,7 +111,7 @@ export function FileTree({ files, formatted, selected, onSelect, onCopy, pending
 
       <div className="min-h-0 flex-1 overflow-y-auto" ref={scrollRef}>
         <div
-          aria-label="Generated files"
+          aria-label={copy.generatedFiles}
           className="relative w-full"
           data-testid="export-file-tree"
           role="tree"

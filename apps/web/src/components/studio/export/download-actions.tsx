@@ -5,6 +5,7 @@ import { DownloadIcon, SaveIcon } from '@motion-studio/icons'
 import { Button } from '@motion-studio/ui'
 import { kebab } from '@motion-studio/utils'
 import { useState } from 'react'
+import { useStudio } from '../../../lib/i18n/studio-surface'
 
 export interface DownloadActionsProps {
   readonly files: readonly ExportFile[]
@@ -46,6 +47,7 @@ export function DownloadActions({
   onCopyAll,
   disabled,
 }: DownloadActionsProps) {
+  const { export: copy } = useStudio()
   const [zipping, setZipping] = useState(false)
 
   const zip = async (): Promise<void> => {
@@ -68,7 +70,7 @@ export function DownloadActions({
   return (
     <>
       <Button disabled={disabled} onClick={onCopyAll} size="sm" variant="secondary">
-        Copy all
+        {copy.copyAll}
       </Button>
 
       <Button
@@ -84,7 +86,7 @@ export function DownloadActions({
         size="sm"
         variant="secondary"
       >
-        Download file
+        {copy.downloadFile}
       </Button>
 
       <Button
@@ -94,7 +96,7 @@ export function DownloadActions({
         size="sm"
         variant="primary"
       >
-        {zipping ? 'Zipping…' : 'Download .zip'}
+        {zipping ? copy.zipping : copy.downloadZip}
       </Button>
     </>
   )

@@ -1,9 +1,9 @@
 import type { CodegenIR, ExportFile, ExportResult, IRWarning } from '@motion-studio/codegen'
 import { createEmptyDocument, nodeId } from '@motion-studio/schema'
 import { ToastProvider } from '@motion-studio/ui'
-import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { render, screen, waitFor, within } from '../../../test/render'
 
 import { useStudioStore } from '../../../store/editor-store'
 

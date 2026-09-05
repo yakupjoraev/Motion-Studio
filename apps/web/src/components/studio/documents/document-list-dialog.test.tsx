@@ -1,7 +1,7 @@
 import { createEmptyDocument } from '@motion-studio/schema'
-import { act, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { act, screen, waitFor } from '../../../test/render'
 
 import { entryOf, readIndex, upsertEntry } from '../../../lib/storage/document-index'
 import {

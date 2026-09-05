@@ -1,0 +1,64 @@
+import type { Dictionary } from '../../dictionary'
+
+export const studioDocuments: Dictionary['studio']['documents'] = {
+  listTitle: 'Документы',
+  listDescription: 'Всё, что сохранено в этом браузере. Ничего отсюда не покидало машину.',
+  listEmpty: 'Документов пока нет. Тот, что вы правите, появится здесь после сохранения.',
+  documentName: 'Имя документа',
+  open: 'Открыть',
+  rename: 'Переименовать',
+  renameOne: 'Переименовать «{name}»',
+  deleteOne: 'Удалить «{name}»',
+  duplicateOne: 'Дублировать «{name}»',
+  blockCount: {
+    one: '{count} блок',
+    few: '{count} блока',
+    many: '{count} блоков',
+    other: '{count} блока',
+  },
+
+  importTitle: 'Импорт документа',
+  importDescription: 'Файл .motion с этой или с другой машины. Перед открытием всё проверяется.',
+  downloadOriginal: 'Скачать оригинал',
+  continue: 'Продолжить',
+  tryAnotherFile: 'Выбрать другой файл',
+  untouched: 'Открытый документ не тронут.',
+  dropHere: 'Перетащите сюда файл .motion или вставьте его с клавиатуры.',
+  chooseFile: 'Выбрать файл',
+  readyToOpen: 'Готово к открытию: «{name}».',
+  openingWithRepairs: {
+    one: 'Открываем «{name}» с {count} починкой.',
+    few: 'Открываем «{name}» с {count} починками.',
+    many: 'Открываем «{name}» с {count} починками.',
+    other: 'Открываем «{name}» с {count} починками.',
+  },
+  nothingRepaired: 'Чинить ничего не пришлось. Файл открылся таким, каким был записан.',
+  repairedPrefix: 'Починено: ',
+  notePrefix: 'Заметка: ',
+
+  saveAsTitle: 'Сохранить как',
+  saveAsDescription: 'Копия становится открытым документом. Оригинал сохраняет всё своё.',
+  name: 'Имя',
+  cancel: 'Отмена',
+  saveCopy: 'Сохранить копию',
+
+  newTitle: 'Новый документ',
+  newDescription: 'Начните со страницы, которая уже собрана, или с чистого листа.',
+  emptyPreview: 'Пусто',
+  blank: 'Чистый',
+  blankDescription: 'Один корневой контейнер. Дальше подскажет канвас.',
+
+  versionsTitle: 'История версий',
+  versionsDescription:
+    'Последние десять версий этого документа. Восстановление — это правка, поэтому оно отменяется.',
+  versionsEmpty: 'Версий пока нет. Новая сохраняется, когда документ меняется существенно.',
+  latest: 'Последняя',
+  restore: 'Восстановить',
+  versionGone: 'Эта версия больше не хранится',
+
+  recoveryTitle: 'Прошлый документ не удалось открыть',
+  recoveryBody: 'Он всё ещё в этом браузере. Скачайте его и начните с нового.',
+  recoveryAction: 'Скачать',
+  copiedAsJson: 'Документ скопирован как JSON',
+  deleted: 'Удалено: {name}',
+}

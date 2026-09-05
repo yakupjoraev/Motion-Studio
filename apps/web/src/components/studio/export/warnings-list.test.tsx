@@ -1,8 +1,8 @@
 import type { IRWarning } from '@motion-studio/codegen'
 import { nodeId } from '@motion-studio/schema'
-import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
+import { render, screen, within } from '../../../test/render'
 
 import { WarningsList } from './warnings-list'
 

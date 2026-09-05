@@ -4,19 +4,24 @@ import { EXPORT_TARGETS, type ExportTarget } from '@motion-studio/codegen/option
 import { TRANSITION_CONTROL } from '@motion-studio/ui'
 import { cn } from '@motion-studio/utils'
 
+import type { Dictionary } from '../../../lib/i18n/dictionary'
+import { useStudio } from '../../../lib/i18n/studio-surface'
+
 export interface TargetSelectorProps {
   readonly value: ExportTarget
   readonly onChange: (target: ExportTarget) => void
 }
 
 /** EXPORT_ENGINE.md § Printers, one line each: what the reader gets, not what the printer does. */
-const TARGETS: Readonly<Record<ExportTarget, { readonly label: string; readonly hint: string }>> = {
-  react: { label: 'React', hint: 'Components you paste into a project' },
-  next: { label: 'Next.js', hint: 'A project that installs and builds' },
-  html: { label: 'HTML', hint: 'One self-contained document' },
-  json: { label: 'JSON', hint: 'The .motion document itself' },
-  tokens: { label: 'Tokens', hint: 'The theme, in four formats' },
-}
+const targets = (
+  copy: Dictionary['studio']['export'],
+): Readonly<Record<ExportTarget, { readonly label: string; readonly hint: string }>> => ({
+  react: { label: copy.targetReact, hint: copy.targetReactHint },
+  next: { label: copy.targetNext, hint: copy.targetNextHint },
+  html: { label: copy.targetHtml, hint: copy.targetHtmlHint },
+  json: { label: copy.targetJson, hint: copy.targetJsonHint },
+  tokens: { label: copy.targetTokens, hint: copy.targetTokensHint },
+})
 
 const ITEM = cn(
   'flex cursor-pointer flex-col gap-0.5 rounded-sm border px-2 py-1.5',
@@ -29,10 +34,13 @@ const ITEM = cn(
  * the browser. A row of buttons would have to reimplement three things and would get one wrong.
  */
 export function TargetSelector({ value, onChange }: TargetSelectorProps) {
+  const { export: copy } = useStudio()
+  const TARGETS = targets(copy)
+
   return (
     <fieldset className="flex flex-col gap-0.5">
       <legend className="px-2 pb-1 font-medium text-2xs text-foreground-subtle uppercase tracking-wide">
-        Target
+        {copy.target}
       </legend>
 
       {EXPORT_TARGETS.map((target) => {
