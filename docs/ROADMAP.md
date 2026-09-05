@@ -323,21 +323,24 @@ out to be different claims.
 
 ### Open, in the order it is being done
 
-1. **The `narrow` choice across the card blocks.** `pricing-table`, `bento-grid`, `logo-cloud`,
-   `stat-grid`, `testimonial-marquee` have the same shape and the same problem. Same prop, same
-   control, same threshold.
-2. **More arrangements per block, each one tested.** The owner's standard: a choice that works
+Each is a prompt in `prompts/`, so a session picks one up without re-deriving it.
+
+1. **`prompts/63` — the `narrow` choice across the rest of the card blocks.** `feature-grid`,
+   `pricing-table` and `stat-grid` have it; `bento-grid`, `logo-cloud`, `testimonial-marquee`,
+   `comparison-table` and the two layout blocks do not. A block that should *not* have it is a finding
+   to record, not an omission to leave.
+2. **`prompts/63` — more arrangements per block, each one tested.** The owner's standard: a choice that works
    perfectly is worth more than a default that is merely defensible. Every option added ships with the
    test that proves it, in both the component and the export.
-3. **Drag a node on the canvas.** `DRAG_AND_DROP.md` § The four operations still says operations 2 and
+3. **`prompts/64` — drag a node on the canvas.** `DRAG_AND_DROP.md` § The four operations still says operations 2 and
    4 are unwired: reordering is only possible from the layers tree, and a user's first instinct is the
    canvas. This is the largest open item.
-4. **Русский язык.** `en` + `ru` across the studio chrome, the public pages and the blocks' own default
+4. **`prompts/65` — русский язык.** `en` + `ru` across the studio chrome, the public pages and the blocks' own default
    copy. Chosen by the visitor's region on a first visit; an explicit choice wins from then on and
    survives a return visit. No i18n dependency exists in the repo today and `lang` is hard-coded.
-5. **A marketing prompt for the product itself**, written with the brand/design/slides skills:
+5. **`prompts/66` — the marketing for the product itself**, written with the brand/design/slides skills:
    positioning, landing copy, launch material.
-6. **The landing and the studio chrome through the design skills.** `DESIGN_REFERENCES.md` names
+6. **`prompts/67` — the landing and the studio chrome through the design skills.** `DESIGN_REFERENCES.md` names
    impeccable.style as the bar for the whole product, and the landing was built against it by eye
    rather than through the process. Verdict to be reported per surface, not "looks fine".
 

@@ -1,7 +1,12 @@
 # Build prompts
 
-65 prompts, one subsystem each, in dependency order. This is the execution plan for the
+70 prompts, one subsystem each, in dependency order. This is the execution plan for the
 specification in [`../docs/`](../docs/).
+
+`63`–`67` are **M15**, opened after v1 was built: the owner used the studio and reported what it was
+like, and five of the seven defects that came out of it were invisible to a green suite of eight
+thousand tests. They are not a phase the plan predicted — they are what using the product turned up.
+`docs/ROADMAP.md` § M15 carries the list and its state.
 
 `45a`–`45c` were added after prompt 45 ran: the export dialog made it demonstrable that a block
 exports as an empty root element, and closing that needs three subsystems rather than an insertion
