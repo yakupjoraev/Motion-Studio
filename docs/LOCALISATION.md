@@ -94,8 +94,9 @@ three; the difference lives in that one helper.
 - **A block's default copy.** Inserting a block writes its text into the document, so it is the
   user's content from that moment. Switching the interface language does not rewrite a page somebody
   already composed (ADR-364).
-- **Enumeration values** — `text-wide`, `md`, `soft-light`. They are identifiers: the same strings
-  appear in the code the exporter emits, and a translated value would not round-trip.
+- **Enumeration values** — `text-wide`, `md`, `soft-light` (ADR-367). They are identifiers: the same
+  strings appear in the code the exporter emits and in the saved `.motion` file, and a translated
+  value would name something that exists under no other name in the product.
 - **Package names, library names, file paths, ARIA tokens.** `editor` is what the directory is
   called in both languages.
 
