@@ -34,9 +34,19 @@ accessible, and retrofitting keyboard drag onto HTML5 DnD is not possible.
 
 All four end in a command. Nothing about drag state lives in the document until drop.
 
-Operations 1 and 3 are wired; 2 and 4 need a canvas node to be a drag *source*, which is the work that
-follows. Both surfaces register a zone per node, under the same node id and with different geometry, so
-a zone states which surface drew it — `DropZone.surface` (ADR-181).
+Operations 1, 2 and 3 are wired. Both surfaces register a zone per node, under the same node id and
+with different geometry, so a zone states which surface drew it — `DropZone.surface` (ADR-181).
+
+**Which node a canvas drag carries** is the same question as which node a click selects, and it has
+the same answer: the nodes at the current level — the children of the isolation, or of the root when
+there is none (ADR-359). A node below that level is reached by entering its parent, not by dragging
+through it. Left alone, the two gestures would disagree from the same pixel: a press selects the
+section and a drag would carry the paragraph inside it.
+
+Operation 4 — carrying a drag across the two surfaces — follows from the same source and is not yet
+covered by a spec. **Keyboard drag on the canvas picks up and cancels but does not step**: an arrow
+moves one 8 px grid cell and a page section is hundreds of pixels tall, so the position never changes.
+ADR-359 § What is not finished carries the measurement and the shape of the fix.
 
 ## Sensors
 

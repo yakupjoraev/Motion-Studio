@@ -25,6 +25,7 @@ import { useStudioStore } from '../../../store/editor-store'
 import { useNodeDropZone } from './node-drop-zone'
 import { NodeErrorBoundary } from './node-error-boundary'
 import { NodeMotion } from './node-motion'
+import { useNodeDrag } from './use-node-drag'
 
 /** A node that is not in the document still has to call the same hooks; nothing is registered for it. */
 const EMPTY_BLOCK = blockId('container')
@@ -60,6 +61,15 @@ export const NodeRenderer = memo(function NodeRenderer({ id, breakpoint }: NodeR
     disabled: breakpoint !== undefined,
   })
 
+  // ADR-359. Same element, the other half of the gesture: this node as a drag source.
+  const drag = useNodeDrag({
+    id,
+    blockId: node?.blockId ?? EMPTY_BLOCK,
+    locked: node?.locked ?? true,
+    hidden: node?.hidden ?? true,
+    disabled: breakpoint !== undefined,
+  })
+
   if (node === undefined || node.hidden) {
     return null
   }
@@ -71,7 +81,7 @@ export const NodeRenderer = memo(function NodeRenderer({ id, breakpoint }: NodeR
 
   if (definition === undefined || Component === undefined) {
     return (
-      <NodeWrapper dropRef={zone.ref} id={id}>
+      <NodeWrapper drag={drag} dropRef={zone.ref} id={id}>
         <UnknownBlock blockId={node.blockId} name={node.name} />
       </NodeWrapper>
     )
@@ -90,7 +100,7 @@ export const NodeRenderer = memo(function NodeRenderer({ id, breakpoint }: NodeR
   ))
 
   return (
-    <NodeWrapper dropRef={zone.ref} id={id} style={escapeHatch}>
+    <NodeWrapper drag={drag} dropRef={zone.ref} id={id} style={escapeHatch}>
       {/* The node's effects are siblings of its markup, never a wrapper around it: a block must not
           learn that it has any, which is what keeps its export honest. */}
       <EffectStack effects={node.effects} registry={blockRegistry} />

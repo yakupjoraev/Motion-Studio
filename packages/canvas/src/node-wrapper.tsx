@@ -19,6 +19,24 @@ export interface NodeWrapperProps {
    * importing the drag layer or the host wrapping every node in an extra element.
    */
   readonly dropRef?: ((element: HTMLElement | null) => void) | undefined
+  /**
+   * The same element as a drag *source* — operation 2 of DRAG_AND_DROP.md, ADR-359. The host owns the
+   * drag layer, so what arrives here is the listeners and attributes it produced, plus its ref: this
+   * package still imports nothing from dnd-kit.
+   */
+  readonly drag?: NodeDragHandle | undefined
+}
+
+export interface NodeDragHandle {
+  readonly ref: (element: HTMLElement | null) => void
+  /**
+   * `object` rather than `Record<string, unknown>`: dnd-kit's own attribute and listener types are
+   * closed shapes with no index signature, and widening them here would need a cast — which § 1.1 of
+   * the contract calls a defect. Everything below spreads them onto an element and reads none of them.
+   */
+  readonly listeners: object | undefined
+  readonly attributes: object
+  readonly isDragging: boolean
 }
 
 /**
@@ -29,7 +47,7 @@ export interface NodeWrapperProps {
  * It is the only writer of `data-node-id`, which is what makes reading that attribute back as a
  * `NodeId` sound in `hit-test.ts`.
  */
-export function NodeWrapper({ id, children, className, style, dropRef }: NodeWrapperProps) {
+export function NodeWrapper({ id, children, className, style, dropRef, drag }: NodeWrapperProps) {
   const cache = useRectCacheContext()
   const ref = useRef<HTMLDivElement | null>(null)
 
@@ -43,16 +61,33 @@ export function NodeWrapper({ id, children, className, style, dropRef }: NodeWra
     return cache.observe(id, element)
   }, [cache, id])
 
+  /*
+   * The drag *ref*, not the drag handle: the handle is a fresh object on every render, and depending
+   * on it here rebuilt `attach` each time — which detaches and re-attaches the element, so the rect
+   * cache re-observes on every render and the canvas never settles. dnd-kit's `setNodeRef` is stable,
+   * which is what makes this safe.
+   */
+  const dragRef = drag?.ref
+
   const attach = useCallback(
     (element: HTMLDivElement | null) => {
       ref.current = element
       dropRef?.(element)
+      dragRef?.(element)
     },
-    [dropRef],
+    [dropRef, dragRef],
   )
 
   return (
-    <div className={cn(NODE_WRAPPER_CLASS, className)} data-node-id={id} ref={attach} style={style}>
+    <div
+      className={cn(NODE_WRAPPER_CLASS, className)}
+      data-dragging={drag?.isDragging === true ? '' : undefined}
+      data-node-id={id}
+      ref={attach}
+      style={style}
+      {...(drag?.attributes ?? {})}
+      {...(drag?.listeners ?? {})}
+    >
       {children}
     </div>
   )

@@ -44,7 +44,7 @@ export type {
   NodeSpacing,
   SelectionMode,
 } from './canvas.types'
-export { NodeWrapper, type NodeWrapperProps } from './node-wrapper'
+export { NodeWrapper, type NodeDragHandle, type NodeWrapperProps } from './node-wrapper'
 export { Scene, type SceneProps } from './scene/scene'
 export { Artboard, type ArtboardProps } from './scene/artboard'
 export {

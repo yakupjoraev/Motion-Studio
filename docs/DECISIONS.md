@@ -14705,3 +14705,54 @@ something already moves (`marquee`, `carousel`), or when the choice exists under
 - The six above are recorded here rather than left as an absence somebody re-opens in three months.
 - `bento-grid` and `stat-grid` needed the compound variant ADR-357 describes: on a drawn panel the
   track does not bleed, because dragging a rounded border off both edges reads as a broken box.
+
+## ADR-359 — A canvas node is a drag source, and what a drag carries is what a click selects
+
+**Date** 2026-09-05 · **Prompt** 64 · **Status** Accepted
+
+### Question
+The owner's first minute in the studio: «почему я не могу двигать добавленные секции\блоки\элементы?
+типо менять местами». Reordering worked only in the layers tree.
+
+### What was already there, and what was missing
+`DRAG_AND_DROP.md` § The four operations has said since it was written that operations 1 and 3 are
+wired and 2 and 4 "need a canvas node to be a drag source, which is the work that follows". The follow
+had not happened, and nearly everything for it existed: `useDraggableNode` was written and used in one
+place, `commandForDrop` already turns a `canvas-nodes` payload into `moveNodes`, `validateDrop` already
+rejects a drop into a node's own subtree, and `useCanvasSelection` already selects on `pointerdown`
+rather than `click` — with a comment saying it does so "when dragging a node moves it".
+
+Verified before starting, by reading the attributes of every `[data-node-id]` in a live document: no
+`aria-roledescription`, no `tabindex`, no listeners. The node was a plain `div`.
+
+### The decision that mattered: which node a drag carries
+A press lands on the deepest element under the pointer, and a canvas click selects the **outermost**
+node at the current level. Left alone, the two gestures disagree from the same pixel: the press selects
+the section and the drag carries the paragraph inside it.
+
+So a node is a drag source only when it is **at the current level** — a child of the isolation, or of
+the root when there is none. Below that level a node is reached by entering its parent, which is the
+canvas's existing model for reaching into a subtree. The two gestures now answer the same question.
+
+### Consequences
+- Verified in the browser and in `e2e/editor/dnd-canvas.spec.ts`: dragging a section over a sibling
+  reorders the document, one undo puts it back, and a 3 px press still selects rather than moving.
+- `NodeWrapper` takes a drag handle beside the drop ref it already had. `packages/canvas` still imports
+  nothing from dnd-kit: the handle arrives as `object`-typed listeners and attributes it only spreads.
+- **The ref, not the handle, is what the wrapper depends on.** Depending on the handle rebuilt the
+  element's ref callback every render, which re-attached the node and made the rect cache re-observe on
+  every render — the canvas never settled. dnd-kit's `setNodeRef` is stable; the handle is not.
+- Every canvas node is now a tab stop. That is the price of a keyboard-operable drag and it is the
+  right one, but it means the e2e specs focus a node directly rather than counting `Tab` presses.
+
+### What is not finished, and measured rather than assumed
+**Keyboard drag picks up but does not step.** `Enter` on a focused node starts the drag — the live
+region announces "Hero — centred over Container, position 7 of 7" — and `Esc` cancels it. But an arrow
+moves the drag point one 8 px grid cell (ADR-127), and a page section is hundreds of pixels tall: five
+presses produced five identical announcements, so the drop lands where it began.
+
+The fix is a step of one **position** rather than one grid cell, which requires the keyboard sensor to
+know the boxes of the zone's children — geometry `packages/dnd` cannot see, so the host would supply
+it. That was attempted and **is not in the tree**: it type-checked and changed nothing in the browser,
+and untested code that has no effect is worse than a recorded gap. The e2e case is `test.fixme` with
+the diagnosis in it, so the next session starts from the measurement rather than from the symptom.

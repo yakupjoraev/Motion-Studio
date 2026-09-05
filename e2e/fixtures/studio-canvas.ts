@@ -47,6 +47,30 @@ export class StudioCanvas {
     return this.page.getByTestId('selection-chip')
   }
 
+  /**
+   * Operation 2 — ADR-359: a node dragged over one of its siblings on the canvas.
+   *
+   * The move is split the way `StudioLayers.drag` splits it, and for the same reason: one long move
+   * can outrun dnd-kit's collision pass, and the first short one is what crosses the 4 px activation
+   * distance so the gesture stops being a selection.
+   */
+  async dragNode(fromIndex: number, toIndex: number): Promise<void> {
+    const from = await this.nodes().nth(fromIndex).boundingBox()
+    const onto = await this.nodes().nth(toIndex).boundingBox()
+
+    if (from === null || onto === null) {
+      throw new Error(`node ${fromIndex} or ${toIndex} is not on screen`)
+    }
+
+    const x = from.x + from.width / 2
+
+    await this.page.mouse.move(x, from.y + 10)
+    await this.page.mouse.down()
+    await this.page.mouse.move(x, from.y + 22, { steps: 5 })
+    await this.page.mouse.move(onto.x + onto.width / 2, onto.y + 8, { steps: 25 })
+    await this.page.mouse.up()
+  }
+
   artboard(): Locator {
     return this.page.getByTestId('canvas-artboard')
   }
