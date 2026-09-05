@@ -110,6 +110,20 @@ three; the difference lives in that one helper.
 - **Package names, library names, file paths, ARIA tokens.** `editor` is what the directory is
   called in both languages.
 
+### Measured, and not yet decided
+
+Two surfaces are still English in a Russian session. Both were found by reading the product rather
+than the dictionaries, and both are counted here so the gap is a number:
+
+- **The generated controls' own words — about 50 strings in 25 components under
+  `packages/ui/src/controls/`.** `Add`, `Mixed`, `Top left`, `Search icons`, `Stiffness`, `No
+  shadow`. `packages/ui` sits below the app and has no dictionary, so they arrive the way the
+  shortcut sheet's do: as data the caller passes, English when it is absent.
+- **The words a block paints itself — about 30 strings across `packages/blocks`.** `/month`,
+  `Monthly`, `No image yet`, `Feature`, `Previous slide`. These are not defaults, so ADR-364 does
+  not cover them, and they are printed **into the exported code** — which makes translating them a
+  decision about somebody else's repository, not a translation task. It needs the owner.
+
 ## 7. Adding a string
 
 1. Add the key to the English surface file. That is the type.

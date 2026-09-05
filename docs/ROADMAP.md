@@ -322,6 +322,7 @@ out to be different claims.
 | ✅ | Six stacked cards on a phone, where the pattern is a swipe | ADR-357 |
 | ✅ | `prompts/63` — the narrow choice across the catalogue, and six recorded exclusions | ADR-358 |
 | ✅ | `prompts/64` — a canvas node is a drag source: sections reorder by dragging, one undo puts them back | ADR-359 |
+| ✅ | `prompts/65` — the product speaks Russian: routing, the choice, every interface surface, both catalogues and the blocks' own copy. The `/docs` bodies stay English by the owner's decision | ADR-360…369 |
 
 ### Open, in the order it is being done
 
@@ -333,15 +334,12 @@ Each is a prompt in `prompts/`, so a session picks one up without re-deriving it
    crossing between the canvas and the layers tree — has no spec either. `DRAG_AND_DROP.md` § The four operations still says operations 2 and
    4 are unwired: reordering is only possible from the layers tree, and a user's first instinct is the
    canvas. This is the largest open item.
-2. **`prompts/65` — русский язык.** `en` + `ru` across the studio chrome, the public pages and the blocks' own default
-   copy. Chosen by the visitor's region on a first visit; an explicit choice wins from then on and
-   survives a return visit. No i18n dependency exists in the repo today and `lang` is hard-coded.
-3. **`prompts/66` — the marketing for the product itself**, written with the brand/design/slides skills:
+2. **`prompts/66` — the marketing for the product itself**, written with the brand/design/slides skills:
    positioning, landing copy, launch material.
-4. **`prompts/67` — the landing and the studio chrome through the design skills.**
-5. **`prompts/68` — the code panel beside the canvas**, collapsible. What makes this not a page
+3. **`prompts/67` — the landing and the studio chrome through the design skills.**
+4. **`prompts/68` — the code panel beside the canvas**, collapsible. What makes this not a page
    builder currently lives behind a dialog nobody is told to open.
-6. **`prompts/69` — findability and ownership.** SEO, the privacy and terms pages, the domain, and
+5. **`prompts/69` — findability and ownership.** SEO, the privacy and terms pages, the domain, and
    the three coupled decisions below. Raised by the owner 2026-09-05.
 
 ### The four questions in prompt 69, and why they are one decision

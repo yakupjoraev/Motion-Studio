@@ -298,7 +298,7 @@ export const RU_DEFAULTS: Readonly<Record<string, UnknownProps>> = {
         description: 'Для работы, которая идёт в прод.',
         priceMonthly: '19',
         priceYearly: '190',
-        badge: 'Чаще всего берут',
+        badge: 'Популярный',
         ctaLabel: 'Взять «Студию»',
         ctaHref: '#',
         features: [
