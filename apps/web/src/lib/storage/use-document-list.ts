@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from 'react'
 
 import { useStudioStore } from '../../store/editor-store'
 import { cloneDocument } from '../documents/clone-document'
+import { useStudio } from '../i18n/studio-surface'
 
 import {
   type DocumentEntry,
@@ -41,6 +42,7 @@ export interface DocumentList {
  * remove rows whose document is gone (ADR-114's trade, applied to the list).
  */
 export function useDocumentList(): DocumentList {
+  const { chrome, documents: copyStrings } = useStudio()
   const publish = useToast()
   const [entries, setEntries] = useState<readonly DocumentEntry[]>(readIndex)
 
@@ -83,19 +85,24 @@ export function useDocumentList(): DocumentList {
     })
   }, [])
 
-  const duplicate = useCallback(async (id: string): Promise<void> => {
-    const stored = await loadDocument(id)
+  const duplicate = useCallback(
+    async (id: string): Promise<void> => {
+      const stored = await loadDocument(id)
 
-    if (stored === undefined) {
-      return
-    }
+      if (stored === undefined) {
+        return
+      }
 
-    const copy = cloneDocument(stored.document, { name: `${stored.document.meta.name} copy` })
-    const at = Date.now()
+      const copy = cloneDocument(stored.document, {
+        name: copyStrings.copyOf.replace('{name}', stored.document.meta.name),
+      })
+      const at = Date.now()
 
-    await saveDocument(copy, at)
-    setEntries(upsertEntry(entryOf(copy, at)))
-  }, [])
+      await saveDocument(copy, at)
+      setEntries(upsertEntry(entryOf(copy, at)))
+    },
+    [copyStrings],
+  )
 
   /**
    * No confirmation dialog: the undo toast is the pattern this app uses for every destructive action,
@@ -129,14 +136,14 @@ export function useDocumentList(): DocumentList {
       setEntries(removeEntry(id))
 
       publish({
-        title: `Deleted ${stored.document.meta.name}`,
+        title: copyStrings.deleted.replace('{name}', stored.document.meta.name),
         action: {
-          label: 'Undo',
+          label: chrome.undo,
           onClick: () => restore(stored.document, stored.savedAt, snapshots),
         },
       })
     },
-    [publish],
+    [chrome, copyStrings, publish],
   )
 
   return { entries, open, rename, duplicate, remove, refresh }

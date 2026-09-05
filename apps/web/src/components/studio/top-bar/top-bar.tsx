@@ -51,13 +51,13 @@ export function TopBar({ leftOpen, rightOpen, onTogglePanel }: TopBarProps) {
         <BreakpointSwitcher />
       </div>
 
-      <Button aria-label="Command palette" disabled size="sm" variant="ghost">
+      <Button aria-label={chrome.commandPalette} disabled size="sm" variant="ghost">
         <SearchIcon size={16} />
         <Kbd keys="Mod+K" />
       </Button>
 
       <Button
-        aria-label="Toggle inspector"
+        aria-label={chrome.toggleInspector}
         aria-pressed={rightOpen}
         onClick={() => onTogglePanel('right')}
         size="icon"

@@ -9,6 +9,7 @@ import { cloneDocument } from '../../../lib/documents/clone-document'
 import { downloadText } from '../../../lib/documents/download'
 import type { ImportRejection, ImportSuccess } from '../../../lib/documents/import-document'
 import { importDocument } from '../../../lib/documents/import-document'
+import { useStudio } from '../../../lib/i18n/studio-surface'
 import { entryOf, upsertEntry, writeLastOpenId } from '../../../lib/storage/document-index'
 import { loadSnapshot, saveDocument } from '../../../lib/storage/document-store'
 import { deferredBlockRegistry } from '../../../store/block-registry'
@@ -52,6 +53,7 @@ export function useDocuments(): DocumentsValue {
  * neither owns: the dialog that ran the pipeline is closed by the time the report is on screen.
  */
 export function DocumentsProvider({ children }: { children: ReactNode }) {
+  const { documents: copy } = useStudio()
   const publish = useToast()
   const [pending, setPending] = useState<PendingImport | null>(null)
   const [rejection, setRejection] = useState<DocumentsValue['rejection']>(null)
@@ -69,8 +71,8 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
         await saveDocument(document, at)
       } catch {
         publish({
-          title: 'Could not save the new document',
-          description: 'It is open and editable. Storage refused the write.',
+          title: copy.saveRefusedTitle,
+          description: copy.saveRefusedBody,
           tone: 'danger',
         })
       }
@@ -149,7 +151,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
         const snapshot = await loadSnapshot(key)
 
         if (snapshot === undefined) {
-          publish({ title: 'That version is no longer stored', tone: 'danger' })
+          publish({ title: copy.versionGone, tone: 'danger' })
 
           return
         }
@@ -157,7 +159,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
         useStudioStore.getState().dispatch(commands.restoreSnapshot({ document: snapshot }))
       },
     }
-  }, [pending, rejection, publish])
+  }, [copy, pending, rejection, publish])
 
   return <DocumentsContext.Provider value={value}>{children}</DocumentsContext.Provider>
 }

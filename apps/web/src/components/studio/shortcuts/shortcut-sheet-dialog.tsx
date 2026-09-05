@@ -1,8 +1,10 @@
 'use client'
 
-import { ShortcutSheet } from '@motion-studio/hooks'
+import { ShortcutSheet, type ShortcutSheetCopy } from '@motion-studio/hooks'
 import { Dialog } from '@motion-studio/ui'
+import { useMemo } from 'react'
 
+import { useStudio } from '../../../lib/i18n/studio-surface'
 import { useStudioStore } from '../../../store/editor-store'
 
 import type { StudioShortcutContext } from './shortcut.types'
@@ -18,17 +20,29 @@ export function ShortcutSheetDialog({
 }: {
   readonly context: StudioShortcutContext
 }) {
+  const { chrome } = useStudio()
   const setActiveDialog = useStudioStore((state) => state.setActiveDialog)
+
+  const copy = useMemo<ShortcutSheetCopy>(
+    () => ({
+      search: chrome.shortcutsSearch,
+      searchPlaceholder: chrome.shortcutsSearchPlaceholder,
+      empty: chrome.shortcutsEmpty,
+      labels: chrome.shortcutLabels,
+      groups: chrome.shortcutGroups,
+    }),
+    [chrome],
+  )
 
   return (
     <Dialog
-      description="Every shortcut the studio knows, generated from the registry that runs them."
+      description={chrome.shortcutsDescription}
       onOpenChange={(open) => setActiveDialog(open ? 'shortcuts' : null)}
       open
-      title="Keyboard shortcuts"
+      title={chrome.shortcutsTitle}
     >
       <div data-shortcut-scope="dialog">
-        <ShortcutSheet context={context} registry={studioShortcuts} />
+        <ShortcutSheet context={context} copy={copy} registry={studioShortcuts} />
       </div>
     </Dialog>
   )

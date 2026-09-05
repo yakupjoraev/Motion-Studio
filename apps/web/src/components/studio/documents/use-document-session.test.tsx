@@ -1,10 +1,10 @@
 import { createEmptyDocument, nodeId } from '@motion-studio/schema'
 import { ToastProvider } from '@motion-studio/ui'
-import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useStudioStore } from '../../../store/editor-store'
+import { render, screen } from '../../../test/render'
 
 import { useDocumentSession } from './use-document-session'
 

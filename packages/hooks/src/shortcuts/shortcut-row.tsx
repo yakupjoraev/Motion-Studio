@@ -8,10 +8,13 @@ import { ShortcutKeys } from './shortcut-keys'
  */
 export function ShortcutRow<Ctx>({
   shortcut,
+  label,
   available,
   platform,
 }: {
   readonly shortcut: Shortcut<Ctx>
+  /** The shortcut's name in the reader's language; the registry declares it in English. */
+  readonly label: string
   readonly available: boolean
   readonly platform: Platform
 }) {
@@ -23,7 +26,7 @@ export function ShortcutRow<Ctx>({
       data-testid="shortcut-row"
     >
       <span className={available ? 'text-foreground text-xs' : 'text-foreground-subtle text-xs'}>
-        {shortcut.label}
+        {label}
       </span>
       <ShortcutKeys keys={shortcut.keys} platform={platform} />
     </li>

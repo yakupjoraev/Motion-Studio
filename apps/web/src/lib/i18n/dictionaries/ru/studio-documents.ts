@@ -55,10 +55,13 @@ export const studioDocuments: Dictionary['studio']['documents'] = {
   latest: 'Последняя',
   restore: 'Восстановить',
   versionGone: 'Эта версия больше не хранится',
+  saveRefusedTitle: 'Не удалось сохранить новый документ',
+  saveRefusedBody: 'Он открыт и его можно править. Хранилище отказало в записи.',
 
   recoveryTitle: 'Прошлый документ не удалось открыть',
   recoveryBody: 'Он всё ещё в этом браузере. Скачайте его и начните с нового.',
   recoveryAction: 'Скачать',
   copiedAsJson: 'Документ скопирован как JSON',
   deleted: 'Удалено: {name}',
+  copyOf: '{name} — копия',
 }

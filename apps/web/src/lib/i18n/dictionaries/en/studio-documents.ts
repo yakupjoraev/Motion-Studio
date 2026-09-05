@@ -53,6 +53,8 @@ export const studioDocuments = {
   latest: 'Latest',
   restore: 'Restore',
   versionGone: 'That version is no longer stored',
+  saveRefusedTitle: 'Could not save the new document',
+  saveRefusedBody: 'It is open and editable. Storage refused the write.',
 
   recoveryTitle: 'Your last document could not be opened',
   recoveryBody: 'It is still stored in this browser. Download it, then start from a new one.',
@@ -60,4 +62,6 @@ export const studioDocuments = {
   copiedAsJson: 'Copied the document as JSON',
   /** `{name}` is the document that was deleted. */
   deleted: 'Deleted {name}',
+  /** The name a duplicate is given. It lands in the document, so it follows the session. */
+  copyOf: '{name} copy',
 }

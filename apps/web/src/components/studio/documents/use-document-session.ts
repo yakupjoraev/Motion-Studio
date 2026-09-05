@@ -4,6 +4,7 @@ import { useToast } from '@motion-studio/ui'
 import { useEffect, useRef } from 'react'
 
 import { downloadText } from '../../../lib/documents/download'
+import { useStudio } from '../../../lib/i18n/studio-surface'
 import { readLastOpenId, writeLastOpenId } from '../../../lib/storage/document-index'
 import { loadDocument, loadRawDocument } from '../../../lib/storage/document-store'
 import { flushPending } from '../../../lib/storage/pending-write'
@@ -21,6 +22,7 @@ export const isFixtureSession = (): boolean =>
  * that refuses storage opens an empty studio rather than no studio.
  */
 export function useDocumentSession(): void {
+  const { documents: copy } = useStudio()
   const restored = useRef(false)
   const notify = useToast()
 
@@ -40,11 +42,11 @@ export function useDocumentSession(): void {
      */
     const reportUnreadable = (id: string, raw: unknown): void => {
       notify({
-        title: 'Your last document could not be opened',
-        description: 'It is still stored in this browser. Download it, then start from a new one.',
+        title: copy.recoveryTitle,
+        description: copy.recoveryBody,
         tone: 'danger',
         action: {
-          label: 'Download it',
+          label: copy.recoveryAction,
           onClick: () => downloadText(JSON.stringify(raw, null, 2), `${id}.motion.json`),
         },
       })
@@ -94,5 +96,5 @@ export function useDocumentSession(): void {
     return () => {
       live = false
     }
-  }, [notify])
+  }, [copy, notify])
 }
