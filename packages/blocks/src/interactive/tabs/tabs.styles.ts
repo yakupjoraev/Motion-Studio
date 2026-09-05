@@ -6,9 +6,12 @@ import { INTERACTIVE_FOCUS, INTERACTIVE_TRANSITION } from '../interactive.styles
 export const TABS_COUNT_VARIABLE = '--ms-tabs-count'
 export const TABS_INDEX_VARIABLE = '--ms-tabs-index'
 
-export const tabsRootStyles = cva('w-full min-w-0 gap-6', {
+export const tabsRootStyles = cva('@container/frame w-full min-w-0 gap-6', {
   variants: {
-    orientation: { horizontal: 'flex flex-col', vertical: 'flex flex-col md:flex-row md:gap-8' },
+    orientation: {
+      horizontal: 'flex flex-col',
+      vertical: 'flex flex-col @min-[768px]/frame:flex-row @min-[768px]/frame:gap-8',
+    },
     hidden: { true: 'hidden', false: 'flex' },
   },
   defaultVariants: { orientation: 'horizontal', hidden: false },
@@ -25,7 +28,11 @@ export const tabsListFrameStyles = cva('relative min-w-0', {
       horizontal: 'border-border border-b',
       vertical: 'border-border border-l',
     },
-    align: { stretch: 'w-full', start: 'w-full md:w-fit', center: 'w-full md:mx-auto md:w-fit' },
+    align: {
+      stretch: 'w-full',
+      start: 'w-full @min-[768px]/frame:w-fit',
+      center: 'w-full @min-[768px]/frame:mx-auto @min-[768px]/frame:w-fit',
+    },
   },
   defaultVariants: { orientation: 'horizontal', align: 'stretch' },
 })

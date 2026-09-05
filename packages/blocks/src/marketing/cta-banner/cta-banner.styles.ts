@@ -9,7 +9,7 @@ import { cva } from 'class-variance-authority'
  * not.
  */
 export const ctaPanelStyles = cva(
-  'relative overflow-hidden rounded-2xl px-6 py-14 md:px-12 md:py-20',
+  'relative overflow-hidden rounded-2xl px-6 py-14 @min-[768px]/frame:px-12 @min-[768px]/frame:py-20',
   {
     variants: {
       surface: {

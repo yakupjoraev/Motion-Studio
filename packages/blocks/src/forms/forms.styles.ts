@@ -12,7 +12,7 @@ import { INTERACTIVE_FOCUS, INTERACTIVE_TRANSITION } from '../interactive/intera
  */
 export const FORM_FIELD = 'flex w-full flex-col gap-2'
 
-export const formBlockStyles = cva('w-full', {
+export const formBlockStyles = cva('@container/frame w-full', {
   variants: {
     hidden: { true: 'hidden', false: 'block' },
   },
@@ -115,7 +115,8 @@ export const CHOICE_HINT = 'm-0 text-base text-foreground-subtle'
  */
 export const HONEYPOT = 'absolute -left-[9999px] size-px overflow-hidden'
 
-export const FORM_ACTIONS = 'mt-2 flex flex-col gap-3 sm:flex-row sm:items-center'
+export const FORM_ACTIONS =
+  'mt-2 flex flex-col gap-3 @min-[640px]/frame:flex-row @min-[640px]/frame:items-center'
 
 /** The form-level message. One element for all four states, so nothing jumps as the state changes. */
 export const formMessageStyles = cva('m-0 text-base', {

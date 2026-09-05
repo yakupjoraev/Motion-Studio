@@ -110,7 +110,7 @@ describe('columnsClass', () => {
 
   it('answers the counts the schema allows and clamps below them', () => {
     expect(columnsClass(2)).toBe(columnsClass(1))
-    expect(columnsClass(3)).toContain('lg:grid-cols-3')
-    expect(columnsClass(4)).toContain('lg:grid-cols-4')
+    expect(columnsClass(3)).toContain('@min-[1024px]/frame:grid-cols-3')
+    expect(columnsClass(4)).toContain('@min-[1024px]/frame:grid-cols-4')
   })
 })

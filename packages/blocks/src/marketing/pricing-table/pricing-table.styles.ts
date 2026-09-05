@@ -15,9 +15,9 @@ export const pricingGridStyles = cva('grid items-start gap-6', {
   variants: {
     columns: {
       1: 'grid-cols-1',
-      2: 'grid-cols-1 sm:grid-cols-2',
-      3: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
-      4: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4',
+      2: 'grid-cols-1 @min-[640px]/frame:grid-cols-2',
+      3: 'grid-cols-1 @min-[640px]/frame:grid-cols-2 @min-[1024px]/frame:grid-cols-3',
+      4: 'grid-cols-1 @min-[640px]/frame:grid-cols-2 @min-[1024px]/frame:grid-cols-4',
     },
     layout: {
       cards: '',
@@ -42,7 +42,7 @@ export const planCardStyles = cva(
         glass: 'ms-glass shadow-md',
       },
       highlighted: {
-        true: 'border-accent/60 bg-surface-2 shadow-lg ring-1 ring-accent/20 max-sm:order-first sm:order-none',
+        true: 'border-accent/60 bg-surface-2 shadow-lg ring-1 ring-accent/20 @max-[639px]/frame:order-first @min-[640px]/frame:order-none',
         false: '',
       },
       compact: { true: 'p-5', false: '' },

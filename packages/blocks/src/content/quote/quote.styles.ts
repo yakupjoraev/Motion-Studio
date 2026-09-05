@@ -6,7 +6,7 @@ import { cva } from 'class-variance-authority'
  * the size alone. A decorative glyph is `aria-hidden` and sits at low contrast on purpose — a quotation
  * mark that competes with the words is a quotation mark somebody will read aloud.
  */
-export const quoteStyles = cva('relative m-0 flex flex-col', {
+export const quoteStyles = cva('@container/frame relative m-0 flex flex-col', {
   variants: {
     mark: {
       rule: 'border-accent border-l-2 pl-6',
@@ -29,8 +29,8 @@ export const quoteTextStyles = cva('m-0 text-balance text-foreground', {
   variants: {
     size: {
       md: 'text-lg',
-      lg: 'text-xl md:text-2xl',
-      xl: 'text-2xl md:text-3xl',
+      lg: 'text-xl @min-[768px]/frame:text-2xl',
+      xl: 'text-2xl @min-[768px]/frame:text-3xl',
     },
   },
 })

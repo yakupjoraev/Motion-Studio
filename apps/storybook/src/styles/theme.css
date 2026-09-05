@@ -374,10 +374,10 @@
   --ms-text-6xl: 80px;
   --ms-text-6xl-line-height: 82px;
   --ms-text-6xl-tracking: -0.035em;
-  --ms-text-display-1: clamp(2.5rem, 6vw, 5rem);
+  --ms-text-display-1: clamp(2.5rem, 6cqw, 5rem);
   --ms-text-display-1-line-height: 1.05;
   --ms-text-display-1-tracking: -0.03em;
-  --ms-text-display-2: clamp(2rem, 4.5vw, 3.5rem);
+  --ms-text-display-2: clamp(2rem, 4.5cqw, 3.5rem);
   --ms-text-display-2-line-height: 1.1;
   --ms-text-display-2-tracking: -0.02em;
   --ms-blur-none: 0px;

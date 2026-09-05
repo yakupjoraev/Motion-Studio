@@ -56,7 +56,7 @@ export const heroSubtitleStyles = cva('mt-6 mb-0 max-w-2xl text-pretty text-fore
   variants: {
     size: {
       md: 'text-lg',
-      lg: 'text-lg md:text-xl',
+      lg: 'text-lg @min-[768px]/frame:text-xl',
     },
   },
 })
@@ -109,16 +109,23 @@ export const heroTrustStyles = cva(
   },
 )
 
-/** The band. Padding steps are the section's, so a hero and a section below it share a rhythm. */
-export const heroSectionStyles = cva('relative flex w-full flex-col', {
+/**
+ * The band. Padding steps are the section's, so a hero and a section below it share a rhythm.
+ *
+ * `@container/frame` is what makes the steps mean anything in the studio — ADR-356. A `md:` here is a
+ * query against the browser window, and the artboard is a 375 px box drawn inside a 1920 px window,
+ * so the mobile frame was laying out with desktop padding. Against the frame's own width the answer
+ * is the same one the exported page gives, because the section carries the container with it.
+ */
+export const heroSectionStyles = cva('@container/frame relative flex w-full flex-col', {
   variants: {
     padding: {
       none: 'p-0',
       xs: 'p-2',
       sm: 'p-4',
       md: 'p-6',
-      lg: 'p-10 md:p-16',
-      xl: 'px-6 py-16 md:px-16 md:py-24 lg:py-32',
+      lg: 'p-10 @min-[768px]/frame:p-16',
+      xl: 'px-6 py-16 @min-[768px]/frame:px-16 @min-[768px]/frame:py-24 @min-[1024px]/frame:py-32',
     },
     minHeight: {
       auto: '',

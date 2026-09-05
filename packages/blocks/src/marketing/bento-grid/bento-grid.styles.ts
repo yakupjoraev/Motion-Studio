@@ -11,14 +11,17 @@ import { cva } from 'class-variance-authority'
  * only) breaks as soon as a cell spans. A painted gap is one declaration and it is correct for every
  * arrangement.
  */
-export const bentoGridStyles = cva('grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4', {
-  variants: {
-    gapless: {
-      true: 'gap-px overflow-hidden rounded-2xl border border-border bg-border',
-      false: 'gap-4',
+export const bentoGridStyles = cva(
+  'grid grid-cols-1 @min-[640px]/frame:grid-cols-2 @min-[1024px]/frame:grid-cols-4',
+  {
+    variants: {
+      gapless: {
+        true: 'gap-px overflow-hidden rounded-2xl border border-border bg-border',
+        false: 'gap-4',
+      },
     },
   },
-})
+)
 
 export const bentoCellStyles = cva('@container flex min-w-0 flex-col overflow-hidden', {
   variants: {
@@ -41,14 +44,14 @@ export const bentoCellStyles = cva('@container flex min-w-0 flex-col overflow-hi
  */
 export const COL_SPAN_CLASS = {
   1: '',
-  2: 'lg:col-span-2',
-  3: 'lg:col-span-3',
-  4: 'lg:col-span-4',
+  2: '@min-[1024px]/frame:col-span-2',
+  3: '@min-[1024px]/frame:col-span-3',
+  4: '@min-[1024px]/frame:col-span-4',
 } as const
 
 export const ROW_SPAN_CLASS = {
   1: '',
-  2: 'lg:row-span-2',
+  2: '@min-[1024px]/frame:row-span-2',
 } as const
 
 /** Cells hold placed blocks, so the padding is the cell's and the content is whatever went in it. */

@@ -12,6 +12,7 @@ export const waitlistFrameStyles = cva('w-full max-w-lg', {
  * A 48 px button beside a field inside 360 px leaves the field about 140 px wide, which is four characters of an
  * email address — the measurement `newsletter-form` made and the reason both of them stack on a phone.
  */
-export const WAITLIST_ROW = 'flex w-full flex-col gap-3 sm:flex-row sm:items-start'
+export const WAITLIST_ROW =
+  'flex w-full flex-col gap-3 @min-[640px]/frame:flex-row @min-[640px]/frame:items-start'
 
 export const WAITLIST_NOTE = 'm-0 mt-3 text-base text-foreground-subtle'

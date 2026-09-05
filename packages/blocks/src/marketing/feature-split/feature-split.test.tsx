@@ -39,7 +39,7 @@ describe('FeatureSplit', () => {
     const [first, second] = screen.getAllByTestId('feature-split-media')
 
     expect(first?.parentElement?.className).not.toContain('order-first')
-    expect(second?.parentElement?.className).toContain('lg:order-first')
+    expect(second?.parentElement?.className).toContain('@min-[1024px]/frame:order-first')
   })
 
   it('keeps the copy before the picture in reading order on a reversed row', () => {

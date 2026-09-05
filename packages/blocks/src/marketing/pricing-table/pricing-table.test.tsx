@@ -156,7 +156,9 @@ describe('PricingTable — cards', () => {
   it('brings the highlighted plan first where the cards stack', () => {
     renderBlock(definition, PricingTable, { highlightIndex: 1 })
 
-    expect(screen.getAllByTestId('plan-card')[1]?.className).toContain('max-sm:order-first')
+    expect(screen.getAllByTestId('plan-card')[1]?.className).toContain(
+      '@max-[639px]/frame:order-first',
+    )
   })
 
   it('marks an excluded feature with a dash and says so off screen', () => {

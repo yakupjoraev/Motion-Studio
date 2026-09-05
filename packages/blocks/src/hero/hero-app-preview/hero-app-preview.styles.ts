@@ -29,7 +29,7 @@ export const PLACEHOLDER_DOT = 'size-2.5 rounded-full bg-border-strong'
 
 export const PLACEHOLDER_BODY = 'flex gap-4 p-4'
 
-export const PLACEHOLDER_SIDEBAR = 'hidden w-1/5 shrink-0 flex-col gap-2 sm:flex'
+export const PLACEHOLDER_SIDEBAR = 'hidden w-1/5 shrink-0 flex-col gap-2 @min-[640px]/frame:flex'
 
 /** The four sidebar rows of the placeholder window, by width. */
 export const SIDEBAR_ROWS = ['w-4/5', 'w-full', 'w-3/5', 'w-2/3'] as const

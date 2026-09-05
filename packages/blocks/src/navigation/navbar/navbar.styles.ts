@@ -10,7 +10,10 @@ import { NAV_INNER, NAV_TRANSITION } from '../navigation.styles'
  * than as chrome. `data-scrolled` arrives from the scroll bus (ADR-191), so the whole switch is a class.
  */
 export const navbarStyles = cva(
-  ['relative z-40 w-full border-b border-transparent', NAV_TRANSITION].join(' '),
+  // `@container/frame` — ADR-356. The menu-versus-drawer switch below is a question about how wide
+  // this bar is, and as a `md:` it asked the browser window: on the studio's 375 px artboard the
+  // desktop menu stayed and the drawer trigger stayed hidden.
+  ['@container/frame relative z-40 w-full border-b border-transparent', NAV_TRANSITION].join(' '),
   {
     variants: {
       sticky: {
@@ -27,11 +30,11 @@ export const navbarStyles = cva(
 export const NAVBAR_INNER = `${NAV_INNER} h-16 justify-between`
 
 /** The menu and the actions are desktop-only; below `md` the drawer is the whole navigation. */
-export const NAVBAR_MENU = 'relative hidden md:flex'
+export const NAVBAR_MENU = 'relative hidden @min-[768px]/frame:flex'
 
 export const NAVBAR_MENU_LIST = 'm-0 flex list-none items-center gap-1 p-0'
 
-export const NAVBAR_ACTIONS = 'hidden items-center gap-2 md:flex'
+export const NAVBAR_ACTIONS = 'hidden items-center gap-2 @min-[768px]/frame:flex'
 
 export const NAVBAR_TRIGGER_CHEVRON =
   'transition-transform [transition-duration:var(--ms-duration-fast)] data-[state=open]:rotate-180'

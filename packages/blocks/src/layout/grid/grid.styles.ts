@@ -7,15 +7,15 @@ import type { GridProps } from './grid.types'
  * Explicit mode is `grid-cols-N`; auto-fit is the arbitrary value most builders do not offer, and
  * the four minimums are the card widths it is actually used for.
  */
-export const gridStyles = cva('grid', {
+export const gridStyles = cva('@container/frame grid', {
   variants: {
     columns: {
       1: 'grid-cols-1',
-      2: 'grid-cols-1 sm:grid-cols-2',
-      3: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
-      4: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4',
-      5: 'grid-cols-1 sm:grid-cols-3 lg:grid-cols-5',
-      6: 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-6',
+      2: 'grid-cols-1 @min-[640px]/frame:grid-cols-2',
+      3: 'grid-cols-1 @min-[640px]/frame:grid-cols-2 @min-[1024px]/frame:grid-cols-3',
+      4: 'grid-cols-1 @min-[640px]/frame:grid-cols-2 @min-[1024px]/frame:grid-cols-4',
+      5: 'grid-cols-1 @min-[640px]/frame:grid-cols-3 @min-[1024px]/frame:grid-cols-5',
+      6: 'grid-cols-2 @min-[640px]/frame:grid-cols-3 @min-[1024px]/frame:grid-cols-6',
     },
     minItemWidth: {
       sm: 'grid-cols-[repeat(auto-fit,minmax(12rem,1fr))]',

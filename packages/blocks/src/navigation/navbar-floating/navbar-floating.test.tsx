@@ -65,7 +65,9 @@ describe('NavbarFloating', () => {
   it('moves the links into the drawer below sm and keeps them in the pill above it', () => {
     renderBlock(definition, NavbarFloating)
 
-    expect(screen.getByTestId('navbar-floating-links').className).toContain('sm:flex')
+    expect(screen.getByTestId('navbar-floating-links').className).toContain(
+      '@min-[640px]/frame:flex',
+    )
     expect(screen.getByTestId('nav-drawer-trigger')).toBeInTheDocument()
   })
 

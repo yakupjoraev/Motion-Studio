@@ -5,14 +5,14 @@ import { cva } from 'class-variance-authority'
  * `reverseOnMobile` is one class rather than a second DOM order — the reading order stays the
  * document's, which is the point of making it a prop.
  */
-export const columnsStyles = cva('flex flex-col md:grid', {
+export const columnsStyles = cva('@container/frame flex flex-col @min-[768px]/frame:grid', {
   variants: {
     split: {
-      '1-1': 'md:grid-cols-2',
-      '2-1': 'md:grid-cols-[2fr_1fr]',
-      '1-2': 'md:grid-cols-[1fr_2fr]',
-      '3-1': 'md:grid-cols-[3fr_1fr]',
-      '1-3': 'md:grid-cols-[1fr_3fr]',
+      '1-1': '@min-[768px]/frame:grid-cols-2',
+      '2-1': '@min-[768px]/frame:grid-cols-[2fr_1fr]',
+      '1-2': '@min-[768px]/frame:grid-cols-[1fr_2fr]',
+      '3-1': '@min-[768px]/frame:grid-cols-[3fr_1fr]',
+      '1-3': '@min-[768px]/frame:grid-cols-[1fr_3fr]',
     },
     gap: {
       none: 'gap-0',
@@ -28,7 +28,7 @@ export const columnsStyles = cva('flex flex-col md:grid', {
       end: 'items-end',
       stretch: 'items-stretch',
     },
-    reverseOnMobile: { true: 'flex-col-reverse md:flex-none', false: '' },
+    reverseOnMobile: { true: 'flex-col-reverse @min-[768px]/frame:flex-none', false: '' },
     hidden: { true: 'hidden', false: 'flex' },
   },
 })

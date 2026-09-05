@@ -37,7 +37,8 @@ describe('HeroSplit', () => {
     expect(
       heading.compareDocumentPosition(mediaPlate) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy()
-    expect(container.querySelector('.lg\\:order-1')).not.toBeNull()
+    // ADR-356: the order swap is a container query against the band, not a viewport one.
+    expect(container.querySelector('[class*="@min-[1024px]/frame:order-1"]')).not.toBeNull()
   })
 
   it('reserves the media box so a late child shifts nothing', () => {

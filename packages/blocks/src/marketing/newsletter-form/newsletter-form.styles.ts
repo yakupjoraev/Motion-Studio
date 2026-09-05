@@ -4,7 +4,7 @@ import { MARKETING_FOCUS, MARKETING_TRANSITION } from '../marketing.styles'
 import { innerRadiusClass } from '../nested-radius'
 
 /** `hidden` is a class rather than an early return, so a hidden block keeps its place in the tree. */
-export const newsletterStackStyles = cva('w-full max-w-xl flex-col', {
+export const newsletterStackStyles = cva('@container/frame w-full max-w-xl flex-col', {
   variants: {
     hidden: { true: 'hidden', false: 'flex' },
   },
@@ -30,7 +30,7 @@ const PLATE_RADIUS = 'lg' as const
 const PLATE_PADDING_PX = 4
 
 export const NEWSLETTER_PLATE =
-  'flex flex-col gap-2 rounded-lg border border-border bg-surface-2 p-1 sm:flex-row sm:items-center'
+  'flex flex-col gap-2 rounded-lg border border-border bg-surface-2 p-1 @min-[640px]/frame:flex-row @min-[640px]/frame:items-center'
 
 export const newsletterFieldStyles = cva(
   [

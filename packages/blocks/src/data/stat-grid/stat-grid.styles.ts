@@ -12,14 +12,14 @@ import { DATA_LABEL } from '../data.styles'
  */
 export const columnsClass = (columns: number): string => {
   if (columns <= 2) {
-    return 'grid-cols-1 sm:grid-cols-2'
+    return 'grid-cols-1 @min-[640px]/frame:grid-cols-2'
   }
 
   if (columns === 3) {
-    return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+    return 'grid-cols-1 @min-[640px]/frame:grid-cols-2 @min-[1024px]/frame:grid-cols-3'
   }
 
-  return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
+  return 'grid-cols-1 @min-[640px]/frame:grid-cols-2 @min-[1024px]/frame:grid-cols-4'
 }
 
 /**
@@ -34,7 +34,7 @@ export const columnsClass = (columns: number): string => {
  * rather than the order they are written. Composed, the grid painted itself `surface-1` and every divider vanished
  * into it — measured at 1440 in light mode, which is where a white gap on a white plate is invisible.
  */
-export const statGridStyles = cva('grid list-none p-0', {
+export const statGridStyles = cva('@container/frame grid list-none p-0', {
   variants: {
     dividers: {
       true: 'gap-px overflow-hidden rounded-xl border border-border bg-border',
@@ -47,7 +47,7 @@ export const statCellStyles = cva('@container flex min-w-0 flex-col', {
   variants: {
     dividers: {
       // Each cell repaints the plate, so the gap between them is the only place the border colour shows.
-      true: 'bg-surface-1 p-5 md:p-6',
+      true: 'bg-surface-1 p-5 @min-[768px]/frame:p-6',
       false: 'p-0',
     },
     align: {

@@ -24,6 +24,12 @@ export const FONT_FAMILY = {
  *
  * The two `display-*` entries are fluid: their size is a `clamp()` and their line height is unitless
  * so it tracks the clamped size instead of a fixed pixel value.
+ *
+ * The fluid middle term is `cqw`, not `vw` — ADR-356. A block section declares `@container/frame`, so
+ * a headline is sized by the band it sits in. That is what makes the studio's 375 px artboard show
+ * the 40 px headline a phone gets: with `vw` it read the 1920 px browser window the artboard is drawn
+ * inside and printed 80 px, so the mobile frame previewed a desktop headline. Outside a container
+ * `cqw` falls back to the small viewport, which is the old behaviour.
  */
 export const TYPE_SCALE = {
   '2xs': { size: '10px', lineHeight: '14px', tracking: '0.04em' },
@@ -38,8 +44,8 @@ export const TYPE_SCALE = {
   '4xl': { size: '48px', lineHeight: '54px', tracking: '-0.025em' },
   '5xl': { size: '64px', lineHeight: '68px', tracking: '-0.03em' },
   '6xl': { size: '80px', lineHeight: '82px', tracking: '-0.035em' },
-  'display-1': { size: 'clamp(2.5rem, 6vw, 5rem)', lineHeight: '1.05', tracking: '-0.03em' },
-  'display-2': { size: 'clamp(2rem, 4.5vw, 3.5rem)', lineHeight: '1.1', tracking: '-0.02em' },
+  'display-1': { size: 'clamp(2.5rem, 6cqw, 5rem)', lineHeight: '1.05', tracking: '-0.03em' },
+  'display-2': { size: 'clamp(2rem, 4.5cqw, 3.5rem)', lineHeight: '1.1', tracking: '-0.02em' },
 } as const satisfies Record<string, TypeScaleEntry>
 
 /** No 300: it fails contrast at small sizes on dark surfaces. */

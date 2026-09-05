@@ -55,9 +55,9 @@ describe('BentoGrid', () => {
 
     const cells = screen.getAllByTestId('bento-cell')
 
-    expect(cells[0]?.className).toContain('lg:col-span-2')
-    expect(cells[0]?.className).toContain('lg:row-span-2')
-    expect(cells[1]?.className).toContain('lg:col-span-3')
+    expect(cells[0]?.className).toContain('@min-[1024px]/frame:col-span-2')
+    expect(cells[0]?.className).toContain('@min-[1024px]/frame:row-span-2')
+    expect(cells[1]?.className).toContain('@min-[1024px]/frame:col-span-3')
     expect(cells[2]?.className).not.toContain('col-span')
   })
 

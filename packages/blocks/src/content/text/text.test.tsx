@@ -48,7 +48,7 @@ describe('Text', () => {
     const className = screen.getByText('Three').className
 
     expect(className).toContain('columns-1')
-    expect(className).toContain('lg:columns-3')
+    expect(className).toContain('@min-[1024px]/frame:columns-3')
   })
 
   it('styles the drop cap without taking the letter out of the sentence', () => {

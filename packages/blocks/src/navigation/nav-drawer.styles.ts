@@ -2,7 +2,7 @@
  * The drawer's surface. Two blocks open it — the bar and the floating pill — so it is the category's
  * rather than either block's.
  */
-export const NAV_DRAWER_TRIGGER = 'md:hidden'
+export const NAV_DRAWER_TRIGGER = '@min-[768px]/frame:hidden'
 
 export const NAV_DRAWER_OVERLAY = 'fixed inset-0 z-50 bg-surface-0/70 backdrop-blur-sm'
 

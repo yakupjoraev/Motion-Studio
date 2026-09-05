@@ -46,7 +46,9 @@ describe('Columns', () => {
     for (const split of SPLITS) {
       const { container, unmount } = renderBlock(definition, Columns, { split })
 
-      expect(container.firstElementChild?.className, split).toContain('md:grid-cols-')
+      expect(container.firstElementChild?.className, split).toContain(
+        '@min-[768px]/frame:grid-cols-',
+      )
       unmount()
     }
   })

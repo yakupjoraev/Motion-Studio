@@ -6,7 +6,7 @@ import { cva } from 'class-variance-authority'
  * out of a document at runtime is never literal at build time. `MEASURE_CH` in the schema is the same
  * table as a number, and the block's test asserts the two agree.
  */
-export const textStyles = cva('mb-0 text-pretty', {
+export const textStyles = cva('@container/frame mb-0 text-pretty', {
   variants: {
     size: {
       sm: 'text-sm',
@@ -32,8 +32,8 @@ export const textStyles = cva('mb-0 text-pretty', {
     },
     columns: {
       1: 'columns-1',
-      2: 'columns-1 gap-10 md:columns-2',
-      3: 'columns-1 gap-10 md:columns-2 lg:columns-3',
+      2: 'columns-1 gap-10 @min-[768px]/frame:columns-2',
+      3: 'columns-1 gap-10 @min-[768px]/frame:columns-2 @min-[1024px]/frame:columns-3',
     },
     /**
      * `::first-letter` rather than a wrapped span: a span would put the letter in the text content,

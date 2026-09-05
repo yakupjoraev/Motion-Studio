@@ -15,7 +15,8 @@ import { NAV_TRANSITION } from '../navigation.styles'
  */
 export const navbarFloatingStyles = cva(
   [
-    'ms-glass ms-nav-glass sticky top-4 z-40 mx-auto flex w-[calc(100%-2rem)] max-w-3xl items-center',
+    // `@container/frame` — ADR-356, so the link row's own width decides whether it fits.
+    '@container/frame ms-glass ms-nav-glass sticky top-4 z-40 mx-auto flex w-[calc(100%-2rem)] max-w-3xl items-center',
     'justify-between gap-3 rounded-full py-2 pr-2 pl-4 shadow-lg',
     'data-[scrolled=true]:py-1 data-[scrolled=true]:shadow-xl',
     NAV_TRANSITION,
@@ -27,7 +28,8 @@ export const navbarFloatingStyles = cva(
 )
 
 /** Below `sm` the pill is the brand, the drawer trigger and nothing else — there is no room for a row. */
-export const FLOATING_LINKS = 'm-0 hidden list-none items-center gap-0.5 p-0 sm:flex'
+export const FLOATING_LINKS =
+  'm-0 hidden list-none items-center gap-0.5 p-0 @min-[640px]/frame:flex'
 
 export const FLOATING_ACTIONS = 'flex items-center gap-2'
 

@@ -6,20 +6,25 @@ import { cva } from 'class-variance-authority'
  *
  * Three numbers carry it, all from DESIGN_SYSTEM.md § Space:
  *
- *   - vertical padding `py-16 md:py-24 lg:py-32` — the section rhythm the document states;
+ *   - vertical padding `py-16 @min-[768px]/frame:py-24 @min-[1024px]/frame:py-32` — the section rhythm the document states;
  *   - the measure: the band is `max-w-6xl`, the header's description is `max-w-2xl` inside it. A
  *     description that spans the band is the specific thing that makes a marketing page look like a
  *     document rather than a product;
- *   - the header-to-content gap is `mt-12 md:mt-16`, one step larger than anything inside the header,
+ *   - the header-to-content gap is `mt-12 @min-[768px]/frame:mt-16`, one step larger than anything inside the header,
  *     so the header reads as a unit rather than as the first row of the content.
  */
-export const marketingSectionStyles = cva('w-full', {
+/**
+ * `@container/frame` — ADR-356. Every step below is a question about how wide this band is, and a
+ * `@min-[768px]/frame:` asks the browser window instead: inside the studio's artboard those are different numbers,
+ * and the mobile frame was answering with the desktop's.
+ */
+export const marketingSectionStyles = cva('@container/frame w-full', {
   variants: {
     hidden: { true: 'hidden', false: 'block' },
     padding: {
       none: 'py-0',
-      compact: 'py-12 md:py-16',
-      default: 'py-16 md:py-24 lg:py-32',
+      compact: 'py-12 @min-[768px]/frame:py-16',
+      default: 'py-16 @min-[768px]/frame:py-24 @min-[1024px]/frame:py-32',
     },
   },
 })
@@ -60,12 +65,12 @@ export const sectionHeadingStyles = cva(
     variants: {
       size: {
         /** For a band that is proof rather than a claim — a logo row, a compact CTA. */
-        md: 'text-2xl md:text-3xl',
+        md: 'text-2xl @min-[768px]/frame:text-3xl',
         /**
          * `display-2`, which DESIGN_SYSTEM.md § Typography assigns to exactly this: "Fluid section".
          * `clamp(2rem, 4.5vw, 3.5rem)` at −0.02em, so a section headline is 32 px on a phone and 56 px at
          * 1440 without a breakpoint in the class. Measured beside the reference at 1440, the earlier pair
-         * (`text-3xl md:text-4xl`, capping at 48 px) read a step quieter than the page around it.
+         * (`text-3xl @min-[768px]/frame:text-4xl`, capping at 48 px) read a step quieter than the page around it.
          */
         lg: 'text-display-2',
       },
@@ -76,7 +81,7 @@ export const sectionHeadingStyles = cva(
 export const SECTION_DESCRIPTION = 'mt-4 mb-0 max-w-2xl text-pretty text-foreground-muted text-lg'
 
 /** The gap between the header and whatever the section shows. Absent header, absent gap. */
-export const SECTION_CONTENT = 'mt-12 w-full md:mt-16'
+export const SECTION_CONTENT = 'mt-12 w-full @min-[768px]/frame:mt-16'
 
 /**
  * The one transition every hoverable marketing surface uses. The duration is a token, so the studio's

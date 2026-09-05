@@ -5,15 +5,15 @@ import { cva } from 'class-variance-authority'
  * variant keys are the schema's enums; a value the schema allows and this map does not is a
  * `cva` fallback to the default, which the meta-test would not catch, so the two are edited together.
  */
-export const sectionStyles = cva('flex w-full flex-col', {
+export const sectionStyles = cva('@container/frame flex w-full flex-col', {
   variants: {
     padding: {
       none: 'p-0',
       xs: 'p-2',
       sm: 'p-4',
       md: 'p-6',
-      lg: 'p-10 md:p-16',
-      xl: 'p-14 md:p-24',
+      lg: 'p-10 @min-[768px]/frame:p-16',
+      xl: 'p-14 @min-[768px]/frame:p-24',
     },
     background: {
       transparent: 'bg-transparent',

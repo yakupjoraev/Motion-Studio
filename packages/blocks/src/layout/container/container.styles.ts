@@ -3,14 +3,14 @@ import { cva } from 'class-variance-authority'
 import type { ContainerProps } from './container.types'
 
 /** Literal classes only — ADR-106. `gap` and `padding` share the space scale the section uses. */
-export const containerStyles = cva('w-full', {
+export const containerStyles = cva('@container/frame w-full', {
   variants: {
     mode: { flex: 'flex', grid: 'grid' },
     columns: {
       1: 'grid-cols-1',
-      2: 'grid-cols-1 sm:grid-cols-2',
-      3: 'grid-cols-1 sm:grid-cols-3',
-      4: 'grid-cols-2 sm:grid-cols-4',
+      2: 'grid-cols-1 @min-[640px]/frame:grid-cols-2',
+      3: 'grid-cols-1 @min-[640px]/frame:grid-cols-3',
+      4: 'grid-cols-2 @min-[640px]/frame:grid-cols-4',
     },
     direction: {
       row: 'flex-row',

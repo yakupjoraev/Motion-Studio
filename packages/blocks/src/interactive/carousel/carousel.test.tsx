@@ -295,9 +295,9 @@ describe('Carousel', () => {
 
   it.each([
     [1, 'basis-full'],
-    [2, 'sm:basis-1/2'],
-    [3, 'lg:basis-1/3'],
-    [4, 'lg:basis-1/4'],
+    [2, '@min-[640px]/frame:basis-1/2'],
+    [3, '@min-[1024px]/frame:basis-1/3'],
+    [4, '@min-[1024px]/frame:basis-1/4'],
   ] as const)('gives %s per view the literal basis class %s', (perView, basis) => {
     renderBlock(definition, Carousel, { perView })
 

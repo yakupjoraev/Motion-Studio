@@ -22,7 +22,7 @@ describe('Grid', () => {
     const className = classesOf({ mode: 'explicit', columns: 3 })
 
     expect(className).toContain('grid-cols-1')
-    expect(className).toContain('lg:grid-cols-3')
+    expect(className).toContain('@min-[1024px]/frame:grid-cols-3')
     expect(className).not.toContain('auto-fit')
   })
 
@@ -30,7 +30,7 @@ describe('Grid', () => {
     const className = classesOf({ mode: 'auto-fit', minItemWidth: 'lg' })
 
     expect(className).toContain('grid-cols-[repeat(auto-fit,minmax(20rem,1fr))]')
-    expect(className).not.toContain('lg:grid-cols-')
+    expect(className).not.toContain('@min-[1024px]/frame:grid-cols-')
   })
 
   it('has a literal class for every step of both scales', () => {

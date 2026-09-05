@@ -5,12 +5,12 @@ import { INTERACTIVE_FOCUS, INTERACTIVE_TRANSITION } from '../interactive.styles
 /** One slide's share of the track. A literal class per value, because Tailwind needs to see it (ADR-106). */
 export const SLIDE_BASIS: Readonly<Record<1 | 2 | 3 | 4, string>> = {
   1: 'basis-full',
-  2: 'basis-full sm:basis-1/2',
-  3: 'basis-full sm:basis-1/2 lg:basis-1/3',
-  4: 'basis-full sm:basis-1/2 lg:basis-1/4',
+  2: 'basis-full @min-[640px]/frame:basis-1/2',
+  3: 'basis-full @min-[640px]/frame:basis-1/2 @min-[1024px]/frame:basis-1/3',
+  4: 'basis-full @min-[640px]/frame:basis-1/2 @min-[1024px]/frame:basis-1/4',
 }
 
-export const carouselRootStyles = cva('w-full min-w-0', {
+export const carouselRootStyles = cva('@container/frame w-full min-w-0', {
   variants: { hidden: { true: 'hidden', false: 'block' } },
   defaultVariants: { hidden: false },
 })

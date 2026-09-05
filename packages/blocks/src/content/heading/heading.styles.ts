@@ -5,15 +5,15 @@ import { cva } from 'class-variance-authority'
  * glyphs rather than a colour, so it needs `text-transparent` — and the token pair is the theme's,
  * which is what keeps it readable in both colour modes.
  */
-export const headingStyles = cva('m-0', {
+export const headingStyles = cva('@container/frame m-0', {
   variants: {
     size: {
       sm: 'text-base',
       md: 'text-lg',
       lg: 'text-2xl',
-      xl: 'text-3xl md:text-4xl',
-      '2xl': 'text-4xl md:text-5xl',
-      '3xl': 'text-5xl md:text-6xl',
+      xl: 'text-3xl @min-[768px]/frame:text-4xl',
+      '2xl': 'text-4xl @min-[768px]/frame:text-5xl',
+      '3xl': 'text-5xl @min-[768px]/frame:text-6xl',
     },
     weight: {
       regular: 'font-normal',

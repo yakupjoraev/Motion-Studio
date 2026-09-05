@@ -11,11 +11,11 @@ import { DATA_LABEL, DATA_SURFACE } from '../data.styles'
  * 1440 in both modes — the same defect ADR-211 recorded for panel prose, in a form that costs the data rather
  * than the reading.
  */
-export const chartFrameStyles = cva('w-full max-w-2xl', {
+export const chartFrameStyles = cva('@container/frame w-full max-w-2xl', {
   variants: {
     hidden: { true: 'hidden', false: 'block' },
     /** The category's plate, for a chart that has to hold its own on a page rather than sit inside a band. */
-    plate: { true: `${DATA_SURFACE} p-5 md:p-6`, false: '' },
+    plate: { true: `${DATA_SURFACE} p-5 @min-[768px]/frame:p-6`, false: '' },
   },
 })
 
