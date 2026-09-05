@@ -13,6 +13,9 @@ import {
 } from '@motion-studio/ui/controls'
 import { useCallback, useState } from 'react'
 
+import { controlLabel } from '@motion-studio/blocks/i18n/translate'
+
+import { useRegistryCopy, useStudio } from '../../../lib/i18n/studio-surface'
 import { useStudioStore } from '../../../store/editor-store'
 
 import { nearestEasing, nearestSpring } from './nearest-curve'
@@ -39,6 +42,8 @@ export function MotionParams({
   readonly spec: MotionSpec
   readonly nodeId: NodeId
 }) {
+  const { panels } = useStudio()
+  const copy = useRegistryCopy()
   const write = useCallback(
     (key: string, value: number | string | boolean) => {
       useStudioStore.getState().dispatch(
@@ -71,7 +76,7 @@ export function MotionParams({
   return (
     <div className="flex flex-col" data-testid="motion-params">
       {preset.controls.map((descriptor) => (
-        <ControlRow key={descriptor.path} label={descriptor.label}>
+        <ControlRow key={descriptor.path} label={controlLabel(copy, descriptor.label)}>
           {(slot) => (
             <ControlRenderer
               descriptor={descriptor}
@@ -85,11 +90,11 @@ export function MotionParams({
       ))}
 
       {isEasingName(easing) ? (
-        <ControlRow label="Curve">
+        <ControlRow label={panels.motionCurve}>
           {(slot) => (
             <CurveEditor
               {...slot}
-              label="Easing curve"
+              label={panels.motionEasingCurve}
               onChange={(curve) => {
                 setCurveDraft(curve)
                 write('easing', nearestEasing(curve))
@@ -105,11 +110,11 @@ export function MotionParams({
       ) : null}
 
       {isSpringName(spring) ? (
-        <ControlRow label="Spring">
+        <ControlRow label={panels.motionSpring}>
           {(slot) => (
             <SpringEditor
               {...slot}
-              label="Spring"
+              label={panels.motionSpring}
               onChange={(config) => {
                 setSpringDraft(config)
                 write('spring', nearestSpring(config))

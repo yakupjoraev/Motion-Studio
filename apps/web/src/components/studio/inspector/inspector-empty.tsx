@@ -2,6 +2,7 @@
 
 import { Button } from '@motion-studio/ui'
 
+import { useStudio } from '../../../lib/i18n/studio-surface'
 import { useStudioStore } from '../../../store/editor-store'
 
 import { ControlGroup } from './control-group'
@@ -18,6 +19,7 @@ const Row = ({ label, value }: { readonly label: string; readonly value: string 
  * the app. With nothing selected it reports the document — the thing the user is actually editing.
  */
 export function InspectorEmpty() {
+  const { panels } = useStudio()
   const name = useStudioStore((state) => state.document.meta.name)
   const width = useStudioStore((state) => state.document.meta.canvas.width)
   const nodes = useStudioStore((state) => Object.keys(state.document.nodes).length)
@@ -27,22 +29,22 @@ export function InspectorEmpty() {
 
   return (
     <div className="flex w-full flex-col" data-testid="inspector-empty">
-      <ControlGroup id="document" label="Document">
-        <Row label="Name" value={name} />
-        <Row label="Canvas width" value={`${width}px`} />
-        <Row label="Blocks" value={String(nodes)} />
+      <ControlGroup id="document" label={panels.inspectorDocument}>
+        <Row label={panels.inspectorName} value={name} />
+        <Row label={panels.inspectorCanvasWidth} value={`${width}px`} />
+        <Row label={panels.inspectorBlocks} value={String(nodes)} />
       </ControlGroup>
 
-      <ControlGroup id="document-theme" label="Theme">
-        <Row label="Preset" value={theme} />
+      <ControlGroup id="document-theme" label={panels.inspectorTheme}>
+        <Row label={panels.inspectorPreset} value={theme} />
         <Button onClick={() => setLeftTab('theme')} size="sm" variant="ghost">
-          Open the theme panel
+          {panels.inspectorOpenTheme}
         </Button>
       </ControlGroup>
 
-      <ControlGroup id="document-history" label="Version history">
-        <Row label="Steps" value={String(entries)} />
-        <p className="text-2xs text-foreground-subtle">Saved versions arrive with persistence.</p>
+      <ControlGroup id="document-history" label={panels.inspectorVersionHistory}>
+        <Row label={panels.inspectorSteps} value={String(entries)} />
+        <p className="text-2xs text-foreground-subtle">{panels.inspectorVersionsSoon}</p>
       </ControlGroup>
     </div>
   )

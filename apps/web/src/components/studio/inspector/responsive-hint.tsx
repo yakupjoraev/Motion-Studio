@@ -27,6 +27,8 @@ export function ResponsiveHint(): ReactElement | null {
     return null
   }
 
+  const [before = '', after = ''] = panels.responsiveHint.split('{breakpoint}')
+
   return (
     <output
       className="flex items-start gap-2 border-accent/30 border-b bg-accent-muted/40 px-3 py-2"
@@ -34,8 +36,9 @@ export function ResponsiveHint(): ReactElement | null {
     >
       <InfoIcon className="mt-px shrink-0 text-accent" size={12} />
       <p className="flex-1 text-pretty text-2xs text-foreground-muted">
-        You’re editing <span className="font-medium text-foreground">{breakpoint}</span> and up.
-        Switch to base to change all sizes.
+        {before}
+        <span className="font-medium text-foreground">{breakpoint}</span>
+        {after}
       </p>
       <Button
         aria-label={panels.dismissHint}

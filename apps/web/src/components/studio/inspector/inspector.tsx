@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic'
 import { useMemo } from 'react'
 
 import { usePersistedSections } from '../../../hooks/use-persisted-sections'
+import { useStudio } from '../../../lib/i18n/studio-surface'
 import { useStudioStore } from '../../../store/editor-store'
 import { useBlockRegistry } from '../../../store/use-block-registry'
 
@@ -52,6 +53,8 @@ const InspectorSkeleton = () => (
 export function Inspector() {
   usePersistedSections()
 
+  const { chrome, panels } = useStudio()
+
   const registry = useBlockRegistry()
 
   const hintVisible = useResponsiveHintVisible()
@@ -76,7 +79,7 @@ export function Inspector() {
 
   return (
     <div className="flex h-full flex-col">
-      <PanelHeader title={nodeIds.length === 1 ? (name ?? 'Inspector') : 'Inspector'} />
+      <PanelHeader title={nodeIds.length === 1 ? (name ?? chrome.inspector) : chrome.inspector} />
       {hintVisible ? <ResponsiveHint /> : null}
       <ResponsiveHeader />
       <ScrollArea className="flex-1">
@@ -86,7 +89,7 @@ export function Inspector() {
         )}
         {nodeIds.length === 1 && definition === undefined && (
           <p className="p-3 text-foreground-muted text-xs">
-            No block is registered as “{blockId}”, so there is nothing to edit.
+            {panels.inspectorUnknownBlock.replace('{id}', blockId ?? '')}
           </p>
         )}
         {nodeIds.length > 1 && <InspectorMulti nodeIds={nodeIds} />}

@@ -3,6 +3,7 @@
 import { BREAKPOINTS } from '@motion-studio/schema'
 import type { ReactElement } from 'react'
 
+import { useStudio } from '../../../lib/i18n/studio-surface'
 import { useStudioStore } from '../../../store/editor-store'
 
 /**
@@ -14,19 +15,29 @@ import { useStudioStore } from '../../../store/editor-store'
  * there is a line nobody reads.
  */
 export function ResponsiveHeader(): ReactElement | null {
+  const { panels } = useStudio()
   const breakpoint = useStudioStore((state) => state.viewport.breakpoint)
 
   if (breakpoint === 'base') {
     return null
   }
 
+  /*
+   * The breakpoint is emphasised inside the sentence, so the sentence is split around its
+   * placeholder rather than assembled from fragments: a translation orders the two halves itself.
+   */
+  const [before = '', after = ''] = panels.responsiveEditing
+    .replace('{width}', String(BREAKPOINTS[breakpoint].min))
+    .split('{breakpoint}')
+
   return (
     <p
       className="border-border border-b bg-surface-2/40 px-3 py-1.5 text-2xs text-foreground-muted"
       data-testid="responsive-header"
     >
-      Editing <span className="font-medium text-foreground">{breakpoint}</span> and up ·{' '}
-      {BREAKPOINTS[breakpoint].min} px and wider
+      {before}
+      <span className="font-medium text-foreground">{breakpoint}</span>
+      {after}
     </p>
   )
 }

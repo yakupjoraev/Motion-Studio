@@ -6,6 +6,7 @@ import type { MotionChannel, NodeId } from '@motion-studio/schema'
 import { Button } from '@motion-studio/ui'
 import { useState } from 'react'
 
+import { useStudio } from '../../../lib/i18n/studio-surface'
 import { useStudioStore } from '../../../store/editor-store'
 
 import { MotionParams } from './motion-params'
@@ -22,6 +23,7 @@ export function MotionChannelRow({
   readonly channel: MotionChannel
   readonly nodeId: NodeId
 }) {
+  const { panels } = useStudio()
   const spec = useStudioStore((state) => state.document.nodes[nodeId]?.motion[channel])
   const [plays, setPlays] = useState(0)
 
@@ -39,27 +41,27 @@ export function MotionChannelRow({
             {channel}
           </span>
           <span className="truncate text-foreground text-xs">
-            {preset?.name ?? `Unknown preset “${spec.presetId}”`}
+            {preset?.name ?? panels.motionUnknownPreset.replace('{id}', spec.presetId)}
           </span>
         </span>
         <span className="flex shrink-0 items-center gap-1">
           <Button
-            aria-label={`Replay ${channel}`}
+            aria-label={panels.motionReplayChannel.replace('{channel}', channel)}
             onClick={() => setPlays((count) => count + 1)}
             size="sm"
             variant="ghost"
           >
-            Play
+            {panels.motionPlay}
           </Button>
           <Button
-            aria-label={`Remove ${channel} motion`}
+            aria-label={panels.motionRemoveChannel.replace('{channel}', channel)}
             onClick={() =>
               useStudioStore.getState().dispatch(commands.clearMotion({ nodeId, channel }))
             }
             size="sm"
             variant="ghost"
           >
-            Remove
+            {panels.motionRemove}
           </Button>
         </span>
       </header>

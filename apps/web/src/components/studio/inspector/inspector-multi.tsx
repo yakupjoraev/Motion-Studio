@@ -4,6 +4,9 @@ import { blockRegistry } from '@motion-studio/blocks'
 import type { BlockDefinition, NodeId } from '@motion-studio/schema'
 import { useMemo } from 'react'
 
+import { useLocale } from '../../../lib/i18n/locale-context'
+import { formatPlural } from '../../../lib/i18n/plural'
+import { useStudio } from '../../../lib/i18n/studio-surface'
 import { useStudioStore } from '../../../store/editor-store'
 
 import { BlockInspector } from './block-inspector'
@@ -21,6 +24,8 @@ const pathsOf = (definition: BlockDefinition): ReadonlySet<string> =>
  * one. What is left renders normally, and a value the selection disagrees about shows as `Mixed`.
  */
 export function InspectorMulti({ nodeIds }: InspectorMultiProps) {
+  const { panels } = useStudio()
+  const { locale } = useLocale()
   const blockIds = useStudioStore((state) =>
     nodeIds.map((id) => state.document.nodes[id]?.blockId ?? '').join(' '),
   )
@@ -53,7 +58,7 @@ export function InspectorMulti({ nodeIds }: InspectorMultiProps) {
   return (
     <div className="flex w-full flex-col" data-testid="inspector-multi">
       <p className="px-3 py-2 text-2xs text-foreground-subtle">
-        {nodeIds.length} blocks selected. Shared properties only.
+        {formatPlural(locale, nodeIds.length, panels.inspectorMulti)}
       </p>
       <BlockInspector definition={shared.definition} nodeIds={nodeIds} only={shared.paths} />
     </div>

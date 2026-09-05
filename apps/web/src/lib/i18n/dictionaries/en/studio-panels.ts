@@ -53,6 +53,11 @@ export const studioPanels = {
   /** `{id}` is the block type the document names. */
   inspectorUnknownBlock: 'No block is registered as “{id}”, so there is nothing to edit.',
 
+  /*
+   * The six sections the inspector renders for every block. A block-defined group's heading is not
+   * here: it comes from the block's own metadata and is translated through the registry's table
+   * (ADR-365), which holds only strings the registry declares.
+   */
   sectionLayout: 'Layout',
   sectionStyle: 'Style',
   sectionTypography: 'Typography',
@@ -61,6 +66,7 @@ export const studioPanels = {
   sectionCode: 'Code',
   motionSelectOne: 'Select a single block to tune its motion.',
   motionNone: 'No motion. Pick a preset in the Motion panel.',
+  codeNothingSelected: 'Nothing selected.',
   codeSoon: '— the generated TSX arrives with the export engine.',
 
   /** `{breakpoint}` is the one being edited, `{width}` its frame in pixels. */
@@ -78,18 +84,34 @@ export const studioPanels = {
   motionCurve: 'Curve',
   motionEasingCurve: 'Easing curve',
   motionSpring: 'Spring',
+  /** `{channel}` is the assigned channel — entrance, hover, scroll. */
+  motionReplayChannel: 'Replay {channel}',
+  motionRemoveChannel: 'Remove {channel} motion',
+  /** `{id}` is the preset the document names and the catalogue does not have. */
+  motionUnknownPreset: 'Unknown preset “{id}”',
 
   effectsEmpty: 'No effects. Add one from the Effects panel.',
-  /** `{count}` layers in the effect stack. */
-  effectsLayers: {
-    one: '{count} layer. Order is paint order.',
-    other: '{count} layers. Order is paint order.',
+  effectsNoneOnSelection: 'No effects on this selection.',
+  /** `{count}` effects spread over a selection of more than one block. */
+  effectsAcrossSelection: {
+    one: '{count} effect across the selection. Select one block to edit its stack.',
+    other: '{count} effects across the selection. Select one block to edit its stack.',
   } as PluralForms,
+  /**
+   * `{count}` of the `{max}` layers a block may carry. Not a plural pair: the noun agrees with the
+   * cap, which never changes, so both languages read correctly at every count.
+   */
+  effectsLayers: '{count} of {max} layers. Order is paint order.',
   effectsMoveUp: 'Move layer up',
   effectsMoveDown: 'Move layer down',
   effectsRemove: 'Remove',
+  /** `{name}` is the effect, `{property}` the declaration a playground value wrote. */
+  effectsRemoveNamed: 'Remove {name}',
+  effectsRemoveCustom: 'Remove the custom {property}',
   effectsEdit: 'Edit',
   effectsLayer: 'Layer',
+  effectsBehind: 'Behind content',
+  effectsInFront: 'In front',
   effectsBlend: 'Blend',
   effectsBlendMode: 'Blend mode',
   effectsOpacity: 'Opacity',

@@ -2,6 +2,7 @@
 
 import type { NodeId } from '@motion-studio/schema'
 
+import { useStudio } from '../../../../lib/i18n/studio-surface'
 import { useStudioStore } from '../../../../store/editor-store'
 import { ControlGroup } from '../control-group'
 
@@ -14,6 +15,7 @@ export interface CodeSectionProps {
  * honestly show today is the element the block's codegen descriptor says it prints as.
  */
 export function CodeSection({ nodeIds }: CodeSectionProps) {
+  const { panels } = useStudio()
   const tags = useStudioStore((state) =>
     nodeIds
       .map((id) => state.document.nodes[id]?.blockId ?? '')
@@ -22,13 +24,12 @@ export function CodeSection({ nodeIds }: CodeSectionProps) {
   )
 
   return (
-    <ControlGroup id="code" label="Code">
+    <ControlGroup id="code" label={panels.sectionCode}>
       <p
         className="text-pretty break-words text-2xs text-foreground-subtle"
         data-testid="code-summary"
       >
-        {tags === '' ? 'Nothing selected.' : `<${tags}>`} — the generated TSX arrives with the
-        export engine.
+        {tags === '' ? panels.codeNothingSelected : `<${tags}>`} {panels.codeSoon}
       </p>
     </ControlGroup>
   )

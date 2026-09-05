@@ -2,6 +2,9 @@
 
 import type { NodeId } from '@motion-studio/schema'
 
+import { useLocale } from '../../../../lib/i18n/locale-context'
+import { formatPlural } from '../../../../lib/i18n/plural'
+import { useStudio } from '../../../../lib/i18n/studio-surface'
 import { useStudioStore } from '../../../../store/editor-store'
 import { CustomCssChips } from '../../effects/custom-css-chips'
 import { EffectStackEditor } from '../../effects/effect-stack-editor'
@@ -17,6 +20,8 @@ export interface EffectsSectionProps {
  * reorder, tune, toggle, remove — and the catalogue it adds from is the Effects panel.
  */
 export function EffectsSection({ nodeIds }: EffectsSectionProps) {
+  const { panels } = useStudio()
+  const { locale } = useLocale()
   const [nodeId] = nodeIds
   const count = useStudioStore((state) =>
     nodeIds.reduce((total, id) => total + (state.document.nodes[id]?.effects.length ?? 0), 0),
@@ -24,18 +29,18 @@ export function EffectsSection({ nodeIds }: EffectsSectionProps) {
 
   if (nodeIds.length !== 1 || nodeId === undefined) {
     return (
-      <ControlGroup id="effects" label="Effects">
+      <ControlGroup id="effects" label={panels.sectionEffects}>
         <p className="text-pretty text-2xs text-foreground-subtle" data-testid="effects-summary">
           {count === 0
-            ? 'No effects on this selection.'
-            : `${count} effect${count === 1 ? '' : 's'} across the selection. Select one block to edit its stack.`}
+            ? panels.effectsNoneOnSelection
+            : formatPlural(locale, count, panels.effectsAcrossSelection)}
         </p>
       </ControlGroup>
     )
   }
 
   return (
-    <ControlGroup id="effects" label="Effects">
+    <ControlGroup id="effects" label={panels.sectionEffects}>
       <EffectStackEditor nodeId={nodeId} />
       {/* A value sent from the playground is a node-level layer too — PLAYGROUND.md § Send to selection. */}
       <CustomCssChips nodeId={nodeId} />

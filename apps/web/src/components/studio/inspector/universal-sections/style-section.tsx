@@ -2,6 +2,8 @@
 
 import type { ControlGroup, NodeId } from '@motion-studio/schema'
 
+import { useStudio } from '../../../../lib/i18n/studio-surface'
+
 import { BlockSection } from './block-section'
 
 export interface StyleSectionProps {
@@ -10,5 +12,7 @@ export interface StyleSectionProps {
 }
 
 export function StyleSection({ group, nodeIds }: StyleSectionProps) {
-  return <BlockSection group={group} id="style" label="Style" nodeIds={nodeIds} />
+  const { panels } = useStudio()
+
+  return <BlockSection group={group} id="style" label={panels.sectionStyle} nodeIds={nodeIds} />
 }

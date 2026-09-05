@@ -4,6 +4,7 @@ import { composeMotion, presetRegistry } from '@motion-studio/motion'
 import type { MotionChannel, NodeId } from '@motion-studio/schema'
 import { useMemo } from 'react'
 
+import { useStudio } from '../../../../lib/i18n/studio-surface'
 import { useStudioStore } from '../../../../store/editor-store'
 import { ConflictChips } from '../../motion/conflict-chips'
 import { MotionChannelRow } from '../../motion/motion-channel-row'
@@ -20,6 +21,7 @@ export interface MotionSectionProps {
  * composition reports.
  */
 export function MotionSection({ nodeIds }: MotionSectionProps) {
+  const { panels } = useStudio()
   const [nodeId] = nodeIds
   const specs = useStudioStore((state) =>
     nodeId === undefined ? undefined : state.document.nodes[nodeId]?.motion,
@@ -40,17 +42,17 @@ export function MotionSection({ nodeIds }: MotionSectionProps) {
 
   if (nodeIds.length !== 1 || nodeId === undefined) {
     return (
-      <ControlGroup id="motion" label="Motion">
-        <p className="text-2xs text-foreground-subtle">Select a single block to tune its motion.</p>
+      <ControlGroup id="motion" label={panels.sectionMotion}>
+        <p className="text-2xs text-foreground-subtle">{panels.motionSelectOne}</p>
       </ControlGroup>
     )
   }
 
   return (
-    <ControlGroup id="motion" label="Motion">
+    <ControlGroup id="motion" label={panels.sectionMotion}>
       {channels.length === 0 ? (
         <p className="text-pretty text-2xs text-foreground-subtle" data-testid="motion-summary">
-          No motion. Pick a preset in the Motion panel.
+          {panels.motionNone}
         </p>
       ) : (
         <div className="flex flex-col gap-3" data-testid="motion-channels">
