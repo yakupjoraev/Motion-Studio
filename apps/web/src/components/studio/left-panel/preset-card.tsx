@@ -1,8 +1,10 @@
 'use client'
 
 import type { MotionPreset } from '@motion-studio/motion'
+import { presetName } from '@motion-studio/motion/i18n/translate'
 import { memo, useState } from 'react'
 
+import { usePresetCopy } from '../../../lib/i18n/studio-surface'
 import { PresetPreview } from '../motion/preset-preview'
 
 export interface PresetCardProps {
@@ -25,7 +27,9 @@ export const PresetCard = memo(function PresetCard({
   disabledReason,
   onApply,
 }: PresetCardProps) {
+  const copy = usePresetCopy()
   const [plays, setPlays] = useState(0)
+  const name = presetName(copy, preset.id, preset.name)
 
   return (
     <button
@@ -34,7 +38,7 @@ export const PresetCard = memo(function PresetCard({
        * `@keyframes` as a `<style>` element inside this button, and a computed name would read the
        * whole stylesheet aloud — measured in the browser, not guessed.
        */
-      aria-label={preset.name}
+      aria-label={name}
       aria-pressed={applied}
       className="flex w-full flex-col gap-2 rounded-sm border border-border bg-surface-1 p-2 text-left transition-colors hover:border-border-strong disabled:opacity-50 data-[applied=true]:border-accent"
       data-applied={applied}
@@ -48,7 +52,7 @@ export const PresetCard = memo(function PresetCard({
     >
       <PresetPreview playKey={plays} preset={preset} />
       <span className="flex items-baseline justify-between gap-2">
-        <span className="truncate text-foreground text-xs">{preset.name}</span>
+        <span className="truncate text-foreground text-xs">{name}</span>
         {preset.capabilities.gpuHeavy === true ? (
           <span className="text-[10px] text-warning uppercase tracking-wide">gpu</span>
         ) : null}

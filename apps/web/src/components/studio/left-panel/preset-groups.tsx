@@ -1,8 +1,11 @@
 'use client'
 
 import type { MotionPreset } from '@motion-studio/motion'
+import { channelName } from '@motion-studio/motion/i18n/translate'
 import type { MotionChannel } from '@motion-studio/schema'
 import type { ReactElement } from 'react'
+
+import { usePresetCopy } from '../../../lib/i18n/studio-surface'
 
 import { PresetCard } from './preset-card'
 
@@ -38,6 +41,8 @@ export function PresetGroups({
   reasonFor,
   grouped,
 }: PresetGroupsProps): ReactElement {
+  const copy = usePresetCopy()
+
   const card = (preset: MotionPreset) => (
     <PresetCard
       applied={applied.has(preset.id)}
@@ -64,7 +69,7 @@ export function PresetGroups({
         return (
           <section key={channel}>
             <h3 className="px-1 pb-2 font-medium text-[11px] text-foreground-subtle uppercase tracking-wide">
-              {label}
+              {channelName(copy, channel, label)}
             </h3>
             <div className="grid grid-cols-2 gap-2">{inChannel.map(card)}</div>
           </section>

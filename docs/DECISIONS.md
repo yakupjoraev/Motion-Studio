@@ -14989,3 +14989,55 @@ label would name a value that does not exist under that name anywhere else in th
   is a control label elsewhere in the registry and is translated there (ADR-365).
 - Rejected: translating the label while keeping the value. It would make the inspector and the
   exported code disagree about what the same choice is called.
+
+## ADR-368 — The motion catalogue carries its own translation table
+
+**Date** 2026-09-05 · **Prompt** 65 · **Status** Accepted
+
+### Question
+The fifty-one preset names and the forty-four control labels their parameters carry are declared in
+`packages/motion`. The block registry already has a table of exactly this shape in
+`packages/blocks/src/i18n` — should the preset strings go into it, or into a second table?
+
+### Criterion (set before deciding)
+Whichever keeps one owner per string. `registry-copy.test.ts` fails on an entry no block declares,
+in both directions, and that test is what has kept the block table honest.
+
+### Decision
+A second table, `packages/motion/src/i18n`, exported as `@motion-studio/motion/i18n` with the same
+shape and the same two-direction test. Putting preset strings in the block table would have to
+weaken that test — the entries would be ones no block claims — and a table that cannot say what it
+is missing is the failure this prompt has already found once.
+
+### Consequences
+- Accepted: `Duration` and `Delay` are translated twice, once per catalogue. Two entries against a
+  test that can fail on either side is the cheaper of the two costs.
+- The studio's registry context now carries both tables, so a client component still reads strings
+  from a prop rather than importing a dictionary (ADR-360's bundle measurement).
+- `Scrub` is kept in English inside the Russian table, for ADR-367's reason: it names a mechanism
+  the field calls by that word, and both Russian candidates describe something else.
+
+## ADR-369 — A dictionary key nothing reads is a build failure
+
+**Date** 2026-09-05 · **Prompt** 65 · **Status** Accepted
+
+### Question
+The first pass of this prompt wrote `panels.motionSelectOne` and eleven of its neighbours, and never
+wired the inspector to them. Every gate stayed green: the parity test compares the two dictionaries
+to each other, and an unused property is legal TypeScript. Ninety-nine keys were in that state.
+
+### Criterion (set before deciding)
+A gate is worth adding when it fails on the defect that actually happened and cannot fail on correct
+code. Anything looser costs more in false alarms than the defect costs.
+
+### Decision
+`dictionary-usage.test.ts` reads the source tree and fails on an English key that no file mentions.
+The match is deliberately loose — a bare `.key` anywhere in `apps/web` counts — because the question
+is "does anything reference this string at all", and a looser answer cannot fail a wired key.
+
+### Consequences
+- Accepted: a key read only through a computed path would be reported. None exists; the tables that
+  are read that way (`chrome.shortcutLabels`, `paletteGroups`) are reached through their own name,
+  which the test checks and their contents it does not.
+- The reverse direction is already covered elsewhere: a string in the source and not in a dictionary
+  shows up as English on screen, and the two catalogue tables fail on it by name (ADR-365, ADR-368).

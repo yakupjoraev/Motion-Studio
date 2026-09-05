@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 
 import { registryCopy } from '@motion-studio/blocks/i18n'
+import { presetCopy } from '@motion-studio/motion/i18n'
 
 import { PANEL_LAYOUT_SCRIPT } from '../../../src/hooks/panel-layout'
 import { getDictionary } from '../../../src/lib/i18n/dictionary'
@@ -32,7 +33,7 @@ export default async function StudioLayout({ children, params }: StudioLayoutPro
 
   return (
     <StudioDictionary value={studio}>
-      <RegistryDictionary value={{ copy: registryCopy(resolved) }}>
+      <RegistryDictionary value={{ copy: registryCopy(resolved), presets: presetCopy(resolved) }}>
         {/*
         The panel widths, restored before the first paint. Same reason as the colour-mode script: a
         width applied in an effect is a width the user watches jump.

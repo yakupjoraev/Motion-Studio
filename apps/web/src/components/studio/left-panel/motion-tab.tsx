@@ -2,12 +2,13 @@
 
 import { SearchIcon } from '@motion-studio/icons'
 import { type MotionPreset, PRESETS } from '@motion-studio/motion'
+import { channelName } from '@motion-studio/motion/i18n/translate'
 import { Button, EmptyState, Input, ScrollArea } from '@motion-studio/ui'
 import { useCallback, useMemo, useState } from 'react'
 
 import { useLocale } from '../../../lib/i18n/locale-context'
 import { formatPlural } from '../../../lib/i18n/plural'
-import { useStudio } from '../../../lib/i18n/studio-surface'
+import { usePresetCopy, useStudio } from '../../../lib/i18n/studio-surface'
 
 import { useStudioStore } from '../../../store/editor-store'
 import { applyPreset, targetsFor } from '../motion/apply-preset'
@@ -24,12 +25,6 @@ import {
 
 const COUNTS = channelCounts()
 
-const CHIPS = CHANNELS.map(({ channel, label }) => ({
-  id: channel,
-  label,
-  count: COUNTS.get(channel) ?? 0,
-}))
-
 /**
  * PRODUCT.md § 2, Motion: the catalogue grouped by channel, each card previewing on hover, clicking
  * applies to the selection as a command. A preset whose channel the selected block does not support
@@ -42,6 +37,7 @@ const CHIPS = CHANNELS.map(({ channel, label }) => ({
  */
 export function MotionTab() {
   const { panels } = useStudio()
+  const presetCopy = usePresetCopy()
   const { locale } = useLocale()
   const [query, setQuery] = useState('')
   const { presets, query: applied } = usePresetSearch(query)
@@ -59,6 +55,16 @@ export function MotionTab() {
 
   const appliedSet = useMemo(() => new Set(appliedIds.split(' ')), [appliedIds])
 
+  const chips = useMemo(
+    () =>
+      CHANNELS.map(({ channel, label }) => ({
+        id: channel,
+        label: channelName(presetCopy, channel, label),
+        count: COUNTS.get(channel) ?? 0,
+      })),
+    [presetCopy],
+  )
+
   const onApply = useCallback((preset: MotionPreset) => {
     applyPreset(useStudioStore, preset)
   }, [])
@@ -71,14 +77,17 @@ export function MotionTab() {
   const reasonFor = useCallback(
     (preset: MotionPreset): string | undefined => {
       if (selectionCount === 0) {
-        return 'Select a block first'
+        return panels.effectsSelectFirst
       }
 
       return targetsFor(useStudioStore, preset.channel).length === 0
-        ? `This block does not support the ${preset.channel} channel`
+        ? panels.motionChannelUnsupported.replace(
+            '{channel}',
+            channelName(presetCopy, preset.channel, preset.channel),
+          )
         : undefined
     },
-    [selectionCount],
+    [panels, presetCopy, selectionCount],
   )
 
   if (PRESETS.length === 0) {
@@ -100,7 +109,7 @@ export function MotionTab() {
           value={query}
         />
         <FilterChips
-          chips={CHIPS}
+          chips={chips}
           label={panels.motionChannels}
           onToggle={toggleChannel}
           selected={channels}

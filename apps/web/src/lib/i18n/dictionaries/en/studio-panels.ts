@@ -89,6 +89,8 @@ export const studioPanels = {
   motionRemoveChannel: 'Remove {channel} motion',
   /** `{id}` is the preset the document names and the catalogue does not have. */
   motionUnknownPreset: 'Unknown preset “{id}”',
+  /** `{channel}` is the channel the selected block has no target for. */
+  motionChannelUnsupported: 'This block does not support the {channel} channel',
 
   effectsEmpty: 'No effects. Add one from the Effects panel.',
   effectsNoneOnSelection: 'No effects on this selection.',

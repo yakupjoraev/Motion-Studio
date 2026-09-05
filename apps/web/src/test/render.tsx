@@ -1,4 +1,5 @@
 import { registryCopy } from '@motion-studio/blocks/i18n'
+import { presetCopy } from '@motion-studio/motion/i18n'
 import { type RenderOptions, type RenderResult, render as baseRender } from '@testing-library/react'
 import type { ReactElement, ReactNode } from 'react'
 
@@ -38,7 +39,12 @@ function Providers({ children }: { readonly children: ReactNode }) {
               <DocsDictionary value={en.docs}>
                 <PlaygroundDictionary value={en.playground}>
                   <StudioDictionary value={en.studio}>
-                    <RegistryDictionary value={{ copy: registryCopy(DEFAULT_LOCALE) }}>
+                    <RegistryDictionary
+                      value={{
+                        copy: registryCopy(DEFAULT_LOCALE),
+                        presets: presetCopy(DEFAULT_LOCALE),
+                      }}
+                    >
                       {children}
                     </RegistryDictionary>
                   </StudioDictionary>
