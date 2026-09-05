@@ -14963,3 +14963,29 @@ unused mechanism is a guess about an answer the owner has not given yet.
 - Accepted: prompt 65's checklist line "no English left in a Russian session" is met for the product
   surfaces and **not** for `/docs` bodies. The session report says so.
 - Deferred, not dropped: revisit after production, per the owner.
+
+## ADR-367 — Enumeration values stay English
+
+**Date** 2026-09-05 · **Prompt** 65 · **Status** Accepted
+
+### Question
+A select in the inspector offers `even`, `text-wide`, `media-wide`; a spacing control offers `sm`,
+`md`, `lg`. `optionsFrom` uses the value as its own label, so these reach the interface as text.
+Are they strings to translate?
+
+### Criterion (set before deciding)
+A string is translated when it is prose the reader reads, and kept when it is an identifier the
+reader may have to type, match or recognise somewhere else.
+
+### Decision
+Kept. Every one of these values appears verbatim in the code the exporter emits —
+`ratio="text-wide"`, `padding="lg"` — and in the `.motion` file the document saves. A translated
+label would name a value that does not exist under that name anywhere else in the product.
+
+### Consequences
+- Accepted: a Russian session reads `text-wide` in a select whose label above it says «Соотношение».
+  That is the same shape a CSS value has in any editor: the property is prose, the value is a token.
+- Accepted: a value that is genuinely prose — an interval's `Monthly`/`Yearly`, a marker's `Icon` —
+  is a control label elsewhere in the registry and is translated there (ADR-365).
+- Rejected: translating the label while keeping the value. It would make the inspector and the
+  exported code disagree about what the same choice is called.
