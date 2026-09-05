@@ -1,5 +1,6 @@
 import type { RegistryCopy } from './registry-copy.types'
 import { RU_BLOCKS } from './ru-blocks'
+import { RU_DEFAULTS } from './ru-defaults'
 import { RU_HINTS } from './ru-hints'
 import { RU_LABELS } from './ru-labels'
 
@@ -36,4 +37,5 @@ export const ruRegistryCopy: RegistryCopy = {
   blocks: RU_BLOCKS,
   labels: { ...RU_LABELS, ...RU_SLOTS },
   hints: RU_HINTS,
+  defaults: RU_DEFAULTS,
 }

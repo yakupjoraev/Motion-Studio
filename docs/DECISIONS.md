@@ -14911,6 +14911,14 @@ is unchanged and no migration is needed (`FILE_FORMAT.md` untouched).
   its English defaults rather than failing, and a test lists which blocks have a patch so the gap is
   a number rather than a surprise.
 
+### Built 2026-09-05
+`packages/blocks/src/i18n/ru-defaults.ts` — 48 of the 72 blocks; the other 24 declare no prose to
+translate except `code-block`, whose default *is* a code sample. The table travels as an
+`insertBlock` payload rather than as an import, because `packages/editor` may not depend on the
+registry (§ 2) and a slot's default children need the same answer as their parent. A patch replaces
+a whole array rather than a row, since a partial row would not survive the block's own schema —
+`registry-copy.test.ts` parses every patched block to prove it does.
+
 ## ADR-365 — Control labels are keyed by their English string
 
 **Date** 2026-09-05 · **Prompt** 65 · **Status** Accepted

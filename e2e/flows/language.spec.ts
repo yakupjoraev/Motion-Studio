@@ -119,6 +119,32 @@ test.describe('language', () => {
     await context.close()
   })
 
+  /**
+   * ADR-364, in the product: a block inserted in a Russian session lands with Russian text, and the
+   * document holds those strings rather than a language. This is the half of the prompt that a
+   * dictionary cannot cover — the copy is content, and it is written once, at insert time.
+   */
+  test('a block inserted in Russian lands with Russian text', async ({ browser }) => {
+    const context = await browser.newContext({ locale: 'ru-RU' })
+    const page = await context.newPage()
+
+    await page.goto('/ru/studio')
+    await page.waitForSelector('[data-testid="canvas-root"]')
+
+    await page.getByRole('tab', { name: 'Блоки' }).click()
+    await page.getByRole('searchbox', { name: 'Поиск блоков' }).fill('цитата')
+
+    const card = page.locator('[data-block-card="quote"]')
+
+    await card.waitFor()
+    await card.dblclick()
+
+    // The block's own default copy, not the chrome around it.
+    await expect(page.getByTestId('canvas-root')).toContainText('единственная проверка')
+
+    await context.close()
+  })
+
   test('the studio is translated, not only the marketing pages', async ({ browser }) => {
     const context = await browser.newContext({ locale: 'ru-RU' })
     const page = await context.newPage()

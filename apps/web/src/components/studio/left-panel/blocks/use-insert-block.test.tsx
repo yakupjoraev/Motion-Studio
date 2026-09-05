@@ -1,11 +1,12 @@
 import { blockRegistry } from '@motion-studio/blocks/registry'
 import { type MotionDocument, type NodeId, blockId, doc, node, nodeId } from '@motion-studio/schema'
 import { ToastProvider } from '@motion-studio/ui'
-import { act, render, screen } from '@testing-library/react'
+import { act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useStudioStore } from '../../../../store/editor-store'
+import { render, screen } from '../../../../test/render'
 import { setCanvasHandle } from '../../canvas-area/canvas-handle'
 
 import { insertBlockAtSelection, useInsertBlock } from './use-insert-block'

@@ -118,7 +118,7 @@ export function usePaletteItems(context: StudioShortcutContext): readonly Palett
 
           // The one implementation of "where does a new block land" — the same one the block palette
           // and paste use. This used to walk the document itself, which was a second set of rules.
-          insertBlockAtSelection(definition)
+          insertBlockAtSelection(definition, registry)
         },
       })
     }

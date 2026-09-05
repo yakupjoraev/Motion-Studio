@@ -15,6 +15,7 @@ import {
 import { DENSITY } from '@motion-studio/ui'
 import { type ReactNode, useCallback, useMemo, useRef } from 'react'
 
+import { useRegistryCopy } from '../../lib/i18n/studio-surface'
 import { deferredBlockRegistry } from '../../store/block-registry'
 import { useStudioStore } from '../../store/editor-store'
 
@@ -37,6 +38,8 @@ const CANVAS_GRID_PX = 8
  * zone and answered by the surface that drew it — ADR-181.
  */
 export function DndHost({ children }: DndHostProps) {
+  const copy = useRegistryCopy()
+
   /** Which surface the drag is currently over, so a keyboard step is that surface's step. */
   const surface = useRef<DropSurface>('canvas')
 
@@ -66,13 +69,16 @@ export function DndHost({ children }: DndHostProps) {
     })
   }, [])
 
-  const onDrop = useCallback((target: DropTarget, payload: DragPayload) => {
-    const command = commandForDrop(target, payload)
+  const onDrop = useCallback(
+    (target: DropTarget, payload: DragPayload) => {
+      const command = commandForDrop(target, payload, copy?.defaults)
 
-    if (command !== null) {
-      useStudioStore.getState().dispatch(command)
-    }
-  }, [])
+      if (command !== null) {
+        useStudioStore.getState().dispatch(command)
+      }
+    },
+    [copy],
+  )
 
   const gridSize = useCallback(
     (): number => (surface.current === 'tree' ? DENSITY.layerRow : CANVAS_GRID_PX),

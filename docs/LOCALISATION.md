@@ -60,7 +60,7 @@ Next's request and response.
 | Block names, descriptions, control labels, hints, categories | `packages/blocks/src/i18n/` | They belong to the registry, not to a page that lists it |
 | Preset names, their control labels, the six channels | `packages/motion/src/i18n/` | They belong to the catalogue that declares them — ADR-368 |
 | Shortcut labels and their groups | `chrome.shortcutLabels`, `chrome.shortcutGroups` | The registry stays English: `docs/SHORTCUTS.md` is checked against it |
-| A block's default copy | The block's own Zod schema, in English | It is content, not interface — see § 6 |
+| A block's default copy | English in the block's Zod schema, Russian in `packages/blocks/src/i18n/ru-defaults.ts` | It is content: applied once when the block is inserted, and the document owns it from then on — § 6 |
 
 The English dictionary **is the type**: `Dictionary = typeof en`, and `ru` is annotated with it, so a
 missing key does not compile. `dictionary-parity.test.ts` covers what the type cannot — a dropped
@@ -99,9 +99,11 @@ three; the difference lives in that one helper.
 
 - **The document bodies at `/docs`** — ADR-366, the owner's decision, revisited after production.
   The shell around them is translated and a Russian session says so above the index.
-- **A block's default copy.** Inserting a block writes its text into the document, so it is the
-  user's content from that moment. Switching the interface language does not rewrite a page somebody
-  already composed (ADR-364).
+- **A block's default copy, after it is inserted.** The text a block arrives with *is* translated —
+  a Russian session inserts Russian copy — but only at insert time (ADR-364). From that moment it is
+  the user's content: switching the interface language never rewrites a page somebody composed, and
+  a `.motion` file holds strings rather than a language. One block is left in English on purpose,
+  `code-block`, whose default is a code sample.
 - **Enumeration values** — `text-wide`, `md`, `soft-light` (ADR-367). They are identifiers: the same
   strings appear in the code the exporter emits and in the saved `.motion` file, and a translated
   value would name something that exists under no other name in the product.

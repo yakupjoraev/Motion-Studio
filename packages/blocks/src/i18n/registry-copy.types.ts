@@ -1,4 +1,4 @@
-import type { BlockCategory } from '@motion-studio/schema'
+import type { BlockCategory, UnknownProps } from '@motion-studio/schema'
 
 export interface BlockCopy {
   readonly name: string
@@ -19,4 +19,10 @@ export interface RegistryCopy {
   readonly blocks: Readonly<Record<string, BlockCopy>>
   readonly labels: Readonly<Record<string, string>>
   readonly hints: Readonly<Record<string, string>>
+  /**
+   * The text a block is *inserted* with, by block id — ADR-364. Interface strings above, content
+   * here: this one is applied once, when the node is created, and belongs to the document from then
+   * on.
+   */
+  readonly defaults: Readonly<Record<string, UnknownProps>>
 }
