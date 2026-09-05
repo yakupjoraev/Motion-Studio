@@ -321,12 +321,16 @@ out to be different claims.
 | ✅ | Blocks sized themselves by the browser window, so the mobile artboard drew a desktop page | ADR-356 |
 | ✅ | Six stacked cards on a phone, where the pattern is a swipe | ADR-357 |
 | ✅ | `prompts/63` — the narrow choice across the catalogue, and six recorded exclusions | ADR-358 |
+| ✅ | `prompts/64` — a canvas node is a drag source: sections reorder by dragging, one undo puts them back | ADR-359 |
 
 ### Open, in the order it is being done
 
 Each is a prompt in `prompts/`, so a session picks one up without re-deriving it.
 
-1. **`prompts/64` — drag a node on the canvas.** `DRAG_AND_DROP.md` § The four operations still says operations 2 and
+1. **`prompts/64`, the part left open — the keyboard step.** The pick-up and the cancel work; an arrow
+   moves one 8 px grid cell against a section hundreds of pixels tall, so the position never changes.
+   ADR-359 § What is not finished has the measurement and the shape of the fix. Operation 4 — a drag
+   crossing between the canvas and the layers tree — has no spec either. `DRAG_AND_DROP.md` § The four operations still says operations 2 and
    4 are unwired: reordering is only possible from the layers tree, and a user's first instinct is the
    canvas. This is the largest open item.
 2. **`prompts/65` — русский язык.** `en` + `ru` across the studio chrome, the public pages and the blocks' own default
