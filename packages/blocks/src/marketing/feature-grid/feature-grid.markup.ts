@@ -16,6 +16,7 @@ export const featureGridMarkup = defineMarkup<FeatureGridProps>(
       headingLevel,
       headingAlign,
       columns,
+      narrow,
       treatment,
       showIcons,
       items,
@@ -27,7 +28,11 @@ export const featureGridMarkup = defineMarkup<FeatureGridProps>(
       hidden,
       children: [
         el('ul', {
-          classNames: [featureGridStyles({ columns: columns as 2 | 3 | 4 })],
+          classNames: [featureGridStyles({ columns: columns as 2 | 3 | 4, narrow })],
+          // Matches the component: a scrolling region needs a keyboard route into it (WCAG 2.1.1).
+          ...(narrow === 'slider'
+            ? { attributes: { tabindex: { kind: 'literal', value: '0' } } }
+            : {}),
           children: items.map((feature) =>
             featureCellMarkup({
               feature,

@@ -3,7 +3,12 @@ import { blockId } from '@motion-studio/schema'
 import { defineBlock } from '../../define-block'
 import { GLASS_ESCAPE_HATCH, optionsFrom } from '../../scales'
 import { SECTION_FRAME_CONTROLS, sectionCopyGroup } from '../marketing.controls'
-import { BODY_MAX_LENGTH, CARD_TREATMENTS, TITLE_MAX_LENGTH } from '../marketing.schema'
+import {
+  BODY_MAX_LENGTH,
+  CARD_TREATMENTS,
+  NARROW_LAYOUTS,
+  TITLE_MAX_LENGTH,
+} from '../marketing.schema'
 
 import { featureGridMotion } from './feature-grid.motion'
 import {
@@ -42,6 +47,13 @@ export const featureGridDefinition = defineBlock({
           label: 'Columns',
           responsive: true,
           options: { min: FEATURE_MIN_COLUMNS, max: FEATURE_MAX_COLUMNS },
+        },
+        {
+          path: 'narrow',
+          kind: 'segmented',
+          label: 'On narrow',
+          hint: 'Below 640 px: swipe through the cards, or stack them',
+          options: { options: optionsFrom(NARROW_LAYOUTS) },
         },
         {
           path: 'treatment',

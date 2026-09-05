@@ -18,6 +18,7 @@ export function FeatureGrid({
   headingLevel,
   headingAlign,
   columns,
+  narrow,
   treatment,
   showIcons,
   items,
@@ -27,7 +28,15 @@ export function FeatureGrid({
 
   return (
     <MarketingSection copy={copy} hidden={hidden} testId="feature-grid">
-      <ul className={featureGridStyles({ columns: columns as 2 | 3 | 4 })}>
+      {/*
+       * `tabIndex` on the list, not on a wrapper: when `narrow` is `slider` this element scrolls, and
+       * WCAG 2.1.1 asks that a scrollable region be reachable without a pointer. It costs a tab stop
+       * in the grid arrangement, which is the cheaper of the two prices.
+       */}
+      <ul
+        className={featureGridStyles({ columns: columns as 2 | 3 | 4, narrow })}
+        tabIndex={narrow === 'slider' ? 0 : undefined}
+      >
         {items.map((feature, index) => (
           <FeatureCell
             feature={feature}

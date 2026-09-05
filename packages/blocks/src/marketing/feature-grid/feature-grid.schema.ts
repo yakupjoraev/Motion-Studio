@@ -4,6 +4,7 @@ import {
   BODY_MAX_LENGTH,
   TITLE_MAX_LENGTH,
   cardTreatment,
+  narrowLayout,
   sectionCopyFields,
   sectionFrameFields,
 } from '../marketing.schema'
@@ -62,6 +63,7 @@ export const featureGridSchema = z.object({
       'Twelve marketing blocks, each one a real component with a schema, controls and an export.',
   }),
   columns: z.number().int().min(FEATURE_MIN_COLUMNS).max(FEATURE_MAX_COLUMNS).default(3),
+  narrow: narrowLayout,
   treatment: cardTreatment.default('card'),
   showIcons: z.boolean().default(true),
   items: z
