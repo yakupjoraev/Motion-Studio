@@ -1,6 +1,8 @@
 import type { CssFeature } from '@motion-studio/schema/css'
 import type { ReactElement } from 'react'
 
+import { usePlayground } from '../../lib/i18n/playground-surface'
+
 /**
  * Layer 4's answer — PLAYGROUND.md § Parsing and validation. The playground is a place to learn what a
  * property does, and "which browsers have this" is half of what a reader needs before they use it.
@@ -13,13 +15,15 @@ export function CompatNotes({
 }: {
   readonly features: readonly CssFeature[]
 }): ReactElement | null {
+  const copy = usePlayground()
+
   if (features.length === 0) {
     return null
   }
 
   return (
     <ul
-      aria-label="Compatibility"
+      aria-label={copy.compatibility}
       className="m-0 flex list-none flex-wrap gap-x-4 gap-y-1 p-0 text-foreground-muted text-xs"
     >
       {features.map((feature) => (

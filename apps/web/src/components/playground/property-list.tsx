@@ -3,6 +3,7 @@
 import { cn } from '@motion-studio/utils'
 import { type KeyboardEvent, type ReactElement, useCallback } from 'react'
 
+import { usePlayground } from '../../lib/i18n/playground-surface'
 import { PLAYGROUND_PROPERTIES, type PlaygroundProperty, propertyDescriptor } from './properties'
 
 /**
@@ -23,6 +24,7 @@ const NEXT: Readonly<Record<string, number>> = {
 }
 
 export function PropertyList({ value, onValueChange }: PropertyListProps): ReactElement {
+  const copy = usePlayground()
   const onKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
       const step = NEXT[event.key]
@@ -47,7 +49,7 @@ export function PropertyList({ value, onValueChange }: PropertyListProps): React
   return (
     <div
       role="radiogroup"
-      aria-label="CSS property"
+      aria-label={copy.cssProperty}
       onKeyDown={onKeyDown}
       className="flex flex-col gap-1"
     >

@@ -71,6 +71,9 @@ export default defineConfig({
      * version puts it — the specs emulate it a second time, and the two agree.
      */
     contextOptions: { reducedMotion: 'reduce' },
+    // The baselines are English: the language a shot is taken in has to be the suite's, not the
+    // machine's — the same reason `playwright.config.ts` pins it.
+    locale: 'en-US',
     trace: 'retain-on-failure',
   },
 

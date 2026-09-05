@@ -2,6 +2,7 @@
 
 import type { MouseEvent, ReactElement } from 'react'
 
+import { usePlayground } from '../../lib/i18n/playground-surface'
 import { PRESETS, type Preset } from './presets'
 import { type PlaygroundProperty, propertyDescriptor } from './properties'
 
@@ -23,6 +24,7 @@ export const appendLayer = (value: string, layer: string): string =>
   value.trim() === '' ? layer : `${value.trimEnd().replace(/,$/, '')},\n  ${layer}`
 
 export function PresetPanel({ property, value, onValueChange }: PresetPanelProps): ReactElement {
+  const copy = usePlayground()
   const { layerable } = propertyDescriptor(property)
   const presets = PRESETS[property]
 
@@ -35,11 +37,9 @@ export function PresetPanel({ property, value, onValueChange }: PresetPanelProps
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
       <div className="flex flex-col gap-1">
-        <h2 className="m-0 font-medium text-foreground text-sm">Presets</h2>
+        <h2 className="m-0 font-medium text-foreground text-sm">{copy.presets}</h2>
         <p className="m-0 text-foreground-muted text-xs">
-          {layerable
-            ? 'Click to replace, Alt-click to add a layer.'
-            : 'Click to replace the value.'}
+          {layerable ? copy.presetReplaceOrAdd : copy.presetReplace}
         </p>
       </div>
       <ul className="m-0 flex min-h-0 flex-1 list-none flex-col gap-1 overflow-y-auto p-0">

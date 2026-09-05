@@ -3,6 +3,7 @@
 import { ColorPicker } from '@motion-studio/ui/controls'
 import { type ReactElement, useEffect, useRef } from 'react'
 
+import { usePlayground } from '../../lib/i18n/playground-surface'
 import type { ColorHit } from './color-swatches'
 
 /**
@@ -17,6 +18,7 @@ export interface SwatchPickerProps {
 }
 
 export function SwatchPicker({ hit, onChange, onClose }: SwatchPickerProps): ReactElement {
+  const copy = usePlayground()
   const panel = useRef<HTMLDivElement | null>(null)
 
   /** Escape and a click outside close it, which is what every other floating surface here does. */
@@ -50,7 +52,7 @@ export function SwatchPicker({ hit, onChange, onClose }: SwatchPickerProps): Rea
       className="fixed z-50 rounded-lg border border-border bg-surface-2 p-3 shadow-lg"
     >
       <ColorPicker
-        label="Colour"
+        label={copy.colour}
         value={{ kind: 'color', color: hit.value }}
         onChange={(next) => {
           if (next.kind === 'color') {

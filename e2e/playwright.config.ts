@@ -41,6 +41,15 @@ export default defineConfig({
 
   use: {
     baseURL: ORIGIN,
+    /*
+     * English, stated rather than inherited. The product picks a language from `Accept-Language`
+     * when no choice is stored (ADR-363), and Playwright derives that header from the machine's own
+     * locale — so on a Russian Windows every spec that reads an English string failed, while the
+     * same spec passed in CI. A suite whose result depends on the developer's operating system is
+     * measuring the operating system. `flows/language.spec.ts` overrides it per context, which is
+     * exactly what a spec about languages should have to do.
+     */
+    locale: 'en-US',
     viewport: { width: 1440, height: 900 },
     trace: 'retain-on-failure',
     video: 'retain-on-failure',
