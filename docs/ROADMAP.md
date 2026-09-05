@@ -334,7 +334,32 @@ Each is a prompt in `prompts/`, so a session picks one up without re-deriving it
    survives a return visit. No i18n dependency exists in the repo today and `lang` is hard-coded.
 3. **`prompts/66` — the marketing for the product itself**, written with the brand/design/slides skills:
    positioning, landing copy, launch material.
-4. **`prompts/67` — the landing and the studio chrome through the design skills.** `DESIGN_REFERENCES.md` names
+4. **`prompts/67` — the landing and the studio chrome through the design skills.**
+5. **`prompts/68` — the code panel beside the canvas**, collapsible. What makes this not a page
+   builder currently lives behind a dialog nobody is told to open.
+6. **`prompts/69` — findability and ownership.** SEO, the privacy and terms pages, the domain, and
+   the three coupled decisions below. Raised by the owner 2026-09-05.
+
+### The four questions in prompt 69, and why they are one decision
+
+- **SEO does nothing until there is a custom domain.** `*.vercel.app` is served with
+  `X-Robots-Tag: noindex`, which is why the deployment already scores 60 on Lighthouse SEO. Domain
+  first, then sitemap, JSON-LD and per-block metadata — the 72 block pages are the real asset.
+- **Privacy and terms pages** — cheap here, because the honest answer is that a local-first studio
+  with no account collects nothing.
+- **Ownership.** Copyright is automatic and the git history evidences it. The exposed part is the
+  **name**: "Motion Studio" is descriptive, therefore hard to register and easy to collide with. That
+  is a question for a trademark attorney, and it is worth asking before a launch creates the
+  association. Register the domain and the handles first — that half is cheap.
+- **Hosting: Vercel is enough.** ISR, image optimisation, previews and the edge network are the
+  platform's own; a rented VPS means maintaining all of it by hand for nothing. Point a domain at it.
+  Revisit only when there is a backend with state — the v2 account, not v1.
+- **Private repository has a price that is already documented.** It was made public deliberately:
+  Actions minutes are free for public repositories, and the pipeline stopped for a week when billing
+  failed. Fifteen jobs, nine e2e shards and two Lighthouse runs would be billed again. **And private
+  does not sit with MIT** — the licence is promised on the landing and in the README. Either both
+  change together or neither does. Also worth weighing: the repository is currently the portfolio
+  artifact `ENGINEERING_CONTRACT` § 0 describes. `DESIGN_REFERENCES.md` names
    impeccable.style as the bar for the whole product, and the landing was built against it by eye
    rather than through the process. Verdict to be reported per surface, not "looks fine".
 
