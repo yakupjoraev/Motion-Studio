@@ -1,7 +1,7 @@
 import { blockRegistry } from '@motion-studio/blocks/registry'
 import type { BlockDefinition } from '@motion-studio/schema'
-import { act, fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { act, fireEvent, render, screen } from '../../../../test/render'
 
 import { DndHost } from '../../dnd-host'
 

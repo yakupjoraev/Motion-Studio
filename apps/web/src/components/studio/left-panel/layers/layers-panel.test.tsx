@@ -8,10 +8,10 @@ import {
   nodeId,
 } from '@motion-studio/schema'
 import { DENSITY } from '@motion-studio/ui'
-import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { axe } from 'jest-axe'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { act, fireEvent, render, screen, within } from '../../../../test/render'
 
 import { useStudioStore } from '../../../../store/editor-store'
 

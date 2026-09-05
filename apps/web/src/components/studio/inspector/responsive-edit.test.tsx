@@ -6,9 +6,9 @@ import {
   createEmptyDocument,
   nodeId,
 } from '@motion-studio/schema'
-import { act, render, renderHook, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { act, render, renderHook, screen } from '../../../test/render'
 
 import { useStudioStore } from '../../../store/editor-store'
 

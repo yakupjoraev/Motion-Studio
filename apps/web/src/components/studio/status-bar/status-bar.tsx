@@ -10,17 +10,29 @@ import { BREAKPOINTS } from '@motion-studio/schema'
 import { Separator } from '@motion-studio/ui'
 
 import { BACKDROP_CAP, useBackdropCount } from '../../../hooks/use-backdrop-count'
+import type { Dictionary } from '../../../lib/i18n/dictionary'
+import { useLocale } from '../../../lib/i18n/locale-context'
+import type { Locale } from '../../../lib/i18n/locales'
+import { formatPlural } from '../../../lib/i18n/plural'
+import { useStudio } from '../../../lib/i18n/studio-surface'
 import { useStudioStore } from '../../../store/editor-store'
 
 import { FpsMeter } from './fps-meter'
 
 /** "Hero selected", "3 selected", or nothing — the phrasing the canvas announces. */
-function describeSelection(count: number, name: string | null): string {
+function describeSelection(
+  locale: Locale,
+  chrome: Dictionary['studio']['chrome'],
+  count: number,
+  name: string | null,
+): string {
   if (count === 0) {
-    return 'No selection'
+    return chrome.statusNoSelection
   }
 
-  return count === 1 ? `${name ?? 'Block'} selected` : `${count} selected`
+  return count === 1
+    ? chrome.statusOneSelected.replace('{name}', name ?? chrome.statusBlockFallback)
+    : formatPlural(locale, count, chrome.statusManySelected)
 }
 
 /**
@@ -29,6 +41,8 @@ function describeSelection(count: number, name: string | null): string {
  * is frozen (`Mod+P`, ADR-100).
  */
 export function StatusBar() {
+  const { chrome } = useStudio()
+  const { locale } = useLocale()
   const reduced = useReducedMotion()
   const nodeCount = useStudioStore((state) => Object.keys(state.document.nodes).length)
   // Two primitive selectors rather than one joined string: a block's name may contain a space, and
@@ -50,22 +64,22 @@ export function StatusBar() {
 
   return (
     <footer className="col-span-3 flex h-[28px] items-center gap-2 border-border border-t bg-surface-1 px-3 text-2xs text-foreground-muted">
-      <span data-testid="status-nodes">
-        {nodeCount} {nodeCount === 1 ? 'node' : 'nodes'}
-      </span>
+      <span data-testid="status-nodes">{formatPlural(locale, nodeCount, chrome.statusNodes)}</span>
       <Separator className="h-3" decorative orientation="vertical" />
-      <span data-testid="status-selection">{describeSelection(selectedCount, selectedName)}</span>
+      <span data-testid="status-selection">
+        {describeSelection(locale, chrome, selectedCount, selectedName)}
+      </span>
       <Separator className="h-3" decorative orientation="vertical" />
       <span data-testid="status-breakpoint">{BREAKPOINTS[breakpoint].label}</span>
       <Separator className="h-3" decorative orientation="vertical" />
       <button
-        aria-label="Frame rate meter"
+        aria-label={chrome.statusFrameRate}
         aria-pressed={showFps}
         className="ms-transition-control rounded-xs px-1 outline-none hover:text-foreground focus-visible:shadow-focus"
         onClick={() => setFpsVisible(!showFps)}
         type="button"
       >
-        {showFps ? <FpsMeter /> : 'fps'}
+        {showFps ? <FpsMeter /> : chrome.statusFps}
       </button>
       <div className="flex-1" />
       {glass > BACKDROP_CAP && (
@@ -76,7 +90,9 @@ export function StatusBar() {
            * than leaving a user to wonder why a section became expensive.
            */}
           <output className="text-warning" data-testid="status-backdrop">
-            {glass} glass surfaces — over the cap of {BACKDROP_CAP}
+            {chrome.statusGlassOverCap
+              .replace('{count}', String(glass))
+              .replace('{cap}', String(BACKDROP_CAP))}
           </output>
           <Separator className="h-3" decorative orientation="vertical" />
         </>
@@ -84,14 +100,16 @@ export function StatusBar() {
       {motionPaused && (
         <>
           <span className="text-warning" data-testid="status-motion">
-            Motion paused
+            {chrome.statusMotionPaused}
           </span>
           <Separator className="h-3" decorative orientation="vertical" />
         </>
       )}
-      <span data-testid="status-saved">{dirty ? 'Unsaved changes' : 'Saved'}</span>
+      <span data-testid="status-saved">{dirty ? chrome.statusUnsaved : chrome.statusSaved}</span>
       <Separator className="h-3" decorative orientation="vertical" />
-      <span>Reduced motion: {reduced ? 'on' : 'off'}</span>
+      <span>
+        {chrome.statusReducedMotion} {reduced ? chrome.statusOn : chrome.statusOff}
+      </span>
     </footer>
   )
 }

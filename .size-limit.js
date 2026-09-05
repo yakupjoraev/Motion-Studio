@@ -26,14 +26,21 @@ const MANIFEST = join(NEXT, 'app-build-manifest.json')
 
 const KIB = 1024
 
+/*
+ * The pages carry a locale segment since ADR-361. The budget is per route, not per language: both
+ * locales load the same JavaScript — the dictionaries travel as data in the RSC payload — so the
+ * manifest entry for either one measures the route.
+ */
+const LOCALE = '/[locale]'
+
 const FIRST_LOAD = [
-  { name: 'landing first-load JS (120 KiB)', page: '/page', limit: 120 * KIB },
-  { name: 'studio first-load JS (250 KiB)', page: '/studio/page', limit: 250 * KIB },
+  { name: 'landing first-load JS (120 KiB)', page: `${LOCALE}/page`, limit: 120 * KIB },
+  { name: 'studio first-load JS (250 KiB)', page: `${LOCALE}/studio/page`, limit: 250 * KIB },
 ]
 
 const ROUTE_CHUNK = [
-  { name: 'playground route chunk (90 KiB)', page: '/playground/page', limit: 90 * KIB },
-  { name: 'blocks route chunk (140 KiB)', page: '/blocks/page', limit: 140 * KIB },
+  { name: 'playground route chunk (90 KiB)', page: `${LOCALE}/playground/page`, limit: 90 * KIB },
+  { name: 'blocks route chunk (140 KiB)', page: `${LOCALE}/blocks/page`, limit: 140 * KIB },
 ]
 
 if (!existsSync(MANIFEST)) {
@@ -53,7 +60,7 @@ const filesOf = (page) => {
 }
 
 /** The chunks only this route loads: everything the landing does not also load. */
-const shared = new Set(filesOf('/page'))
+const shared = new Set(filesOf(`${LOCALE}/page`))
 
 export default [
   ...FIRST_LOAD.map(({ name, page, limit }) => ({

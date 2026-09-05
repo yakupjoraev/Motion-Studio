@@ -5,6 +5,7 @@ import { errors } from './errors'
 import { gallery } from './gallery'
 import { landing } from './landing'
 import { nav } from './nav'
+import { studio } from './studio'
 
 /**
  * Russian. Typed as `Dictionary`, so the compiler — not a reviewer, and not a missing-string report
@@ -16,4 +17,5 @@ export const ru: Dictionary = {
   landing,
   gallery,
   docs,
+  studio,
 }

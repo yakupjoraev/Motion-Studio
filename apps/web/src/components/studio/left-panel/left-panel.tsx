@@ -3,6 +3,7 @@
 import { Tabs } from '@motion-studio/ui'
 import { useMemo } from 'react'
 
+import { useStudio } from '../../../lib/i18n/studio-surface'
 import { useStudioStore } from '../../../store/editor-store'
 
 import { isLeftTab, panelTabs } from './panel-tabs'
@@ -22,15 +23,19 @@ import { resolveFor } from './theme/theme-variables'
  * drag: the drag writes variables and dispatches nothing.
  */
 export function LeftPanel() {
+  const { panels } = useStudio()
   const tab = useStudioStore((state) => state.ui.leftPanel.tab)
   const setLeftTab = useStudioStore((state) => state.setLeftTab)
   const theme = useStudioStore((state) => state.document.theme)
 
-  const items = useMemo(() => panelTabs(contrastNoticeCount(resolveFor(theme))), [theme])
+  const items = useMemo(
+    () => panelTabs(panels, contrastNoticeCount(resolveFor(theme))),
+    [panels, theme],
+  )
 
   return (
     <Tabs
-      aria-label="Panels"
+      aria-label={panels.panels}
       className="h-full [&_[role=tablist]]:overflow-x-auto [&_[role=tablist]]:[scrollbar-width:none]"
       items={items}
       onValueChange={(next) => {

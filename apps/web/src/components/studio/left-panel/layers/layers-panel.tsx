@@ -4,6 +4,8 @@ import { type NodeId, descendants } from '@motion-studio/schema'
 import { EmptyState } from '@motion-studio/ui'
 import { useCallback, useState } from 'react'
 
+import { useStudio } from '../../../../lib/i18n/studio-surface'
+
 import { useStudioStore } from '../../../../store/editor-store'
 
 import { LayersSearch } from './layers-search'
@@ -18,6 +20,7 @@ import { useFlatLayers } from './use-flat-layers'
  * drop target, one context has to span both, so it moved to the shell — ADR-179 supersedes ADR-137.
  */
 export function LayersPanel() {
+  const { panels } = useStudio()
   const [collapsed, setCollapsed] = useState<ReadonlySet<NodeId>>(() => new Set<NodeId>())
   const [query, setQuery] = useState('')
   const { rows, matchCount, searching } = useFlatLayers(collapsed, query)
@@ -54,7 +57,7 @@ export function LayersPanel() {
 
       <div className="min-h-0 flex-1">
         {rows.length === 0 ? (
-          <EmptyState className="h-full" message="No layers match." />
+          <EmptyState className="h-full" message={panels.noLayers} />
         ) : (
           <LayersTree onFold={onFold} rows={rows} />
         )}

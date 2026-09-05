@@ -6,6 +6,8 @@ import { type BlockDefinition, effectId } from '@motion-studio/schema'
 import { EmptyState, ScrollArea } from '@motion-studio/ui'
 import { useCallback } from 'react'
 
+import { useStudio } from '../../../lib/i18n/studio-surface'
+
 import { useStudioStore } from '../../../store/editor-store'
 
 import { EffectCard } from './effect-card'
@@ -16,6 +18,7 @@ import { EffectCard } from './effect-card'
  * than discovered by a user whose ninth click did nothing.
  */
 export function EffectsTab() {
+  const { panels } = useStudio()
   const effects = blockRegistry.byCategory('effects')
   const targetId = useStudioStore((state) => state.selection.ids[0] ?? null)
   const stackSize = useStudioStore((state) =>
@@ -36,16 +39,16 @@ export function EffectsTab() {
   )
 
   if (effects.length === 0) {
-    return <EmptyState className="h-full" message="No effects are registered." />
+    return <EmptyState className="h-full" message={panels.noEffects} />
   }
 
   const full = stackSize >= commands.MAX_EFFECTS
 
   const reason =
     targetId === null
-      ? 'Select a block first'
+      ? panels.effectsSelectFirst
       : full
-        ? `This block already carries ${commands.MAX_EFFECTS} effects`
+        ? panels.effectsFull.replace('{count}', String(commands.MAX_EFFECTS))
         : undefined
 
   return (
@@ -53,8 +56,10 @@ export function EffectsTab() {
       <div className="flex flex-col gap-2 p-2" data-testid="effects-tab">
         <p className="px-1 text-2xs text-foreground-subtle">
           {targetId === null
-            ? 'Select a block to attach an effect to it.'
-            : `${stackSize} of ${commands.MAX_EFFECTS} layers used on this block.`}
+            ? panels.effectsPickTarget
+            : panels.effectsUsed
+                .replace('{count}', String(stackSize))
+                .replace('{max}', String(commands.MAX_EFFECTS))}
         </p>
         <div className="grid grid-cols-2 gap-2">
           {effects.map((definition) => (

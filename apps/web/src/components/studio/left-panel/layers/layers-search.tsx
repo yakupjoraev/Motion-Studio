@@ -3,6 +3,8 @@
 import { SearchIcon } from '@motion-studio/icons'
 import { Input } from '@motion-studio/ui'
 
+import { useStudio } from '../../../../lib/i18n/studio-surface'
+
 import { LAYERS_TREE_ID } from './layers-tree'
 
 export interface LayersSearchProps {
@@ -18,13 +20,14 @@ export interface LayersSearchProps {
  * it filters and a live count beside it, because a filter with no feedback reads as a broken list.
  */
 export function LayersSearch({ value, onChange, matchCount, searching }: LayersSearchProps) {
+  const { panels } = useStudio()
   return (
     <div className="flex flex-col gap-1 border-border border-b p-2">
       <Input
         aria-controls={LAYERS_TREE_ID}
-        aria-label="Search layers"
+        aria-label={panels.searchLayers}
         onChange={(event) => onChange(event.target.value)}
-        placeholder="Search layers"
+        placeholder={panels.searchLayers}
         prefix={<SearchIcon size={12} />}
         role="searchbox"
         type="search"

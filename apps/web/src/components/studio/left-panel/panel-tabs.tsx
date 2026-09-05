@@ -2,7 +2,9 @@
 
 import type { LeftTab } from '@motion-studio/editor'
 import type { TabItem } from '@motion-studio/ui'
+
 import dynamic from 'next/dynamic'
+import type { Dictionary } from '../../../lib/i18n/dictionary'
 
 import { ThemeTabBadge } from './theme/theme-tab-badge'
 
@@ -47,22 +49,30 @@ const ThemeTab = dynamic(() => import('./theme/theme-tab').then((module) => modu
  * `contrastNotices` puts the theme's repair count on the Theme tab, so a failing pair stays visible
  * from the other four tabs.
  */
-export const panelTabs = (contrastNotices = 0): readonly TabItem[] => [
-  { value: 'blocks', label: 'Blocks', content: <BlocksTab /> },
-  { value: 'motion', label: 'Motion', content: <MotionTab /> },
-  { value: 'effects', label: 'Effects', content: <EffectsTab /> },
+export const panelTabs = (
+  copy: Dictionary['studio']['panels'],
+  contrastNotices = 0,
+): readonly TabItem[] => [
+  { value: 'blocks', label: copy.blocks, content: <BlocksTab /> },
+  { value: 'motion', label: copy.motion, content: <MotionTab /> },
+  { value: 'effects', label: copy.effects, content: <EffectsTab /> },
   {
     value: 'theme',
-    label: 'Theme',
+    label: copy.theme,
     content: <ThemeTab />,
     ...(contrastNotices === 0 ? {} : { icon: <ThemeTabBadge count={contrastNotices} /> }),
   },
-  { value: 'layers', label: 'Layers', content: <LayersPanel /> },
+  { value: 'layers', label: copy.layers, content: <LayersPanel /> },
 ]
 
 export const DEFAULT_PANEL_TAB = 'blocks'
 
-const TAB_VALUES: readonly string[] = panelTabs().map((tab) => tab.value)
+/*
+ * The values, written out rather than read back from `panelTabs`. A tab's value is not translated,
+ * so this seam has no business holding a dictionary — and importing one here would have put every
+ * string in the product into the studio's first-load chunk, measured at 1.9 kB over its budget.
+ */
+const TAB_VALUES: readonly string[] = ['blocks', 'motion', 'effects', 'theme', 'layers']
 
 /** Radix hands a tab change back as a string; the store's tab is a union, and this is the seam. */
 export const isLeftTab = (value: string): value is LeftTab => TAB_VALUES.includes(value)

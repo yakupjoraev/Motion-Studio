@@ -8,6 +8,7 @@
     ".": "./src/index.ts",
     "./registry": "./src/registry.ts",
     "./i18n": "./src/i18n/index.ts",
+    "./i18n/translate": "./src/i18n/translate.ts",
     "./effects": "./src/effects/components.ts",
     "./lazy": "./src/lazy-components.ts",
     "./markup": "./src/markup-registry.ts",
