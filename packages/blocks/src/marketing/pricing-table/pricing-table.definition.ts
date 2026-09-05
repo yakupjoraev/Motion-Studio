@@ -1,7 +1,7 @@
 import { blockId } from '@motion-studio/schema'
 
 import { defineBlock } from '../../define-block'
-import { GLASS_ESCAPE_HATCH, optionsFrom } from '../../scales'
+import { GLASS_ESCAPE_HATCH, NARROW_LAYOUTS, optionsFrom } from '../../scales'
 import { SECTION_FRAME_CONTROLS, sectionCopyGroup } from '../marketing.controls'
 import { BODY_MAX_LENGTH, LABEL_MAX_LENGTH, TITLE_MAX_LENGTH } from '../marketing.schema'
 
@@ -49,6 +49,13 @@ export const pricingTableDefinition = defineBlock({
           kind: 'segmented',
           label: 'Style',
           options: { options: optionsFrom(PRICING_LAYOUTS) },
+        },
+        {
+          path: 'narrow',
+          kind: 'segmented',
+          label: 'On narrow',
+          hint: 'Below 640 px: swipe through the plans, or stack them',
+          options: { options: optionsFrom(NARROW_LAYOUTS) },
         },
         {
           path: 'highlightIndex',

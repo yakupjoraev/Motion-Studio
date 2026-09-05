@@ -1,10 +1,11 @@
 import { z } from 'zod'
 
+import { narrowLayout } from '../../scales'
+
 import {
   BODY_MAX_LENGTH,
   TITLE_MAX_LENGTH,
   cardTreatment,
-  narrowLayout,
   sectionCopyFields,
   sectionFrameFields,
 } from '../marketing.schema'

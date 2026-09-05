@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { narrowLayout } from '../../scales'
+
 import {
   BODY_MAX_LENGTH,
   HREF_MAX_LENGTH,
@@ -111,6 +113,7 @@ export const pricingTableSchema = z.object({
     description: 'Yearly is two months off. Change plans or leave whenever you like.',
   }),
   layout: z.enum(PRICING_LAYOUTS).default('cards'),
+  narrow: narrowLayout,
   /** `-1` highlights nothing, which is a real answer and not a missing one. */
   highlightIndex: z
     .number()

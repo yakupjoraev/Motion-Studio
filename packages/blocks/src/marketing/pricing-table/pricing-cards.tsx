@@ -1,3 +1,4 @@
+import type { NarrowLayout } from '../../scales'
 import type { HeadingLevel } from '../marketing.schema'
 
 import { PlanCard } from './plan-card'
@@ -12,6 +13,8 @@ export interface PricingCardsProps {
   readonly glass: boolean
   readonly compact: boolean
   readonly headingLevel: HeadingLevel
+  /** ADR-357: what the row does when the band is too narrow to hold it. */
+  readonly narrow: NarrowLayout
 }
 
 /**
@@ -27,13 +30,17 @@ export function PricingCards({
   glass,
   compact,
   headingLevel,
+  narrow,
 }: PricingCardsProps) {
   return (
     <div
       className={pricingGridStyles({
         columns: Math.min(plans.length, 4) as 1 | 2 | 3 | 4,
         layout: compact ? 'compact' : 'cards',
+        narrow,
       })}
+      // A scrolling region needs a keyboard route into it — WCAG 2.1.1.
+      tabIndex={narrow === 'slider' ? 0 : undefined}
     >
       {plans.map((plan, index) => (
         <PlanCard

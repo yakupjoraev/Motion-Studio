@@ -94,10 +94,41 @@ describe('StatGrid', () => {
     expect(screen.getByRole('list').className).toContain('bg-transparent')
   })
 
-  it('adds no tab stop to the page', () => {
-    const { container } = render()
+  it('adds no tab stop to the page when the figures are stacked', () => {
+    const { container } = render({ narrow: 'stack' })
 
     expect(container.querySelectorAll('a, button, input, [tabindex]')).toHaveLength(0)
+  })
+
+  /*
+   * The one exception, and it is the accessible answer rather than a regression: as a slider the list
+   * scrolls, and WCAG 2.1.1 asks that a scrollable region be reachable without a pointer. Exactly one
+   * stop, on the region itself — nothing inside the block became focusable.
+   */
+  it('takes one tab stop as a slider, on the scrolling region itself', () => {
+    const { container } = render({ narrow: 'slider' })
+
+    const stops = container.querySelectorAll('a, button, input, [tabindex]')
+
+    expect(stops).toHaveLength(1)
+    expect(stops[0]?.tagName).toBe('UL')
+  })
+
+  it('keeps the plate intact when a slider sits on it', () => {
+    render({ narrow: 'slider', dividers: true })
+
+    const list = screen.getByRole('list')
+
+    // The drawn border must not be dragged off both edges of the band — hence no bleed here.
+    expect(list.className).toContain('rounded-xl')
+    expect(list.className).not.toContain('-mx-6')
+    expect(list.className).toContain('snap-x')
+  })
+
+  it('lets the track reach the band edges when there is no plate', () => {
+    render({ narrow: 'slider', dividers: false })
+
+    expect(screen.getByRole('list').className).toContain('-mx-6')
   })
 })
 

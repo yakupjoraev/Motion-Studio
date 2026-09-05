@@ -24,6 +24,7 @@ export function PricingTable({
   headingLevel,
   headingAlign,
   layout,
+  narrow,
   highlightIndex,
   currency,
   interval,
@@ -59,6 +60,7 @@ export function PricingTable({
           headingLevel={nextHeadingLevel(headingLevel)}
           highlightIndex={highlightIndex}
           interval={activeInterval}
+          narrow={narrow}
           plans={plans}
         />
       )}

@@ -172,6 +172,44 @@ describe('PricingTable — cards', () => {
   })
 })
 
+describe('PricingTable — the narrow arrangement', () => {
+  /*
+   * ADR-357, and plans are the case that most needs it: a plan card is tall, so three stacked put the
+   * third one two screens below the first and nobody compares what they cannot see together.
+   */
+  const track = (): HTMLElement => {
+    const card = screen.getAllByTestId('plan-card')[0]
+    const parent = card?.parentElement
+
+    if (parent === null || parent === undefined) {
+      throw new Error('the plan cards have no container')
+    }
+
+    return parent
+  }
+
+  it('makes a keyboard-reachable swipe track when it is a slider', () => {
+    renderBlock(definition, PricingTable, { narrow: 'slider' })
+
+    expect(track()).toHaveAttribute('tabindex', '0')
+    expect(track().className).toContain('snap-x')
+    expect(track().className).toContain('-mx-6')
+    expect(track().className).toContain('@min-[640px]/frame:grid')
+  })
+
+  it('is a plain single column when it is a stack', () => {
+    renderBlock(definition, PricingTable, { narrow: 'stack' })
+
+    expect(track()).not.toHaveAttribute('tabindex')
+    expect(track().className).toContain('grid-cols-1')
+    expect(track().className).not.toContain('snap-x')
+  })
+
+  it('defaults to the slider', () => {
+    expect(definition.defaults.narrow).toBe('slider')
+  })
+})
+
 describe('PricingTable — compact', () => {
   it('drops the feature lists', () => {
     renderBlock(definition, PricingTable, { layout: 'compact' })

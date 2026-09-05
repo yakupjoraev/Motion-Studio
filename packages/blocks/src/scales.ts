@@ -78,3 +78,20 @@ export const optionsFrom = (
 export const GLASS_ESCAPE_HATCH: readonly string[] = ESCAPE_HATCH_PROPERTIES.filter(
   (property) => property !== 'backdrop-filter',
 )
+
+/**
+ * What a row of cards does when the band is too narrow to hold it — ADR-357.
+ *
+ * `slider` is the default because a column of six cards is a page a phone reader scrolls past rather
+ * than reads: the swipe keeps the set to one screen, and the next card peeking in says there is one.
+ * `stack` stays available and is the honest choice for two or three cards, where a slider hides
+ * nothing and costs a gesture. Both are the block's own markup, so the export matches the preview.
+ *
+ * Here rather than in a category's schema because `marketing` and `data` both need it, and a category
+ * reaching into another one's schema is the import § 2 of the contract forbids.
+ */
+export const NARROW_LAYOUTS = ['slider', 'stack'] as const
+
+export type NarrowLayout = (typeof NARROW_LAYOUTS)[number]
+
+export const narrowLayout = z.enum(NARROW_LAYOUTS).default('slider')

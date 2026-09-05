@@ -17,12 +17,16 @@ import type { StatGridProps } from './stat-grid.types'
 const ARROWS = { up: '↑', down: '↓' } as const
 
 export const statGridMarkup = defineMarkup<StatGridProps>(
-  ({ props: { items, columns, dividers, size, align, hidden } }) =>
+  ({ props: { items, columns, narrow, dividers, size, align, hidden } }) =>
     el('div', {
       classNames: [dataBlockStyles({ hidden })],
       children: [
         el('ul', {
-          classNames: [statGridStyles({ dividers }), columnsClass(columns)],
+          classNames: [statGridStyles({ dividers, narrow }), columnsClass(columns)],
+          // Matches the component: a scrolling region needs a keyboard route in (WCAG 2.1.1).
+          ...(narrow === 'slider'
+            ? { attributes: { tabindex: { kind: 'literal' as const, value: '0' } } }
+            : {}),
           children: items.map((item) =>
             el('li', {
               classNames: [statCellStyles({ align, dividers })],

@@ -18,6 +18,7 @@ export const pricingTableMarkup = defineMarkup<PricingTableProps>(
       headingLevel,
       headingAlign,
       layout,
+      narrow,
       highlightIndex,
       currency,
       interval,
@@ -49,8 +50,13 @@ export const pricingTableMarkup = defineMarkup<PricingTableProps>(
                 pricingGridStyles({
                   columns: Math.min(plans.length, 4) as 1 | 2 | 3 | 4,
                   layout: layout === 'compact' ? 'compact' : 'cards',
+                  narrow,
                 }),
               ],
+              // Matches the component: a scrolling region needs a keyboard route in (WCAG 2.1.1).
+              ...(narrow === 'slider'
+                ? { attributes: { tabindex: { kind: 'literal' as const, value: '0' } } }
+                : {}),
               children: plans.map((plan, index) =>
                 planCardMarkup(
                   plan,

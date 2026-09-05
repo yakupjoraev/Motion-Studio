@@ -93,20 +93,6 @@ export type CardTreatment = (typeof CARD_TREATMENTS)[number]
 
 export const cardTreatment = z.enum(CARD_TREATMENTS)
 
-/**
- * What a row of cards does when the band is too narrow to hold it — ADR-357.
- *
- * `slider` is the default because six stacked cards is a page a phone user scrolls past rather than
- * reads: the swipe keeps the set to one screen and the next card peeks in to say there is one. `stack`
- * stays available and is the honest choice for two or three cards, where a slider hides nothing.
- * Both are the block's own markup, so the export behaves like the preview.
- */
-export const NARROW_LAYOUTS = ['slider', 'stack'] as const
-
-export type NarrowLayout = (typeof NARROW_LAYOUTS)[number]
-
-export const narrowLayout = z.enum(NARROW_LAYOUTS).default('slider')
-
 export const ALT_MAX_LENGTH = 200
 
 /**

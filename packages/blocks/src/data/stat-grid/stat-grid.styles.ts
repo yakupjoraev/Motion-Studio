@@ -1,5 +1,7 @@
 import { cva } from 'class-variance-authority'
 
+import { NARROW_BLEED, NARROW_SLIDER_INSET, NARROW_STACK } from '../../narrow-track'
+
 import type { Alignment } from '../../scales'
 import { DATA_LABEL } from '../data.styles'
 
@@ -34,13 +36,33 @@ export const columnsClass = (columns: number): string => {
  * rather than the order they are written. Composed, the grid painted itself `surface-1` and every divider vanished
  * into it — measured at 1440 in light mode, which is where a white gap on a white plate is invisible.
  */
-export const statGridStyles = cva('@container/frame grid list-none p-0', {
+export const statGridStyles = cva('@container/frame list-none p-0', {
   variants: {
     dividers: {
       true: 'gap-px overflow-hidden rounded-xl border border-border bg-border',
       false: 'gap-6 bg-transparent',
     },
+    /**
+     * ADR-357. Four figures side by side is the point of a stat row, and four stacked is a list nobody
+     * reads to the end — so the narrow arrangement is a swipe by default here too.
+     */
+    narrow: {
+      stack: NARROW_STACK,
+      slider: NARROW_SLIDER_INSET,
+    },
   },
+  compoundVariants: [
+    {
+      /*
+       * The bleed is added here rather than removed on the plate: `cva` concatenates variants, so a
+       * compound can only add. Off the plate the track reaches the band's edges; on it the drawn
+       * border stays put, because dragging a rounded frame off both sides reads as a broken box.
+       */
+      dividers: false,
+      narrow: 'slider',
+      class: NARROW_BLEED,
+    },
+  ],
 })
 
 export const statCellStyles = cva('@container flex min-w-0 flex-col', {

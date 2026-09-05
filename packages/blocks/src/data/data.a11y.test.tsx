@@ -41,7 +41,12 @@ const CASES: readonly Case[] = [
     tabStops: 1 + tableDefinition.defaults.columns.filter((column) => column.sortable).length,
     render: () => renderBlock(tableDefinition, Table),
   },
-  { id: 'stat-grid', tabStops: 0, render: () => renderBlock(statGridDefinition, StatGrid) },
+  {
+    id: 'stat-grid',
+    // One stop, and it is the slider's scrolling region — WCAG 2.1.1, ADR-357. `stack` takes none.
+    tabStops: 1,
+    render: () => renderBlock(statGridDefinition, StatGrid),
+  },
   {
     id: 'progress-ring',
     tabStops: 0,

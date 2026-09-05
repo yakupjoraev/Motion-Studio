@@ -14,10 +14,14 @@ import type { StatGridProps } from './stat-grid.types'
  * wide in a two-column grid and narrow in a four-column one at one viewport width, so where the change sits
  * relative to the figure is a fact about the cell rather than about the page.
  */
-export function StatGrid({ items, columns, dividers, size, align, hidden }: StatGridProps) {
+export function StatGrid({ items, columns, narrow, dividers, size, align, hidden }: StatGridProps) {
   return (
     <div className={dataBlockStyles({ hidden })} data-testid="stat-grid">
-      <ul className={`${statGridStyles({ dividers })} ${columnsClass(columns)}`}>
+      {/* A scrolling region needs a keyboard route into it — WCAG 2.1.1. */}
+      <ul
+        className={`${statGridStyles({ dividers, narrow })} ${columnsClass(columns)}`}
+        tabIndex={narrow === 'slider' ? 0 : undefined}
+      >
         {items.map((item, index) => (
           <StatCell
             align={align}

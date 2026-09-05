@@ -2,7 +2,7 @@ import { blockId } from '@motion-studio/schema'
 
 import { DELTA_DIRECTIONS, STAT_SIZES } from '../../content/stat/stat.schema'
 import { defineBlock } from '../../define-block'
-import { ALIGNMENTS, optionsFrom } from '../../scales'
+import { ALIGNMENTS, NARROW_LAYOUTS, optionsFrom } from '../../scales'
 import { DATA_FRAME_CONTROLS } from '../data.controls'
 import { CELL_MAX_LENGTH, LABEL_MAX_LENGTH } from '../data.schema'
 
@@ -89,6 +89,13 @@ export const statGridDefinition = defineBlock({
           label: 'Columns',
           responsive: true,
           options: { min: MIN_COLUMNS, max: MAX_COLUMNS },
+        },
+        {
+          path: 'narrow',
+          kind: 'segmented',
+          label: 'On narrow',
+          hint: 'Below 640 px: swipe through the figures, or stack them',
+          options: { options: optionsFrom(NARROW_LAYOUTS) },
         },
         {
           path: 'align',

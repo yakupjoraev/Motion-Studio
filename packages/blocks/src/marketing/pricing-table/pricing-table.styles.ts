@@ -1,5 +1,7 @@
 import { cva } from 'class-variance-authority'
 
+import { NARROW_SLIDER, NARROW_STACK } from '../../narrow-track'
+
 import { MARKETING_FOCUS, MARKETING_TRANSITION } from '../marketing.styles'
 import { innerRadiusClass } from '../nested-radius'
 
@@ -11,8 +13,16 @@ import { innerRadiusClass } from '../nested-radius'
  * grid takes over. A user who highlighted a plan wants that plan seen first on the device where only one
  * card fits on screen at a time.
  */
-export const pricingGridStyles = cva('grid items-start gap-6', {
+export const pricingGridStyles = cva('items-start gap-6', {
   variants: {
+    /**
+     * ADR-357. Plans are the case the slider was made for: a card is tall, so three stacked plans put
+     * the third one two screens down and nobody compares what they cannot see side by side.
+     */
+    narrow: {
+      stack: NARROW_STACK,
+      slider: NARROW_SLIDER,
+    },
     columns: {
       1: 'grid-cols-1',
       2: 'grid-cols-1 @min-[640px]/frame:grid-cols-2',

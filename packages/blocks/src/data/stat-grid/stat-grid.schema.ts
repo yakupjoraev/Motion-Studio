@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 import { DELTA_DIRECTIONS, STAT_SIZES } from '../../content/stat/stat.schema'
-import { alignment } from '../../scales'
+import { alignment, narrowLayout } from '../../scales'
 import { CELL_MAX_LENGTH, LABEL_MAX_LENGTH, dataFrameFields } from '../data.schema'
 
 export const MAX_STATS = 8
@@ -68,6 +68,7 @@ export const statGridSchema = z.object({
     .max(MAX_STATS)
     .default([...DEFAULT_ITEMS]),
   columns: z.number().int().min(MIN_COLUMNS).max(MAX_COLUMNS).default(4),
+  narrow: narrowLayout,
   /**
    * Hairline rules between the cells. On, the grid is one plate divided; off, it is figures on the page.
    * Both are correct and they are different blocks visually, which is why it is a prop rather than a look.
