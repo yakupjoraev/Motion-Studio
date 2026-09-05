@@ -57,6 +57,7 @@ repeating. That is what keeps a session's context small.
 | [FILE_FORMAT.md](FILE_FORMAT.md) | `.motion` schema, versioning, migrations, import/export safety |
 | [PLAYGROUND.md](PLAYGROUND.md) | Live CSS editor, property sandboxes, parsing and safety |
 | [SHORTCUTS.md](SHORTCUTS.md) | Keyboard map, chords, command palette, conflict rules |
+| [LOCALISATION.md](LOCALISATION.md) | Locales, URL shape, the stored choice, dictionaries, and what stays English |
 
 ### Quality
 | Document | Owns |
