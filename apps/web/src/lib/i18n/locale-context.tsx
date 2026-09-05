@@ -2,37 +2,34 @@
 
 import { type ReactNode, createContext, useContext, useMemo } from 'react'
 
-import type { Dictionary } from './dictionary'
 import { localeHref } from './locale-href'
 import type { Locale } from './locales'
 
 export interface LocaleValue {
   readonly locale: Locale
-  readonly dictionary: Dictionary
   /** An internal route, prefixed for the current locale — ADR-361. */
   readonly href: (path: string) => string
 }
 
 /*
- * No default dictionary: a component that reads strings outside the provider is a bug, and a silent
- * English fallback is how that bug reaches production looking like a translation gap.
+ * No default: a component that builds a link outside the provider would silently build an English
+ * one, and a Russian page full of English links is a bug that looks like a translation gap.
  */
 const LocaleContext = createContext<LocaleValue | null>(null)
 
 export interface LocaleProviderProps {
   readonly locale: Locale
-  /**
-   * Handed down from a Server Component, so the strings travel as data in the RSC payload and the
-   * client bundle carries neither dictionary (ADR-360).
-   */
-  readonly dictionary: Dictionary
   readonly children: ReactNode
 }
 
-export function LocaleProvider({ locale, dictionary, children }: LocaleProviderProps) {
+/**
+ * The locale itself — which language, and how to build a link in it. **Not the strings**: those come
+ * per surface (`surfaces.tsx`), so a page ships its own dictionary slice and no other.
+ */
+export function LocaleProvider({ locale, children }: LocaleProviderProps) {
   const value = useMemo<LocaleValue>(
-    () => ({ locale, dictionary, href: (path: string) => localeHref(locale, path) }),
-    [locale, dictionary],
+    () => ({ locale, href: (path: string) => localeHref(locale, path) }),
+    [locale],
   )
 
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>
@@ -47,6 +44,3 @@ export function useLocale(): LocaleValue {
 
   return value
 }
-
-/** The dictionary alone, which is what most components want. */
-export const useDictionary = (): Dictionary => useLocale().dictionary

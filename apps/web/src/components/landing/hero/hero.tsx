@@ -1,5 +1,8 @@
 import Link from 'next/link'
 
+import { localeHref } from '../../../lib/i18n/locale-href'
+import { getRequestDictionary, getRequestLocale } from '../../../lib/i18n/request-locale'
+
 import { HeroDemoIsland } from './hero-demo-island'
 import { HeroDemoStatic } from './hero-demo-static'
 
@@ -13,6 +16,9 @@ import { HeroDemoStatic } from './hero-demo-static'
  * walks away with the source", and a picture of an editor demonstrates none of the three.
  */
 export function Hero() {
+  const locale = getRequestLocale()
+  const { hero } = getRequestDictionary().landing
+
   return (
     <section className="relative overflow-hidden" id="hero">
       {/*
@@ -45,33 +51,31 @@ export function Hero() {
       <div className="relative mx-auto grid w-full max-w-[76rem] gap-12 px-5 pt-16 pb-20 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,28rem)] lg:items-center lg:gap-16 lg:pt-24 lg:pb-28 lg:pl-[7.5rem]">
         <div className="flex flex-col items-start gap-6">
           <p className="rounded-full border border-border bg-surface-1 px-3 py-1 font-mono text-2xs text-foreground-muted uppercase tracking-[0.18em]">
-            Local-first · MIT · no account
+            {hero.eyebrow}
           </p>
 
           <h1 className="max-w-[16ch] text-balance font-display text-5xl leading-[0.95] tracking-[-0.03em] sm:text-6xl">
-            Drag it. Tune it. Take the code.
+            {hero.headline}
           </h1>
 
           <p className="max-w-[52ch] text-foreground-muted text-lg leading-relaxed">
-            A visual editor over a real React component registry. The inspector is generated from
-            each component&rsquo;s schema, and the export button emits the component you were just
-            looking at.
+            {hero.subtitle}
           </p>
 
           <div className="flex flex-wrap items-center gap-3 pt-2">
             <Link
               className="rounded-md bg-accent px-4 py-2.5 font-medium text-foreground-onAccent outline-none transition-colors hover:bg-accent-hover focus-visible:shadow-focus"
-              href="/studio"
+              href={localeHref(locale, '/studio')}
               prefetch={false}
             >
-              Open the studio
+              {hero.openStudio}
             </Link>
             <Link
               className="rounded-md border border-border bg-surface-1 px-4 py-2.5 font-medium outline-none transition-colors hover:border-border-strong focus-visible:shadow-focus"
-              href="/playground"
+              href={localeHref(locale, '/playground')}
               prefetch={false}
             >
-              Try the playground
+              {hero.tryPlayground}
             </Link>
           </div>
 
@@ -83,9 +87,9 @@ export function Hero() {
           */}
           <dl className="grid w-full max-w-[26rem] grid-cols-3 gap-x-6 pt-4">
             {[
-              { label: 'Blocks', value: '72' },
-              { label: 'Presets', value: '51' },
-              { label: 'Targets', value: '4' },
+              { label: hero.statBlocks, value: '72' },
+              { label: hero.statPresets, value: '51' },
+              { label: hero.statTargets, value: '4' },
             ].map((stat) => (
               <div className="flex flex-col gap-0.5" key={stat.label}>
                 <dt className="font-mono text-2xs text-foreground-muted uppercase tracking-[0.14em]">

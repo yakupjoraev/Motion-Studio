@@ -3,6 +3,7 @@
 import Link from 'next/link'
 
 import { useLocale } from '../../lib/i18n/locale-context'
+import { useNav } from '../../lib/i18n/surfaces'
 import { LocaleSwitch } from '../nav/locale-switch'
 
 /**
@@ -19,8 +20,8 @@ import { LocaleSwitch } from '../nav/locale-switch'
  * HTML the server sends.
  */
 export function LandingNav() {
-  const { dictionary, href } = useLocale()
-  const { nav } = dictionary
+  const { href } = useLocale()
+  const nav = useNav()
 
   const links = [
     { href: '/studio', label: nav.studio },

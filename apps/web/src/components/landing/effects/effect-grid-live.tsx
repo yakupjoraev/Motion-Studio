@@ -3,7 +3,9 @@
 import { components as effectComponents } from '@motion-studio/blocks/effects'
 import { type ComponentType, Suspense } from 'react'
 
-import { EFFECT_CARDS } from './effect-cards'
+import { useLanding } from '../../../lib/i18n/surfaces'
+
+import { effectCards } from './effect-cards'
 import { EffectShell } from './effect-shell'
 
 /**
@@ -43,9 +45,11 @@ const PROPS: Readonly<Record<string, Record<string, unknown>>> = {
 }
 
 export function EffectGridLive() {
+  const { effects } = useLanding()
+
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {EFFECT_CARDS.map((card) => {
+      {effectCards(effects).map((card) => {
         const Effect = effectComponents[card.id as keyof typeof effectComponents] as
           | ComponentType<Record<string, unknown>>
           | undefined

@@ -4,6 +4,8 @@ import { createScrollBus, windowScrollSource } from '@motion-studio/motion'
 import { clamp, lerp } from '@motion-studio/utils'
 import { useEffect, useRef, useState } from 'react'
 
+import { useLanding } from '../../../lib/i18n/surfaces'
+
 import { END, START, WalkthroughPanel } from './walkthrough-values'
 
 /**
@@ -19,6 +21,7 @@ export interface WalkthroughLiveProps {
 }
 
 export function WalkthroughLive({ note }: WalkthroughLiveProps) {
+  const { inspector } = useLanding()
   const frame = useRef<HTMLDivElement | null>(null)
   const [progress, setProgress] = useState(0)
 
@@ -50,7 +53,13 @@ export function WalkthroughLive({ note }: WalkthroughLiveProps) {
   return (
     <div className="flex flex-col gap-3" ref={frame}>
       <WalkthroughPanel
-        caption={`scroll position ${Math.round(eased * 100)}%`}
+        caption={inspector.scrollPosition.replace('{percent}', String(Math.round(eased * 100)))}
+        labels={{
+          panelTitle: inspector.panelTitle,
+          radius: inspector.radius,
+          glow: inspector.glow,
+          card: inspector.card,
+        }}
         values={{
           radius: Math.round(lerp(START.radius, END.radius, eased)),
           glow: lerp(START.glow, END.glow, eased),

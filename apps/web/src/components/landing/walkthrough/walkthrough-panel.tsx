@@ -5,8 +5,21 @@ export interface WalkthroughValues {
   readonly glow: number
 }
 
+export interface WalkthroughPanelLabels {
+  readonly panelTitle: string
+  readonly radius: string
+  readonly glow: string
+  readonly card: string
+}
+
 export interface WalkthroughPanelProps {
   readonly values: WalkthroughValues
+  /**
+   * The four strings on the panel, handed in rather than read from a hook: this component renders
+   * inside a Server Component (the static pair) and inside a client one (the live variant), and a
+   * hook would force the whole panel onto the client for four words.
+   */
+  readonly labels: WalkthroughPanelLabels
   /** Rendered under the preview: the caption for a static pair, or the live readout. */
   readonly caption: string
   /**
@@ -24,19 +37,24 @@ const ROW = 'flex items-center justify-between gap-4 border-border-subtle border
  * pair, the live scroll-driven version and the reduced-motion variant all render this, so the three
  * cannot drift into three different pictures of the same panel.
  */
-export function WalkthroughPanel({ values, caption, compact = false }: WalkthroughPanelProps) {
+export function WalkthroughPanel({
+  values,
+  caption,
+  labels,
+  compact = false,
+}: WalkthroughPanelProps) {
   return (
     <div className="grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-[minmax(0,15rem)_minmax(0,1fr)]">
       <div className="bg-surface-1">
         <p className="px-4 py-2.5 font-mono text-2xs text-foreground-muted uppercase tracking-[0.14em]">
-          Inspector · Style
+          {labels.panelTitle}
         </p>
         <div className={ROW}>
-          <span className="text-foreground-muted text-sm">Radius</span>
+          <span className="text-foreground-muted text-sm">{labels.radius}</span>
           <span className="font-mono text-sm tabular-nums">{values.radius}px</span>
         </div>
         <div className={`${ROW} border-b-0`}>
-          <span className="text-foreground-muted text-sm">Glow</span>
+          <span className="text-foreground-muted text-sm">{labels.glow}</span>
           <span className="font-mono text-sm tabular-nums">{values.glow.toFixed(2)}</span>
         </div>
       </div>
@@ -51,7 +69,7 @@ export function WalkthroughPanel({ values, caption, compact = false }: Walkthrou
             boxShadow: `0 0 ${24 * values.glow}px ${6 * values.glow}px var(--ms-color-accent-muted)`,
           }}
         >
-          Card
+          {labels.card}
         </div>
         <p className="font-mono text-2xs text-foreground-muted uppercase tracking-[0.14em]">
           {caption}
