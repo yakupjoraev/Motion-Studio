@@ -2,6 +2,7 @@
 
 import { Button, Segmented, Switch } from '@motion-studio/ui'
 import { type ReactElement, useEffect } from 'react'
+import { usePlayground } from '../../../lib/i18n/playground-surface'
 
 export type CompareSide = 'a' | 'b'
 
@@ -29,6 +30,7 @@ export function CompareTabs({
   onSideChange,
   onSwap,
 }: CompareTabsProps): ReactElement {
+  const copy = usePlayground()
   /* SHORTCUTS.md spells the swap `Cmd+Shift+S`; it only means anything while the split is on. */
   useEffect(() => {
     if (!enabled) {
@@ -53,9 +55,9 @@ export function CompareTabs({
         <Switch
           checked={enabled}
           onCheckedChange={onEnabledChange}
-          aria-label="Compare two values"
+          aria-label={copy.compareTwoValues}
         />
-        Compare
+        {copy.compare}
       </span>
       {enabled && (
         <>
@@ -63,10 +65,10 @@ export function CompareTabs({
             options={SIDES}
             value={side}
             onValueChange={(next) => onSideChange(next === 'b' ? 'b' : 'a')}
-            aria-label="Which half the editor edits"
+            aria-label={copy.whichHalf}
           />
           <Button size="sm" variant="ghost" onClick={onSwap}>
-            Swap A and B
+            {copy.swap}
           </Button>
           <output aria-live="polite" className="sr-only" data-testid="compare-announcement">
             {`Editing ${side === 'a' ? 'A, the left half' : 'B, the right half'}.`}

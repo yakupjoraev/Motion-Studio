@@ -1,6 +1,6 @@
-import { act, renderHook } from '@testing-library/react'
 import { createRef } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { act, renderHook } from '../../test/render'
 
 import { APPLY_DEBOUNCE_MS, useApplyCss } from './use-apply-css'
 

@@ -1,0 +1,54 @@
+import type { Dictionary } from '../../dictionary'
+
+export const playground: Dictionary['playground'] = {
+  metaTitle: 'Песочница — Motion Studio',
+  metaDescription:
+    'Живой редактор CSS для свойств, которые тяжело писать руками: градиенты, тени, фильтры, трансформации, переходы, обтравочные контуры.',
+  heading: 'Песочница',
+  subtitle: 'Восемь CSS-свойств, и под каждое — своя мишень.',
+  properties: 'Свойства',
+  presetsAndSharing: 'Пресеты и обмен',
+  cssProperty: 'CSS-свойство',
+  presets: 'Пресеты',
+  presetReplaceOrAdd: 'Клик заменяет значение, Alt+клик добавляет слой.',
+  presetReplace: 'Клик заменяет значение.',
+  compatibility: 'Совместимость',
+  colour: 'Цвет',
+
+  compare: 'Сравнение',
+  compareTwoValues: 'Сравнить два значения',
+  whichHalf: 'Какую половину правит редактор',
+  swap: 'Поменять A и B местами',
+
+  copyCss: 'Скопировать CSS',
+  copyTailwind: 'Скопировать как Tailwind',
+  copyVariable: 'Скопировать как CSS-переменную',
+  copyLink: 'Скопировать ссылку',
+  sendToSelection: 'Отправить в выделение',
+  sendToBlock: 'Отправить в «{name}»',
+  studioNotListening: 'Студия не слушает. Откройте её и выделите блок.',
+  selectOneBlock: 'Выделите один блок в студии — и значение уйдёт к нему.',
+
+  noBezier: 'В этом значении нет cubic-bezier(), который можно тянуть.',
+  addBezier: 'Добавить',
+  namedCurve: 'Именованная кривая',
+  replay: 'Проиграть заново',
+  reducedMotionDot: 'Включена ограниченная анимация, поэтому точка стоит в конечном состоянии.',
+
+  pathIsText: 'path() правится как текст: его команды — не список вершин.',
+  units: 'Единицы',
+  vertexUnits: 'Единицы вершин',
+  vertex: 'Вершина',
+  insertAfter: 'Вставить после',
+  done: 'Готово',
+
+  glassPanel: 'Стеклянная панель',
+  behindTheGlass: 'Что за стеклом',
+  maskPreview: 'Превью маски',
+  cardOnSurface: 'Карточка на поверхности средней светлоты',
+  cardInPerspective: 'Карточка в контейнере с перспективой',
+  toggleState: 'Переключить состояние',
+  loop: 'Цикл',
+  scrub: 'Прокрутка',
+  transitionProgress: 'Прогресс перехода',
+}

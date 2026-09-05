@@ -6,6 +6,7 @@ import { en } from '../lib/i18n/dictionaries/en'
 import { ErrorDictionary } from '../lib/i18n/error-surface'
 import { LocaleProvider } from '../lib/i18n/locale-context'
 import { DEFAULT_LOCALE } from '../lib/i18n/locales'
+import { PlaygroundDictionary } from '../lib/i18n/playground-surface'
 import { RegistryDictionary, StudioDictionary } from '../lib/i18n/studio-surface'
 import {
   DocsDictionary,
@@ -35,11 +36,13 @@ function Providers({ children }: { readonly children: ReactNode }) {
           <LandingDictionary value={en.landing}>
             <GalleryDictionary value={en.gallery}>
               <DocsDictionary value={en.docs}>
-                <StudioDictionary value={en.studio}>
-                  <RegistryDictionary value={{ copy: registryCopy(DEFAULT_LOCALE) }}>
-                    {children}
-                  </RegistryDictionary>
-                </StudioDictionary>
+                <PlaygroundDictionary value={en.playground}>
+                  <StudioDictionary value={en.studio}>
+                    <RegistryDictionary value={{ copy: registryCopy(DEFAULT_LOCALE) }}>
+                      {children}
+                    </RegistryDictionary>
+                  </StudioDictionary>
+                </PlaygroundDictionary>
               </DocsDictionary>
             </GalleryDictionary>
           </LandingDictionary>

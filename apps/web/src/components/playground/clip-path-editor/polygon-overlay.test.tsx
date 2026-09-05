@@ -1,6 +1,6 @@
-import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
+import { render, screen, waitFor } from '../../../test/render'
 
 import type { Polygon, Vertex } from './parse-polygon'
 import { PolygonOverlay } from './polygon-overlay'

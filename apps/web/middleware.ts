@@ -35,8 +35,13 @@ export function middleware(request: NextRequest): NextResponse {
 export const config = {
   /*
    * Everything a person can see, and nothing a machine fetches: `_next` is the build output, `api`
-   * answers in one language (JSON), and a path with a dot is a file in `public/`. A locale prefix on
-   * any of them would be a redirect on the critical path for no visible difference.
+   * and `fixtures` answer with JSON in no language at all, and a path with a dot is a file in
+   * `public/`. A locale prefix on any of them would be a redirect on the critical path for no
+   * visible difference.
+   *
+   * `fixtures` is on the list because leaving it off broke three flow specs: the rewrite sent
+   * `/fixtures/responsive-grid` to `/en/fixtures/responsive-grid`, which is not a route, so every
+   * `?fixture=` load answered 404.
    */
-  matcher: ['/((?!_next|api|.*\\.).*)'],
+  matcher: ['/((?!_next|api|fixtures|.*\\.).*)'],
 }

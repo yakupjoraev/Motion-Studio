@@ -3,6 +3,7 @@
 import { useShortcuts } from '@motion-studio/hooks'
 import { type ReactElement, useMemo } from 'react'
 
+import { usePlayground } from '../../lib/i18n/playground-surface'
 import { CompareTabs } from './compare-mode/compare-tabs'
 import { CompareTarget } from './compare-mode/compare-target'
 import { EditorPane } from './editor-pane'
@@ -21,6 +22,7 @@ import { usePlaygroundState } from './use-playground-state'
  * actions on the right, the editor along the bottom.
  */
 export function PlaygroundLayout(): ReactElement {
+  const strings = usePlayground()
   const state = usePlaygroundState()
   const { property, compare, side, a, b, active } = state
   const descriptor = propertyDescriptor(property)
@@ -55,7 +57,7 @@ export function PlaygroundLayout(): ReactElement {
   return (
     <div className="grid h-full grid-rows-[1fr_auto] gap-4 p-4">
       <div className="grid min-h-0 grid-cols-1 gap-4 lg:grid-cols-[16rem_1fr_16rem]">
-        <aside aria-label="Properties" className="min-h-0 overflow-y-auto">
+        <aside aria-label={strings.properties} className="min-h-0 overflow-y-auto">
           <PropertyList value={property} onValueChange={state.setProperty} />
         </aside>
         <div className="grid min-h-0 place-items-center overflow-auto">
@@ -79,7 +81,7 @@ export function PlaygroundLayout(): ReactElement {
             )}
           </TargetFrame>
         </div>
-        <aside aria-label="Presets and sharing" className="flex min-h-0 flex-col gap-4">
+        <aside aria-label={strings.presetsAndSharing} className="flex min-h-0 flex-col gap-4">
           <PresetPanel property={property} value={active.value} onValueChange={active.setValue} />
           <CopyActionsBar actions={copy} />
           <SendToSelection action={send} disabled={active.applied === ''} />

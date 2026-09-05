@@ -3,6 +3,7 @@
 import { Button } from '@motion-studio/ui'
 import { type ReactElement, useCallback, useState } from 'react'
 
+import { usePlayground } from '../../../lib/i18n/playground-surface'
 import type { PlaygroundProperty } from '../properties'
 
 import { encodePermalink } from './permalink'
@@ -69,17 +70,18 @@ export interface CopyActionsBarProps {
 }
 
 export function CopyActionsBar({ actions }: CopyActionsBarProps): ReactElement {
+  const copy = usePlayground()
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap gap-2">
         <Button size="sm" variant="secondary" onClick={actions.copyCss}>
-          Copy CSS
+          {copy.copyCss}
         </Button>
         <Button size="sm" variant="secondary" onClick={actions.copyTailwind}>
-          Copy as Tailwind
+          {copy.copyTailwind}
         </Button>
         <Button size="sm" variant="secondary" onClick={actions.copyVariable}>
-          Copy as CSS variable
+          {copy.copyVariable}
         </Button>
         <Button
           size="sm"
@@ -87,7 +89,7 @@ export function CopyActionsBar({ actions }: CopyActionsBarProps): ReactElement {
           onClick={actions.copyLink}
           data-testid="copy-permalink"
         >
-          Copy link
+          {copy.copyLink}
         </Button>
       </div>
       <output
