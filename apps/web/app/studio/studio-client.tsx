@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic'
 import { useEffect } from 'react'
 
+import { CanvasPlaceholder } from '../../src/components/studio/canvas-placeholder'
 import { StudioShell } from '../../src/components/studio/studio-shell'
 import { loadBlockRegistry } from '../../src/store/block-registry'
 import { connectEscapeHatch } from '../../src/store/escape-hatch-bridge'
@@ -17,7 +18,9 @@ const CanvasIsland = dynamic(
     import('../../src/components/studio/canvas-area/canvas-host').then(
       (module) => module.CanvasHost,
     ),
-  { ssr: false },
+  // ADR-353: the shell paints before the island's chunk lands, and an empty canvas frame in between
+  // is the same silence the route-level fallback exists to remove.
+  { ssr: false, loading: () => <CanvasPlaceholder /> },
 )
 
 export function StudioClient() {
