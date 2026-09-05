@@ -344,6 +344,51 @@ Use the product before claiming a surface is finished. Every item above was foun
 not by reading the code — and five of the seven closed items were invisible to a test suite of 8 000
 that was green the whole time.
 
+## The differentiation, and where it is hidden
+
+Recorded 2026-09-05, after the owner looked at the finished editor and said what it reads as:
+
+> мне кажется мы создали аналог тильды... я думал, что мы создадим что-то лучшее, новое
+
+The observation is fair and the diagnosis is not that the product is a page builder. It is that
+**everything which is not a page builder lives behind a dialog.** A visitor opens `/studio`, sees
+blocks, a canvas and an inspector, and has no reason to think anything else is there.
+
+What is actually different, and is already built:
+
+| | Motion Studio | A page builder |
+| --- | --- | --- |
+| Output | A React/Next project with types and idiomatic Tailwind, and a suite that compiles and typechecks it | A hosted page, or dead exported HTML |
+| Blocks | Production React components whose inspector is generated from their own zod schema | A closed list only the vendor can extend |
+| Motion | 51 presets, six channels, a curve editor — and the animation is in the exported code | A checkbox for "fade in" |
+| Ownership | Local-first, MIT, no account, no backend | The vendor's servers |
+
+**The gap is presentation, not architecture.** The export dialog is where the product's whole reason
+to exist is kept, and a user has to guess to open it.
+
+### v1.x — the code panel (`prompts/68`)
+
+A panel beside the canvas showing the selected block's generated React. Editing a prop rewrites it in
+front of the user. **Collapsible**, and closed is a legitimate state — the owner's condition, and the
+right one: someone composing a page does not want a wall of code, and someone evaluating the product
+needs to see it inside five seconds.
+
+The generator already exists; this is a surface for it, not a new subsystem.
+
+### v2 — the account, and what it unlocks
+
+The owner's direction, recorded here rather than started: after v1 ships and there is feedback.
+
+- A personal account: a user edits a block and keeps their version.
+- Publishing that version — to their own library, or to the shared catalogue.
+- The social layer on top: other users adopt a published component, and like it.
+- **This is the monetisation surface.** A catalogue of user-authored components with attribution and
+  demand is a market; a local-first editor with no backend is not.
+
+It depends on user-authored blocks (v1.4 below) and therefore on the sandbox, which is why the order
+is: ship v1 → get feedback → build the block authoring model → then the account and the catalogue.
+Doing it in the other order builds a marketplace for components nobody can safely author yet.
+
 ## Post-v1
 
 Listed so the v1 boundary is deliberate rather than accidental, and **sized honestly** — an
