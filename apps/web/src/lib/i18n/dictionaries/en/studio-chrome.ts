@@ -74,6 +74,10 @@ export const studioChrome = {
   shortcutsTitle: 'Keyboard shortcuts',
   shortcutsDescription:
     'Every shortcut the studio knows, generated from the registry that runs them.',
+  shortcutsSearch: 'Search shortcuts',
+  shortcutsSearchPlaceholder: 'undo, breakpoint, pan…',
+  /** `{query}` is what was typed into the sheet's search. */
+  shortcutsEmpty: 'No shortcut matches “{query}”.',
   /**
    * Shortcut labels and their groups, keyed by the English string the registry holds — the same
    * scheme ADR-365 chose for the block registry, and for the same reason: `studio-registry.test.ts`

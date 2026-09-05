@@ -33,4 +33,4 @@ export {
 } from './use-shortcuts'
 export { ShortcutKeys } from './shortcut-keys'
 export { ShortcutRow } from './shortcut-row'
-export { ShortcutSheet } from './shortcut-sheet'
+export { ShortcutSheet, type ShortcutSheetCopy } from './shortcut-sheet'

@@ -102,7 +102,7 @@ export function DocumentListDialog() {
                 {copy.rename}
               </Button>
               <Button
-                aria-label={`Duplicate ${entry.name}`}
+                aria-label={copy.duplicateOne.replace('{name}', entry.name)}
                 onClick={() => void duplicate(entry.id)}
                 size="icon"
                 variant="ghost"

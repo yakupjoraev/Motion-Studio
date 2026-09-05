@@ -85,6 +85,9 @@ export const studioChrome: Dictionary['studio']['chrome'] = {
   shortcutsTitle: 'Горячие клавиши',
   shortcutsDescription:
     'Все сочетания, которые знает студия, — из того же реестра, что их исполняет.',
+  shortcutsSearch: 'Поиск сочетаний',
+  shortcutsSearchPlaceholder: 'отменить, брейкпоинт, панорама…',
+  shortcutsEmpty: 'Ни одно сочетание не подходит под «{query}».',
   paletteInsert: 'Вставить {name}',
   paletteAdd: 'Добавить {name}',
   paletteApply: 'Применить {name}',

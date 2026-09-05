@@ -3,6 +3,8 @@
 import { ShortcutKeys } from '@motion-studio/hooks'
 import { memo } from 'react'
 
+import { useStudio } from '../../../lib/i18n/studio-surface'
+
 import type { PaletteItem } from './use-palette-items'
 
 export interface PaletteOptionProps {
@@ -29,6 +31,8 @@ export const PaletteOption = memo(function PaletteOption({
   height,
   onPick,
 }: PaletteOptionProps) {
+  const { chrome } = useStudio()
+
   return (
     // biome-ignore lint/a11y/useKeyWithClickEvents: the listbox owns the keyboard; an option inside it is not a tab stop
     // biome-ignore lint/a11y/useFocusableInteractive: aria-activedescendant keeps focus on the input, which is what makes the option not a tab stop
@@ -49,7 +53,7 @@ export const PaletteOption = memo(function PaletteOption({
     >
       <span className="flex min-w-0 items-center gap-2">
         <span className="w-16 shrink-0 text-[10px] text-foreground-subtle uppercase tracking-wide">
-          {item.group}
+          {chrome.paletteGroups[item.group] ?? item.group}
         </span>
         <span className={`truncate ${item.available ? '' : 'opacity-50'}`}>{item.label}</span>
       </span>

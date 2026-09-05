@@ -76,4 +76,41 @@ describe('ShortcutSheet', () => {
     expect(screen.queryAllByTestId('shortcut-row')).toHaveLength(0)
     expect(screen.getByText(/No shortcut matches/)).toBeInTheDocument()
   })
+
+  /**
+   * The registry stays English — SHORTCUTS.md is checked against it — so a second language is a
+   * table the caller hands over. Searching has to follow the labels on screen: a reader who types
+   * what they can see and gets nothing concludes the sheet is broken.
+   */
+  it('shows the labels and groups the caller translates, and searches them', () => {
+    const copy = {
+      search: 'Поиск сочетаний',
+      searchPlaceholder: 'отменить…',
+      empty: 'Ничего не найдено по «{query}».',
+      labels: { Undo: 'Отменить', Duplicate: 'Дублировать' },
+      groups: { Global: 'Глобальные' },
+    }
+
+    render(
+      <ShortcutSheet
+        context={{ hasSelection: true }}
+        copy={copy}
+        platform="other"
+        registry={registry}
+      />,
+    )
+
+    expect(screen.getByRole('heading', { name: 'Глобальные' })).toBeInTheDocument()
+    expect(screen.getByText('Отменить')).toBeInTheDocument()
+    // Untranslated entries keep the registry's own English rather than showing a key.
+    expect(screen.getByText('Command palette')).toBeInTheDocument()
+
+    const russian = screen.getByLabelText('Поиск сочетаний')
+
+    fireEvent.change(russian, { target: { value: 'Дублировать' } })
+    expect(screen.getAllByTestId('shortcut-row')).toHaveLength(1)
+
+    fireEvent.change(russian, { target: { value: 'xyzzy' } })
+    expect(screen.getByText('Ничего не найдено по «xyzzy».')).toBeInTheDocument()
+  })
 })
