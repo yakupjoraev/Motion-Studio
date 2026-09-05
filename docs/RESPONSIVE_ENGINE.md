@@ -171,6 +171,45 @@ Rules in `buildIR`:
 Golden-file tests cover: base only, one override, multiple overrides, redundant override
 elimination, and the arbitrary-value fallback.
 
+## How a block asks its own width
+
+Since ADR-356 a block's own breakpoints are **container queries against the band it sits in**, not
+media queries against the browser window:
+
+```
+@container/frame            declared on the block's root
+@min-[640px]/frame:grid-cols-2      the sm step
+@min-[768px]/frame:py-24            the md step
+@min-[1024px]/frame:grid-cols-3     the lg step
+```
+
+The pixel values are the ones `BREAKPOINTS` above already names, so nothing new has to be learned.
+
+**Why, in one line:** the artboard is a 375 px box inside a 1920 px window, and a media query reads
+the window — so a `md:` was true on the mobile frame and the studio previewed a desktop page. The
+container is declared by the block, never by the canvas (ADR-184): one the canvas added would exist
+in the preview and not in the export.
+
+Two consequences worth knowing before editing a block:
+
+- **A query with no container never matches, silently.** A block that uses `/frame` must declare
+  `@container/frame` on its own root. Nested declarations are fine and usually right — a grid inside a
+  narrow column should answer for the column.
+- **`sm` / `md` / `lg` as cva *variant keys* are sizes, not breakpoints.** `padding: { md: 'p-6' }` is a
+  name; `'p-6 @min-[768px]/frame:p-10'` is a query. Do not convert the former.
+
+The fluid display steps use `cqw` for the same reason — `DESIGN_SYSTEM.md` § Typography.
+
+## Two arrangements, and the user picks
+
+A row of cards has no single right answer on a narrow band, so the block offers both — ADR-357. The
+`narrow` prop is `slider` (default) or `stack`, shown as "On narrow" in the inspector.
+
+`slider` is a scroll-snap track below 640 px: the card is 82 % of the band so the next one peeks in,
+the track bleeds past the section gutter (`-mx-6 px-6 scroll-px-6`) so a card runs off the screen edge
+instead of being clipped inside the padding, and the list carries `tabindex="0"` because a scrollable
+region has to be reachable from the keyboard. At 640 px and up both settings are the same grid.
+
 ## Container queries
 
 Blocks that are placed inside variable-width containers (cards in a bento grid) respond to their

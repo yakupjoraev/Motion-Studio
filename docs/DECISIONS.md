@@ -14438,3 +14438,236 @@ the preview does in between.
   panel by clicking their cards, and it failed on exactly this before the fix.
 - Not chosen: dropping `onFocus` from the play triggers. It would have fixed the symptom by removing
   a keyboard affordance, and the preview being clickable was the actual defect.
+
+## ADR-351 — A control option's value may be a number, and the renderer decodes it back
+
+**Date** 2026-09-05 · **Prompt** owner audit · **Status** Accepted
+
+### Question
+`Heading level` was an empty select in every marketing block. The trigger showed the `Select…`
+placeholder even though the node's prop was set, and opening it produced a 10 x 10 px popup with zero
+options — measured in the browser, not inferred. Eight blocks carry the control through
+`sectionCopyGroup`: bento-grid, comparison-table, faq-accordion, feature-grid, feature-split,
+logo-cloud, pricing-table, testimonial-marquee.
+
+### Cause (verified in the session)
+`descriptor-options.ts` accepted an option only when its `value` was a `string`. `HEADING_LEVELS` is
+`[2, 3, 4, 5, 6]`, so `marketing.controls.ts` builds `{ value: 2, label: 'h2' }` and every option was
+filtered out as the wrong shape. `asString(2)` then answered `''`, which is what Radix reads as "no
+selection" — so a set property also looked unset. Nothing failed loudly: the filter's own comment
+calls an empty list "nothing to choose", which is indistinguishable from a control with no options.
+
+### The options, and what each costs
+| | Fix | Cost |
+| --- | --- | --- |
+| Make the descriptor's values strings | One line in `marketing.controls.ts` | The commit then writes `'2'`, which the block's schema (`z.literal(2)`) rejects — so it also needs a coercion somewhere, and the next numeric enum repeats the bug |
+| Accept numbers in the renderer, decode on commit | `isOption`, `selectOptions`, `optionDecoder`, `asOptionValue` | Two more functions in the reader that already exists for this |
+
+### Decision
+The second. A number is a legal option value: `selectOptions` prints it as a string for the DOM and
+`optionDecoder` turns the chosen string back into the number the schema parses. `asOptionValue` is
+the matching read, so a numeric prop shows as selected instead of as the placeholder.
+
+### Consequences
+- `Heading level` works in all eight blocks: verified in the browser — the list offers h2…h6, and
+  choosing h3 moved the section heading to `H3` and every card title to `H4` via `nextHeadingLevel`.
+- The class is fixed rather than the case: any descriptor may now declare numeric options.
+- `control-renderer.test.tsx` covers it, and was confirmed red against the old reader.
+- Not chosen: widening `SelectOption` to `string | number`. The DOM has no numeric option value, so
+  the string is the honest type at that boundary — the number belongs on either side of it, not in it.
+
+## ADR-352 — A control built out of controls takes the panel's width
+
+**Date** 2026-09-05 · **Prompt** owner audit · **Status** Accepted
+
+### Question
+Every item name in a `list` control rendered as one character and an ellipsis — `Real components`
+showed as `R.`. It looked like a truncation bug in the list row, which is written correctly
+(`min-w-0 flex-1 truncate`).
+
+### What was measured
+In the browser, on `feature-grid` in the 320 px panel: six item labels, each with
+`clientWidth: 11` against `scrollWidth: 87–111`. The arithmetic is the row's, not the label's — the
+88 px label column plus the item's grip, two reorder buttons and a delete (128 px that cannot shrink)
+leave the name 11 px of the control column's ~150.
+
+### Threshold, set before the change
+An item name needs **120 px**. Names measured 87–111 px at `text-xs`, so 120 clears the longest with
+room; anything under it truncates a real name rather than an exceptional one.
+
+### Decision
+`ControlRow` gains `layout: 'inline' | 'stacked'`. A `list` renders stacked: label on its own line,
+control across the panel. `UI_GUIDELINES.md` § Control rows was amended first, since it specified
+only the inline geometry.
+
+### Consequences
+- Measured after: **147 px** per item name, none clipped. Over the 120 px threshold.
+- Only `list` is stacked. Every other control keeps the 88 px column the guideline specifies, so the
+  panel still reads as one aligned list of rows.
+- The inline layout gained no wrapper element: the header is `display: contents` there, so the three
+  children stay direct children of the row's flex and the rendering is unchanged for 25 of 26 kinds.
+
+## ADR-353 — The studio answers the press before it can answer the navigation
+
+**Date** 2026-09-05 · **Prompt** owner audit · **Status** Accepted
+
+### Question
+Pressing "Open the studio" changed nothing on screen. The landing page stayed, unchanged and with
+nothing moving, until the studio replaced it whole — measured at **14 s** on the dev server, and
+never under the time it takes to fetch a 250 kB route chunk in production. The owner read it as a
+press that had missed, which is exactly what it looks like.
+
+### Cause
+`app/studio/` had no `loading.tsx`, so the route segment had no Suspense fallback and the router kept
+the previous page painted for the whole transition. The canvas island's `dynamic()` had no `loading`
+either, so even after the shell painted the canvas frame was empty with nothing saying why.
+
+### Decision
+Two fallbacks, one wording. `app/studio/loading.tsx` draws the shell's own grid — top bar, both
+panels, status bar — as skeletons, and `CanvasPlaceholder` fills the canvas track with a pulse and
+"Opening the studio…". The same placeholder is the island's `dynamic` fallback, so the two waits the
+user cannot distinguish are not reported differently.
+
+### Why the shell's grid rather than a spinner
+The frame the user waits in is the frame that arrives: the panels do not slide into place after the
+fact, and the transition has no layout jump. A centred spinner would have been less work and would
+have thrown away the one thing this route can promise cheaply — its shape.
+
+### Consequences
+- Verified in the browser: the skeleton is on screen in the same frame as the press, and the studio
+  replaces it in place.
+- `col-span-3` on both bars is load-bearing. Without it the grid's auto-placement put the top bar in
+  the first column and pushed every panel one cell along — caught by looking at the result, and the
+  reason the placeholder first drew in the inspector's track.
+- The pulse is `data-ms-skeleton`, whose duration is a token multiplied by `--ms-reduced-motion`, so
+  § 6 of the contract is honoured without a rule of its own.
+- Not chosen: prefetching the studio chunk from the landing page. It would shorten the wait for
+  someone who is going to press the button and lengthen the first load for everyone who is not; the
+  wait needed an answer either way.
+
+## ADR-354 — The link control follows the shape the block actually stores
+
+**Date** 2026-09-05 · **Prompt** owner audit · **Status** Accepted
+
+### Question
+Inserting a `navbar` produced a block that was immediately in an error state: `Brand link` was empty,
+outlined red, with "Enter a URL." under it — on a prop whose default is `'/'`. The same control is
+declared in nine places across hero, button, cta-banner, cta-split, pricing-table and the four
+navigation entries.
+
+### Cause
+`kind: 'link'` renders `LinkField`, whose value is `{ href, target, rel }`. Every one of those nine
+props is `z.string()` in its block's schema, and every printer emits `attributes: { href }` and
+nothing else. So `asLink('/')` read a string as an object, found no `href` key, and answered `''` —
+which `hrefIssue` correctly calls an empty URL. Worse than the noise: an edit would have committed an
+object into a prop the schema declares a string.
+
+### The disagreement this exposes
+`COMPONENT_LIBRARY.md` § Control kinds describes `link` as three properties. The schemas and the
+printers describe it as one. Two documents cannot both be right, and the code agrees with the
+schemas: **nothing in this repository can store or emit `target` or `rel` today.**
+
+### Decision
+The control follows its value. A string value edits as a URL alone — `hrefOnly` hides the target and
+`rel` rows, `relIssue` is not consulted, and the commit hands back a string. An object value gets the
+full three-part editor, unchanged. This is the same shape of fix as ADR-351: the renderer is where a
+legal-but-different value shape is reconciled, rather than each block being rewritten.
+
+### Escalated to the owner, not decided here
+Whether `target` and `rel` should exist at all. Making them real means an object link value in the
+`.motion` format, a migration, and nine printers learning to emit two more attributes. Making them
+formally absent means deleting them from `COMPONENT_LIBRARY.md` § Control kinds. Until that is
+answered, the control shows only what the product can store, which is the honest half of either
+answer — and no user is offered a switch that does nothing.
+
+### Consequences
+- Verified in the browser: a freshly inserted `navbar` shows `Brand link` as `/` with no error, and
+  typing `https://example.com/home` stores that **string** in `brandHref`.
+- `control-renderer.test.tsx` covers the string path, including that the target and `rel` controls are
+  absent for it.
+- Nine controls stop lying about what they will save. None of the nine block schemas changed.
+
+## ADR-356 — A block's breakpoints ask the band, not the browser window
+
+**Date** 2026-09-05 · **Prompt** owner audit · **Status** Accepted
+
+### Question
+The owner switched the artboard to `base` (375 px), inserted a navbar, a hero and a feature grid, and
+got a desktop page in a phone-sized frame: a four-column grid whose cells were ~50 px wide with one
+word per line, an 80 px headline breaking after every second word, and a navbar showing its desktop
+menu with no drawer trigger. "Нет моб видов элементов."
+
+### Cause (measured in the browser)
+The artboard is a `<div style="width: 375px">` inside a 1920 px window — `packages/canvas/src/scene/
+artboard.tsx`. A Tailwind `md:` is `@media (min-width: 768px)`, and a media query reads **the window**.
+So every viewport-prefixed class in every block answered 1920 while the frame was 375. Measured on the
+same document: headline `80px`, grid `4 columns`, `NAVBAR_MENU` displayed, drawer trigger hidden.
+
+`clamp(2.5rem, 6vw, 5rem)` had the same fault for the same reason: `6vw` of 1920 is 115 px, so the
+clamp pinned to its 80 px ceiling on a 375 px frame.
+
+### The options, and what each costs
+| | Preview is honest | Cost |
+| --- | --- | --- |
+| Render the artboard in an `iframe` | Yes — a real viewport per frame | Overlays, hit testing, snapping and DnD all cross a document boundary; the theme stops cascading in; multi-frame means three documents |
+| Container queries on the blocks | Yes — the band is the subject | One pass over the block styles; the container ships with the block, so the export behaves identically |
+| Leave it, document it | No | The editor's core promise is that what you see is what exports |
+
+### Decision
+Container queries. Each block declares `@container/frame` on its own root and its breakpoints are
+`@min-[640px]/frame:` … `@min-[1536px]/frame:`, at the same pixel values `BREAKPOINTS` already names.
+The display type scale's fluid term becomes `cqw`.
+
+The container is the block's, not the canvas's — which is ADR-184's rule, arrived at again from the
+other direction. A container the canvas added would exist in the preview and not in the export, and
+the block would read one width in the studio and another on the page.
+
+### Measured after
+Same document, artboard 375 px, window 1920 px: headline `40px` (the phone value), grid `1 column of
+321px`, drawer trigger visible, desktop menu `display: none`. At `xl` (1280 px artboard): headline
+`73.56px`, grid `4 × 254px` — the desktop arrangement is unchanged.
+
+### Consequences
+- 30 style files converted; every block that queries `/frame` declares it, checked by grepping the two
+  lists against each other. A query with no container silently never matches, so this is not optional.
+- Nested declarations are intentional: a grid inside a narrow column answers for the column.
+- Variant **keys** named `sm`/`md`/`lg` are sizes, not breakpoints, and are untouched. The first pass
+  of the conversion rewrote nine of them and TypeScript caught it immediately.
+- Ten unit tests asserted the viewport prefixes by name and were updated to the container ones.
+- Not chosen: the iframe. It is the only option that also fixes `vw` units the blocks do not use and
+  media queries in user CSS, and it costs the canvas's whole overlay and interaction model.
+
+## ADR-357 — A row of cards is a swipe on a narrow band, and the user picks
+
+**Date** 2026-09-05 · **Prompt** owner audit · **Status** Accepted
+
+### Question
+With ADR-356 in place a six-cell feature grid became six full-width cards stacked on a phone — correct,
+and still not what a marketing page does. The owner: "вместо 100500 блочков сделал бы на телефонах
+слайдер, так более профессионально! или дай 2 вида на выбор юзеру".
+
+### Decision
+A `narrow` prop on the block — `slider` (default) or `stack` — rendered as a segmented control labelled
+"On narrow". Below 640 px `slider` is a scroll-snap track; at 640 px and up both are the same grid.
+
+`slider` is the default because six stacked cards is a page a reader scrolls past rather than reads.
+`stack` stays, because with two or three cards a slider hides content behind a gesture for no gain.
+
+### What the slider owes, and why each part is there
+- **The card is 82 % of the band.** The next one peeks in. A slider with nothing peeking is a slider
+  nobody swipes, and the scrollbar is hidden, so the peek is the only affordance there is.
+- **It bleeds to the edges** — `-mx-6 px-6 scroll-px-6`. Inside the section's gutter the track ended
+  24 px short on both sides and a card leaving the frame looked clipped by an invisible margin rather
+  than running off the screen. The owner caught this one. The padding moves onto the content, so the
+  first card still lines up with the heading above it.
+- **`tabindex="0"` on the list.** A scrollable region has to be reachable without a pointer — WCAG
+  2.1.1. It costs a tab stop in the grid arrangement, which is the cheaper of the two prices.
+- **No `scroll-smooth`.** It would animate the user's own swipe, against a reduced-motion setting.
+
+### Consequences
+- Measured on a 375 px artboard: track 375 px wide (the band's full width), scroll width 1768 px,
+  `scroll-snap-type: x mandatory`, cards 263 px, `tabindex=0`. At `xl`: a four-column grid.
+- The component and the markup producer share `featureGridStyles`, so the export is the same markup —
+  no second implementation to keep in step.
+- `narrow` is the first of the "two arrangements, user picks" props. It is a pattern for the other
+  card blocks — pricing, bento, logos, stats — rather than a one-off here.

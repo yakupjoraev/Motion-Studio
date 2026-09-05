@@ -124,6 +124,21 @@ Label left (fixed 88 px), control right (fills). Labels are `text-xs`,
   Blur         [  8 ]px
 ```
 
+A control whose content is itself a row of controls — the `list` kind — is the exception: it takes
+the full panel width with its label **above** it.
+
+```
+  Features                                          ↺
+  ⠿ Real components                    ▲  ▼  🗑
+  ⠿ Motion you can tune                ▲  ▼  🗑
+```
+
+The reason is arithmetic, not taste. In the 320 px panel the label column takes 88 px and an item
+carries a grip, two reorder buttons and a delete — 128 px that cannot shrink. Beside a label column
+the item name is left **11 px** and shows one character (measured, ADR-352). The threshold is
+**120 px**: item names run 87–111 px at `text-xs`, so anything under that truncates a real name.
+Full width gives the name 134 px.
+
 Rules:
 - Label and control are one click target for focus purposes — clicking the label focuses the
   control.
