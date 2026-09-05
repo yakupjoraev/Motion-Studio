@@ -59,4 +59,10 @@ export interface ControlRowProps {
   readonly onReset?: () => void
   readonly id?: string
   readonly className?: string
+  /**
+   * `stacked` puts the label on its own line and gives the control the panel's full width — what
+   * § Control rows requires of a control built out of controls, because the label column leaves an
+   * item's name 11 px of 320 (ADR-352). Everything else is `inline`.
+   */
+  readonly layout?: 'inline' | 'stacked'
 }

@@ -9,6 +9,8 @@ import {
   controlRowDotSlotStyles,
   controlRowLabelStyles,
   controlRowResetStyles,
+  controlRowStackedLabelStyles,
+  controlRowStackedStyles,
   controlRowStyles,
 } from './control-row.styles'
 
@@ -32,6 +34,7 @@ export function ControlRow({
   onReset,
   id,
   className,
+  layout = 'inline',
 }: ControlRowProps): ReactElement {
   const generated = useId()
   const controlId = id ?? generated
@@ -45,21 +48,46 @@ export function ControlRow({
     document.getElementById(controlId)?.focus()
   }
 
-  return (
-    <div className={cn(controlRowStyles(), className)}>
-      {/* The gutter is reserved whether or not a marker is in it, so labels line up down the panel. */}
-      <span className={controlRowDotSlotStyles()}>{indicator}</span>
+  const stacked = layout === 'stacked'
 
-      <Label
-        id={labelId}
-        htmlFor={controlId}
-        onClick={focusControl}
-        className={controlRowLabelStyles()}
+  const reset = (
+    <span className={controlRowResetStyles({ visible: canReset })}>
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label={`Reset ${label}`}
+        disabled={!canReset}
+        tabIndex={canReset ? undefined : -1}
+        onClick={onReset}
       >
-        {label}
-      </Label>
+        <ReplayIcon size={12} />
+      </Button>
+    </span>
+  )
 
-      <span className={controlRowControlStyles()}>
+  return (
+    <div className={cn(stacked ? controlRowStackedStyles() : controlRowStyles(), className)}>
+      {/*
+       * `contents` in the inline layout: the header's three children stay direct children of the row's
+       * own flex, so one component draws both layouts without the inline one gaining a wrapper.
+       */}
+      <div className={stacked ? 'flex items-center gap-1.5' : 'contents'}>
+        {/* The gutter is reserved whether or not a marker is in it, so labels line up down the panel. */}
+        <span className={controlRowDotSlotStyles()}>{indicator}</span>
+
+        <Label
+          id={labelId}
+          htmlFor={controlId}
+          onClick={focusControl}
+          className={stacked ? controlRowStackedLabelStyles() : controlRowLabelStyles()}
+        >
+          {label}
+        </Label>
+
+        {stacked ? reset : null}
+      </div>
+
+      <span className={stacked ? 'flex min-w-0 flex-col gap-1' : controlRowControlStyles()}>
         {children({ id: controlId, labelledBy: labelId, describedBy: descriptionId, mixed })}
       </span>
 
@@ -69,18 +97,7 @@ export function ControlRow({
         </span>
       )}
 
-      <span className={controlRowResetStyles({ visible: canReset })}>
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label={`Reset ${label}`}
-          disabled={!canReset}
-          tabIndex={canReset ? undefined : -1}
-          onClick={onReset}
-        >
-          <ReplayIcon size={12} />
-        </Button>
-      </span>
+      {stacked ? null : reset}
     </div>
   )
 }

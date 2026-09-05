@@ -22,6 +22,14 @@ export const asString = (value: unknown): string => (typeof value === 'string' ?
 export const asNumber = (value: unknown): number =>
   typeof value === 'number' && Number.isFinite(value) ? value : 0
 
+/**
+ * What a choice control shows as selected. A descriptor may declare its options as numbers (ADR-351),
+ * and `asString` would answer `''` for one — which is Radix's "nothing selected" and would leave a set
+ * property looking unset.
+ */
+export const asOptionValue = (value: unknown): string =>
+  typeof value === 'number' && Number.isFinite(value) ? String(value) : asString(value)
+
 export const asBoolean = (value: unknown): boolean => value === true
 
 const record = (value: unknown): Readonly<Record<string, unknown>> =>
@@ -89,6 +97,11 @@ export const asImage = (value: unknown): ImageValue => {
 }
 
 export const asLink = (value: unknown): LinkValue => {
+  // ADR-354: a bare string is an href — the shape nine blocks' schemas actually store.
+  if (typeof value === 'string') {
+    return { href: value, target: '_self', rel: [] }
+  }
+
   const held = record(value)
   const target = held['target']
   const rel = held['rel']

@@ -160,6 +160,72 @@ describe('ControlRenderer', () => {
     expect(gradientToCss(asGradient('not a gradient'))).toContain('linear-gradient')
   })
 
+  /*
+   * ADR-351. A heading level is `2`, not `'2'` — the block's schema parses a number and the printer
+   * emits one. Before this, numeric options were filtered out as the wrong shape: the panel showed an
+   * empty list and the property could not be set at all, in every marketing block.
+   */
+  it('offers a numeric option, shows it as selected, and commits it as a number', async () => {
+    const onCommit = vi.fn()
+    const numeric = descriptor('select', {
+      options: {
+        options: [
+          { value: 2, label: 'h2' },
+          { value: 3, label: 'h3' },
+        ],
+      },
+    })
+
+    render(
+      <ControlRenderer
+        descriptor={numeric}
+        onChange={() => undefined}
+        onCommit={onCommit}
+        value={2}
+      />,
+    )
+
+    const trigger = await screen.findByRole('combobox')
+
+    // The set value reads as set, rather than as the placeholder a coerced-to-`''` value would show.
+    expect(trigger).toHaveTextContent('h2')
+
+    await userEvent.click(trigger)
+    await userEvent.click(await screen.findByRole('option', { name: 'h3' }))
+
+    expect(onCommit).toHaveBeenCalledWith(3)
+  })
+
+  /*
+   * ADR-354. Nine blocks store a link as a bare href string. Before this, the control read the string
+   * as an object, showed an empty URL field with "Enter a URL." under it on a block that had just been
+   * inserted, and would have committed `{href, target, rel}` into a prop the schema declares a string.
+   */
+  it('edits a link stored as a bare string, and commits a string back', async () => {
+    const onCommit = vi.fn()
+
+    render(
+      <ControlRenderer
+        descriptor={descriptor('link')}
+        onChange={() => undefined}
+        onCommit={onCommit}
+        value="/"
+      />,
+    )
+
+    const url = await screen.findByRole('textbox', { name: 'Value URL' })
+
+    expect(url).toHaveValue('/')
+    // Nothing stores `target` or `rel` for this prop, so the control does not offer them.
+    expect(screen.queryByRole('radiogroup', { name: 'Value target' })).toBeNull()
+    expect(screen.queryByRole('checkbox', { name: 'noopener' })).toBeNull()
+
+    await userEvent.type(url, 'docs')
+    await userEvent.tab()
+
+    expect(onCommit).toHaveBeenLastCalledWith('/docs')
+  })
+
   it('reads a value of the wrong shape as empty rather than as NaN', async () => {
     render(
       <ControlRenderer

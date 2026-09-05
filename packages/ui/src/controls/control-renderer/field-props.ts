@@ -1,7 +1,7 @@
 import type { ControlDescriptor } from '@motion-studio/schema'
 
 import type { ControlRendererProps } from './control-renderer.types'
-import { optionNumber, optionString } from './descriptor-options'
+import { optionDecoder, optionNumber, optionString } from './descriptor-options'
 
 /**
  * The three prop groups every branch of the switch spreads. They are built here so the switch reads
@@ -24,6 +24,25 @@ export function commonProps(props: ControlRendererProps) {
     ...(slot ?? {}),
     ...(disabled === undefined ? {} : { disabled }),
     ...(mixed === undefined ? {} : { mixed: (slot?.mixed ?? false) || mixed }),
+  }
+}
+
+/**
+ * What a choice control — `select`, `segmented` — writes back. The DOM hands every choice over as a
+ * string; this returns it in the type the descriptor declared its options in, so a numeric option
+ * commits the number the block's schema parses rather than a string it rejects (ADR-351).
+ */
+export function choiceProps(props: ControlRendererProps) {
+  const { descriptor, onChange, onCommit } = props
+  const decode = optionDecoder(descriptor)
+
+  return {
+    onChange: (next: string) => {
+      onChange(decode(next))
+    },
+    onCommit: (next: string) => {
+      onCommit(decode(next))
+    },
   }
 }
 

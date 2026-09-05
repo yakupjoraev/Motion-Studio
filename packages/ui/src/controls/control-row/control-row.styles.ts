@@ -31,6 +31,25 @@ export const controlRowLabelStyles = cva([
 
 export const controlRowControlStyles = cva('flex min-w-0 flex-1 items-center gap-1')
 
+/**
+ * The stacked row — § Control rows, ADR-352. A control built out of controls has the panel's whole
+ * width and wears its label above, because the 88 px label column plus an item's own four buttons
+ * leave the item's name 11 px of 320.
+ */
+export const controlRowStackedStyles = cva([
+  'flex flex-col items-stretch gap-1 py-0.5 pr-1',
+  MIN_HEIGHT_CLASS.controlRow,
+])
+
+/**
+ * No fixed column here: the label owns the line, so it truncates against the panel rather than 88 px.
+ * `w-auto` is load-bearing — `Label` carries `LABEL_COLUMN_CLASS` itself, and `flex-1` does not
+ * override a width, so without it the stacked label stays 88 px wide.
+ */
+export const controlRowStackedLabelStyles = cva(
+  'w-auto min-w-0 flex-1 truncate text-foreground-muted text-xs',
+)
+
 /** Held in the layout even when hidden: a row must not reflow when a value starts differing. */
 export const controlRowResetStyles = cva('shrink-0', {
   variants: { visible: { true: '', false: 'invisible' } },

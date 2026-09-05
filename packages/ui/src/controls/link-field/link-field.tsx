@@ -30,10 +30,14 @@ function LinkFieldImpl({
   disabled = false,
   mixed = false,
   className,
+  hrefOnly = false,
 }: LinkFieldProps): ReactElement {
   const generated = useId()
   const groupId = id ?? generated
-  const issue = mixed ? null : (hrefIssue(value.href) ?? relIssue(value.target, value.rel))
+  // With no `rel` to store, `relIssue` has nothing to judge: it reports a `_blank` without `noopener`.
+  const issue = mixed
+    ? null
+    : (hrefIssue(value.href) ?? (hrefOnly ? null : relIssue(value.target, value.rel)))
   const issueId = issue === null ? undefined : `${groupId}-issue`
   const described = [describedBy, issueId].filter((part) => part !== undefined)
 
@@ -69,35 +73,41 @@ function LinkFieldImpl({
         onCommit={(href) => onCommit({ ...value, href })}
       />
 
-      <SegmentedField
-        label={`${label} target`}
-        value={value.target}
-        options={TARGETS}
-        disabled={disabled}
-        mixed={mixed}
-        onChange={() => undefined}
-        onCommit={(target) => edit({ ...value, target: target === '_blank' ? '_blank' : '_self' })}
-      />
+      {hrefOnly ? null : (
+        <>
+          <SegmentedField
+            label={`${label} target`}
+            value={value.target}
+            options={TARGETS}
+            disabled={disabled}
+            mixed={mixed}
+            onChange={() => undefined}
+            onCommit={(target) =>
+              edit({ ...value, target: target === '_blank' ? '_blank' : '_self' })
+            }
+          />
 
-      <span className="flex flex-wrap items-center gap-2">
-        {REL_TOKENS.map((token) => {
-          const tokenId = `${groupId}-${token}`
+          <span className="flex flex-wrap items-center gap-2">
+            {REL_TOKENS.map((token) => {
+              const tokenId = `${groupId}-${token}`
 
-          return (
-            <span key={token} className="flex items-center gap-1">
-              <Checkbox
-                id={tokenId}
-                checked={value.rel.includes(token)}
-                disabled={disabled}
-                onCheckedChange={(checked) => toggleRel(token, checked === true)}
-              />
-              <Label htmlFor={tokenId} className="text-2xs text-foreground-muted">
-                {token}
-              </Label>
-            </span>
-          )
-        })}
-      </span>
+              return (
+                <span key={token} className="flex items-center gap-1">
+                  <Checkbox
+                    id={tokenId}
+                    checked={value.rel.includes(token)}
+                    disabled={disabled}
+                    onCheckedChange={(checked) => toggleRel(token, checked === true)}
+                  />
+                  <Label htmlFor={tokenId} className="text-2xs text-foreground-muted">
+                    {token}
+                  </Label>
+                </span>
+              )
+            })}
+          </span>
+        </>
+      )}
 
       {issue === null ? null : (
         <p id={issueId} className="text-2xs text-danger">

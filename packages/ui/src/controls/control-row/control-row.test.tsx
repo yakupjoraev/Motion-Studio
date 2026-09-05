@@ -69,6 +69,32 @@ describe('ControlRow', () => {
     expect(screen.getByTestId('composite')).toHaveAccessibleDescription('Overridden at Medium')
   })
 
+  /*
+   * ADR-352. The stacked row exists so a list item's name is not squeezed to 11 px by the 88 px label
+   * column. jsdom lays nothing out, so what is asserted is the cause: the label carries the fixed
+   * column in the inline layout and does not in the stacked one, while both keep the same wiring.
+   */
+  it('drops the fixed label column when it is stacked, and keeps it otherwise', () => {
+    const { rerender } = render(<ControlRow label="Radius">{Composite}</ControlRow>)
+
+    expect(screen.getByText('Radius').className).toContain('w-[88px]')
+    expect(screen.getByText('Radius').className).not.toContain('w-auto')
+
+    rerender(
+      <ControlRow label="Radius" layout="stacked">
+        {Composite}
+      </ControlRow>,
+    )
+
+    const label = screen.getByText('Radius')
+
+    // `Label` carries the column itself, so what proves the column is gone is `w-auto` winning it.
+    expect(label.className).toContain('w-auto')
+    // Still the control's label, so the stacked layout costs nothing in the accessibility tree.
+    expect(screen.getByTestId('composite')).toHaveAccessibleName('Radius')
+    expect(label).toHaveAttribute('for', screen.getByTestId('composite').getAttribute('id'))
+  })
+
   it('offers the reset affordance without a marker when the value merely differs', () => {
     render(
       <ControlRow label="Radius" modified onReset={() => undefined}>

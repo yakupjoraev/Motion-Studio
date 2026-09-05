@@ -30,17 +30,46 @@ export const optionBoolean = (descriptor: ControlDescriptor, key: string): boole
   return typeof value === 'boolean' ? value : undefined
 }
 
-const isOption = (value: unknown): value is { value: string; label: string } =>
+/**
+ * A choice's value reaches the DOM as a string, but a descriptor may legitimately declare it as a
+ * number — a heading level is `2`, not `'2'`, because that is what the block's schema parses and what
+ * the printer emits. So a number is a legal option value here, printed as a string by `selectOptions`
+ * and turned back into a number by `optionDecoder` when the choice is committed (ADR-351).
+ */
+const isOption = (value: unknown): value is { value: string | number; label: string } =>
   typeof value === 'object' &&
   value !== null &&
-  typeof (value as { value?: unknown }).value === 'string' &&
+  (typeof (value as { value?: unknown }).value === 'string' ||
+    typeof (value as { value?: unknown }).value === 'number') &&
   typeof (value as { label?: unknown }).label === 'string'
 
 /** A control with no legal options renders an empty list, which reads as "nothing to choose". */
 export function selectOptions(descriptor: ControlDescriptor): readonly SelectOption[] {
   const raw = bag(descriptor)['options']
 
-  return Array.isArray(raw) ? raw.filter(isOption).map((one) => ({ ...one })) : []
+  return Array.isArray(raw)
+    ? raw.filter(isOption).map((one) => ({ ...one, value: String(one.value) }))
+    : []
+}
+
+/**
+ * The inverse of the `String()` above: what a control hands back, in the type the descriptor declared
+ * it in. A value the descriptor never offered passes through unchanged rather than being invented —
+ * the store's guard is what rejects it, and it does so with the value the user's action produced.
+ */
+export function optionDecoder(descriptor: ControlDescriptor): (chosen: string) => string | number {
+  const raw = bag(descriptor)['options']
+  const numeric = new Map<string, number>()
+
+  if (Array.isArray(raw)) {
+    for (const one of raw) {
+      if (isOption(one) && typeof one.value === 'number') {
+        numeric.set(String(one.value), one.value)
+      }
+    }
+  }
+
+  return (chosen) => numeric.get(chosen) ?? chosen
 }
 
 /** A segmented option needs its own visible content; a scale name is its own best rendering. */

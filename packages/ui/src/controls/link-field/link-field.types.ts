@@ -8,4 +8,10 @@ export interface LinkValue {
   readonly rel: readonly string[]
 }
 
-export type LinkFieldProps = ValueControlProps<LinkValue>
+export interface LinkFieldProps extends ValueControlProps<LinkValue> {
+  /**
+   * The prop behind this control holds a bare href string, so `target` and `rel` have nowhere to be
+   * stored and nothing prints them — ADR-354. They are hidden rather than shown and ignored.
+   */
+  readonly hrefOnly?: boolean | undefined
+}

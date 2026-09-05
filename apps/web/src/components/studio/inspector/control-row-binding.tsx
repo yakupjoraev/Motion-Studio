@@ -26,6 +26,8 @@ function ControlRowBindingImpl({ descriptor, nodeIds }: ControlRowBindingProps) 
     <ControlRow
       indicator={<OverrideIndicator state={override} />}
       label={descriptor.label}
+      // § Control rows: a list is a control made of controls, so it takes the width (ADR-352).
+      layout={descriptor.kind === 'list' ? 'stacked' : 'inline'}
       mixed={mixed}
       modified={modified}
       onReset={onReset}

@@ -10,6 +10,7 @@ import { SwitchField } from '../switch-field/index'
 import { TextField } from '../text-field/index'
 import { TextareaField } from '../textarea-field/index'
 
+import type { LinkValue } from '../link-field/index'
 import {
   asAlign,
   asBoolean,
@@ -18,11 +19,13 @@ import {
   asImage,
   asLink,
   asNumber,
+  asOptionValue,
   asRadius,
   asShadow,
   asSpacing,
   asString,
 } from './coerce'
+
 import type { ControlRendererProps } from './control-renderer.types'
 import {
   AlignField,
@@ -47,7 +50,7 @@ import {
   segmentedOptions,
   selectOptions,
 } from './descriptor-options'
-import { boundsProps, commonProps, textProps } from './field-props'
+import { boundsProps, choiceProps, commonProps, textProps } from './field-props'
 
 /**
  * One `switch` over `ControlDescriptor.kind`, exhaustive by `assertNever`: adding a kind to
@@ -98,13 +101,21 @@ export function ControlFields(props: ControlRendererProps): ReactElement {
     case 'stepper':
       return <StepperField {...common} {...bounds} value={asNumber(value)} />
     case 'select':
-      return <SelectField {...common} options={selectOptions(descriptor)} value={asString(value)} />
+      return (
+        <SelectField
+          {...common}
+          {...choiceProps(props)}
+          options={selectOptions(descriptor)}
+          value={asOptionValue(value)}
+        />
+      )
     case 'segmented':
       return (
         <SegmentedField
           {...common}
+          {...choiceProps(props)}
           options={segmentedOptions(descriptor)}
-          value={asString(value)}
+          value={asOptionValue(value)}
         />
       )
     case 'switch':
@@ -194,12 +205,34 @@ export function ControlFields(props: ControlRendererProps): ReactElement {
           <IconControl {...common} value={value} />
         </Deferred>
       )
-    case 'link':
+    /*
+     * ADR-354. Nine blocks declare a `link` control over a prop their schema stores as a bare href
+     * string, and their printers emit only `href`. The control follows the value it is given: a
+     * string edits as a URL alone and commits a string, an object gets the full three-part editor.
+     */
+    case 'link': {
+      const plain = typeof value === 'string'
+
       return (
         <Deferred>
-          <LinkField {...common} value={asLink(value)} />
+          <LinkField
+            {...common}
+            hrefOnly={plain}
+            value={asLink(value)}
+            {...(plain
+              ? {
+                  onChange: (next: LinkValue) => {
+                    props.onChange(next.href)
+                  },
+                  onCommit: (next: LinkValue) => {
+                    props.onCommit(next.href)
+                  },
+                }
+              : {})}
+          />
         </Deferred>
       )
+    }
     case 'list':
       return (
         <Deferred>
