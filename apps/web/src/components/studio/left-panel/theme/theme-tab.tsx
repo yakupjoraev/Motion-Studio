@@ -4,6 +4,7 @@ import { PRESETS, type PresetId } from '@motion-studio/theme'
 import { Button, ScrollArea } from '@motion-studio/ui'
 import { useState } from 'react'
 
+import { useStudio } from '../../../../lib/i18n/studio-surface'
 import { useStudioStore } from '../../../../store/editor-store'
 
 import { ContrastReport } from './contrast-report'
@@ -30,6 +31,7 @@ const isPresetId = (id: string): id is PresetId => Object.hasOwn(PRESETS, id)
  * repaints at 60 fps with no React render and the whole session is one undo step per control.
  */
 export function ThemeTab() {
+  const { theme: copy } = useStudio()
   const { config } = useThemeEdit()
   const applyPreset = useStudioStore((state) => state.applyThemePreset)
   const setTheme = useStudioStore((state) => state.setTheme)
@@ -56,27 +58,27 @@ export function ThemeTab() {
   return (
     <ScrollArea className="h-full">
       <div className="flex flex-col gap-4 p-2" data-testid="theme-tab">
-        <ThemeSection title="Mode">
+        <ThemeSection title={copy.mode}>
           <ModeToggle />
         </ThemeSection>
 
-        <ThemeSection title="Preset">
+        <ThemeSection title={copy.preset}>
           <PresetPicker activeId={config.id} custom={custom} />
         </ThemeSection>
 
-        <ThemeSection title="Palette">
+        <ThemeSection title={copy.palette}>
           <PaletteControls />
         </ThemeSection>
 
-        <ThemeSection title="Scales">
+        <ThemeSection title={copy.scales}>
           <ScaleControls />
         </ThemeSection>
 
-        <ThemeSection title="Typography">
+        <ThemeSection title={copy.typography}>
           <TypographyControls />
         </ThemeSection>
 
-        <ThemeSection title="Surface">
+        <ThemeSection title={copy.surface}>
           <SurfaceControls />
         </ThemeSection>
 
@@ -87,13 +89,13 @@ export function ThemeTab() {
             disabled={reset === undefined}
             onClick={reset}
             size="sm"
-            title={reset === undefined ? 'This theme is not based on a preset' : undefined}
+            title={reset === undefined ? copy.resetDisabled : undefined}
             variant="ghost"
           >
-            Reset
+            {copy.reset}
           </Button>
           <Button onClick={() => setNaming(true)} size="sm" variant="secondary">
-            Save as preset
+            {copy.saveAsPreset}
           </Button>
           <ExportTokensDialog config={config} />
         </div>

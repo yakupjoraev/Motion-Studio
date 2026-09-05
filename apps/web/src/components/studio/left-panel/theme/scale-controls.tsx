@@ -2,6 +2,7 @@
 
 import type { SegmentedOption } from '@motion-studio/ui'
 
+import { useStudio } from '../../../../lib/i18n/studio-surface'
 import { ThemeSegmentedRow } from './theme-segmented-row'
 import { useThemeEdit } from './use-theme-edit'
 
@@ -46,33 +47,34 @@ const ELEVATION = options([
 ])
 
 export function ScaleControls() {
+  const { theme: copy } = useStudio()
   const { config, set } = useThemeEdit()
 
   return (
     <>
       <ThemeSegmentedRow
-        label="Radius"
+        label={copy.radius}
         onSelect={(value) => set('radiusScale', Number(value))}
         options={RADIUS}
         value={String(config.radiusScale)}
       />
 
       <ThemeSegmentedRow
-        label="Spacing"
+        label={copy.spacing}
         onSelect={(value) => set('spacingScale', Number(value))}
         options={SPACING}
         value={String(config.spacingScale)}
       />
 
       <ThemeSegmentedRow
-        label="Motion"
+        label={copy.motion}
         onSelect={(value) => set('motionScale', Number(value))}
         options={MOTION}
         value={String(config.motionScale)}
       />
 
       <ThemeSegmentedRow
-        label="Elevation"
+        label={copy.elevation}
         onSelect={(value) => set('elevationStyle', value)}
         options={ELEVATION}
         value={config.elevationStyle}

@@ -5,6 +5,7 @@ import { PRESETS, type PresetId, type ThemeConfig } from '@motion-studio/theme'
 import { Button, Dropdown } from '@motion-studio/ui'
 import { useState } from 'react'
 
+import { useStudio } from '../../../../lib/i18n/studio-surface'
 import { useStudioStore } from '../../../../store/editor-store'
 
 import { PresetCard } from './preset-card'
@@ -27,6 +28,7 @@ export interface PresetPickerProps {
  * whose id it cannot — ADR-173.
  */
 export function PresetPicker({ activeId, custom }: PresetPickerProps) {
+  const { theme: copy } = useStudio()
   const applyPreset = useStudioStore((state) => state.applyThemePreset)
   const setTheme = useStudioStore((state) => state.setTheme)
   const [renaming, setRenaming] = useState<string | null>(null)
@@ -47,7 +49,7 @@ export function PresetPicker({ activeId, custom }: PresetPickerProps) {
       {custom.presets.length === 0 ? null : (
         <>
           <h3 className="px-1 font-medium text-[11px] text-foreground-subtle uppercase tracking-wide">
-            Saved
+            {copy.saved}
           </h3>
           <div className="grid grid-cols-2 gap-2" data-testid="theme-saved-presets">
             {custom.presets.map((preset) =>
@@ -69,12 +71,12 @@ export function PresetPicker({ activeId, custom }: PresetPickerProps) {
                       items={[
                         {
                           id: 'rename',
-                          label: 'Rename',
+                          label: copy.rename,
                           onSelect: () => setRenaming(preset.id),
                         },
                         {
                           id: 'delete',
-                          label: 'Delete',
+                          label: copy.delete,
                           danger: true,
                           onSelect: () => custom.remove(preset.id),
                         },

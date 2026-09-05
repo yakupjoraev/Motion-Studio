@@ -4,6 +4,11 @@ import { WarningIcon } from '@motion-studio/icons'
 import type { ThemeResolution } from '@motion-studio/theme'
 import { useEffect, useState } from 'react'
 
+import type { Dictionary } from '../../../../lib/i18n/dictionary'
+import { useLocale } from '../../../../lib/i18n/locale-context'
+import type { Locale } from '../../../../lib/i18n/locales'
+import { formatPlural } from '../../../../lib/i18n/plural'
+import { useStudio } from '../../../../lib/i18n/studio-surface'
 import { contrastNoticeCount } from './contrast-count'
 import { ContrastRepairItem } from './contrast-repair-item'
 import { useThemeEdit } from './use-theme-edit'
@@ -11,20 +16,24 @@ import { useThemeEdit } from './use-theme-edit'
 /** 500 ms, the same debounce the playground's diagnostics use — `ACCESSIBILITY.md` § Playground. */
 const ANNOUNCE_DELAY_MS = 500
 
-const summarise = (resolution: ThemeResolution): string => {
+const summarise = (
+  resolution: ThemeResolution,
+  copy: Dictionary['studio']['theme'],
+  locale: Locale,
+): string => {
   const total = contrastNoticeCount(resolution)
 
   if (total === 0) {
-    return 'Contrast passes.'
+    return copy.contrastPassesShort
   }
 
   const repaired = resolution.repairs.length
   const kept = resolution.overrides.length
   const unfixable = resolution.warnings.length
   const parts = [
-    repaired === 0 ? '' : `${repaired} contrast repair${repaired === 1 ? '' : 's'}`,
-    kept === 0 ? '' : `${kept} kept at your request`,
-    unfixable === 0 ? '' : `${unfixable} pair${unfixable === 1 ? '' : 's'} no step can fix`,
+    repaired === 0 ? '' : formatPlural(locale, repaired, copy.contrastRepairs),
+    kept === 0 ? '' : copy.contrastKept.replace('{count}', String(kept)),
+    unfixable === 0 ? '' : formatPlural(locale, unfixable, copy.contrastUnfixable),
   ]
 
   return `${parts.filter((part) => part !== '').join(', ')}.`
@@ -42,8 +51,10 @@ export interface ContrastReportProps {
  * narrate every intermediate ratio — `ACCESSIBILITY.md` § Contrast.
  */
 export function ContrastReport({ resolution }: ContrastReportProps) {
+  const { theme: copy } = useStudio()
+  const { locale } = useLocale()
   const { set } = useThemeEdit()
-  const summary = summarise(resolution)
+  const summary = summarise(resolution, copy, locale)
   const [announced, setAnnounced] = useState(summary)
 
   useEffect(() => {
@@ -55,12 +66,12 @@ export function ContrastReport({ resolution }: ContrastReportProps) {
   const notices = [...resolution.repairs, ...resolution.overrides]
 
   return (
-    <section aria-label="Contrast" className="flex flex-col gap-2">
+    <section aria-label={copy.contrast} className="flex flex-col gap-2">
       {/* An `output` rather than a `div` with `role="status"`: same implicit role, one element. */}
       <output className="sr-only">{announced}</output>
 
       {notices.length === 0 && resolution.warnings.length === 0 ? (
-        <p className="px-1 text-[11px] text-foreground-subtle">Contrast passes in this mode.</p>
+        <p className="px-1 text-[11px] text-foreground-subtle">{copy.contrastPasses}</p>
       ) : (
         <p className="flex items-center gap-1.5 px-1 font-medium text-[11px] text-warning">
           <WarningIcon aria-hidden="true" size={12} />

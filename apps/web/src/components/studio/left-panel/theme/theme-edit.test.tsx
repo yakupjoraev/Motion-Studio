@@ -1,7 +1,7 @@
 import { createEmptyDocument, nodeId } from '@motion-studio/schema'
 import { PRESETS } from '@motion-studio/theme'
-import { act, render, renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it } from 'vitest'
+import { act, render, renderHook } from '../../../../test/render'
 
 import { ToastProvider } from '@motion-studio/ui'
 import { useStudioStore } from '../../../../store/editor-store'
