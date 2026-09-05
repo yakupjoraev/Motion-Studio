@@ -1,9 +1,9 @@
 import { blockRegistry } from '@motion-studio/blocks/registry'
 import { ToastProvider } from '@motion-studio/ui'
-import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { axe } from 'jest-axe'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { render, screen, within } from '../../../../test/render'
 
 import { useStudioStore } from '../../../../store/editor-store'
 import { DndHost } from '../../dnd-host'

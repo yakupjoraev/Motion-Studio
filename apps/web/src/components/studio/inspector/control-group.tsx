@@ -1,8 +1,10 @@
 'use client'
 
+import { controlLabel } from '@motion-studio/blocks/i18n/translate'
 import { Collapsible } from '@motion-studio/ui'
 import type { ReactNode } from 'react'
 
+import { useRegistryCopy } from '../../../lib/i18n/studio-surface'
 import { useStudioStore } from '../../../store/editor-store'
 
 export interface ControlGroupProps {
@@ -18,6 +20,7 @@ export interface ControlGroupProps {
  * `use-persisted-sections` is what carries that across a reload.
  */
 export function ControlGroup({ id, label, children }: ControlGroupProps) {
+  const copy = useRegistryCopy()
   const open = useStudioStore((state) => state.ui.rightPanel.openSections[id] ?? true)
   const setSectionOpen = useStudioStore((state) => state.setSectionOpen)
 
@@ -32,7 +35,7 @@ export function ControlGroup({ id, label, children }: ControlGroupProps) {
           className="font-medium text-2xs uppercase tracking-[0.06em]"
           data-testid={`section-${id}`}
         >
-          {label}
+          {controlLabel(copy, label)}
         </span>
       }
       triggerClassName="sticky top-0 z-10 bg-surface-1 px-3"

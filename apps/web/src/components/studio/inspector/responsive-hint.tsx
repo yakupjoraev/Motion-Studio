@@ -4,6 +4,8 @@ import { InfoIcon, XIcon } from '@motion-studio/icons'
 import { Button } from '@motion-studio/ui'
 import type { ReactElement } from 'react'
 
+import { useStudio } from '../../../lib/i18n/studio-surface'
+
 import { useStudioStore } from '../../../store/editor-store'
 
 import { dismissResponsiveHint, useResponsiveHintVisible } from './use-responsive-edit'
@@ -17,6 +19,7 @@ import { dismissResponsiveHint, useResponsiveHintVisible } from './use-responsiv
  * the element carries that role implicitly.
  */
 export function ResponsiveHint(): ReactElement | null {
+  const { panels } = useStudio()
   const visible = useResponsiveHintVisible()
   const breakpoint = useStudioStore((state) => state.viewport.breakpoint)
 
@@ -34,7 +37,12 @@ export function ResponsiveHint(): ReactElement | null {
         You’re editing <span className="font-medium text-foreground">{breakpoint}</span> and up.
         Switch to base to change all sizes.
       </p>
-      <Button aria-label="Dismiss hint" onClick={dismissResponsiveHint} size="icon" variant="ghost">
+      <Button
+        aria-label={panels.dismissHint}
+        onClick={dismissResponsiveHint}
+        size="icon"
+        variant="ghost"
+      >
         <XIcon size={12} />
       </Button>
     </output>

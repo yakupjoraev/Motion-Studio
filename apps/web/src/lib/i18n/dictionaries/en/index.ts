@@ -3,6 +3,7 @@ import { errors } from './errors'
 import { gallery } from './gallery'
 import { landing } from './landing'
 import { nav } from './nav'
+import { studio } from './studio'
 
 /**
  * The English dictionary, and — through `typeof` — the shape every other locale answers. Split by
@@ -15,4 +16,5 @@ export const en = {
   landing,
   gallery,
   docs,
+  studio,
 }

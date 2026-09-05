@@ -4,6 +4,7 @@ import { PanelLeftIcon, PanelRightIcon, SearchIcon } from '@motion-studio/icons'
 import { Button, Kbd, Separator } from '@motion-studio/ui'
 
 import type { PanelSide } from '../../../hooks/panel-layout'
+import { useStudio } from '../../../lib/i18n/studio-surface'
 
 import { BreakpointSwitcher } from './breakpoint-switcher'
 import { EditMenu } from './edit-menu'
@@ -21,10 +22,12 @@ export interface TopBarProps {
 
 /** § Density scale: 48 px, hairline below, no shadow — depth in the chrome comes from value. */
 export function TopBar({ leftOpen, rightOpen, onTogglePanel }: TopBarProps) {
+  const { chrome } = useStudio()
+
   return (
     <header className="col-span-3 flex h-[48px] items-center gap-2 border-border border-b bg-surface-1 px-2">
       <Button
-        aria-label="Toggle left panel"
+        aria-label={chrome.toggleLeftPanel}
         aria-pressed={leftOpen}
         onClick={() => onTogglePanel('left')}
         size="icon"
@@ -33,7 +36,7 @@ export function TopBar({ leftOpen, rightOpen, onTogglePanel }: TopBarProps) {
         <PanelLeftIcon size={20} />
       </Button>
 
-      <span className="px-1 font-medium text-sm tracking-tight">Motion Studio</span>
+      <span className="px-1 font-medium text-sm tracking-tight">{chrome.brand}</span>
 
       <Separator className="mx-1 h-4" orientation="vertical" />
 

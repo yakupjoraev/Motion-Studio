@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { fireEvent, render, screen, within } from '../../../test/render'
 
 import { useStudioStore } from '../../../store/editor-store'
 import type { StudioShortcutContext } from '../shortcuts/shortcut.types'

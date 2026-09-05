@@ -1,7 +1,7 @@
 import { commands } from '@motion-studio/editor'
 import { type NodeId, blockId, createEmptyDocument, nodeId } from '@motion-studio/schema'
-import { act, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it } from 'vitest'
+import { act, render, screen } from '../../../test/render'
 
 import { useStudioStore } from '../../../store/editor-store'
 

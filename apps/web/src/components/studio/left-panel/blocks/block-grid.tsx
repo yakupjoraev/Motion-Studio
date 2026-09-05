@@ -4,6 +4,8 @@ import type { BlockDefinition } from '@motion-studio/schema'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { type KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
+import { useStudio } from '../../../../lib/i18n/studio-surface'
+
 import { BlockCard } from './block-card'
 
 export const BLOCK_GRID_ID = 'block-grid'
@@ -96,6 +98,7 @@ export interface BlockGridProps {
  * by construction rather than by a second code path that only runs once the catalogue grows.
  */
 export function BlockGrid({ blocks, onInsert }: BlockGridProps) {
+  const { panels } = useStudio()
   const scrollRef = useRef<HTMLDivElement>(null)
   const gridRef = useRef<HTMLDivElement>(null)
   const [focusedIndex, setFocusedIndex] = useState(0)
@@ -176,7 +179,7 @@ export function BlockGrid({ blocks, onInsert }: BlockGridProps) {
   return (
     <div className="h-full overflow-y-auto" data-testid="block-grid-scroll" ref={scrollRef}>
       <div
-        aria-label="Blocks"
+        aria-label={panels.blocks}
         aria-rowcount={rows.length}
         className="relative w-full"
         id={BLOCK_GRID_ID}

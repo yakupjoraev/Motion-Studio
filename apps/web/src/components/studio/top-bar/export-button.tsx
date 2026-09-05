@@ -3,10 +3,12 @@
 import { ExportIcon } from '@motion-studio/icons'
 import { Button, Kbd } from '@motion-studio/ui'
 
+import { useStudio } from '../../../lib/i18n/studio-surface'
 import { useStudioStore } from '../../../store/editor-store'
 
 /** The one accent-carrying control in the chrome — § Character. */
 export function ExportButton() {
+  const { chrome } = useStudio()
   const setOpen = useStudioStore((state) => state.setExportDialogOpen)
 
   return (
@@ -22,7 +24,7 @@ export function ExportButton() {
       size="sm"
       variant="primary"
     >
-      Export
+      {chrome.export}
       <Kbd keys="Mod+Shift+E" />
     </Button>
   )

@@ -5,6 +5,10 @@ import { type MotionPreset, PRESETS } from '@motion-studio/motion'
 import { Button, EmptyState, Input, ScrollArea } from '@motion-studio/ui'
 import { useCallback, useMemo, useState } from 'react'
 
+import { useLocale } from '../../../lib/i18n/locale-context'
+import { formatPlural } from '../../../lib/i18n/plural'
+import { useStudio } from '../../../lib/i18n/studio-surface'
+
 import { useStudioStore } from '../../../store/editor-store'
 import { applyPreset, targetsFor } from '../motion/apply-preset'
 
@@ -37,6 +41,8 @@ const CHIPS = CHANNELS.map(({ channel, label }) => ({
  * the two tabs are learned once.
  */
 export function MotionTab() {
+  const { panels } = useStudio()
+  const { locale } = useLocale()
   const [query, setQuery] = useState('')
   const { presets, query: applied } = usePresetSearch(query)
   const channels = useSelectedChannels()
@@ -76,7 +82,7 @@ export function MotionTab() {
   )
 
   if (PRESETS.length === 0) {
-    return <EmptyState className="h-full" message="No motion presets are registered." />
+    return <EmptyState className="h-full" message={panels.noPresets} />
   }
 
   const filtering = applied !== '' || channels.size > 0
@@ -85,9 +91,9 @@ export function MotionTab() {
     <div className="flex h-full flex-col" data-testid="motion-tab">
       <div className="flex flex-col gap-2 border-border border-b p-2">
         <Input
-          aria-label="Search presets"
+          aria-label={panels.searchPresets}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search presets"
+          placeholder={panels.searchPresets}
           prefix={<SearchIcon size={12} />}
           role="searchbox"
           type="search"
@@ -95,7 +101,7 @@ export function MotionTab() {
         />
         <FilterChips
           chips={CHIPS}
-          label="Motion channels"
+          label={panels.motionChannels}
           onToggle={toggleChannel}
           selected={channels}
           testId="channel-filter"
@@ -105,9 +111,7 @@ export function MotionTab() {
           className="px-1 text-[11px] text-foreground-muted"
           data-testid="preset-count"
         >
-          {filtering
-            ? `${presets.length} ${presets.length === 1 ? 'preset' : 'presets'} match`
-            : ''}
+          {filtering ? formatPlural(locale, presets.length, panels.presetsMatch) : ''}
         </output>
       </div>
 
@@ -116,12 +120,14 @@ export function MotionTab() {
           <EmptyState
             action={
               <Button onClick={reset} size="sm" variant="secondary">
-                Clear search
+                {panels.clearSearch}
               </Button>
             }
             className="h-full"
             message={
-              applied === '' ? 'No presets in these channels.' : `No presets match “${applied}”.`
+              applied === ''
+                ? panels.noPresetsInChannels
+                : panels.noPresetsMatch.replace('{query}', applied)
             }
           />
         ) : (

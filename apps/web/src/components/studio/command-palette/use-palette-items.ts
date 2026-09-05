@@ -6,6 +6,9 @@ import { effectId } from '@motion-studio/schema'
 import { type PresetId, PRESETS as THEME_PRESETS } from '@motion-studio/theme'
 import { useMemo } from 'react'
 
+import { blockName, controlLabel } from '@motion-studio/blocks/i18n/translate'
+
+import { useRegistryCopy, useStudio } from '../../../lib/i18n/studio-surface'
 import { deferredBlockRegistry } from '../../../store/block-registry'
 import { useStudioStore } from '../../../store/editor-store'
 import { insertBlockAtSelection } from '../left-panel/blocks/use-insert-block'
@@ -56,6 +59,8 @@ const GROUP_FOR_SHORTCUT: Readonly<Record<string, PaletteGroup>> = {
  * it costs more than rendering it, and neither has to happen on a keystroke.
  */
 export function usePaletteItems(context: StudioShortcutContext): readonly PaletteItem[] {
+  const { chrome } = useStudio()
+  const registry = useRegistryCopy()
   const version = useStudioStore((state) => state.version)
   const selectionKey = useStudioStore((state) => state.selection.ids.join(' '))
 
@@ -71,7 +76,9 @@ export function usePaletteItems(context: StudioShortcutContext): readonly Palett
 
       items.push({
         id: `shortcut:${shortcut.id}`,
-        label: shortcut.label,
+        // The registry declares its labels in English (ADR-365); the palette shows the
+        // language the session is in.
+        label: chrome.shortcutLabels[shortcut.label] ?? shortcut.label,
         group: GROUP_FOR_SHORTCUT[shortcut.group] ?? 'Document',
         keywords: shortcut.keywords ?? [],
         shortcut: shortcut.keys,
@@ -86,7 +93,10 @@ export function usePaletteItems(context: StudioShortcutContext): readonly Palett
 
       items.push({
         id: `block:${definition.id}`,
-        label: isEffect ? `Add ${definition.name}` : `Insert ${definition.name}`,
+        label: (isEffect ? chrome.paletteAdd : chrome.paletteInsert).replace(
+          '{name}',
+          blockName(registry, definition.id, definition.name),
+        ),
         group: isEffect ? 'Effects' : 'Insert',
         keywords: [definition.category, ...definition.tags],
         available: isEffect ? target !== undefined : true,
@@ -114,7 +124,7 @@ export function usePaletteItems(context: StudioShortcutContext): readonly Palett
     for (const preset of MOTION_PRESETS) {
       items.push({
         id: `preset:${preset.id}`,
-        label: `Apply ${preset.name}`,
+        label: chrome.paletteApply.replace('{name}', controlLabel(registry, preset.name)),
         group: 'Motion',
         keywords: [preset.channel, preset.engine, 'motion'],
         available: state.selection.ids.length > 0,
@@ -125,7 +135,7 @@ export function usePaletteItems(context: StudioShortcutContext): readonly Palett
     for (const [id, preset] of Object.entries(THEME_PRESETS)) {
       items.push({
         id: `theme:${id}`,
-        label: `Theme: ${preset.name}`,
+        label: chrome.paletteTheme.replace('{name}', preset.name),
         group: 'Theme',
         keywords: ['theme', 'palette'],
         available: true,
@@ -136,7 +146,7 @@ export function usePaletteItems(context: StudioShortcutContext): readonly Palett
     for (const node of Object.values(state.document.nodes)) {
       items.push({
         id: `layer:${node.id}`,
-        label: `Select ${node.name}`,
+        label: chrome.paletteSelect.replace('{name}', node.name),
         group: 'Layer',
         keywords: [node.blockId],
         available: true,
@@ -145,5 +155,5 @@ export function usePaletteItems(context: StudioShortcutContext): readonly Palett
     }
 
     return items
-  }, [context, version, selectionKey])
+  }, [chrome, context, registry, version, selectionKey])
 }

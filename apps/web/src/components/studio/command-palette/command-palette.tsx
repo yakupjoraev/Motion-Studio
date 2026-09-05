@@ -4,6 +4,7 @@ import { Dialog } from '@motion-studio/ui'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
+import { useStudio } from '../../../lib/i18n/studio-surface'
 import { useStudioStore } from '../../../store/editor-store'
 import { PaletteCombobox } from '../../palette/palette-combobox'
 import type { StudioShortcutContext } from '../shortcuts/shortcut.types'
@@ -22,6 +23,7 @@ const LIST_HEIGHT = 320
  * keyboard. The combobox itself is shared with the docs site — ADR-310.
  */
 export function CommandPalette({ context }: { readonly context: StudioShortcutContext }) {
+  const { chrome } = useStudio()
   const setOpen = useStudioStore((state) => state.setCommandPaletteOpen)
   const items = usePaletteItems(context)
   const { recent, remember } = useRecentItems()
@@ -82,11 +84,11 @@ export function CommandPalette({ context }: { readonly context: StudioShortcutCo
 
   return (
     <Dialog
-      description="Search every command, block, preset, theme and layer."
+      description={chrome.paletteDescription}
       onOpenChange={setOpen}
       open
       size="lg"
-      title="Command palette"
+      title={chrome.paletteTitle}
     >
       <PaletteCombobox
         active={active}
@@ -94,18 +96,18 @@ export function CommandPalette({ context }: { readonly context: StudioShortcutCo
         count={matches.length}
         empty={
           <p className="p-4 text-center text-foreground-subtle text-xs">
-            Nothing matches “{query}”.
+            {chrome.paletteEmpty.replace('{query}', query)}
           </p>
         }
-        inputLabel="Search commands"
+        inputLabel={chrome.paletteSearchLabel}
         inputTestId="palette-input"
         listHeight={LIST_HEIGHT}
         listId="palette-listbox"
-        listLabel="Commands"
+        listLabel={chrome.paletteListLabel}
         listRef={listRef}
         listTestId="palette-listbox"
         onPick={(index) => pick(matches[index])}
-        placeholder="Type a command…"
+        placeholder={chrome.palettePlaceholder}
         query={query}
         setActive={setActive}
         setQuery={setQuery}

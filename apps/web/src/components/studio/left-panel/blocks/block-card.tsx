@@ -1,10 +1,18 @@
 'use client'
 
+import {
+  type RegistryCopy,
+  blockDescription,
+  blockName,
+  categoryName,
+} from '@motion-studio/blocks/i18n/translate'
 import { useDraggableBlock } from '@motion-studio/dnd'
 import { BLOCK_CATEGORIES, type BlockDefinition } from '@motion-studio/schema'
 import { FOCUS_RING } from '@motion-studio/ui'
 import { cn } from '@motion-studio/utils'
 import { type KeyboardEvent, memo, useCallback, useMemo, useState } from 'react'
+
+import { useRegistryCopy, useStudio } from '../../../../lib/i18n/studio-surface'
 
 import { BlockThumbnail } from './block-thumbnail'
 
@@ -17,9 +25,23 @@ export interface BlockCardProps {
   readonly onFocus: (definition: BlockDefinition) => void
 }
 
-/** "Pricing table, marketing block" — the accessible name ACCESSIBILITY.md § Block palette specifies. */
-export const cardLabel = (definition: BlockDefinition): string =>
-  `${definition.name}, ${BLOCK_CATEGORIES[definition.category].toLowerCase()} block`
+/**
+ * "Pricing table, marketing block" — the accessible name ACCESSIBILITY.md § Block palette
+ * specifies, in the language of the session. `{name}` and `{category}` are the block's own,
+ * which is why the sentence is a template rather than a join: Russian puts them in the other
+ * order.
+ */
+export const cardLabel = (
+  definition: BlockDefinition,
+  copy: RegistryCopy | undefined,
+  template: string,
+): string =>
+  template
+    .replace('{name}', blockName(copy, definition.id, definition.name))
+    .replace(
+      '{category}',
+      categoryName(copy, definition.category, BLOCK_CATEGORIES[definition.category]).toLowerCase(),
+    )
 
 const CARD_CLASS =
   'flex h-full w-full flex-col gap-1.5 rounded-sm border border-border bg-surface-1 p-1.5 text-left transition-colors hover:border-border-strong data-[dragging=true]:opacity-40'
@@ -37,8 +59,11 @@ export const BlockCard = memo(function BlockCard({
   onInsert,
   onFocus,
 }: BlockCardProps) {
+  const { panels } = useStudio()
+  const copy = useRegistryCopy()
   const [hovered, setHovered] = useState(false)
-  const drag = useDraggableBlock({ blockId: definition.id, label: cardLabel(definition) })
+  const label = cardLabel(definition, copy, panels.blockCardLabel)
+  const drag = useDraggableBlock({ blockId: definition.id, label })
 
   const insert = useCallback(() => onInsert(definition), [definition, onInsert])
 
@@ -73,7 +98,7 @@ export const BlockCard = memo(function BlockCard({
       role="gridcell"
     >
       <button
-        aria-label={cardLabel(definition)}
+        aria-label={label}
         className={cn(CARD_CLASS, FOCUS_RING)}
         data-block-card={definition.id}
         data-dragging={drag.isDragging}
@@ -83,7 +108,7 @@ export const BlockCard = memo(function BlockCard({
         onPointerEnter={() => setHovered(true)}
         onPointerLeave={() => setHovered(false)}
         ref={drag.ref}
-        title={definition.description}
+        title={blockDescription(copy, definition.id, definition.description)}
         type="button"
         {...drag.attributes}
         {...listeners}
@@ -91,9 +116,11 @@ export const BlockCard = memo(function BlockCard({
         tabIndex={focused ? 0 : -1}
       >
         <BlockThumbnail definition={definition} hovered={hovered} />
-        <span className="truncate text-2xs text-foreground">{definition.name}</span>
+        <span className="truncate text-2xs text-foreground">
+          {blockName(copy, definition.id, definition.name)}
+        </span>
         <span className="truncate text-[10px] text-foreground-subtle uppercase tracking-wide">
-          {BLOCK_CATEGORIES[definition.category]}
+          {categoryName(copy, definition.category, BLOCK_CATEGORIES[definition.category])}
         </span>
       </button>
     </div>

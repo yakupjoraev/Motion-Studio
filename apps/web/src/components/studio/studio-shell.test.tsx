@@ -1,8 +1,8 @@
-import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { axe } from 'jest-axe'
 import { useRef } from 'react'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { act, fireEvent, render, screen, within } from '../../test/render'
 
 import { PANEL_BOUNDS, PANEL_LAYOUT_KEY, PANEL_VARIABLE } from '../../hooks/panel-layout'
 import { useStudioStore } from '../../store/editor-store'

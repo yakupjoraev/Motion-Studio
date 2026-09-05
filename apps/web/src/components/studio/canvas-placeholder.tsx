@@ -8,7 +8,13 @@
  * The wording is a state, not a promise: "Opening the studio" is true whether the wait is 200 ms or
  * four seconds, and it names the destination so the press is visibly the one that was made.
  */
+'use client'
+
+import { useStudio } from '../../lib/i18n/studio-surface'
+
 export function CanvasPlaceholder() {
+  const { chrome } = useStudio()
+
   return (
     <div
       className="flex h-full w-full flex-col items-center justify-center gap-3 bg-canvas-bg"
@@ -17,7 +23,7 @@ export function CanvasPlaceholder() {
       <div aria-hidden="true" className="h-6 w-6 rounded-full bg-surface-2" data-ms-skeleton />
       {/* An `<output>` rather than a `<p>` with `role="status"`: it is the element that role names. */}
       <output aria-live="polite" className="text-foreground-subtle text-xs">
-        Opening the studio…
+        {chrome.loading}
       </output>
     </div>
   )

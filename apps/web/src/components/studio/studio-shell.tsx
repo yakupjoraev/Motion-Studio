@@ -7,6 +7,8 @@ import { type ReactNode, useEffect, useState } from 'react'
 
 import { RenderCounter } from '../../lib/dev/render-counter'
 import { watchGestures } from '../../lib/errors/watch-gestures'
+import { useLocale } from '../../lib/i18n/locale-context'
+import { useStudio } from '../../lib/i18n/studio-surface'
 import { useStudioStore } from '../../store/editor-store'
 import { CommandAnnouncer } from './command-announcer'
 
@@ -85,6 +87,8 @@ const PANEL_CLASS = 'ms-panel-overlay bg-surface-1'
  * Nothing here knows what a document is. The panels are frames and the canvas is a slot.
  */
 export function StudioShell({ canvas }: StudioShellProps) {
+  const { chrome } = useStudio()
+  const { href } = useLocale()
   const { layout, setWidth, toggleCollapsed } = usePanelLayout()
   const exportOpen = useStudioStore((state) => state.ui.exportDialogOpen)
   const [exportMounted, setExportMounted] = useState(false)
@@ -190,7 +194,7 @@ export function StudioShell({ canvas }: StudioShellProps) {
             />
 
             <aside
-              aria-label="Left panel"
+              aria-label={chrome.leftPanel}
               className={cn(REGION_CLASS, PANEL_CLASS, 'border-border border-r')}
               data-open={String(isOpen('left'))}
               data-shortcut-scope="left"
@@ -203,7 +207,7 @@ export function StudioShell({ canvas }: StudioShellProps) {
               </div>
               {isOpen('left') ? (
                 <PanelResizer
-                  aria-label="Left panel width"
+                  aria-label={chrome.leftPanelWidth}
                   onWidthChange={(width) => setWidth('left', width)}
                   side="left"
                   width={layout.left}
@@ -212,7 +216,7 @@ export function StudioShell({ canvas }: StudioShellProps) {
             </aside>
 
             <main
-              aria-label="Canvas"
+              aria-label={chrome.canvas}
               className={cn(REGION_CLASS, 'overflow-hidden')}
               data-shortcut-scope="canvas"
               tabIndex={-1}
@@ -221,7 +225,7 @@ export function StudioShell({ canvas }: StudioShellProps) {
             </main>
 
             <aside
-              aria-label="Inspector"
+              aria-label={chrome.inspector}
               className={cn(REGION_CLASS, PANEL_CLASS, 'border-border border-l')}
               data-open={String(isOpen('right'))}
               data-shortcut-scope="inspector"
@@ -234,7 +238,7 @@ export function StudioShell({ canvas }: StudioShellProps) {
               </div>
               {isOpen('right') ? (
                 <PanelResizer
-                  aria-label="Inspector width"
+                  aria-label={chrome.inspectorWidth}
                   onWidthChange={(width) => setWidth('right', width)}
                   side="right"
                   width={layout.right}
@@ -259,9 +263,9 @@ export function StudioShell({ canvas }: StudioShellProps) {
         <ThemeHost />
 
         <div className="ms-studio-notice h-dvh place-content-center gap-3 px-6 text-center">
-          <p className="text-sm">Motion Studio needs a wider screen.</p>
-          <a className="text-accent text-sm underline underline-offset-4" href="/blocks">
-            Browse the block gallery instead →
+          <p className="text-sm">{chrome.tooNarrow}</p>
+          <a className="text-accent text-sm underline underline-offset-4" href={href('/blocks')}>
+            {chrome.browseGallery}
           </a>
         </div>
       </DocumentsProvider>

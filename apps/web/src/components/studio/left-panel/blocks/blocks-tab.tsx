@@ -4,6 +4,10 @@ import { SearchIcon } from '@motion-studio/icons'
 import { Button, EmptyState, Input } from '@motion-studio/ui'
 import { useCallback, useState } from 'react'
 
+import { useLocale } from '../../../../lib/i18n/locale-context'
+import { formatPlural } from '../../../../lib/i18n/plural'
+import { useStudio } from '../../../../lib/i18n/studio-surface'
+
 import { BLOCK_GRID_ID, BlockGrid } from './block-grid'
 import { CategoryFilter } from './category-filter'
 import { clearCategories, useBlockSearch, useSelectedCategories } from './use-block-search'
@@ -15,6 +19,8 @@ import { useInsertBlock } from './use-insert-block'
  * (`use-insert-block.ts`), so a card and a paste land a block in the same place.
  */
 export function BlocksTab() {
+  const { panels } = useStudio()
+  const { locale } = useLocale()
   const [query, setQuery] = useState('')
   const { blocks, query: applied } = useBlockSearch(query)
   const categories = useSelectedCategories()
@@ -32,9 +38,9 @@ export function BlocksTab() {
       <div className="flex flex-col gap-2 border-border border-b p-2">
         <Input
           aria-controls={BLOCK_GRID_ID}
-          aria-label="Search blocks"
+          aria-label={panels.searchBlocks}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search blocks"
+          placeholder={panels.searchBlocks}
           prefix={<SearchIcon size={12} />}
           role="searchbox"
           type="search"
@@ -47,7 +53,7 @@ export function BlocksTab() {
           className="px-1 text-[11px] text-foreground-muted"
           data-testid="block-count"
         >
-          {filtering ? `${blocks.length} ${blocks.length === 1 ? 'block' : 'blocks'} match` : ''}
+          {filtering ? formatPlural(locale, blocks.length, panels.blocksMatch) : ''}
         </output>
       </div>
 
@@ -56,12 +62,14 @@ export function BlocksTab() {
           <EmptyState
             action={
               <Button onClick={reset} size="sm" variant="secondary">
-                Clear search
+                {panels.clearSearch}
               </Button>
             }
             className="h-full"
             message={
-              applied === '' ? 'No blocks in these categories.' : `No blocks match “${applied}”.`
+              applied === ''
+                ? panels.noBlocksInCategories
+                : panels.noBlocksMatch.replace('{query}', applied)
             }
           />
         ) : (

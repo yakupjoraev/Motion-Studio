@@ -1,8 +1,11 @@
 'use client'
 
+import { controlHint, controlLabel } from '@motion-studio/blocks/i18n/translate'
 import type { ControlDescriptor, NodeId } from '@motion-studio/schema'
 import { ControlRenderer, ControlRow } from '@motion-studio/ui/controls'
-import { memo } from 'react'
+import { memo, useMemo } from 'react'
+
+import { useRegistryCopy } from '../../../lib/i18n/studio-surface'
 
 import { OverrideIndicator, describeOverride } from './override-indicator'
 import { useControlCommit } from './use-control-commit'
@@ -18,6 +21,20 @@ export interface ControlRowBindingProps {
  * that connect them to the store. Nothing here knows which block it is editing.
  */
 function ControlRowBindingImpl({ descriptor, nodeIds }: ControlRowBindingProps) {
+  const copy = useRegistryCopy()
+  /*
+   * The descriptor the registry declares is English (ADR-365). The row and every field under it read
+   * one translated copy rather than each translating its own string — `packages/ui` knows nothing
+   * about locales, and it should not.
+   */
+  const localised = useMemo(
+    (): ControlDescriptor => ({
+      ...descriptor,
+      label: controlLabel(copy, descriptor.label),
+      ...(descriptor.hint === undefined ? {} : { hint: controlHint(copy, descriptor.hint) }),
+    }),
+    [copy, descriptor],
+  )
   const { value, mixed, override, modified } = useControlValue(descriptor.path, nodeIds)
   const { onChange, onCommit, onReset } = useControlCommit(descriptor, nodeIds)
   const description = describeOverride(override)
@@ -25,7 +42,7 @@ function ControlRowBindingImpl({ descriptor, nodeIds }: ControlRowBindingProps) 
   return (
     <ControlRow
       indicator={<OverrideIndicator state={override} />}
-      label={descriptor.label}
+      label={localised.label}
       // § Control rows: a list is a control made of controls, so it takes the width (ADR-352).
       layout={descriptor.kind === 'list' ? 'stacked' : 'inline'}
       mixed={mixed}
@@ -35,7 +52,7 @@ function ControlRowBindingImpl({ descriptor, nodeIds }: ControlRowBindingProps) 
     >
       {(slot) => (
         <ControlRenderer
-          descriptor={descriptor}
+          descriptor={localised}
           mixed={mixed}
           onChange={onChange}
           onCommit={onCommit}

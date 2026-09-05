@@ -15,6 +15,8 @@ import {
   useState,
 } from 'react'
 
+import { useStudio } from '../../../../lib/i18n/studio-surface'
+
 import { useStudioStore } from '../../../../store/editor-store'
 
 import { layerRects, subtreeSpans } from './layer-rects'
@@ -40,6 +42,7 @@ const OVERSCAN = 8
  * reader that the twelve rendered rows are twelve of four hundred.
  */
 export function LayersTree({ rows, onFold }: LayersTreeProps) {
+  const { panels } = useStudio()
   const scrollRef = useRef<HTMLDivElement>(null)
   const treeRef = useRef<HTMLDivElement>(null)
   const [focusedId, setFocusedId] = useState<NodeId | null>(null)
@@ -204,7 +207,7 @@ export function LayersTree({ rows, onFold }: LayersTreeProps) {
   return (
     <div className="h-full overflow-y-auto" data-testid="layers-scroll" ref={scrollRef}>
       <div
-        aria-label="Layers"
+        aria-label={panels.layers}
         aria-multiselectable="true"
         className="relative w-full"
         id={LAYERS_TREE_ID}
