@@ -1,0 +1,13 @@
+export const nav = {
+  brand: 'Motion Studio',
+  main: 'Main',
+  studio: 'Studio',
+  playground: 'Playground',
+  blocks: 'Blocks',
+  docs: 'Docs',
+  openStudio: 'Open the studio',
+  skipToContent: 'Skip to content',
+  language: 'Language',
+  footerLicence: 'MIT',
+  footerTelemetry: 'No telemetry',
+}

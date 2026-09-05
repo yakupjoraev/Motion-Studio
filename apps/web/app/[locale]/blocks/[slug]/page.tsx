@@ -4,12 +4,12 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
-import { BlockA11yNotes } from '../../../src/components/gallery/detail/block-a11y-notes'
-import { BlockPropsTable } from '../../../src/components/gallery/detail/block-props-table'
-import { printBlockSource } from '../../../src/components/gallery/detail/block-source'
-import { BlockWorkbench } from '../../../src/components/gallery/detail/block-workbench'
-import { slotFill } from '../../../src/components/gallery/slot-fill'
-import { LandingNav } from '../../../src/components/landing/landing-nav'
+import { BlockA11yNotes } from '../../../../src/components/gallery/detail/block-a11y-notes'
+import { BlockPropsTable } from '../../../../src/components/gallery/detail/block-props-table'
+import { printBlockSource } from '../../../../src/components/gallery/detail/block-source'
+import { BlockWorkbench } from '../../../../src/components/gallery/detail/block-workbench'
+import { slotFill } from '../../../../src/components/gallery/slot-fill'
+import { LandingNav } from '../../../../src/components/landing/landing-nav'
 
 export function generateStaticParams(): { slug: string }[] {
   return blockRegistry.list().map((definition) => ({ slug: definition.id }))

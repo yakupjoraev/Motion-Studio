@@ -2,9 +2,9 @@
 
 import { useEffect } from 'react'
 
-import { DownloadDocumentButton } from '../src/components/errors/download-document-button'
-import { ErrorDetails } from '../src/components/errors/error-details'
-import { formatErrorReport } from '../src/lib/errors/format-error-report'
+import { DownloadDocumentButton } from '../../src/components/errors/download-document-button'
+import { ErrorDetails } from '../../src/components/errors/error-details'
+import { formatErrorReport } from '../../src/lib/errors/format-error-report'
 
 export interface RouteErrorProps {
   readonly error: Error & { digest?: string }

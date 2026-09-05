@@ -3,10 +3,10 @@
 import dynamic from 'next/dynamic'
 import { useEffect } from 'react'
 
-import { CanvasPlaceholder } from '../../src/components/studio/canvas-placeholder'
-import { StudioShell } from '../../src/components/studio/studio-shell'
-import { loadBlockRegistry } from '../../src/store/block-registry'
-import { connectEscapeHatch } from '../../src/store/escape-hatch-bridge'
+import { CanvasPlaceholder } from '../../../src/components/studio/canvas-placeholder'
+import { StudioShell } from '../../../src/components/studio/studio-shell'
+import { loadBlockRegistry } from '../../../src/store/block-registry'
+import { connectEscapeHatch } from '../../../src/store/escape-hatch-bridge'
 
 /**
  * ARCHITECTURE.md § Rendering strategy: the shell is server-rendered, the canvas is not. It needs
@@ -15,7 +15,7 @@ import { connectEscapeHatch } from '../../src/store/escape-hatch-bridge'
  */
 const CanvasIsland = dynamic(
   () =>
-    import('../../src/components/studio/canvas-area/canvas-host').then(
+    import('../../../src/components/studio/canvas-area/canvas-host').then(
       (module) => module.CanvasHost,
     ),
   // ADR-353: the shell paints before the island's chunk lands, and an empty canvas frame in between
@@ -46,7 +46,7 @@ export function StudioClient() {
   useEffect(() => {
     const controller = new AbortController()
 
-    void import('../../src/components/studio/load-fixture').then(({ loadFixtureFromQuery }) => {
+    void import('../../../src/components/studio/load-fixture').then(({ loadFixtureFromQuery }) => {
       loadFixtureFromQuery(controller.signal)
     })
 

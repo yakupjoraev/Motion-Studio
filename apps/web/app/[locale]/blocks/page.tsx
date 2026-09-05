@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
 
-import { GalleryGrid } from '../../src/components/gallery/gallery-grid'
-import { galleryCounts, galleryIndex } from '../../src/components/gallery/gallery-index'
-import { GallerySearch } from '../../src/components/gallery/gallery-search'
-import { LandingNav } from '../../src/components/landing/landing-nav'
+import { GalleryGrid } from '../../../src/components/gallery/gallery-grid'
+import { galleryCounts, galleryIndex } from '../../../src/components/gallery/gallery-index'
+import { GallerySearch } from '../../../src/components/gallery/gallery-search'
+import { LandingNav } from '../../../src/components/landing/landing-nav'
 
 export const metadata: Metadata = {
   title: 'Blocks — Motion Studio',

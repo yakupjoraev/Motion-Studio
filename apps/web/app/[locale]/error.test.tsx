@@ -12,9 +12,9 @@ const { getState, listDocumentIds, loadDocument, readPending } = vi.hoisted(() =
   readPending: vi.fn(),
 }))
 
-vi.mock('../src/store/editor-store', () => ({ useStudioStore: { getState } }))
-vi.mock('../src/lib/storage/document-store', () => ({ listDocumentIds, loadDocument }))
-vi.mock('../src/lib/storage/pending-write', () => ({ readPending }))
+vi.mock('../../src/store/editor-store', () => ({ useStudioStore: { getState } }))
+vi.mock('../../src/lib/storage/document-store', () => ({ listDocumentIds, loadDocument }))
+vi.mock('../../src/lib/storage/pending-write', () => ({ readPending }))
 
 let saved: Blob[]
 let consoleError: ReturnType<typeof vi.spyOn>
