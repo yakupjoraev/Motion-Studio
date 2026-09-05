@@ -1,7 +1,8 @@
+import { getRequestDictionary } from '../../../lib/i18n/request-locale'
 import { SectionIntro } from '../section-intro'
 import { Section } from '../section-rail'
 
-import { EFFECT_CARDS } from './effect-cards'
+import { effectCards } from './effect-cards'
 import { EffectGridIsland } from './effect-grid-island'
 import { EffectShell } from './effect-shell'
 
@@ -15,18 +16,19 @@ import { EffectShell } from './effect-shell'
  * arrives and finished still if none of it does.
  */
 export function EffectGrid() {
+  const { effects } = getRequestDictionary().landing
+
   return (
-    <Section id="effects" label="02 / effects">
+    <Section id="effects" label={effects.rail}>
       <div className="flex flex-col gap-10 py-16 lg:py-24">
-        <SectionIntro heading="Every effect is a component with a schema." id="effects-heading">
-          Not a snippet to paste and patch. Each one is parameterised, tunable in the inspector,
-          correct under reduced motion, and exportable as source you can read.
+        <SectionIntro heading={effects.heading} id="effects-heading">
+          {effects.intro}
         </SectionIntro>
 
         <EffectGridIsland
           fallback={
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {EFFECT_CARDS.map((card) => (
+              {effectCards(effects).map((card) => (
                 <EffectShell card={card} key={card.id} />
               ))}
             </div>

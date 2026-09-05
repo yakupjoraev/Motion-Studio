@@ -7,6 +7,7 @@ import type { ReactNode } from 'react'
 import { getDictionary } from '../../src/lib/i18n/dictionary'
 import { LocaleProvider } from '../../src/lib/i18n/locale-context'
 import { HTML_LANG, LOCALES, isLocale } from '../../src/lib/i18n/locales'
+import { NavDictionary } from '../../src/lib/i18n/surfaces'
 import '../globals.css'
 import { ThemeBoot } from '../theme-boot'
 
@@ -88,8 +89,8 @@ export default async function RootLayout({ children, params }: RootLayoutProps) 
         <script dangerouslySetInnerHTML={{ __html: COLOR_MODE_SCRIPT }} />
       </head>
       <body>
-        <LocaleProvider dictionary={getDictionary(locale)} locale={locale}>
-          {children}
+        <LocaleProvider locale={locale}>
+          <NavDictionary value={getDictionary(locale).nav}>{children}</NavDictionary>
         </LocaleProvider>
         <ThemeBoot />
       </body>

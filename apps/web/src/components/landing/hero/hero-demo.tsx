@@ -4,6 +4,8 @@ import { type CanvasRect, type SnapCandidate, canvasRect, computeSnap } from '@m
 import { clamp } from '@motion-studio/utils'
 import { type PointerEvent as ReactPointerEvent, useRef, useState } from 'react'
 
+import { useLanding } from '../../../lib/i18n/surfaces'
+
 import { CARD, DEMO, DemoFrame, FIXED, START, cardClass } from './hero-demo-frame'
 
 /** CANVAS.md § Snapping. The studio's default; the demo has no reason to be more forgiving. */
@@ -79,6 +81,7 @@ const percent = (value: number, of: number): string => `${(value / of) * 100}%`
  * would be a worse page, not a safer one — ADR-294.
  */
 export function HeroDemo() {
+  const { hero } = useLanding()
   const surface = useRef<HTMLDivElement | null>(null)
   const grab = useRef({ x: 0, y: 0 })
   const [position, setPosition] = useState(START)
@@ -146,7 +149,12 @@ export function HeroDemo() {
   }
 
   return (
-    <DemoFrame caption={`x ${position.x}  ·  y ${position.y}  ·  snapping to siblings`}>
+    <DemoFrame
+      caption={hero.demoLiveCaption
+        .replace('{x}', String(position.x))
+        .replace('{y}', String(position.y))}
+      fixedLabels={[hero.demoNavbar, hero.demoFooter]}
+    >
       <div className="absolute inset-0" ref={surface}>
         {guides.map((guide) => (
           <span
@@ -162,7 +170,7 @@ export function HeroDemo() {
         ))}
 
         <button
-          aria-label="Hero block. Drag it, or move it with the arrow keys."
+          aria-label={hero.demoBlockLabel}
           className={`${cardClass} cursor-grab touch-none border-accent bg-accent-muted text-foreground shadow-[inset_0_1px_0_color-mix(in_oklch,var(--ms-color-foreground)_16%,transparent),0_0_28px_-6px_var(--ms-color-accent)] outline-none focus-visible:shadow-focus active:cursor-grabbing motion-safe:transition-[left,top] motion-safe:duration-[--ms-duration-instant]`}
           data-dragging={String(dragging)}
           onKeyDown={(event) => {
@@ -192,7 +200,7 @@ export function HeroDemo() {
           }}
           type="button"
         >
-          Hero
+          {hero.demoBlock}
         </button>
       </div>
     </DemoFrame>

@@ -7,8 +7,8 @@ export const CARD = { width: 132, height: 68 } as const
 
 /** Two fixed siblings and the one the visitor moves — the smallest arrangement snapping can prove. */
 export const FIXED = [
-  { id: 'a', x: 40, y: 40, label: 'Navbar' },
-  { id: 'b', x: 40, y: 192, label: 'Footer' },
+  { id: 'a', x: 40, y: 40 },
+  { id: 'b', x: 40, y: 192 },
 ] as const
 
 export const START: { readonly x: number; readonly y: number } = { x: 236, y: 116 }
@@ -17,6 +17,12 @@ export interface DemoFrameProps {
   readonly children?: ReactNode
   /** Shown when there is no interaction to offer: no JavaScript, or the island has not arrived. */
   readonly caption: string
+  /**
+   * The two fixed cards' names, in the reading order of `FIXED`. Passed in rather than read from a
+   * hook: this frame is rendered by a Server Component and by a client one, and a hook would move
+   * the whole frame — the dotted ground included — onto the client for two words.
+   */
+  readonly fixedLabels: readonly [string, string]
 }
 
 const cardClass =
@@ -27,7 +33,7 @@ const cardClass =
  * is in the HTML and nothing shifts when the island arrives. The island renders the moving card into
  * `children`; without it, `hero-demo-static` draws that card too.
  */
-export function DemoFrame({ children, caption }: DemoFrameProps) {
+export function DemoFrame({ children, caption, fixedLabels }: DemoFrameProps) {
   return (
     <figure className="m-0 flex flex-col gap-3">
       {/*
@@ -48,7 +54,7 @@ export function DemoFrame({ children, caption }: DemoFrameProps) {
             ['--demo-h' as string]: String(DEMO.height),
           }}
         >
-          {FIXED.map((card) => (
+          {FIXED.map((card, index) => (
             <div
               className={cardClass}
               key={card.id}
@@ -59,7 +65,7 @@ export function DemoFrame({ children, caption }: DemoFrameProps) {
                 height: `${(CARD.height / DEMO.height) * 100}%`,
               }}
             >
-              {card.label}
+              {fixedLabels[index]}
             </div>
           ))}
 

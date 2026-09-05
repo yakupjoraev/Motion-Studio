@@ -1,3 +1,5 @@
+import { getRequestDictionary } from '../../lib/i18n/request-locale'
+
 import { SectionIntro } from './section-intro'
 import { Section } from './section-rail'
 
@@ -7,53 +9,57 @@ import { Section } from './section-rail'
  * As HTML it is selectable, it reflows at 320 px, it scales at 200 % zoom, and — the reason that
  * matters most here — a screen reader reads it as four nested lists with headings rather than as a
  * wall of box-drawing characters. The `alt` a diagram usually needs is the markup itself.
+ *
+ * Package names are not translated: `editor` is what the directory is called in both languages.
+ * What each one *does* is prose, and that is what the dictionary carries.
  */
-const LAYERS = [
-  {
-    title: 'App',
-    note: 'Next.js 15, App Router',
-    packages: [{ name: 'apps/web', detail: 'landing · studio · playground · docs' }],
-  },
-  {
-    title: 'Editing',
-    note: 'One direction of dependency, downward only',
-    packages: [
-      { name: 'editor', detail: 'document · commands · history · selection' },
-      { name: 'canvas', detail: 'viewport · zoom · pan · snap · guides' },
-      { name: 'dnd', detail: 'drop rules · reorder · keyboard drag' },
-      { name: 'codegen', detail: 'IR · printers · formatter' },
-    ],
-  },
-  {
-    title: 'Domain',
-    note: 'What a document is, and what can go in it',
-    packages: [
-      { name: 'schema', detail: 'zod · .motion · migrations' },
-      { name: 'blocks', detail: 'the registry · 72 blocks' },
-      { name: 'motion', detail: 'presets · springs · scheduler' },
-    ],
-  },
-  {
-    title: 'Foundation',
-    note: 'Depended on by everything, depending on nothing',
-    packages: [
-      { name: 'ui · theme · tokens', detail: 'chrome · CSS variables' },
-      { name: 'hooks · utils · icons · config', detail: 'shared, and small' },
-    ],
-  },
-] as const
-
 export function Architecture() {
+  const { architecture } = getRequestDictionary().landing
+
+  const layers = [
+    {
+      title: architecture.appTitle,
+      note: architecture.appNote,
+      packages: [{ name: 'apps/web', detail: architecture.appWeb }],
+    },
+    {
+      title: architecture.editingTitle,
+      note: architecture.editingNote,
+      packages: [
+        { name: 'editor', detail: architecture.editingEditor },
+        { name: 'canvas', detail: architecture.editingCanvas },
+        { name: 'dnd', detail: architecture.editingDnd },
+        { name: 'codegen', detail: architecture.editingCodegen },
+      ],
+    },
+    {
+      title: architecture.domainTitle,
+      note: architecture.domainNote,
+      packages: [
+        { name: 'schema', detail: architecture.domainSchema },
+        { name: 'blocks', detail: architecture.domainBlocks },
+        { name: 'motion', detail: architecture.domainMotion },
+      ],
+    },
+    {
+      title: architecture.foundationTitle,
+      note: architecture.foundationNote,
+      packages: [
+        { name: 'ui · theme · tokens', detail: architecture.foundationChrome },
+        { name: 'hooks · utils · icons · config', detail: architecture.foundationShared },
+      ],
+    },
+  ]
+
   return (
-    <Section id="architecture" label="05 / shape">
+    <Section id="architecture" label={architecture.rail}>
       <div className="flex flex-col gap-10 py-16 lg:py-24">
-        <SectionIntro heading="Seventeen packages, one direction." id="architecture-heading">
-          Nothing depends on the app. The editor never imports a block — it talks to the registry
-          through schema types only. That rule is what makes the export testable without a browser.
+        <SectionIntro heading={architecture.heading} id="architecture-heading">
+          {architecture.intro}
         </SectionIntro>
 
         <ol className="flex flex-col gap-3">
-          {LAYERS.map((layer, index) => (
+          {layers.map((layer, index) => (
             <li
               className="rounded-xl border border-border bg-surface-1 p-4 sm:p-5"
               key={layer.title}
@@ -83,10 +89,7 @@ export function Architecture() {
           ))}
         </ol>
 
-        <p className="text-foreground-muted text-sm">
-          Read top to bottom: each layer may depend on the ones below it and never on the ones
-          above.
-        </p>
+        <p className="text-foreground-muted text-sm">{architecture.footnote}</p>
       </div>
     </Section>
   )

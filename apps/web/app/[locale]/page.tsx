@@ -11,6 +11,8 @@ import { Stack } from '../../src/components/landing/stack'
 import { InspectorWalkthrough } from '../../src/components/landing/walkthrough/inspector-walkthrough'
 import { getDictionary } from '../../src/lib/i18n/dictionary'
 import { DEFAULT_LOCALE, isLocale } from '../../src/lib/i18n/locales'
+import { setRequestLocale } from '../../src/lib/i18n/request-locale'
+import { LandingDictionary } from '../../src/lib/i18n/surfaces'
 
 interface HomePageProps {
   readonly params: Promise<{ readonly locale: string }>
@@ -42,7 +44,9 @@ export async function generateMetadata({ params }: HomePageProps): Promise<Metad
  */
 export default async function HomePage({ params }: HomePageProps) {
   const { locale } = await params
-  const { nav } = getDictionary(isLocale(locale) ? locale : DEFAULT_LOCALE)
+  // Every section below reads the locale from the request store rather than from a prop chain.
+  const dictionary = getDictionary(setRequestLocale(locale))
+  const { nav } = dictionary
 
   return (
     <>
@@ -56,14 +60,16 @@ export default async function HomePage({ params }: HomePageProps) {
       <LandingNav />
 
       <main id="main">
-        <Hero />
-        <Problem />
-        <EffectGrid />
-        <InspectorWalkthrough />
-        <ExportReveal />
-        <Architecture />
-        <Stack />
-        <Cta />
+        <LandingDictionary value={dictionary.landing}>
+          <Hero />
+          <Problem />
+          <EffectGrid />
+          <InspectorWalkthrough />
+          <ExportReveal />
+          <Architecture />
+          <Stack />
+          <Cta />
+        </LandingDictionary>
       </main>
 
       <footer className="border-border-subtle border-t">
