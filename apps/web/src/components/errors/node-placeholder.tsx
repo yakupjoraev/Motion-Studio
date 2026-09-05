@@ -1,5 +1,7 @@
 'use client'
 
+import { useErrors } from '../../lib/i18n/error-surface'
+
 import { Button } from '@motion-studio/ui'
 
 export interface NodePlaceholderProps {
@@ -21,21 +23,21 @@ export interface NodePlaceholderProps {
  * That is what keeps the rest of the document editable without costing them the block's content.
  */
 export function NodePlaceholder({ blockId, nodeName, onSelect, onRestore }: NodePlaceholderProps) {
+  const copy = useErrors()
   return (
     <div
       className="flex flex-col items-center gap-2 rounded-sm border border-border border-dashed bg-surface-2/40 p-6 text-center"
       data-testid="node-placeholder"
     >
       <p className="text-foreground-muted text-xs">
-        {nodeName} is not being rendered. Its block still holds your content — edit it in the
-        inspector, or try it again.
+        {copy.placeholderBody.replace('{name}', nodeName)}
       </p>
       <div className="flex flex-wrap items-center justify-center gap-2">
         <Button onClick={onSelect} size="sm" variant="secondary">
-          Select
+          {copy.select}
         </Button>
         <Button onClick={onRestore} size="sm" variant="ghost">
-          Try the block again
+          {copy.tryBlockAgain}
         </Button>
       </div>
       <span className="text-2xs text-foreground-subtle">{blockId}</span>

@@ -3,6 +3,8 @@
 import { Button } from '@motion-studio/ui'
 import { useState } from 'react'
 
+import { useErrors } from '../../lib/i18n/error-surface'
+
 import { DownloadDocumentButton } from './download-document-button'
 import { ErrorDetails } from './error-details'
 
@@ -26,19 +28,17 @@ export interface DialogErrorStateProps {
  * already flagged, and that list is the closest thing to a cause a user can act on.
  */
 export function DialogErrorState({ report, warnings, onCopyJson, onRetry }: DialogErrorStateProps) {
+  const copy = useErrors()
   const [copied, setCopied] = useState(false)
 
   return (
     <div className="flex flex-col gap-3" data-testid="export-error" role="alert">
-      <p className="font-medium text-danger text-sm">
-        The export failed while printing. Nothing was written. Copy the document as JSON instead, or
-        try again.
-      </p>
+      <p className="font-medium text-danger text-sm">{copy.exportFailed}</p>
 
       {warnings.length === 0 ? null : (
         <div className="flex flex-col gap-1">
           <p className="text-2xs text-foreground-subtle uppercase tracking-[0.14em]">
-            What the export had already flagged
+            {copy.exportFlagged}
           </p>
           <ul className="flex flex-col gap-1" data-testid="export-error-warnings">
             {warnings.map((warning) => (
@@ -65,7 +65,7 @@ export function DialogErrorState({ report, warnings, onCopyJson, onRetry }: Dial
         </Button>
         <DownloadDocumentButton />
         <Button onClick={onRetry} size="sm" variant="ghost">
-          Try again
+          {copy.tryAgain}
         </Button>
       </div>
 

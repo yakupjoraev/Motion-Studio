@@ -2,6 +2,8 @@
 
 import { Button } from '@motion-studio/ui'
 
+import { useErrors } from '../../lib/i18n/error-surface'
+
 import { DownloadDocumentButton } from './download-document-button'
 import { ErrorDetails } from './error-details'
 
@@ -38,6 +40,7 @@ export function NodeErrorCard({
   onDelete,
   onReplace,
 }: NodeErrorCardProps) {
+  const copy = useErrors()
   return (
     <div
       className="flex flex-col gap-2 rounded-sm border border-danger/40 bg-danger-muted/30 p-3 text-xs"
@@ -45,21 +48,21 @@ export function NodeErrorCard({
       role="alert"
     >
       <p className="font-medium text-danger">
-        {nodeName} failed to render. {message} Reset its props or delete the block.
+        {copy.nodeFailed.replace('{name}', nodeName)} {message} {copy.nodeAdvice}
       </p>
 
       <div className="flex flex-wrap items-center gap-2">
         <Button onClick={onResetProps} size="sm" variant="secondary">
-          Reset to defaults
+          {copy.resetToDefaults}
         </Button>
         <Button onClick={onSelect} size="sm" variant="ghost">
-          Select
+          {copy.select}
         </Button>
         <Button onClick={onReplace} size="sm" variant="ghost">
-          Replace with a placeholder
+          {copy.replaceWithPlaceholder}
         </Button>
         <Button onClick={onDelete} size="sm" variant="ghost">
-          Delete block
+          {copy.deleteBlock}
         </Button>
         <DownloadDocumentButton />
       </div>

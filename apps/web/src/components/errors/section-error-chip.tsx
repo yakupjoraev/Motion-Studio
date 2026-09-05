@@ -2,6 +2,8 @@
 
 import { Button } from '@motion-studio/ui'
 
+import { useErrors } from '../../lib/i18n/error-surface'
+
 import { DownloadDocumentButton } from './download-document-button'
 import { ErrorDetails } from './error-details'
 
@@ -20,6 +22,7 @@ export interface SectionErrorChipProps {
  * "the colour picker is broken" and "the inspector is broken".
  */
 export function SectionErrorChip({ section, report, onRetry }: SectionErrorChipProps) {
+  const copy = useErrors()
   return (
     <div
       className="flex flex-col gap-1.5 border-border border-b px-3 py-2"
@@ -27,14 +30,13 @@ export function SectionErrorChip({ section, report, onRetry }: SectionErrorChipP
       role="alert"
     >
       <p className="text-[11px] text-danger leading-snug">
-        {section} controls failed to render. The other sections still work. Try again, or download
-        the document.
+        {copy.sectionFailed.replace('{section}', section)}
       </p>
       <div className="flex flex-wrap items-center gap-1.5">
         <Button onClick={onRetry} size="sm" variant="secondary">
-          Try again
+          {copy.tryAgain}
         </Button>
-        <DownloadDocumentButton label="Download" />
+        <DownloadDocumentButton label={copy.download} />
       </div>
       <ErrorDetails report={report} />
     </div>

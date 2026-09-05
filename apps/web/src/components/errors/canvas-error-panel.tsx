@@ -2,6 +2,8 @@
 
 import { Button } from '@motion-studio/ui'
 
+import { useErrors } from '../../lib/i18n/error-surface'
+
 import { DownloadDocumentButton } from './download-document-button'
 import { ErrorDetails } from './error-details'
 
@@ -29,6 +31,7 @@ export function CanvasErrorPanel({
   onResetViewport,
   onRetry,
 }: CanvasErrorPanelProps) {
+  const copy = useErrors()
   return (
     <div
       className="flex h-full flex-col items-center justify-center gap-4 p-8"
@@ -36,22 +39,22 @@ export function CanvasErrorPanel({
       role="alert"
     >
       <div className="flex max-w-md flex-col gap-2 text-center">
-        <p className="font-medium text-danger text-sm">The canvas stopped rendering. {message}</p>
-        <p className="text-foreground-muted text-xs">
-          Your document is still in this browser. Download it before reloading.
+        <p className="font-medium text-danger text-sm">
+          {copy.canvasStopped} {message}
         </p>
+        <p className="text-foreground-muted text-xs">{copy.canvasKeepDocument}</p>
       </div>
 
       <div className="flex flex-wrap items-center justify-center gap-2">
         <DownloadDocumentButton variant="primary" />
         <Button onClick={onResetViewport} size="sm" variant="secondary">
-          Reset viewport
+          {copy.resetViewport}
         </Button>
         <Button onClick={onRetry} size="sm" variant="ghost">
-          Try again
+          {copy.tryAgain}
         </Button>
         <Button onClick={() => window.location.reload()} size="sm" variant="ghost">
-          Reload
+          {copy.reload}
         </Button>
       </div>
 

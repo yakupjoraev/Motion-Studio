@@ -3,6 +3,9 @@
 import { Button } from '@motion-studio/ui'
 import { useState } from 'react'
 
+import type { Dictionary } from '../../lib/i18n/dictionary'
+import { useErrors } from '../../lib/i18n/error-surface'
+
 import { downloadDocument } from '../../lib/documents/download'
 import { type DocumentSource, recoverDocument } from '../../lib/errors/recover-document'
 import { useStudioStore } from '../../store/editor-store'
@@ -14,11 +17,12 @@ export interface DownloadDocumentButtonProps {
 }
 
 /** What the button says afterwards, so a user knows which copy of their work they are holding. */
-const SOURCE_NOTE: Readonly<Record<DocumentSource, string>> = {
-  store: 'Downloaded from this session.',
-  autosave: 'Downloaded from the last autosave.',
-  'unload-lane': 'Downloaded from the last save before the tab closed.',
-}
+const sourceNote = (copy: Dictionary['errors'], source: DocumentSource): string =>
+  ({
+    store: copy.downloadedFromSession,
+    autosave: copy.downloadedFromAutosave,
+    'unload-lane': copy.downloadedFromUnload,
+  })[source]
 
 /**
  * The escape hatch every boundary offers — `prompts/58`: a crash must never lose the user's work.
@@ -30,8 +34,9 @@ const SOURCE_NOTE: Readonly<Record<DocumentSource, string>> = {
  */
 export function DownloadDocumentButton({
   variant = 'secondary',
-  label = 'Download document',
+  label,
 }: DownloadDocumentButtonProps) {
+  const copy = useErrors()
   const [note, setNote] = useState<string | null>(null)
 
   const download = (): void => {
@@ -41,7 +46,7 @@ export function DownloadDocumentButton({
       fromStore: () => useStudioStore.getState().document ?? null,
     }).then((recovered) => {
       if (recovered === null) {
-        setNote('No document could be recovered from this browser.')
+        setNote(copy.nothingRecovered)
 
         return
       }
@@ -49,14 +54,14 @@ export function DownloadDocumentButton({
       // The same writer the File menu uses, so a file recovered from a crash is byte-for-byte the
       // file a working session would have produced — and re-imports the same way.
       downloadDocument(recovered.document)
-      setNote(SOURCE_NOTE[recovered.source])
+      setNote(sourceNote(copy, recovered.source))
     })
   }
 
   return (
     <div className="flex flex-col gap-1">
       <Button onClick={download} size="sm" variant={variant}>
-        {label}
+        {label ?? copy.downloadDocument}
       </Button>
       {note === null ? null : <output className="text-2xs text-foreground-muted">{note}</output>}
     </div>

@@ -1,7 +1,7 @@
 import { ToastProvider } from '@motion-studio/ui'
-import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { render, screen } from '../../../test/render'
 
 import { useStudioStore } from '../../../store/editor-store'
 import { CanvasHost } from './canvas-host'
