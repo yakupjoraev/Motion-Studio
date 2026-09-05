@@ -3,6 +3,8 @@
 import { Button, Select } from '@motion-studio/ui'
 import { type PointerEvent, type ReactElement, useCallback, useMemo, useRef, useState } from 'react'
 
+import { usePlayground } from '../../../lib/i18n/playground-surface'
+
 import { useAnnouncement } from '../use-announcement'
 
 import {
@@ -46,6 +48,7 @@ export interface BezierEditorProps {
  * something.
  */
 export function BezierEditor({ value, onValueChange, reduced }: BezierEditorProps): ReactElement {
+  const copy = usePlayground()
   const grid = useRef<HTMLDivElement | null>(null)
   const { message, announce } = useAnnouncement()
   const [replay, setReplay] = useState(0)
@@ -111,10 +114,10 @@ export function BezierEditor({ value, onValueChange, reduced }: BezierEditorProp
     return (
       <div className="flex items-center gap-3 rounded-md border border-border p-3">
         <p className="m-0 text-2xs text-foreground-muted" data-testid="bezier-note">
-          This value has no cubic-bezier() to drag.
+          {copy.noBezier}
         </p>
         <Button size="sm" variant="secondary" onClick={() => write(DEFAULT_BEZIER)}>
-          Add one
+          {copy.addBezier}
         </Button>
       </div>
     )
@@ -182,20 +185,16 @@ export function BezierEditor({ value, onValueChange, reduced }: BezierEditorProp
             { value: CUSTOM, label: 'custom' },
             ...NAMED_CURVES.map((entry) => ({ value: entry.name, label: entry.name })),
           ]}
-          aria-label="Named curve"
+          aria-label={copy.namedCurve}
         />
         <p className="m-0 font-mono text-2xs text-foreground-muted" data-testid="bezier-value">
           {toCssString(curve)}
         </p>
         <BezierPreview key={replay} curve={curve} duration={duration} reduced={reduced} />
         <Button size="sm" variant="secondary" onClick={() => setReplay((count) => count + 1)}>
-          Replay
+          {copy.replay}
         </Button>
-        {reduced && (
-          <p className="m-0 text-2xs text-foreground-subtle">
-            Reduced motion is on, so the dot holds its end state.
-          </p>
-        )}
+        {reduced && <p className="m-0 text-2xs text-foreground-subtle">{copy.reducedMotionDot}</p>}
         <output aria-live="polite" className="sr-only" data-testid="bezier-announcement">
           {message}
         </output>

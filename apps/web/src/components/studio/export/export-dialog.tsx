@@ -85,15 +85,15 @@ export function ExportDialog() {
   )
 
   const copyFile = useCallback(
-    (file: ExportFile) => copy(file.contents, `Copied ${file.path}`),
-    [copy],
+    (file: ExportFile) => copy(file.contents, strings.copiedFile.replace('{path}', file.path)),
+    [copy, strings.copiedFile],
   )
 
   const copyAll = useCallback(() => {
     const all = snapshot.files.map((file) => `// ${file.path}\n${file.contents}`).join('\n\n')
 
-    copy(all, `Copied ${snapshot.files.length} files`)
-  }, [copy, snapshot.files])
+    copy(all, formatPlural(locale, snapshot.files.length, strings.copiedFiles))
+  }, [copy, locale, snapshot.files, strings.copiedFiles])
 
   /**
    * The escape hatch behind a failed export — `prompts/58` § The five boundaries.

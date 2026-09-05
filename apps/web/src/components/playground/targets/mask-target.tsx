@@ -3,6 +3,8 @@
 import { Segmented } from '@motion-studio/ui'
 import { type ReactElement, useState } from 'react'
 
+import { usePlayground } from '../../../lib/i18n/playground-surface'
+
 import type { TargetProps } from './target.types'
 
 /**
@@ -26,6 +28,7 @@ const CHECKERBOARD =
   'bg-[length:16px_16px] bg-[position:0_0,0_8px,8px_-8px,-8px_0] bg-[linear-gradient(45deg,oklch(30%_0_0)_25%,transparent_25%),linear-gradient(-45deg,oklch(30%_0_0)_25%,transparent_25%),linear-gradient(45deg,transparent_75%,oklch(30%_0_0)_75%),linear-gradient(-45deg,transparent_75%,oklch(30%_0_0)_75%)]'
 
 export function MaskTarget({ targetRef, applied, initialStyle }: TargetProps): ReactElement {
+  const copy = usePlayground()
   const [view, setView] = useState<View>('result')
   const showsResult = view !== 'mask'
   const showsMask = view !== 'result'
@@ -64,7 +67,7 @@ export function MaskTarget({ targetRef, applied, initialStyle }: TargetProps): R
           value={view}
           onValueChange={(next) => setView(next as View)}
           options={VIEWS}
-          aria-label="Mask preview"
+          aria-label={copy.maskPreview}
         />
       </div>
     </div>

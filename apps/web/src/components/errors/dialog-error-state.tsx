@@ -4,6 +4,7 @@ import { Button } from '@motion-studio/ui'
 import { useState } from 'react'
 
 import { useErrors } from '../../lib/i18n/error-surface'
+import { useStudio } from '../../lib/i18n/studio-surface'
 
 import { DownloadDocumentButton } from './download-document-button'
 import { ErrorDetails } from './error-details'
@@ -29,6 +30,7 @@ export interface DialogErrorStateProps {
  */
 export function DialogErrorState({ report, warnings, onCopyJson, onRetry }: DialogErrorStateProps) {
   const copy = useErrors()
+  const { export: exportCopy } = useStudio()
   const [copied, setCopied] = useState(false)
 
   return (
@@ -61,7 +63,7 @@ export function DialogErrorState({ report, warnings, onCopyJson, onRetry }: Dial
           size="sm"
           variant="primary"
         >
-          {copied ? 'Copied' : 'Copy JSON instead'}
+          {copied ? exportCopy.copied : exportCopy.copyJsonInstead}
         </Button>
         <DownloadDocumentButton />
         <Button onClick={onRetry} size="sm" variant="ghost">

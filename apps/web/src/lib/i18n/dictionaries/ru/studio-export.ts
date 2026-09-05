@@ -52,6 +52,13 @@ export const studioExport: Dictionary['studio']['export'] = {
   downloadZip: 'Скачать .zip',
   zipping: 'Пакуем…',
   nothingCopied: 'Ничего не скопировалось',
+  copiedFile: 'Скопировано: {path}',
+  copiedFiles: {
+    one: 'Скопирован {count} файл',
+    few: 'Скопировано {count} файла',
+    many: 'Скопировано {count} файлов',
+    other: 'Скопировано {count} файла',
+  },
   copiedAsJson: 'Документ скопирован как JSON',
   copyJsonInstead: 'Скопировать JSON вместо этого',
 

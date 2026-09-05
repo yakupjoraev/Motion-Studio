@@ -28,6 +28,9 @@ export const playground: Dictionary['playground'] = {
   sendToBlock: 'Отправить в «{name}»',
   studioNotListening: 'Студия не слушает. Откройте её и выделите блок.',
   selectOneBlock: 'Выделите один блок в студии — и значение уйдёт к нему.',
+  sentToBlock: '{property} отправлено в «{name}». Отмена в студии уберёт это.',
+  blockPaintsItself: '«{name}» не принимает {property} отсюда: это свойство блок рисует сам.',
+  landsAsChip: 'Ляжет на «{name}» отдельным чипом своего CSS.',
 
   noBezier: 'В этом значении нет cubic-bezier(), который можно тянуть.',
   addBezier: 'Добавить',

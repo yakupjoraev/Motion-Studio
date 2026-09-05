@@ -3,6 +3,8 @@
 import { Segmented } from '@motion-studio/ui'
 import { type ReactElement, type RefObject, useCallback, useMemo, useRef } from 'react'
 
+import { usePlayground } from '../../../lib/i18n/playground-surface'
+
 import { useAnnouncement } from '../use-announcement'
 import { parseParametricShape, serializeParametricShape, shapeKindOf } from './basic-shape'
 import {
@@ -38,6 +40,7 @@ export function ClipPathEditor({
   onValueChange,
   target,
 }: ClipPathEditorProps): ReactElement {
+  const copy = usePlayground()
   const root = useRef<HTMLDivElement | null>(null)
   const size = useOverlaySize(root)
   const { message, announce } = useAnnouncement()
@@ -103,7 +106,7 @@ export function ClipPathEditor({
             className="m-0 rounded-md bg-surface-1/90 px-3 py-2 text-2xs text-foreground-muted"
             data-testid="clip-path-note"
           >
-            A path() is edited as text: its commands are not a list of vertices.
+            {copy.pathIsText}
           </p>
         )}
         {!polygon.ok && kind === 'polygon' && (
@@ -116,12 +119,12 @@ export function ClipPathEditor({
         )}
         {polygon.ok && (
           <div className="flex items-center gap-2 rounded-md bg-surface-1/90 px-2 py-1">
-            <span className="text-2xs text-foreground-muted">Units</span>
+            <span className="text-2xs text-foreground-muted">{copy.units}</span>
             <Segmented
               options={UNITS}
               value={polygon.value.unit}
               onValueChange={onUnit}
-              aria-label="Vertex units"
+              aria-label={copy.vertexUnits}
             />
           </div>
         )}
