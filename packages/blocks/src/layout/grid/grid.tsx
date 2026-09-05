@@ -7,5 +7,10 @@ import type { GridProps } from './grid.types'
  * want.
  */
 export function Grid({ children, ...props }: GridProps) {
-  return <div className={gridClassName(props)}>{children}</div>
+  return (
+    // A scrolling region needs a keyboard route into it — WCAG 2.1.1.
+    <div className={gridClassName(props)} tabIndex={props.narrow === 'slider' ? 0 : undefined}>
+      {children}
+    </div>
+  )
 }

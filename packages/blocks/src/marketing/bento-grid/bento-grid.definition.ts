@@ -1,7 +1,7 @@
 import { blockId } from '@motion-studio/schema'
 
 import { defineBlock } from '../../define-block'
-import { optionsFrom } from '../../scales'
+import { NARROW_LAYOUTS, optionsFrom } from '../../scales'
 import { SECTION_FRAME_CONTROLS, sectionCopyGroup } from '../marketing.controls'
 
 import { bentoGridMotion } from './bento-grid.motion'
@@ -75,6 +75,13 @@ export const bentoGridDefinition = defineBlock({
               },
             ],
           },
+        },
+        {
+          path: 'narrow',
+          kind: 'segmented',
+          label: 'On narrow',
+          hint: 'Below 640 px: swipe through the cells, or stack them',
+          options: { options: optionsFrom(NARROW_LAYOUTS) },
         },
         {
           path: 'gapless',

@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { narrowLayout } from '../../scales'
+
 import { sectionCopyFields, sectionFrameFields } from '../marketing.schema'
 
 export const MAX_CELLS = 8
@@ -43,6 +45,7 @@ export const bentoGridSchema = z.object({
    * that makes a grid read as a single panel rather than as a tray of cards.
    */
   gapless: z.boolean().default(false),
+  narrow: narrowLayout,
   cellHeight: z.enum(CELL_HEIGHTS).default('md'),
   ...sectionFrameFields(),
 })

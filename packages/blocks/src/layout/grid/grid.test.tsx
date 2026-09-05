@@ -18,6 +18,43 @@ const classesOf = (overrides: Record<string, unknown> = {}) => {
 }
 
 describe('Grid', () => {
+  /*
+   * ADR-357, and a prop rather than a default here: this grid holds whatever a user put in it, so only
+   * they know whether a swipe hides something. Both arrangements are asserted, in both grid modes,
+   * because `gridClassName` builds the two through separate branches.
+   */
+  describe('the narrow arrangement', () => {
+    it('is a swipe track in explicit mode', () => {
+      const className = classesOf({ mode: 'explicit', narrow: 'slider' })
+
+      expect(className).toContain('snap-x')
+      expect(className).toContain('-mx-6')
+      expect(className).toContain('@min-[640px]/frame:grid')
+    })
+
+    it('is a swipe track in auto-fit mode too', () => {
+      expect(classesOf({ mode: 'auto-fit', narrow: 'slider' })).toContain('snap-x')
+    })
+
+    it('is a plain grid when it is a stack', () => {
+      const className = classesOf({ mode: 'explicit', narrow: 'stack' })
+
+      expect(className).toContain('grid-cols-1')
+      expect(className).not.toContain('snap-x')
+    })
+
+    it('takes a tab stop only as a slider', () => {
+      const { container, unmount } = renderBlock(definition, Grid, { narrow: 'slider' })
+
+      expect(container.firstElementChild).toHaveAttribute('tabindex', '0')
+      unmount()
+
+      const stacked = renderBlock(definition, Grid, { narrow: 'stack' })
+
+      expect(stacked.container.firstElementChild).not.toHaveAttribute('tabindex')
+      stacked.unmount()
+    })
+  })
   it('gives explicit mode a column class that steps down on small screens', () => {
     const className = classesOf({ mode: 'explicit', columns: 3 })
 

@@ -26,6 +26,49 @@ describe('bentoCells', () => {
 })
 
 describe('BentoGrid', () => {
+  /*
+   * ADR-357. A bento composition is cells of deliberately different weights; stacking makes every one
+   * the same full-width box, which is the single arrangement a bento grid is not.
+   */
+  describe('the narrow arrangement', () => {
+    const grid = (): HTMLElement => {
+      const cell = screen.getAllByTestId('bento-cell')[0]
+      const parent = cell?.parentElement
+
+      if (parent === null || parent === undefined) {
+        throw new Error('the bento cells have no container')
+      }
+
+      return parent
+    }
+
+    it('is a keyboard-reachable swipe track as a slider', () => {
+      renderBlock(definition, BentoGrid, { narrow: 'slider' })
+
+      expect(grid()).toHaveAttribute('tabindex', '0')
+      expect(grid().className).toContain('snap-x')
+    })
+
+    it('keeps the gapless panel border on the band as a slider', () => {
+      renderBlock(definition, BentoGrid, { narrow: 'slider', gapless: true })
+
+      expect(grid().className).toContain('rounded-2xl')
+      expect(grid().className).not.toContain('-mx-6')
+    })
+
+    it('reaches the band edges when there is no panel', () => {
+      renderBlock(definition, BentoGrid, { narrow: 'slider', gapless: false })
+
+      expect(grid().className).toContain('-mx-6')
+    })
+
+    it('takes no tab stop when the cells are stacked', () => {
+      renderBlock(definition, BentoGrid, { narrow: 'stack' })
+
+      expect(grid()).not.toHaveAttribute('tabindex')
+      expect(grid().className).toContain('grid-cols-1')
+    })
+  })
   it('draws one cell per entry in the arrangement', () => {
     renderBlock(definition, BentoGrid)
 

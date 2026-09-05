@@ -1,5 +1,7 @@
 import { cva } from 'class-variance-authority'
 
+import { NARROW_BLEED, NARROW_SLIDER_INSET, NARROW_STACK } from '../../narrow-track'
+
 /**
  * Four tracks above `lg`, two above `sm`, one below it — so a cell that spans two columns spans half the
  * grid at every width where spanning means anything, and the whole composition becomes a stack at
@@ -12,14 +14,32 @@ import { cva } from 'class-variance-authority'
  * arrangement.
  */
 export const bentoGridStyles = cva(
-  'grid grid-cols-1 @min-[640px]/frame:grid-cols-2 @min-[1024px]/frame:grid-cols-4',
+  '@min-[640px]/frame:grid-cols-2 @min-[1024px]/frame:grid-cols-4',
   {
     variants: {
       gapless: {
         true: 'gap-px overflow-hidden rounded-2xl border border-border bg-border',
         false: 'gap-4',
       },
+      /**
+       * ADR-357. A bento composition is a set of cells of deliberately different weights, and stacking
+       * it throws that away — every cell becomes the same full-width box, which is the one arrangement
+       * a bento grid is not. As a swipe the sizes stay relative to each other.
+       */
+      narrow: {
+        stack: NARROW_STACK,
+        slider: NARROW_SLIDER_INSET,
+      },
     },
+    compoundVariants: [
+      {
+        // Gapless draws a rounded panel around the whole grid; bleeding would drag its border off both
+        // edges of the band. Off the panel the track reaches the edges as everywhere else.
+        gapless: false,
+        narrow: 'slider',
+        class: NARROW_BLEED,
+      },
+    ],
   },
 )
 

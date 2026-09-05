@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { spaceScale, visibility } from '../../scales'
+import { narrowLayout, spaceScale, visibility } from '../../scales'
 
 export const GRID_MODES = ['explicit', 'auto-fit'] as const
 
@@ -14,6 +14,7 @@ export type MinItemWidth = (typeof MIN_ITEM_WIDTHS)[number]
 
 export const gridSchema = z.object({
   mode: z.enum(GRID_MODES).default('explicit'),
+  narrow: narrowLayout,
   columns: z.number().int().min(1).max(MAX_COLUMNS).default(3),
   /** Auto-fit only: the width below which a column wraps to the next row. */
   minItemWidth: z.enum(MIN_ITEM_WIDTHS).default('md'),

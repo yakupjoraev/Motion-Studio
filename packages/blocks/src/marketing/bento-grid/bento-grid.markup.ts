@@ -23,6 +23,7 @@ export const bentoGridMarkup = defineMarkup<BentoGridProps>(
       headingAlign,
       cells,
       gapless,
+      narrow,
       cellHeight,
       hidden,
     },
@@ -33,7 +34,11 @@ export const bentoGridMarkup = defineMarkup<BentoGridProps>(
       hidden,
       children: [
         el('div', {
-          classNames: [bentoGridStyles({ gapless })],
+          classNames: [bentoGridStyles({ gapless, narrow })],
+          // Matches the component: a scrolling region needs a keyboard route in (WCAG 2.1.1).
+          ...(narrow === 'slider'
+            ? { attributes: { tabindex: { kind: 'literal' as const, value: '0' } } }
+            : {}),
           // The arrangement is the block's; which child lands in which cell is the document's, and a
           // cell is addressed by position — the same index the canvas reads.
           children: bentoCells(cells, slots['children'] ?? 0).map((span, index) =>

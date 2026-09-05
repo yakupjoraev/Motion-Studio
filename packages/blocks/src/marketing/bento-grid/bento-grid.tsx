@@ -23,6 +23,7 @@ export function BentoGrid({
   headingAlign,
   cells,
   gapless,
+  narrow,
   cellHeight,
   hidden,
   children,
@@ -33,7 +34,11 @@ export function BentoGrid({
 
   return (
     <MarketingSection copy={copy} hidden={hidden} testId="bento-grid">
-      <div className={bentoGridStyles({ gapless })}>
+      {/* A scrolling region needs a keyboard route into it — WCAG 2.1.1. */}
+      <div
+        className={bentoGridStyles({ gapless, narrow })}
+        tabIndex={narrow === 'slider' ? 0 : undefined}
+      >
         {spans.map((span, index) => (
           // The cell's position *is* its identity: `cells` is an arrangement, and the child that lands in
           // a cell is chosen by index. Keying by content would remount every cell when a span changes.

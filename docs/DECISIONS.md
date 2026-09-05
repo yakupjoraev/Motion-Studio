@@ -14671,3 +14671,37 @@ A `narrow` prop on the block — `slider` (default) or `stack` — rendered as a
   no second implementation to keep in step.
 - `narrow` is the first of the "two arrangements, user picks" props. It is a pattern for the other
   card blocks — pricing, bento, logos, stats — rather than a one-off here.
+
+## ADR-358 — Which blocks do not get a narrow arrangement, and why
+
+**Date** 2026-09-05 · **Prompt** 63 · **Status** Accepted
+
+### Question
+ADR-357 gave `feature-grid` a slider-or-stack choice and the pattern was carried to `pricing-table`,
+`stat-grid`, `bento-grid` and `layout/grid`. The remaining candidates were checked one at a time rather
+than converted, because "every block gets the prop" is a rule nobody chose and a block wearing a
+control that helps nobody is a worse product than one without it.
+
+### The blocks that did not take it, each for its own reason
+
+| Block | Why not |
+| --- | --- |
+| `logo-cloud` | **It already has the choice.** `LOGO_MODES` is `grid` or `marquee`, and a marquee is the moving arrangement a slider would be. A third would be a second way to do the same thing. Its grid is also two columns on a phone, not one: a logo mark is 40 px tall and two of them read fine at 320 px. |
+| `comparison-table` | **It already solved this, better.** `COMPARISON_SCROLLER` is `overflow-x: auto` with `tabindex="0"`, a labelled `role="region"` and a visible hint under the table. That is the same pattern the slider arrived at, applied to the one block where the columns must stay aligned — a table whose rows swipe independently is not a comparison. |
+| `testimonial-marquee` | It is a marquee. The row already moves, and a snap track over an animated one is two scroll models fighting for the same gesture. |
+| `feature-split` | Its children are rows of text beside media, not cards. A row is most of a screen tall on a phone, so a swipe would hide the section's content behind a gesture rather than compress it. |
+| `interactive/carousel` | It *is* the slider, with its own controls, dots and `perView`. Adding `narrow` would give it two conflicting implementations of one behaviour. |
+| `layout/columns` | Two columns of composed content, with `reverseOnMobile` already answering the narrow question — which of the two comes first. Cards are not what goes in it. |
+
+### The rule this leaves
+A block gets `narrow` when it lays out **a set of peers a reader compares**. It does not when the
+children are not peers (`feature-split`), when comparison requires alignment (`comparison-table`), when
+something already moves (`marquee`, `carousel`), or when the choice exists under another name
+(`logo-cloud`, `layout/columns`).
+
+### Consequences
+- Six blocks carry `narrow`: `feature-grid`, `pricing-table`, `stat-grid`, `bento-grid`, `layout/grid`,
+  and the pattern is documented for any block added later.
+- The six above are recorded here rather than left as an absence somebody re-opens in three months.
+- `bento-grid` and `stat-grid` needed the compound variant ADR-357 describes: on a drawn panel the
+  track does not bleed, because dragging a rounded border off both edges reads as a broken box.

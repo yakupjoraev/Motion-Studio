@@ -1,7 +1,7 @@
 import { blockId } from '@motion-studio/schema'
 
 import { defineBlock } from '../../define-block'
-import { SPACE_SCALE, optionsFrom } from '../../scales'
+import { NARROW_LAYOUTS, SPACE_SCALE, optionsFrom } from '../../scales'
 
 import { gridMotion } from './grid.motion'
 import { GRID_MODES, MAX_COLUMNS, MIN_ITEM_WIDTHS, gridSchema } from './grid.schema'
@@ -39,6 +39,13 @@ export const gridDefinition = defineBlock({
           kind: 'segmented',
           label: 'Mode',
           options: { options: optionsFrom(GRID_MODES) },
+        },
+        {
+          path: 'narrow',
+          kind: 'segmented',
+          label: 'On narrow',
+          hint: 'Below 640 px: swipe through the items, or stack them',
+          options: { options: optionsFrom(NARROW_LAYOUTS) },
         },
         {
           path: 'columns',
