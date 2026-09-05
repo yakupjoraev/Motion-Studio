@@ -3,6 +3,7 @@
 import { FONT_PAIRING } from '@motion-studio/theme'
 import type { SegmentedOption, SelectOption } from '@motion-studio/ui'
 
+import { useStudio } from '../../../../lib/i18n/studio-surface'
 import { ThemeSegmentedRow } from './theme-segmented-row'
 import { ThemeSelectRow } from './theme-select-row'
 import { useThemeEdit } from './use-theme-edit'
@@ -34,26 +35,27 @@ const RATIOS: readonly SegmentedOption[] = [1.2, 1.25, 1.333].map((ratio) => ({
 
 /** Font pairing, base size, scale ratio — `THEME_ENGINE.md` § Theme builder UI, third block. */
 export function TypographyControls() {
+  const { theme: copy } = useStudio()
   const { config, set } = useThemeEdit()
 
   return (
     <>
       <ThemeSelectRow
-        label="Font pairing"
+        label={copy.fontPairing}
         onSelect={(value) => set('typography.pairing', value)}
         options={PAIRINGS}
         value={config.typography.pairing}
       />
 
       <ThemeSegmentedRow
-        label="Base size"
+        label={copy.baseSize}
         onSelect={(value) => set('typography.baseSize', Number(value))}
         options={SIZES}
         value={String(config.typography.baseSize)}
       />
 
       <ThemeSegmentedRow
-        label="Scale ratio"
+        label={copy.scaleRatio}
         onSelect={(value) => set('typography.scaleRatio', Number(value))}
         options={RATIOS}
         value={String(config.typography.scaleRatio)}

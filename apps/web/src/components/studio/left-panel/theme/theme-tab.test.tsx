@@ -1,8 +1,8 @@
 import { createEmptyDocument, nodeId } from '@motion-studio/schema'
 import { PRESETS, type ThemeConfig } from '@motion-studio/theme'
-import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
+import { act, render, screen, waitFor, within } from '../../../../test/render'
 
 import { useStudioStore } from '../../../../store/editor-store'
 

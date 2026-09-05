@@ -4,6 +4,7 @@ import { TOKEN_FORMATS, type ThemeConfig, resolveForExport } from '@motion-studi
 import { Button, Dialog, type TabItem, Tabs } from '@motion-studio/ui'
 import { useMemo, useState } from 'react'
 
+import { useStudio } from '../../../../lib/i18n/studio-surface'
 import { TokenFormatPanel } from './token-format-panel'
 
 export interface ExportTokensDialogProps {
@@ -19,6 +20,7 @@ export interface ExportTokensDialogProps {
  * kilobytes each, and nothing else in the studio needs them.
  */
 export function ExportTokensDialog({ config }: ExportTokensDialogProps) {
+  const { theme: copy } = useStudio()
   const [open, setOpen] = useState(false)
 
   const items = useMemo<readonly TabItem[]>(() => {
@@ -43,7 +45,7 @@ export function ExportTokensDialog({ config }: ExportTokensDialogProps) {
       onOpenChange={setOpen}
       open={open}
       size="lg"
-      title="Export tokens"
+      title={copy.exportTokens}
       trigger={
         <Button size="sm" variant="secondary">
           Export tokens
@@ -51,7 +53,7 @@ export function ExportTokensDialog({ config }: ExportTokensDialogProps) {
       }
     >
       {first === undefined ? null : (
-        <Tabs aria-label="Token formats" defaultValue={first.value} items={items} />
+        <Tabs aria-label={copy.tokenFormats} defaultValue={first.value} items={items} />
       )}
     </Dialog>
   )

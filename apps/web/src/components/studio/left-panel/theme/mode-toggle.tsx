@@ -2,6 +2,8 @@
 
 import type { SegmentedOption } from '@motion-studio/ui'
 
+import { useStudio } from '../../../../lib/i18n/studio-surface'
+
 import { ThemeSegmentedRow } from './theme-segmented-row'
 import { useThemeEdit } from './use-theme-edit'
 
@@ -13,20 +15,21 @@ import { useThemeEdit } from './use-theme-edit'
  * name per option anyway. `system` is not a third appearance — it is a subscription to the OS, which
  * `ThemeHost` holds.
  */
-const MODES: readonly SegmentedOption[] = [
-  { value: 'light', content: 'Light', label: 'Light mode' },
-  { value: 'dark', content: 'Dark', label: 'Dark mode' },
-  { value: 'system', content: 'System', label: 'Follow the system' },
-]
-
 export function ModeToggle() {
+  const { theme: copy } = useStudio()
   const { config, set } = useThemeEdit()
+
+  const modes: readonly SegmentedOption[] = [
+    { value: 'light', content: copy.light, label: copy.lightMode },
+    { value: 'dark', content: copy.dark, label: copy.darkMode },
+    { value: 'system', content: copy.system, label: copy.followSystem },
+  ]
 
   return (
     <ThemeSegmentedRow
-      label="Mode"
+      label={copy.mode}
       onSelect={(value) => set('colorMode', value)}
-      options={MODES}
+      options={modes}
       value={config.colorMode}
     />
   )

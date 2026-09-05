@@ -2,6 +2,7 @@
 
 import type { SegmentedOption } from '@motion-studio/ui'
 
+import { useStudio } from '../../../../lib/i18n/studio-surface'
 import { ThemeSegmentedRow } from './theme-segmented-row'
 import { useThemeEdit } from './use-theme-edit'
 
@@ -34,26 +35,27 @@ const BORDERS: readonly SegmentedOption[] = [
 ]
 
 export function SurfaceControls() {
+  const { theme: copy } = useStudio()
   const { config, set } = useThemeEdit()
 
   return (
     <>
       <ThemeSegmentedRow
-        label="Glass"
+        label={copy.glass}
         onSelect={(value) => set('surface.glassLevel', value)}
         options={GLASS}
         value={config.surface.glassLevel}
       />
 
       <ThemeSegmentedRow
-        label="Noise"
+        label={copy.noise}
         onSelect={(value) => set('surface.noiseLevel', value)}
         options={NOISE}
         value={config.surface.noiseLevel}
       />
 
       <ThemeSegmentedRow
-        label="Borders"
+        label={copy.borders}
         onSelect={(value) => set('surface.borderStyle', value)}
         options={BORDERS}
         value={config.surface.borderStyle}

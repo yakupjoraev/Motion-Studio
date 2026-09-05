@@ -4,6 +4,7 @@ import { NEUTRAL_HUES } from '@motion-studio/theme'
 import type { SelectOption } from '@motion-studio/ui'
 import { ColorField, ControlRow } from '@motion-studio/ui/controls'
 
+import { useStudio } from '../../../../lib/i18n/studio-surface'
 import { ThemeSelectRow } from './theme-select-row'
 import { ThemeSliderRow } from './theme-slider-row'
 import { useThemeEdit } from './use-theme-edit'
@@ -21,16 +22,17 @@ const NEUTRAL_OPTIONS: readonly SelectOption[] = NEUTRAL_HUES.map((hue) => ({
  * fires per pointer move, and the picker's own commit is what becomes the history entry.
  */
 export function PaletteControls() {
+  const { theme: copy } = useStudio()
   const { config, preview, commit, set } = useThemeEdit()
   const { accent, neutral, accentHueShift, saturation } = config.palette
 
   return (
     <>
-      <ControlRow label="Accent">
+      <ControlRow label={copy.accent}>
         {(slot) => (
           <ColorField
             {...slot}
-            label="Accent"
+            label={copy.accent}
             onChange={(value) => {
               if (value.kind === 'color') {
                 preview('palette.accent', value.color)
@@ -47,14 +49,14 @@ export function PaletteControls() {
       </ControlRow>
 
       <ThemeSelectRow
-        label="Neutral"
+        label={copy.neutral}
         onSelect={(value) => set('palette.neutral', value)}
         options={NEUTRAL_OPTIONS}
         value={neutral}
       />
 
       <ThemeSliderRow
-        label="Hue shift"
+        label={copy.hueShift}
         max={30}
         min={-30}
         onCommit={(value) => commit('palette.accentHueShift', value)}
@@ -65,7 +67,7 @@ export function PaletteControls() {
       />
 
       <ThemeSliderRow
-        label="Saturation"
+        label={copy.saturation}
         max={1.5}
         min={0.5}
         onCommit={(value) => commit('palette.saturation', value)}
