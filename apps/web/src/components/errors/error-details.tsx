@@ -1,5 +1,7 @@
 'use client'
 
+import { useErrors } from '../../lib/i18n/error-surface'
+
 import { Button, Collapsible } from '@motion-studio/ui'
 import { useState } from 'react'
 
@@ -18,6 +20,7 @@ export interface ErrorDetailsProps {
  * labelled *report* is right to assume it phones home. Nothing here does: it is a clipboard write.
  */
 export function ErrorDetails({ report }: ErrorDetailsProps) {
+  const copy = useErrors()
   const [copied, setCopied] = useState(false)
 
   return (
@@ -39,9 +42,9 @@ export function ErrorDetails({ report }: ErrorDetailsProps) {
             size="sm"
             variant="secondary"
           >
-            {copied ? 'Copied' : 'Copy report'}
+            {copied ? copy.copied : copy.copyReport}
           </Button>
-          <span className="text-2xs text-foreground-subtle">Nothing is sent automatically.</span>
+          <span className="text-2xs text-foreground-subtle">{copy.nothingSent}</span>
         </div>
       </div>
     </Collapsible>

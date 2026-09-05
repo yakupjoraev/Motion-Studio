@@ -1,7 +1,7 @@
 import { createEmptyDocument, nodeId } from '@motion-studio/schema'
-import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { render, screen } from '../../src/test/render'
 
 import RouteError from './error'
 

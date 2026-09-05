@@ -1,8 +1,8 @@
 import { blockRegistry } from '@motion-studio/blocks'
 import { type MotionDocument, createEmptyDocument } from '@motion-studio/schema'
-import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { render, screen } from '../../test/render'
 
 import { importDocument } from '../../lib/documents/import-document'
 import { useStudioStore } from '../../store/editor-store'

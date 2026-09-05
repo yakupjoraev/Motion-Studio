@@ -1,10 +1,10 @@
 import { RectCacheContext, createRectCache } from '@motion-studio/canvas'
 import { commands } from '@motion-studio/editor'
 import { type NodeId, blockId, createEmptyDocument, nodeId } from '@motion-studio/schema'
-import { act, render, screen } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
 import type { ComponentType } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { act, render, screen } from '../../../test/render'
 
 import { useStudioStore } from '../../../store/editor-store'
 

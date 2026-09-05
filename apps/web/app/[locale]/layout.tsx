@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import type { ReactNode } from 'react'
 
 import { getDictionary } from '../../src/lib/i18n/dictionary'
+import { ErrorDictionary } from '../../src/lib/i18n/error-surface'
 import { LocaleProvider } from '../../src/lib/i18n/locale-context'
 import { HTML_LANG, LOCALES, isLocale } from '../../src/lib/i18n/locales'
 import { NavDictionary } from '../../src/lib/i18n/surfaces'
@@ -90,7 +91,9 @@ export default async function RootLayout({ children, params }: RootLayoutProps) 
       </head>
       <body>
         <LocaleProvider locale={locale}>
-          <NavDictionary value={getDictionary(locale).nav}>{children}</NavDictionary>
+          <ErrorDictionary value={getDictionary(locale).errors}>
+            <NavDictionary value={getDictionary(locale).nav}>{children}</NavDictionary>
+          </ErrorDictionary>
         </LocaleProvider>
         <ThemeBoot />
       </body>
