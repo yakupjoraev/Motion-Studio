@@ -6,6 +6,9 @@ import { Dialog, useToast } from '@motion-studio/ui'
 import dynamic from 'next/dynamic'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
+import { useLocale } from '../../../lib/i18n/locale-context'
+import { formatPlural } from '../../../lib/i18n/plural'
+import { useStudio } from '../../../lib/i18n/studio-surface'
 import { useStudioStore } from '../../../store/editor-store'
 import { DialogErrorState } from '../../errors/dialog-error-state'
 import { ErrorBoundary } from '../../errors/error-boundary'
@@ -42,6 +45,8 @@ const prefetchExportPanels = (): void => {
  * `download-actions` and `code-viewer`, and its two heaviest children are prefetched on idle.
  */
 export function ExportDialog() {
+  const { export: strings } = useStudio()
+  const { locale } = useLocale()
   const open = useStudioStore((state) => state.ui.exportDialogOpen)
   const documentName = useStudioStore((state) => state.document.meta.name)
   const setOpen = useStudioStore((state) => state.setExportDialogOpen)
@@ -73,10 +78,10 @@ export function ExportDialog() {
     (text: string, title: string): void => {
       navigator.clipboard.writeText(text).then(
         () => notify({ title }),
-        () => notify({ title: 'Nothing was copied', tone: 'danger' }),
+        () => notify({ title: strings.nothingCopied, tone: 'danger' }),
       )
     },
-    [notify],
+    [notify, strings.nothingCopied],
   )
 
   const copyFile = useCallback(
@@ -100,8 +105,8 @@ export function ExportDialog() {
     const document = useStudioStore.getState().document
 
     await navigator.clipboard.writeText(JSON.stringify(document, null, 2))
-    notify({ title: 'Copied the document as JSON' })
-  }, [notify])
+    notify({ title: strings.copiedAsJson })
+  }, [notify, strings.copiedAsJson])
 
   /** Re-runs the generation with the options that are already chosen. */
   const regenerate = useCallback(() => setOptions({}), [setOptions])
@@ -119,11 +124,11 @@ export function ExportDialog() {
 
   return (
     <Dialog
-      description="Generated from the document in the canvas. Warnings first, then the code."
+      description={strings.description}
       onOpenChange={setOpen}
       open={open}
       size="lg"
-      title="Export"
+      title={strings.title}
       footer={
         <>
           <span
@@ -131,10 +136,13 @@ export function ExportDialog() {
             data-testid="export-status"
           >
             {snapshot.status === 'failed'
-              ? 'Export failed'
+              ? strings.failed
               : snapshot.elapsedMs === null
-                ? 'Generating…'
-                : `${snapshot.files.length} files in ${Math.round(snapshot.elapsedMs)} ms`}
+                ? strings.generating
+                : formatPlural(locale, snapshot.files.length, strings.finished).replace(
+                    '{ms}',
+                    String(Math.round(snapshot.elapsedMs)),
+                  )}
           </span>
 
           <DownloadActions

@@ -3,6 +3,9 @@
 import { Dialog } from '@motion-studio/ui'
 import { useEffect, useState } from 'react'
 
+import { useLocale } from '../../../lib/i18n/locale-context'
+import { formatPlural } from '../../../lib/i18n/plural'
+import { useStudio } from '../../../lib/i18n/studio-surface'
 import { useStudioStore } from '../../../store/editor-store'
 
 import { useDocuments } from './documents-context'
@@ -31,6 +34,8 @@ const CARD =
  * dialog is the first thing that needs them.
  */
 export function TemplatePicker() {
+  const { documents: copy } = useStudio()
+  const { locale } = useLocale()
   const open = useStudioStore((state) => state.ui.activeDialog === 'templates')
   const setActiveDialog = useStudioStore((state) => state.setActiveDialog)
   const { newBlank, newFromTemplate } = useDocuments()
@@ -60,21 +65,19 @@ export function TemplatePicker() {
 
   return (
     <Dialog
-      description="Start from a page that is already built, or from nothing at all."
+      description={copy.newDescription}
       onOpenChange={(next) => setActiveDialog(next ? 'templates' : null)}
       open={open}
       size="lg"
-      title="New document"
+      title={copy.newTitle}
     >
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3" data-testid="template-picker">
         <button className={CARD} onClick={() => start(newBlank)} type="button">
           <span className="flex h-[92px] items-center justify-center rounded-md border border-border border-dashed text-foreground-muted text-xs">
-            Empty
+            {copy.emptyPreview}
           </span>
-          <span className="font-medium text-sm">Blank</span>
-          <span className="text-foreground-muted text-xs">
-            One root container. The canvas says what to do next.
-          </span>
+          <span className="font-medium text-sm">{copy.blank}</span>
+          <span className="text-foreground-muted text-xs">{copy.blankDescription}</span>
         </button>
 
         {templates.map((template) => (
@@ -90,7 +93,9 @@ export function TemplatePicker() {
             </span>
             <span className="flex items-baseline justify-between gap-2">
               <span className="font-medium text-sm">{template.name}</span>
-              <span className="text-foreground-muted text-xs">{template.nodeCount} blocks</span>
+              <span className="text-foreground-muted text-xs">
+                {formatPlural(locale, template.nodeCount, copy.blockCount)}
+              </span>
             </span>
             <span className="text-foreground-muted text-xs">{template.description}</span>
           </button>

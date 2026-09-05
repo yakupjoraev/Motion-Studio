@@ -2,6 +2,8 @@
 
 import { InfoIcon, WarningIcon } from '@motion-studio/icons'
 
+import { useStudio } from '../../../lib/i18n/studio-surface'
+
 import type { ImportNote } from '../../../lib/documents/import-document'
 
 export interface ImportReportProps {
@@ -14,12 +16,9 @@ export interface ImportReportProps {
  * a repair touched one node and reads as though nothing happened.
  */
 export function ImportReport({ notes }: ImportReportProps) {
+  const { documents: copy } = useStudio()
   if (notes.length === 0) {
-    return (
-      <p className="text-foreground-muted text-sm">
-        Nothing needed repairing. The file opened as it was written.
-      </p>
-    )
+    return <p className="text-foreground-muted text-sm">{copy.nothingRepaired}</p>
   }
 
   return (
@@ -35,7 +34,9 @@ export function ImportReport({ notes }: ImportReportProps) {
             {note.tone === 'warning' ? <WarningIcon size={16} /> : <InfoIcon size={16} />}
           </span>
           <span className="min-w-0">
-            <span className="sr-only">{note.tone === 'warning' ? 'Repaired: ' : 'Note: '}</span>
+            <span className="sr-only">
+              {note.tone === 'warning' ? copy.repairedPrefix : copy.notePrefix}
+            </span>
             {note.message}
           </span>
         </li>

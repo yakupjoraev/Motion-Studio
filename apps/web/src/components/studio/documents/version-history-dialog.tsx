@@ -3,13 +3,17 @@
 import { Button, Dialog, EmptyState } from '@motion-studio/ui'
 import { useEffect, useState } from 'react'
 
+import { useLocale } from '../../../lib/i18n/locale-context'
+import type { Locale } from '../../../lib/i18n/locales'
+import { formatPlural } from '../../../lib/i18n/plural'
+import { useStudio } from '../../../lib/i18n/studio-surface'
 import { type SnapshotMeta, listSnapshots } from '../../../lib/storage/document-store'
 import { useStudioStore } from '../../../store/editor-store'
 
 import { useDocuments } from './documents-context'
 
-const at = (createdAt: number): string =>
-  new Date(createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
+const at = (createdAt: number, locale: Locale): string =>
+  new Date(createdAt).toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'short' })
 
 /**
  * `File → Version history` — FILE_FORMAT.md § Autosave. Ten snapshots, newest first, each with the
@@ -17,6 +21,8 @@ const at = (createdAt: number): string =>
  * step back out is the same `Mod+Z` as any other edit.
  */
 export function VersionHistoryDialog() {
+  const { documents: copy } = useStudio()
+  const { locale } = useLocale()
   const open = useStudioStore((state) => state.ui.activeDialog === 'version-history')
   const setActiveDialog = useStudioStore((state) => state.setActiveDialog)
   const documentId = useStudioStore((state) => state.document.meta.id)
@@ -45,14 +51,14 @@ export function VersionHistoryDialog() {
 
   return (
     <Dialog
-      description="The last ten versions of this document. Restoring one is an edit, so it undoes."
+      description={copy.versionsDescription}
       onOpenChange={(next) => setActiveDialog(next ? 'version-history' : null)}
       open={open}
       size="sm"
-      title="Version history"
+      title={copy.versionsTitle}
     >
       {snapshots.length === 0 ? (
-        <EmptyState message="No versions yet. One is kept whenever the document changes materially." />
+        <EmptyState message={copy.versionsEmpty} />
       ) : (
         <ul className="flex flex-col gap-1" data-testid="version-list">
           {snapshots.map((snapshot, index) => (
@@ -62,12 +68,14 @@ export function VersionHistoryDialog() {
             >
               <span className="flex min-w-0 flex-col">
                 <span className="text-sm">
-                  {at(snapshot.createdAt)}
+                  {at(snapshot.createdAt, locale)}
                   {index === 0 ? (
-                    <span className="ml-2 text-foreground-muted text-xs">Latest</span>
+                    <span className="ml-2 text-foreground-muted text-xs">{copy.latest}</span>
                   ) : null}
                 </span>
-                <span className="text-foreground-muted text-xs">{snapshot.nodeCount} blocks</span>
+                <span className="text-foreground-muted text-xs">
+                  {formatPlural(locale, snapshot.nodeCount, copy.blockCount)}
+                </span>
               </span>
               <Button
                 onClick={() => {
@@ -77,7 +85,7 @@ export function VersionHistoryDialog() {
                 size="sm"
                 variant="secondary"
               >
-                Restore
+                {copy.restore}
               </Button>
             </li>
           ))}

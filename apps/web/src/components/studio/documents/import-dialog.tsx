@@ -5,6 +5,9 @@ import { Button, Dialog } from '@motion-studio/ui'
 import { cn } from '@motion-studio/utils'
 import { type DragEvent, useRef, useState } from 'react'
 
+import { useLocale } from '../../../lib/i18n/locale-context'
+import { formatPlural } from '../../../lib/i18n/plural'
+import { useStudio } from '../../../lib/i18n/studio-surface'
 import { useStudioStore } from '../../../store/editor-store'
 
 import { useDocuments } from './documents-context'
@@ -19,6 +22,8 @@ const ACCEPT = '.json,.motion,application/json'
  * which is the surface that decides.
  */
 export function ImportDialog() {
+  const { documents: copy } = useStudio()
+  const { locale } = useLocale()
   const open = useStudioStore((state) => state.ui.activeDialog === 'import')
   const setActiveDialog = useStudioStore((state) => state.setActiveDialog)
   const { pending, rejection, read, applyImport, dismissImport, downloadOriginal } = useDocuments()
@@ -48,7 +53,7 @@ export function ImportDialog() {
 
   return (
     <Dialog
-      description="A .motion file from this or another machine. Everything is checked before it opens."
+      description={copy.importDescription}
       onOpenChange={(next) => {
         if (!next) {
           close()
@@ -56,12 +61,12 @@ export function ImportDialog() {
       }}
       open={open}
       size="md"
-      title={outcome === null ? 'Import a document' : outcome.fileName}
+      title={outcome === null ? copy.importTitle : outcome.fileName}
       footer={
         pending !== null ? (
           <>
             <Button onClick={downloadOriginal} size="sm" variant="secondary">
-              Download original
+              {copy.downloadOriginal}
             </Button>
             <Button
               onClick={() => {
@@ -71,16 +76,16 @@ export function ImportDialog() {
               size="sm"
               variant="primary"
             >
-              Continue
+              {copy.continue}
             </Button>
           </>
         ) : rejection !== null ? (
           <>
             <Button onClick={downloadOriginal} size="sm" variant="secondary">
-              Download original
+              {copy.downloadOriginal}
             </Button>
             <Button onClick={dismissImport} size="sm" variant="primary">
-              Try another file
+              {copy.tryAnotherFile}
             </Button>
           </>
         ) : null
@@ -90,10 +95,11 @@ export function ImportDialog() {
         <div className="flex flex-col gap-3">
           <p className="text-sm">
             {pending.notes.length === 0
-              ? `Ready to open “${pending.document.meta.name}”.`
-              : `Opening “${pending.document.meta.name}” with ${pending.notes.length} ${
-                  pending.notes.length === 1 ? 'repair' : 'repairs'
-                }.`}
+              ? copy.readyToOpen.replace('{name}', pending.document.meta.name)
+              : formatPlural(locale, pending.notes.length, copy.openingWithRepairs).replace(
+                  '{name}',
+                  pending.document.meta.name,
+                )}
           </p>
           <ImportReport notes={pending.notes} />
         </div>
@@ -101,9 +107,7 @@ export function ImportDialog() {
         <div className="flex flex-col gap-2" data-testid="import-rejection">
           <p className="font-medium text-sm text-warning">{rejection.title}</p>
           <p className="text-foreground-muted text-sm">{rejection.detail}</p>
-          <p className="text-foreground-muted text-sm">
-            The document you have open was not touched.
-          </p>
+          <p className="text-foreground-muted text-sm">{copy.untouched}</p>
         </div>
       ) : (
         <div
@@ -120,9 +124,9 @@ export function ImportDialog() {
           onDrop={onDrop}
         >
           <UploadIcon size={24} />
-          <p className="text-sm">Drop a .motion file here, or paste one with the keyboard.</p>
+          <p className="text-sm">{copy.dropHere}</p>
           <Button onClick={() => input.current?.click()} size="sm" variant="secondary">
-            Choose a file
+            {copy.chooseFile}
           </Button>
           <input
             accept={ACCEPT}

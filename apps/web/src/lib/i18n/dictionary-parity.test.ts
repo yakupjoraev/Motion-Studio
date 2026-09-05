@@ -97,6 +97,13 @@ describe('the Russian dictionary answers the English one', () => {
       'gallery.detail.copyReact',
       'studio.chrome.brand',
       'studio.chrome.commandPalette',
+      // Names of the things themselves: a target, a language, a file format.
+      'studio.export.targetReact',
+      'studio.export.targetNext',
+      'studio.export.targetHtml',
+      'studio.export.targetJson',
+      'studio.export.typescript',
+      'studio.export.javascript',
     ])
 
     const identical: string[] = []

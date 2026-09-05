@@ -1,11 +1,12 @@
 import type { DialogId } from '@motion-studio/editor'
 import { ToastProvider } from '@motion-studio/ui'
-import { type RenderResult, render } from '@testing-library/react'
+import type { RenderResult } from '@testing-library/react'
 import { IDBFactory } from 'fake-indexeddb'
 import type { ReactElement } from 'react'
 
 import { closeDatabase } from '../../../lib/storage/idb'
 import { useStudioStore } from '../../../store/editor-store'
+import { render } from '../../../test/render'
 
 import { DocumentsProvider } from './documents-context'
 

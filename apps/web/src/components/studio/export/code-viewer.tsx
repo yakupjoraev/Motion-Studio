@@ -5,6 +5,7 @@ import { CheckIcon, CopyIcon } from '@motion-studio/icons'
 import { Button, Skeleton } from '@motion-studio/ui'
 import { cn } from '@motion-studio/utils'
 import { useEffect, useMemo, useState } from 'react'
+import { useStudio } from '../../../lib/i18n/studio-surface'
 
 type Highlighter = typeof import('@motion-studio/blocks/highlight')
 type Language = Parameters<Highlighter['tokenize']>[1]
@@ -67,6 +68,7 @@ const load = (): Promise<Highlighter> => {
  * regions.
  */
 export function CodeViewer({ file, ready, onCopy, maxLines = MAX_LINES }: CodeViewerProps) {
+  const { export: copy } = useStudio()
   const [highlighter, setHighlighter] = useState<Highlighter | null>(null)
   const [copied, setCopied] = useState(false)
   const [wrap, setWrap] = useState(false)
@@ -120,7 +122,7 @@ export function CodeViewer({ file, ready, onCopy, maxLines = MAX_LINES }: CodeVi
   if (file === null) {
     return (
       <p className="p-2 text-2xs text-foreground-subtle" data-testid="export-viewer-empty">
-        Pick a file to read it.
+        {copy.pickAFile}
       </p>
     )
   }
@@ -139,7 +141,7 @@ export function CodeViewer({ file, ready, onCopy, maxLines = MAX_LINES }: CodeVi
           size="sm"
           variant="ghost"
         >
-          Wrap
+          {copy.wrap}
         </Button>
 
         <Button
@@ -151,7 +153,7 @@ export function CodeViewer({ file, ready, onCopy, maxLines = MAX_LINES }: CodeVi
           size="sm"
           variant="ghost"
         >
-          {copied ? 'Copied' : 'Copy'}
+          {copied ? copy.copied : copy.copy}
         </Button>
       </div>
 

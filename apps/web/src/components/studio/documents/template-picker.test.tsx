@@ -2,8 +2,8 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { nodeIds } from '@motion-studio/schema'
-import { act, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { act, screen, waitFor } from '../../../test/render'
 
 import { useStudioStore } from '../../../store/editor-store'
 
