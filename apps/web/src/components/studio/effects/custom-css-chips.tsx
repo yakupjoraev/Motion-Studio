@@ -7,6 +7,7 @@ import { Button } from '@motion-studio/ui'
 import Link from 'next/link'
 import { useCallback } from 'react'
 
+import { useStudio } from '../../../lib/i18n/studio-surface'
 import { useStudioStore } from '../../../store/editor-store'
 import { isPlaygroundProperty } from '../../playground/properties'
 import { encodePermalink } from '../../playground/sharing/permalink'
@@ -17,6 +18,7 @@ import { encodePermalink } from '../../playground/sharing/permalink'
  * permalink, so there is one way to carry a value between the two surfaces.
  */
 export function CustomCssChips({ nodeId }: { readonly nodeId: NodeId }) {
+  const { panels } = useStudio()
   const css = useStudioStore((state) => {
     const stored = state.document.nodes[nodeId]?.props[ESCAPE_HATCH_PROP]
 
@@ -57,9 +59,9 @@ export function CustomCssChips({ nodeId }: { readonly nodeId: NodeId }) {
             size="sm"
             variant="ghost"
             onClick={() => remove(declaration.property)}
-            aria-label={`Remove the custom ${declaration.property}`}
+            aria-label={panels.effectsRemoveCustom.replace('{property}', declaration.property)}
           >
-            Remove
+            {panels.effectsRemove}
           </Button>
         </li>
       ))}
@@ -69,6 +71,7 @@ export function CustomCssChips({ nodeId }: { readonly nodeId: NodeId }) {
 
 /** The playground opens on this value; a link it cannot encode is one the chip does not offer. */
 function EditLink({ property, value }: { readonly property: string; readonly value: string }) {
+  const { panels } = useStudio()
   const link = isPlaygroundProperty(property) ? encodePermalink({ property, value }) : undefined
 
   if (link === undefined || !link.ok) {
@@ -80,7 +83,7 @@ function EditLink({ property, value }: { readonly property: string; readonly val
       href={`/playground${link.value}`}
       className="rounded-sm px-1.5 py-0.5 text-2xs text-accent underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-accent-ring"
     >
-      Edit
+      {panels.effectsEdit}
     </Link>
   )
 }

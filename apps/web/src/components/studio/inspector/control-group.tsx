@@ -1,15 +1,18 @@
 'use client'
 
-import { controlLabel } from '@motion-studio/blocks/i18n/translate'
 import { Collapsible } from '@motion-studio/ui'
 import type { ReactNode } from 'react'
 
-import { useRegistryCopy } from '../../../lib/i18n/studio-surface'
 import { useStudioStore } from '../../../store/editor-store'
 
 export interface ControlGroupProps {
   /** The section id the open state is stored under — one key per section, not per block. */
   readonly id: string
+  /**
+   * Already in the reader's language. Translating here would mean guessing where the string came
+   * from: a block's group heading is in the registry's table and the studio's own six are in the
+   * dictionary, and only the caller knows which it is holding.
+   */
   readonly label: string
   readonly children: ReactNode
 }
@@ -20,7 +23,6 @@ export interface ControlGroupProps {
  * `use-persisted-sections` is what carries that across a reload.
  */
 export function ControlGroup({ id, label, children }: ControlGroupProps) {
-  const copy = useRegistryCopy()
   const open = useStudioStore((state) => state.ui.rightPanel.openSections[id] ?? true)
   const setSectionOpen = useStudioStore((state) => state.setSectionOpen)
 
@@ -35,7 +37,7 @@ export function ControlGroup({ id, label, children }: ControlGroupProps) {
           className="font-medium text-2xs uppercase tracking-[0.06em]"
           data-testid={`section-${id}`}
         >
-          {controlLabel(copy, label)}
+          {label}
         </span>
       }
       triggerClassName="sticky top-0 z-10 bg-surface-1 px-3"

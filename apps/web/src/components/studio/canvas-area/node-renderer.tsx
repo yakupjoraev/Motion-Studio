@@ -20,6 +20,7 @@ import {
   useMemo,
 } from 'react'
 
+import { useStudio } from '../../../lib/i18n/studio-surface'
 import { useStudioStore } from '../../../store/editor-store'
 
 import { useNodeDropZone } from './node-drop-zone'
@@ -130,12 +131,14 @@ export const NodeRenderer = memo(function NodeRenderer({ id, breakpoint }: NodeR
 
 /** A block the registry does not know. The node stays in the document; only its picture is missing. */
 function UnknownBlock({ blockId, name }: { readonly blockId: string; readonly name: string }) {
+  const { panels } = useStudio()
+
   return (
     <div
       className="rounded-sm border border-border border-dashed p-3 text-foreground-muted text-xs"
       data-testid="unknown-block"
     >
-      {name} — no block registered as “{blockId}”
+      {panels.canvasUnknownBlock.replace('{name}', name).replace('{id}', blockId)}
     </div>
   )
 }
@@ -144,13 +147,17 @@ function InvalidProps({
   blockId,
   message,
 }: { readonly blockId: string; readonly message: string }) {
+  const { panels } = useStudio()
+
   return (
     <div
       className="rounded-sm border border-warning/40 bg-warning-muted/30 p-3 text-xs"
       data-testid="invalid-props"
       role="alert"
     >
-      <span className="font-medium text-warning">{blockId} has props it cannot use</span>
+      <span className="font-medium text-warning">
+        {panels.canvasBadProps.replace('{name}', blockId)}
+      </span>
       <span className="block text-foreground-muted">{message}</span>
     </div>
   )

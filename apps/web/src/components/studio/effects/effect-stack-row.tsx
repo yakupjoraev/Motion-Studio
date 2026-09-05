@@ -7,6 +7,9 @@ import { Button } from '@motion-studio/ui'
 import { ControlRenderer, ControlRow, SelectField, SliderField } from '@motion-studio/ui/controls'
 import { useCallback } from 'react'
 
+import { blockName, controlLabel } from '@motion-studio/blocks/i18n/translate'
+
+import { useRegistryCopy, useStudio } from '../../../lib/i18n/studio-surface'
 import { useStudioStore } from '../../../store/editor-store'
 
 export interface EffectStackRowProps {
@@ -29,6 +32,8 @@ export function EffectStackRow({
   onMove,
   onRemove,
 }: EffectStackRowProps) {
+  const { panels } = useStudio()
+  const copy = useRegistryCopy()
   const definition = blockRegistry.get(effectBlockId(instance.effectId))
 
   const tune = useCallback(
@@ -55,6 +60,9 @@ export function EffectStackRow({
 
   const params = { ...(definition?.defaults as Record<string, unknown>), ...instance.params }
 
+  const name =
+    definition === undefined ? instance.effectId : blockName(copy, definition.id, definition.name)
+
   return (
     <section
       className="rounded-sm border border-border p-2"
@@ -62,12 +70,10 @@ export function EffectStackRow({
       data-testid="effect-row"
     >
       <header className="flex items-center justify-between gap-2 pb-2">
-        <span className="truncate text-foreground text-xs">
-          {definition?.name ?? instance.effectId}
-        </span>
+        <span className="truncate text-foreground text-xs">{name}</span>
         <span className="flex shrink-0 items-center gap-1">
           <Button
-            aria-label="Move layer up"
+            aria-label={panels.effectsMoveUp}
             disabled={!canMoveUp}
             onClick={() => onMove(instance.id, index - 1)}
             size="sm"
@@ -76,7 +82,7 @@ export function EffectStackRow({
             ↑
           </Button>
           <Button
-            aria-label="Move layer down"
+            aria-label={panels.effectsMoveDown}
             disabled={!canMoveDown}
             onClick={() => onMove(instance.id, index + 1)}
             size="sm"
@@ -85,37 +91,37 @@ export function EffectStackRow({
             ↓
           </Button>
           <Button
-            aria-label={`Remove ${definition?.name ?? instance.effectId}`}
+            aria-label={panels.effectsRemoveNamed.replace('{name}', name)}
             onClick={() => onRemove(instance.id)}
             size="sm"
             variant="ghost"
           >
-            Remove
+            {panels.effectsRemove}
           </Button>
         </span>
       </header>
 
-      <ControlRow label="Layer">
+      <ControlRow label={panels.effectsLayer}>
         {(slot) => (
           <SelectField
             {...slot}
-            label="Layer"
+            label={panels.effectsLayer}
             onChange={(value) => tune({ layer: value === 'front' ? 'front' : 'behind' })}
             onCommit={(value) => tune({ layer: value === 'front' ? 'front' : 'behind' })}
             options={[
-              { value: 'behind', label: 'Behind content' },
-              { value: 'front', label: 'In front' },
+              { value: 'behind', label: panels.effectsBehind },
+              { value: 'front', label: panels.effectsInFront },
             ]}
             value={instance.layer}
           />
         )}
       </ControlRow>
 
-      <ControlRow label="Blend">
+      <ControlRow label={panels.effectsBlend}>
         {(slot) => (
           <SelectField
             {...slot}
-            label="Blend mode"
+            label={panels.effectsBlendMode}
             onChange={(value) => tune({ blendMode: value as EffectInstance['blendMode'] })}
             onCommit={(value) => tune({ blendMode: value as EffectInstance['blendMode'] })}
             options={BLEND_MODES.map((mode) => ({ value: mode, label: mode }))}
@@ -124,11 +130,11 @@ export function EffectStackRow({
         )}
       </ControlRow>
 
-      <ControlRow label="Opacity">
+      <ControlRow label={panels.effectsOpacity}>
         {(slot) => (
           <SliderField
             {...slot}
-            label="Opacity"
+            label={panels.effectsOpacity}
             max={1}
             min={0}
             onChange={(value) => tune({ opacity: value })}
@@ -141,7 +147,7 @@ export function EffectStackRow({
 
       {(definition?.controls ?? []).flatMap((group) =>
         group.controls.map((descriptor) => (
-          <ControlRow key={descriptor.path} label={descriptor.label}>
+          <ControlRow key={descriptor.path} label={controlLabel(copy, descriptor.label)}>
             {(slot) => (
               <ControlRenderer
                 descriptor={descriptor}

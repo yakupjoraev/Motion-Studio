@@ -2,6 +2,8 @@
 
 import type { BlockDefinition, ControlGroup, NodeId } from '@motion-studio/schema'
 
+import { useStudio } from '../../../../lib/i18n/studio-surface'
+
 import { BlockSection } from './block-section'
 import { sizingAllowed } from './section-order'
 
@@ -15,11 +17,13 @@ export interface LayoutSectionProps {
 }
 
 export function LayoutSection({ definition, group, nodeIds }: LayoutSectionProps) {
+  const { panels } = useStudio()
+
   return (
     <BlockSection
       group={group}
       id="layout"
-      label="Layout"
+      label={panels.sectionLayout}
       nodeIds={nodeIds}
       {...(sizingAllowed(definition) ? {} : { omit: SIZING_PATHS })}
     />

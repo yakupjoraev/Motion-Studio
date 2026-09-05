@@ -5,6 +5,7 @@ import type { MotionConflict } from '@motion-studio/motion'
 import type { NodeId } from '@motion-studio/schema'
 import { Button } from '@motion-studio/ui'
 
+import { useStudio } from '../../../lib/i18n/studio-surface'
 import { useStudioStore } from '../../../store/editor-store'
 
 /**
@@ -20,6 +21,8 @@ export function ConflictChips({
   readonly conflicts: readonly MotionConflict[]
   readonly nodeId: NodeId
 }) {
+  const { panels } = useStudio()
+
   if (conflicts.length === 0) {
     return null
   }
@@ -42,7 +45,7 @@ export function ConflictChips({
             size="sm"
             variant="ghost"
           >
-            Resolve
+            {panels.motionResolve}
           </Button>
         </li>
       ))}
