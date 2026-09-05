@@ -2,11 +2,12 @@
 
 import { commands } from '@motion-studio/editor'
 import { presetRegistry } from '@motion-studio/motion'
+import { channelName, presetName } from '@motion-studio/motion/i18n/translate'
 import type { MotionChannel, NodeId } from '@motion-studio/schema'
 import { Button } from '@motion-studio/ui'
 import { useState } from 'react'
 
-import { useStudio } from '../../../lib/i18n/studio-surface'
+import { usePresetCopy, useStudio } from '../../../lib/i18n/studio-surface'
 import { useStudioStore } from '../../../store/editor-store'
 
 import { MotionParams } from './motion-params'
@@ -24,6 +25,7 @@ export function MotionChannelRow({
   readonly nodeId: NodeId
 }) {
   const { panels } = useStudio()
+  const copy = usePresetCopy()
   const spec = useStudioStore((state) => state.document.nodes[nodeId]?.motion[channel])
   const [plays, setPlays] = useState(0)
 
@@ -38,15 +40,20 @@ export function MotionChannelRow({
       <header className="flex items-center justify-between gap-2">
         <span className="flex min-w-0 flex-col">
           <span className="text-[10px] text-foreground-subtle uppercase tracking-wide">
-            {channel}
+            {channelName(copy, channel, channel)}
           </span>
           <span className="truncate text-foreground text-xs">
-            {preset?.name ?? panels.motionUnknownPreset.replace('{id}', spec.presetId)}
+            {preset === undefined
+              ? panels.motionUnknownPreset.replace('{id}', spec.presetId)
+              : presetName(copy, preset.id, preset.name)}
           </span>
         </span>
         <span className="flex shrink-0 items-center gap-1">
           <Button
-            aria-label={panels.motionReplayChannel.replace('{channel}', channel)}
+            aria-label={panels.motionReplayChannel.replace(
+              '{channel}',
+              channelName(copy, channel, channel),
+            )}
             onClick={() => setPlays((count) => count + 1)}
             size="sm"
             variant="ghost"
@@ -54,7 +61,10 @@ export function MotionChannelRow({
             {panels.motionPlay}
           </Button>
           <Button
-            aria-label={panels.motionRemoveChannel.replace('{channel}', channel)}
+            aria-label={panels.motionRemoveChannel.replace(
+              '{channel}',
+              channelName(copy, channel, channel),
+            )}
             onClick={() =>
               useStudioStore.getState().dispatch(commands.clearMotion({ nodeId, channel }))
             }

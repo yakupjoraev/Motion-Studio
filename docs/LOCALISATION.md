@@ -9,7 +9,7 @@ summary: Locales, URL shape, the stored choice, dictionaries, and what stays Eng
 The product speaks **English and Russian**. This document owns how a language is chosen, where the
 strings live, and what is deliberately not translated.
 
-The decisions behind every rule here are ADR-360 … ADR-366 in [DECISIONS.md](DECISIONS.md).
+The decisions behind every rule here are ADR-360 … ADR-369 in [DECISIONS.md](DECISIONS.md).
 
 ## 1. The two locales
 
@@ -58,15 +58,21 @@ Next's request and response.
 | --- | --- | --- |
 | App surfaces — nav, landing, gallery, docs shell, studio | `apps/web/src/lib/i18n/dictionaries/<locale>/` | They belong to the app |
 | Block names, descriptions, control labels, hints, categories | `packages/blocks/src/i18n/` | They belong to the registry, not to a page that lists it |
+| Preset names, their control labels, the six channels | `packages/motion/src/i18n/` | They belong to the catalogue that declares them — ADR-368 |
+| Shortcut labels and their groups | `chrome.shortcutLabels`, `chrome.shortcutGroups` | The registry stays English: `docs/SHORTCUTS.md` is checked against it |
 | A block's default copy | The block's own Zod schema, in English | It is content, not interface — see § 6 |
 
 The English dictionary **is the type**: `Dictionary = typeof en`, and `ru` is annotated with it, so a
 missing key does not compile. `dictionary-parity.test.ts` covers what the type cannot — a dropped
 placeholder, a missing Russian plural form, a string nobody translated.
 
-The registry's tables are keyed by the **English string** (ADR-365), and
-`packages/blocks/src/i18n/registry-copy.test.ts` walks the registry in both directions: a new block
-cannot ship an untranslated inspector, and a renamed control cannot leave a dead entry behind.
+The catalogue tables are keyed by the **English string** (ADR-365), and each one is walked in both
+directions — `registry-copy.test.ts` for the blocks, `preset-copy.test.ts` for the presets: a new
+block cannot ship an untranslated inspector, and a renamed control cannot leave a dead entry behind.
+
+`dictionary-usage.test.ts` closes the third gap, the one that let ninety-nine keys sit written and
+unread (ADR-369): an English key no file in `apps/web` mentions fails the build. A key in a
+dictionary is not a translated product until something reads it.
 
 ## 5. How the strings reach a component
 
@@ -75,8 +81,10 @@ cannot ship an untranslated inspector, and a renamed control cannot leave a dead
   `setRequestLocale`. Every page calls it — a layout is not enough, because Next renders a layout and
   its page in the same pass.
 - A **Client Component** reads its surface's context: `useNav`, `useLanding`, `useGallery`,
-  `useDocs`, `useStudio`, and `useRegistryCopy` for the registry's table. The route provides the
-  slice it needs and no other.
+  `useDocs`, `useStudio`, and `useRegistryCopy` / `usePresetCopy` for the two catalogue tables. The
+  route provides the slice it needs and no other.
+- A component **below the app** — `packages/hooks`'s shortcut sheet — has no dictionary to read, so
+  it takes its strings as a prop and renders English without them.
 
 **Dictionaries are props, never imports, on the client.** A client component that imports a
 dictionary puts every string in the product into that route's JavaScript — measured at 1.9 kB over
@@ -110,7 +118,8 @@ three; the difference lives in that one helper.
 
 ## 8. Adding a locale
 
-`LOCALES`, a dictionary directory, and — for the registry — a table in `packages/blocks/src/i18n/`.
+`LOCALES`, a dictionary directory, and a table in each of `packages/blocks/src/i18n/` and
+`packages/motion/src/i18n/`.
 Everything else reads the list. The one thing that is not mechanical is the URL shape: ADR-361 gives
 Russian a prefix and English the root, so a third locale needs a decision about which of those two
 shapes it takes.

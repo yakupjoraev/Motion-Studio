@@ -85,6 +85,7 @@ export const studioPanels: Dictionary['studio']['panels'] = {
   motionReplayChannel: 'Проиграть канал {channel} заново',
   motionRemoveChannel: 'Убрать движение канала {channel}',
   motionUnknownPreset: 'Неизвестный пресет «{id}»',
+  motionChannelUnsupported: 'Этот блок не поддерживает канал «{channel}»',
 
   effectsEmpty: 'Эффектов нет. Добавьте из панели «Эффекты».',
   effectsNoneOnSelection: 'На этом выделении эффектов нет.',

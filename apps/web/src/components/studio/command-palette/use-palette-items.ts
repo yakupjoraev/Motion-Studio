@@ -6,9 +6,10 @@ import { effectId } from '@motion-studio/schema'
 import { type PresetId, PRESETS as THEME_PRESETS } from '@motion-studio/theme'
 import { useMemo } from 'react'
 
-import { blockName, controlLabel } from '@motion-studio/blocks/i18n/translate'
+import { blockName } from '@motion-studio/blocks/i18n/translate'
+import { presetName } from '@motion-studio/motion/i18n/translate'
 
-import { useRegistryCopy, useStudio } from '../../../lib/i18n/studio-surface'
+import { usePresetCopy, useRegistryCopy, useStudio } from '../../../lib/i18n/studio-surface'
 import { deferredBlockRegistry } from '../../../store/block-registry'
 import { useStudioStore } from '../../../store/editor-store'
 import { insertBlockAtSelection } from '../left-panel/blocks/use-insert-block'
@@ -61,6 +62,7 @@ const GROUP_FOR_SHORTCUT: Readonly<Record<string, PaletteGroup>> = {
 export function usePaletteItems(context: StudioShortcutContext): readonly PaletteItem[] {
   const { chrome } = useStudio()
   const registry = useRegistryCopy()
+  const presets = usePresetCopy()
   const version = useStudioStore((state) => state.version)
   const selectionKey = useStudioStore((state) => state.selection.ids.join(' '))
 
@@ -124,7 +126,7 @@ export function usePaletteItems(context: StudioShortcutContext): readonly Palett
     for (const preset of MOTION_PRESETS) {
       items.push({
         id: `preset:${preset.id}`,
-        label: chrome.paletteApply.replace('{name}', controlLabel(registry, preset.name)),
+        label: chrome.paletteApply.replace('{name}', presetName(presets, preset.id, preset.name)),
         group: 'Motion',
         keywords: [preset.channel, preset.engine, 'motion'],
         available: state.selection.ids.length > 0,
@@ -155,5 +157,5 @@ export function usePaletteItems(context: StudioShortcutContext): readonly Palett
     }
 
     return items
-  }, [chrome, context, registry, version, selectionKey])
+  }, [chrome, context, presets, registry, version, selectionKey])
 }
