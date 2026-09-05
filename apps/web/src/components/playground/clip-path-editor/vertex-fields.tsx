@@ -3,6 +3,8 @@
 import { Button, Input } from '@motion-studio/ui'
 import { type ReactElement, useEffect, useId, useRef, useState } from 'react'
 
+import { usePlayground } from '../../../lib/i18n/playground-surface'
+
 import { type ShapeUnit, type Vertex, formatLength } from './parse-polygon'
 
 export interface VertexFieldsProps {
@@ -23,6 +25,7 @@ export function VertexFields({
   onInsertAfter,
   onClose,
 }: VertexFieldsProps): ReactElement {
+  const copy = usePlayground()
   const fieldId = useId()
   const first = useRef<HTMLInputElement | null>(null)
   const [x, setX] = useState(formatLength(vertex.x))
@@ -61,7 +64,7 @@ export function VertexFields({
         className="flex flex-col gap-1 text-2xs text-foreground-muted"
         htmlFor={`${fieldId}-x`}
       >
-        Vertex {index + 1} x
+        {copy.vertex} {index + 1} x
         <Input
           id={`${fieldId}-x`}
           ref={first}
@@ -89,10 +92,10 @@ export function VertexFields({
         />
       </label>
       <Button size="sm" variant="secondary" onClick={onInsertAfter}>
-        Insert after
+        {copy.insertAfter}
       </Button>
       <Button size="sm" variant="ghost" onClick={onClose}>
-        Done
+        {copy.done}
       </Button>
     </div>
   )

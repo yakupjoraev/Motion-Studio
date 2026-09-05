@@ -3,6 +3,7 @@
 import { Button } from '@motion-studio/ui'
 import { type ReactElement, useCallback, useState, useSyncExternalStore } from 'react'
 
+import { type PlaygroundCopy, usePlayground } from '../../lib/i18n/playground-surface'
 import { type EscapeHatchTarget, escapeHatchPort } from '../../store/escape-hatch-port'
 
 import type { PlaygroundProperty } from './properties'
@@ -27,6 +28,7 @@ export interface SendAction {
  * carry the block registry to find out whether something is selected.
  */
 export function useSendToSelection(property: PlaygroundProperty, value: string): SendAction {
+  const copy = usePlayground()
   const target = useSyncExternalStore(subscribe, snapshot, serverSnapshot)
   const [said, setSaid] = useState('')
   const accepted = target?.properties.includes(property) ?? false
@@ -38,12 +40,12 @@ export function useSendToSelection(property: PlaygroundProperty, value: string):
 
     setSaid(
       escapeHatchPort.write(property, value)
-        ? `${property} sent to ${target.nodeName}. Undo in the studio removes it.`
-        : 'The studio is not listening. Open it and select a block first.',
+        ? copy.sentToBlock.replace('{property}', property).replace('{name}', target.nodeName)
+        : copy.studioNotListening,
     )
-  }, [accepted, property, target, value])
+  }, [accepted, copy, property, target, value])
 
-  return { target, accepted, said, reason: reasonFor(target, property, accepted), send }
+  return { target, accepted, said, reason: reasonFor(copy, target, property, accepted), send }
 }
 
 export interface SendToSelectionProps {
@@ -53,6 +55,7 @@ export interface SendToSelectionProps {
 
 /** Why a property can be refused is on screen, not implied by a button that does nothing. */
 export function SendToSelection({ action, disabled }: SendToSelectionProps): ReactElement {
+  const copy = usePlayground()
   const { target, accepted, said, reason, send } = action
 
   return (
@@ -64,7 +67,9 @@ export function SendToSelection({ action, disabled }: SendToSelectionProps): Rea
         disabled={disabled || target === undefined || !accepted}
         data-testid="send-to-selection"
       >
-        {target === undefined ? 'Send to selection' : `Send to ${target.nodeName}`}
+        {target === undefined
+          ? copy.sendToSelection
+          : copy.sendToBlock.replace('{name}', target.nodeName)}
       </Button>
       <p className="m-0 text-2xs text-foreground-muted" data-testid="send-reason">
         {reason}
@@ -77,17 +82,20 @@ export function SendToSelection({ action, disabled }: SendToSelectionProps): Rea
 }
 
 function reasonFor(
+  copy: PlaygroundCopy,
   target: EscapeHatchTarget | undefined,
   property: string,
   accepted: boolean,
 ): string {
   if (target === undefined) {
-    return 'Select one block in the studio and this sends the value to it.'
+    return copy.selectOneBlock
   }
 
   if (!accepted) {
-    return `${target.blockName} does not take ${property} from here: it is a property the block paints itself.`
+    return copy.blockPaintsItself
+      .replace('{name}', target.blockName)
+      .replace('{property}', property)
   }
 
-  return `Lands on ${target.nodeName} as a custom CSS chip.`
+  return copy.landsAsChip.replace('{name}', target.nodeName)
 }

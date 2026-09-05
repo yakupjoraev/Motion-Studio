@@ -2,6 +2,8 @@
 
 import type { ReactElement } from 'react'
 
+import { usePlayground } from '../../../lib/i18n/playground-surface'
+
 import type { TargetProps } from './target.types'
 
 /**
@@ -12,6 +14,8 @@ import type { TargetProps } from './target.types'
  * is designed for.
  */
 export function TransformTarget({ targetRef, initialStyle }: TargetProps): ReactElement {
+  const copy = usePlayground()
+
   return (
     <div className="grid h-full w-full place-items-center rounded-md bg-surface-2 p-10 [contain:paint] [perspective:1000px]">
       <div
@@ -20,7 +24,7 @@ export function TransformTarget({ targetRef, initialStyle }: TargetProps): React
         data-testid="playground-target"
         className="grid h-48 w-72 place-items-center rounded-xl bg-[linear-gradient(140deg,oklch(62%_0.19_285),oklch(72%_0.16_200))] p-6 text-center font-medium text-sm text-white shadow-lg"
       >
-        Card in a perspective container
+        {copy.cardInPerspective}
       </div>
     </div>
   )

@@ -3,6 +3,8 @@
 import { Segmented } from '@motion-studio/ui'
 import { type ReactElement, useState } from 'react'
 
+import { usePlayground } from '../../../lib/i18n/playground-surface'
+
 import type { TargetProps } from './target.types'
 
 /**
@@ -27,6 +29,7 @@ const OPTIONS = [
 ]
 
 export function BackdropTarget({ targetRef, initialStyle }: TargetProps): ReactElement {
+  const copy = usePlayground()
   const [backdrop, setBackdrop] = useState<Backdrop>('photo')
 
   return (
@@ -38,14 +41,14 @@ export function BackdropTarget({ targetRef, initialStyle }: TargetProps): ReactE
         data-testid="playground-target"
         className="relative grid h-1/2 w-2/3 place-items-center rounded-xl border border-[oklch(100%_0_0_/_0.16)] bg-[oklch(100%_0_0_/_0.12)] text-center font-medium text-sm text-white"
       >
-        Glass panel
+        {copy.glassPanel}
       </div>
       <div className="-translate-x-1/2 absolute bottom-3 left-1/2">
         <Segmented
           value={backdrop}
           onValueChange={(next) => setBackdrop(next as Backdrop)}
           options={OPTIONS}
-          aria-label="What is behind the glass"
+          aria-label={copy.behindTheGlass}
         />
       </div>
     </div>

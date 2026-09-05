@@ -49,6 +49,10 @@ export const studioExport = {
   downloadZip: 'Download .zip',
   zipping: 'Zipping…',
   nothingCopied: 'Nothing was copied',
+  /** `{path}` is the file that reached the clipboard. */
+  copiedFile: 'Copied {path}',
+  /** `{count}` files copied as one block. */
+  copiedFiles: { one: 'Copied {count} file', other: 'Copied {count} files' } as PluralForms,
   copiedAsJson: 'Copied the document as JSON',
   copyJsonInstead: 'Copy JSON instead',
 

@@ -1,6 +1,8 @@
 import { InfoIcon } from '@motion-studio/icons'
 import type { Token } from 'marked'
 
+import { getRequestDictionary } from '../../lib/i18n/request-locale'
+
 import { DocsInline } from './docs-inline'
 
 /**
@@ -9,9 +11,11 @@ import { DocsInline } from './docs-inline'
  * announces itself as a note.
  */
 export function DocsCallout({ tokens }: { readonly tokens: readonly Token[] }) {
+  const copy = getRequestDictionary().docs
+
   return (
     <aside
-      aria-label="Note"
+      aria-label={copy.calloutLabel}
       className="my-6 flex gap-3 rounded-lg border border-accent/30 bg-accent-muted/25 px-4 py-3"
     >
       <InfoIcon className="mt-0.5 size-4 shrink-0 text-accent" />

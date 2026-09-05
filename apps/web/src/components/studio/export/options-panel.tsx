@@ -17,16 +17,6 @@ export interface OptionsPanelProps {
   readonly onChange: (patch: Partial<ExportOptions>) => void
 }
 
-const LANGUAGES = [
-  { value: 'ts', content: 'TS', label: 'TypeScript' },
-  { value: 'js', content: 'JS', label: 'JavaScript' },
-]
-
-const IMAGES = [
-  { value: 'next-image', content: 'next', label: 'next/image' },
-  { value: 'img', content: 'img', label: 'Plain img element' },
-]
-
 const ASSETS = ASSET_MODES.map((mode) => ({ value: mode, label: mode }))
 
 /** ADR-237 and ADR-242: the only two fields a target narrows, and the sentence each one earns. */
@@ -82,6 +72,17 @@ function Row({
 export function OptionsPanel({ options, resolved, onChange }: OptionsPanelProps) {
   const { export: copy } = useStudio()
   const data = resolved.target === 'json' || resolved.target === 'tokens'
+  /* Built here, not at module scope: two of the four accessible names are the session's language. */
+  const languages = [
+    { value: 'ts', content: 'TS', label: copy.typescript },
+    { value: 'js', content: 'JS', label: copy.javascript },
+  ]
+
+  const images = [
+    { value: 'next-image', content: 'next', label: 'next/image' },
+    { value: 'img', content: 'img', label: copy.plainImg },
+  ]
+
   const fixedOf = (key: keyof ExportOptions): string | undefined =>
     resolved[key] === options[key] ? undefined : (fixedReason(copy)[key] ?? copy.fixedByTarget)
 
@@ -95,7 +96,7 @@ export function OptionsPanel({ options, resolved, onChange }: OptionsPanelProps)
             label={copy.language}
             onChange={(value) => onChange({ language: value === 'js' ? 'js' : 'ts' })}
             onCommit={() => undefined}
-            options={LANGUAGES}
+            options={languages}
             value={resolved.language}
           />
         )}
@@ -126,7 +127,7 @@ export function OptionsPanel({ options, resolved, onChange }: OptionsPanelProps)
               onChange({ imageComponent: value === 'img' ? 'img' : 'next-image' })
             }
             onCommit={() => undefined}
-            options={IMAGES}
+            options={images}
             value={resolved.imageComponent}
           />
         )}

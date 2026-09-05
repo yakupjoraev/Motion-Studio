@@ -14,6 +14,8 @@ const BezierEditor = dynamic(
   { ssr: false },
 )
 
+import { usePlayground } from '../../../lib/i18n/playground-surface'
+
 import type { TargetProps } from './target.types'
 
 /**
@@ -50,6 +52,7 @@ export function TransitionTarget({
 }: TargetProps): ReactElement {
   const [at, setAt] = useState<'from' | 'to'>('from')
   const [playing, setPlaying] = useState(false)
+  const copy = usePlayground()
   const [loop, setLoop] = useState(false)
   const [progress, setProgress] = useState(100)
   const reduced = useReducedMotionPreference()
@@ -130,22 +133,27 @@ export function TransitionTarget({
           {playing ? 'Pause' : 'Play'}
         </Button>
         <Button variant="ghost" size="sm" onClick={toggle}>
-          Toggle state
+          {copy.toggleState}
         </Button>
         {/* A span, not a label: the switch is a button, and `for` cannot point at one. */}
         <span className="flex items-center gap-2 text-foreground-muted text-xs">
-          <Switch checked={loop} onCheckedChange={setLoop} aria-label="Loop" disabled={reduced} />
-          Loop
+          <Switch
+            checked={loop}
+            onCheckedChange={setLoop}
+            aria-label={copy.loop}
+            disabled={reduced}
+          />
+          {copy.loop}
         </span>
         <div className="flex min-w-48 flex-1 items-center gap-2">
-          <span className="text-foreground-muted text-xs">Scrub</span>
+          <span className="text-foreground-muted text-xs">{copy.scrub}</span>
           <Slider
             value={progress}
             onValueChange={scrub}
             min={0}
             max={100}
             step={1}
-            aria-label="Transition progress"
+            aria-label={copy.transitionProgress}
           />
         </div>
       </div>

@@ -8,3 +8,6 @@ const playgroundContext = createDictionaryContext<Dictionary['playground']>('pla
 
 export const PlaygroundDictionary = playgroundContext.Provider
 export const usePlayground = playgroundContext.use
+
+/** For the helpers below a component, which are handed the strings rather than reading a context. */
+export type PlaygroundCopy = Dictionary['playground']

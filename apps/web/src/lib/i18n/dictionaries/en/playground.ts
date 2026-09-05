@@ -28,6 +28,12 @@ export const playground = {
   sendToBlock: 'Send to {name}',
   studioNotListening: 'The studio is not listening. Open it and select a block first.',
   selectOneBlock: 'Select one block in the studio and this sends the value to it.',
+  /** Announced after a send: `{property}` landed on the block named `{name}`. */
+  sentToBlock: '{property} sent to {name}. Undo in the studio removes it.',
+  /** Why a property is refused: the block paints `{property}` itself. */
+  blockPaintsItself:
+    '{name} does not take {property} from here: it is a property the block paints itself.',
+  landsAsChip: 'Lands on {name} as a custom CSS chip.',
 
   noBezier: 'This value has no cubic-bezier() to drag.',
   addBezier: 'Add one',

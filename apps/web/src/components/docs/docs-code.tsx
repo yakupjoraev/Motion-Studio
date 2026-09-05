@@ -50,8 +50,8 @@ export function DocsCode({ info, source, ordinal, copy }: DocsCodeProps) {
         <span className="ml-auto">
           <CopyButton
             announcement={copy.copyCodeAnnouncement}
-            copiedLabel={copy.copyCode}
-            failedLabel={copy.copyCode}
+            copiedLabel={copy.copyCodeCopied}
+            failedLabel={copy.copyCodeFailed}
             label={copy.copyCode}
             testId="docs-code-copy"
             text={source}
