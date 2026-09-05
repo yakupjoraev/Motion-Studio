@@ -302,6 +302,51 @@ The pre-agreed cut order, should the owner choose to use it:
 what make the project what it claims to be, and a portfolio project that fails its own stated
 standards is worse than a smaller one that meets them.
 
+## M15 — Product polish, from using it (in progress)
+
+Opened 2026-09-05, after the owner composed a page in the studio and reported what it was like. It is
+not a milestone the build plan predicted: every item here is something the prompts marked done and a
+user found broken. Kept as its own list because "the prompt is closed" and "the product is good" turned
+out to be different claims.
+
+### Done
+
+| | What was wrong | Where it is recorded |
+| --- | --- | --- |
+| ✅ | `Heading level` offered no options in all eight marketing blocks | ADR-351 |
+| ✅ | A list item's name got 11 px of the 320 px inspector | ADR-352 |
+| ✅ | `/studio` showed nothing at all between the press and the shell | ADR-353 |
+| ✅ | A navbar arrived carrying a validation error on its own default | ADR-354 |
+| ✅ | 51 presets in 6 channels with no search and no filter | ADR-355 |
+| ✅ | Blocks sized themselves by the browser window, so the mobile artboard drew a desktop page | ADR-356 |
+| ✅ | Six stacked cards on a phone, where the pattern is a swipe | ADR-357 |
+
+### Open, in the order it is being done
+
+1. **The `narrow` choice across the card blocks.** `pricing-table`, `bento-grid`, `logo-cloud`,
+   `stat-grid`, `testimonial-marquee` have the same shape and the same problem. Same prop, same
+   control, same threshold.
+2. **More arrangements per block, each one tested.** The owner's standard: a choice that works
+   perfectly is worth more than a default that is merely defensible. Every option added ships with the
+   test that proves it, in both the component and the export.
+3. **Drag a node on the canvas.** `DRAG_AND_DROP.md` § The four operations still says operations 2 and
+   4 are unwired: reordering is only possible from the layers tree, and a user's first instinct is the
+   canvas. This is the largest open item.
+4. **Русский язык.** `en` + `ru` across the studio chrome, the public pages and the blocks' own default
+   copy. Chosen by the visitor's region on a first visit; an explicit choice wins from then on and
+   survives a return visit. No i18n dependency exists in the repo today and `lang` is hard-coded.
+5. **A marketing prompt for the product itself**, written with the brand/design/slides skills:
+   positioning, landing copy, launch material.
+6. **The landing and the studio chrome through the design skills.** `DESIGN_REFERENCES.md` names
+   impeccable.style as the bar for the whole product, and the landing was built against it by eye
+   rather than through the process. Verdict to be reported per surface, not "looks fine".
+
+### The rule this milestone runs on
+
+Use the product before claiming a surface is finished. Every item above was found by composing a page,
+not by reading the code — and five of the seven closed items were invisible to a test suite of 8 000
+that was green the whole time.
+
 ## Post-v1
 
 Listed so the v1 boundary is deliberate rather than accidental, and **sized honestly** — an
