@@ -168,6 +168,7 @@ Then state, in the reply: what you changed, what you verified, what you did not.
 | Theme engine, runtime theming | `docs/THEME_ENGINE.md` |
 | Responsive engine, breakpoints | `docs/RESPONSIVE_ENGINE.md` |
 | Keyboard map, command palette | `docs/SHORTCUTS.md` |
+| Languages, locale routing, dictionaries | `docs/LOCALISATION.md` |
 | Perf techniques and budgets | `docs/PERFORMANCE.md` |
 | A11y requirements per surface | `docs/ACCESSIBILITY.md` |
 | Test strategy and coverage rules | `docs/TESTING.md` |
