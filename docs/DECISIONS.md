@@ -14756,3 +14756,210 @@ know the boxes of the zone's children — geometry `packages/dnd` cannot see, so
 it. That was attempted and **is not in the tree**: it type-checked and changed nothing in the browser,
 and untested code that has no effect is worse than a recorded gap. The e2e case is `test.fixme` with
 the diagnosis in it, so the next session starts from the measurement rather than from the symptom.
+
+## ADR-360 — Two locales, no i18n dependency
+
+**Date** 2026-09-05 · **Prompt** 65 · **Status** Accepted
+
+### Question
+`next-intl` (or `react-intl`, or `lingui`) versus a dictionary module written here. § 1.10 of the
+contract wants the justification either way, and `TECH_STACK.md` § Adding a dependency wants six
+answers.
+
+### Criterion (set before measuring)
+A dependency earns its place if it does something this product needs and the standard library cannot:
+plural rules, gender, ICU message syntax, a translator-facing format, or lazy per-route dictionaries.
+If the whole need is "look a string up by key in one of two objects", the dependency is weight and an
+opinion about routing that this repository already has its own answer for.
+
+### Measurement
+Counted before choosing: 419 strings in `apps/web` JSX, 412 unique control labels and 193 unique
+hints in `packages/blocks`, 72 block names and 70 block descriptions. Of those, the strings needing
+ICU plural selection are the "N of M" and "N blocks" counters, which `Intl.PluralRules` — present in
+every target browser at zero shipped bytes — answers directly.
+
+The studio's first load is **248.9 KiB against a 250 KiB budget** (ADR-349): 1.1 KiB of headroom.
+`next-intl`'s runtime is larger than that headroom before a single translated string.
+
+### Decision
+No dependency. `apps/web/src/lib/i18n` holds the locale list, the dictionary type, and a lookup that
+is a property read. The dictionaries reach client components as **props from a Server Component**, so
+the shipped JS is the same for both locales and the strings travel in the RSC payload as data.
+
+### Consequences
+- Accepted: no translator tooling, no `.po` files, no message extraction. The dictionaries are
+  TypeScript objects, and the compiler is what checks that `ru` answers every key `en` declares.
+- Accepted: plurals are written against `Intl.PluralRules` where they occur. Russian has three forms
+  and English two, so one helper is the only place that difference is allowed to live.
+- Avoided: a second routing opinion. ADR-361 decides the URL shape, and a library that also decides
+  it would have to be fought or followed.
+
+### Alternatives rejected
+- `next-intl`: earns its weight on a product with many locales, translators outside the repository,
+  and ICU messages. This product has two locales and one author.
+- A runtime `import()` of the dictionary per locale: keeps the JS bundle honest but paints English
+  first and swaps — the flash the prompt's first checklist line forbids.
+
+## ADR-361 — Russian is a prefix, English is the root
+
+**Date** 2026-09-05 · **Prompt** 65 · **Status** Accepted
+
+### Question
+`/ru/...` and `/en/...` for both, one URL with a cookie, or a prefix for Russian only.
+
+### Escalated
+Options presented with their costs, recommendation given (prefixes for both), owner decided on
+2026-09-05 for **a prefix on Russian only**. Owner's stated reason, verbatim: «Префикс только для
+русского».
+
+### Decision
+`/` is English; `/ru/...` is Russian. On disk every route lives once, under `app/[locale]/`, and
+`generateStaticParams` builds both. Middleware rewrites a path with no prefix onto `/en/...`, so the
+English URL never gains a prefix and both locales are still statically generated — a cookie read on
+every request would have made every page dynamic.
+
+### Consequences
+- Accepted: English has no canonical prefix of its own, so `hreflang` names `/` and `/ru/`, not
+  `/en/` and `/ru/`. `/en/...` requested directly redirects to `/` so the same page is not reachable
+  at two URLs.
+- Accepted: every route file moves into `app/[locale]/`, and their relative imports move with them.
+  No route's URL changes for English, so the e2e specs, the Lighthouse URLs and the OG images keep
+  the paths they were written against.
+- Accepted: an internal link has to be built for the current locale. `localeHref()` is that one
+  place, and a test asserts a bare route `href` does not leave it.
+
+## ADR-362 — The stored choice is a cookie, not `localStorage`
+
+**Date** 2026-09-05 · **Prompt** 65 · **Status** Accepted
+
+### Question
+Where the explicit language choice lives, given point 3 of the owner's specification: coming back
+must not re-run the guess and override the choice.
+
+### Criterion (set before measuring)
+The store must be readable **before the first byte of HTML is chosen**. Anything read after hydration
+paints one language and swaps to the other, which is the flash the checklist forbids.
+
+### Measurement
+`localStorage` is not visible to middleware or to a Server Component — the earliest a client can read
+it is after the bundle executes, which on the studio route is a whole page later. A cookie is on the
+request that picks the HTML.
+
+### Decision
+`ms-locale`, a first-party cookie, `SameSite=Lax`, `Max-Age` one year, not `HttpOnly` (the switch in
+the header writes it). Middleware reads it and never writes it: **only an explicit choice writes the
+cookie**, which is what makes the guess run exactly once.
+
+### Consequences
+- Accepted: a visitor who clears cookies is guessed at again. That is the same visitor the guess
+  exists for.
+- Accepted: the cookie is one more thing a privacy page has to name (prompt 69). It carries `en` or
+  `ru` and nothing else — no id, no timestamp.
+- Avoided: a locale that disagrees between the server's HTML and the client's first render.
+
+## ADR-363 — What "region" means, and what happens when the signals disagree
+
+**Date** 2026-09-05 · **Prompt** 65 · **Status** Accepted
+
+### Question
+The owner asked for the region, not only `Accept-Language`: «Смотри с какой локации заходит юзер и
+автоматом выбери сам». Vercel puts the country in a header; a container on a laptop has no such
+header; and the two signals can point different ways.
+
+### Decision
+With no stored choice, the guess is Russian if **either** signal says Russian:
+
+- `x-vercel-ip-country` is one of `RU BY KZ KG TJ TM UZ AM MD` — the countries where Russian is an
+  official or a widely used working language;
+- or the first tag in `Accept-Language` is `ru`.
+
+Otherwise English. Where the deployment has no geo header the language header carries the guess
+alone, which is what happens in Docker and in `next dev`.
+
+### Consequences
+- Accepted: a Russian speaker travelling through a country outside the list gets Russian from their
+  browser; an English speaker inside a listed country gets Russian from the geo header, and one click
+  fixes it for a year (ADR-362). Both are recoverable, and that recovery is why the switch is in the
+  header rather than in a menu.
+- Accepted: the country list is a judgement, not a measurement, and it is written here so it can be
+  argued with rather than found by reading middleware.
+- Rejected: guessing from a timezone. It is a client value, so it arrives too late to pick the HTML.
+
+## ADR-364 — A block's default copy is chosen when the block is inserted
+
+**Date** 2026-09-05 · **Prompt** 65 · **Status** Accepted
+
+### Question
+A block's defaults are content inside a Zod schema (`headline: 'Every property, one panel, no
+guessing'`). Either the schema carries both languages, or the localised defaults are applied when the
+block is inserted.
+
+### Criterion (set before measuring)
+Whichever answer keeps a saved `.motion` document meaning one thing. A document is the user's
+content: if a block's text changed language when the interface did, switching the language would edit
+their page.
+
+### Decision
+Insert time. The schema keeps its English defaults, and inserting a block in a Russian session
+applies a patch of localised text over them. The document stores the resulting strings, so `.motion`
+is unchanged and no migration is needed (`FILE_FORMAT.md` untouched).
+
+### Consequences
+- Accepted: a document composed in Russian and reopened in English keeps its Russian text. That is
+  correct — it is the user's copy, not the interface's.
+- Accepted: the patch covers text fields only. A block whose Russian patch is missing inserts with
+  its English defaults rather than failing, and a test lists which blocks have a patch so the gap is
+  a number rather than a surprise.
+
+## ADR-365 — Control labels are keyed by their English string
+
+**Date** 2026-09-05 · **Prompt** 65 · **Status** Accepted
+
+### Question
+The 72 block definitions hold 912 control labels and 209 hints as literal English. Translating them
+means either replacing every literal with a key, or treating the English string as the key.
+
+### Criterion (set before measuring)
+Fewer entries to write and fewer files to touch, provided the collisions are checkable. A key scheme
+is worth its cost only if the same English string genuinely needs two different Russian translations.
+
+### Measurement
+912 labels are **412 unique**; 209 hints are **193 unique**. Keying by string is 605 entries against
+1 121, and touches **zero** of the 72 definition files. `Style` appears 51 times, `Content` 44,
+`Layout` 29 — always as the same inspector group heading.
+
+### Decision
+The English string is the key. `packages/blocks` exports the dictionary beside the definitions,
+because the strings are the registry's, not the app's.
+
+### Consequences
+- Accepted: a future block wanting a different Russian word for an existing English label cannot have
+  one without introducing a key for that control. The test that fails is the one asserting every
+  label in the registry has an entry — it names the label, so the gap is visible where it is created.
+- Accepted: the dictionary is a table of data, so it is exempt from § 1.2 by ADR-347's list.
+
+## ADR-366 — The documents at `/docs` stay English for now
+
+**Date** 2026-09-05 · **Prompt** 65 · **Status** Accepted
+
+### Question
+Prompt 65 names "the docs" as a surface to translate. The route renders `docs/` — 30 engineering
+documents, tens of thousands of words, more text than the rest of the product together.
+
+### Escalated
+Options presented (shell only · shell plus a mechanism · translate everything), owner first chose to
+translate everything, then on seeing the shape of the work decided on 2026-09-05 to defer it. Owner's
+stated reason, verbatim: «/docs не надо пока. запиши куда нибюудь. после продакшена подумаем что
+сделать».
+
+### Decision
+The docs **shell** is translated — navigation, search, breadcrumbs, pager, the headings around the
+article. The document bodies stay English, and no content-localisation mechanism is written: an
+unused mechanism is a guess about an answer the owner has not given yet.
+
+### Consequences
+- Accepted: a Russian session reads Russian chrome around English prose. That is the shape most
+  engineering documentation ships in, and it is a recorded state rather than an oversight.
+- Accepted: prompt 65's checklist line "no English left in a Russian session" is met for the product
+  surfaces and **not** for `/docs` bodies. The session report says so.
+- Deferred, not dropped: revisit after production, per the owner.

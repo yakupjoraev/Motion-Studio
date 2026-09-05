@@ -1,4 +1,4 @@
-import { CanvasPlaceholder } from '../../src/components/studio/canvas-placeholder'
+import { CanvasPlaceholder } from '../../../src/components/studio/canvas-placeholder'
 
 const PANEL = 'ms-panel-overlay bg-surface-1'
 

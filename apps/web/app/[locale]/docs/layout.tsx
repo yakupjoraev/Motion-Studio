@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 
-import { DocsSearch } from '../../src/components/docs/docs-search'
+import { DocsSearch } from '../../../src/components/docs/docs-search'
 
 /**
  * The chrome that does not depend on which document is open. The sidebar is not here: it carries

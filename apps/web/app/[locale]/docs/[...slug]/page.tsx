@@ -1,13 +1,13 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
-import { DocsBreadcrumbs } from '../../../src/components/docs/docs-breadcrumbs'
-import { DocsContent } from '../../../src/components/docs/docs-content'
-import { DocsPager } from '../../../src/components/docs/docs-pager'
-import { DocsShell } from '../../../src/components/docs/docs-shell'
-import { neighboursOf } from '../../../src/lib/docs/build-nav'
-import { plainText } from '../../../src/lib/docs/frontmatter'
-import { INDEX_FILE, findDoc, readDocs } from '../../../src/lib/docs/read-docs'
+import { DocsBreadcrumbs } from '../../../../src/components/docs/docs-breadcrumbs'
+import { DocsContent } from '../../../../src/components/docs/docs-content'
+import { DocsPager } from '../../../../src/components/docs/docs-pager'
+import { DocsShell } from '../../../../src/components/docs/docs-shell'
+import { neighboursOf } from '../../../../src/lib/docs/build-nav'
+import { plainText } from '../../../../src/lib/docs/frontmatter'
+import { INDEX_FILE, findDoc, readDocs } from '../../../../src/lib/docs/read-docs'
 
 interface PageProps {
   readonly params: Promise<{ readonly slug: readonly string[] }>

@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
-import { DocsContent } from '../../src/components/docs/docs-content'
-import { DocsPager } from '../../src/components/docs/docs-pager'
-import { DocsShell } from '../../src/components/docs/docs-shell'
-import { neighboursOf } from '../../src/lib/docs/build-nav'
-import { findDoc } from '../../src/lib/docs/read-docs'
+import { DocsContent } from '../../../src/components/docs/docs-content'
+import { DocsPager } from '../../../src/components/docs/docs-pager'
+import { DocsShell } from '../../../src/components/docs/docs-shell'
+import { neighboursOf } from '../../../src/lib/docs/build-nav'
+import { findDoc } from '../../../src/lib/docs/read-docs'
 
 export const metadata: Metadata = {
   title: 'Documentation — Motion Studio',

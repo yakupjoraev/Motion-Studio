@@ -1,10 +1,14 @@
 import { COLOR_MODE_SCRIPT, studioDark } from '@motion-studio/theme'
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
+import { notFound } from 'next/navigation'
 import type { ReactNode } from 'react'
 
-import './globals.css'
-import { ThemeBoot } from './theme-boot'
+import { getDictionary } from '../../src/lib/i18n/dictionary'
+import { LocaleProvider } from '../../src/lib/i18n/locale-context'
+import { HTML_LANG, LOCALES, isLocale } from '../../src/lib/i18n/locales'
+import '../globals.css'
+import { ThemeBoot } from '../theme-boot'
 
 /**
  * DESIGN_SYSTEM.md § Typography: self-hosted, `display: swap`, latin + latin-ext.
@@ -16,11 +20,15 @@ import { ThemeBoot } from './theme-boot'
  * **Both faces preload.** The mono is not decoration on the landing page: the eyebrow, the stat row
  * and the demo's readout are all set in it and all above the fold, so leaving it to swap late
  * rewrapped the stat row at 1.3 s and moved everything under it — 0.07 of a 0.02 CLS budget,
- * measured (ADR-295). PERFORMANCE.md § Fonts is amended to say so.
+ * measured (ADR-295).
+ *
+ * **`cyrillic` joins the subsets** with the second locale (ADR-361). Geist ships it, so a Russian
+ * session gets the same face rather than a fallback: without the subset the browser paints Cyrillic
+ * in its own serif and the studio's dense chrome shifts under it.
  */
 const sans = Geist({
   variable: '--font-geist-sans',
-  subsets: ['latin', 'latin-ext'],
+  subsets: ['latin', 'latin-ext', 'cyrillic'],
   display: 'swap',
   adjustFontFallback: true,
   preload: true,
@@ -28,7 +36,7 @@ const sans = Geist({
 
 const mono = Geist_Mono({
   variable: '--font-geist-mono',
-  subsets: ['latin', 'latin-ext'],
+  subsets: ['latin', 'latin-ext', 'cyrillic'],
   display: 'swap',
   adjustFontFallback: true,
   preload: false,
@@ -39,8 +47,14 @@ export const metadata: Metadata = {
   description: 'A visual editor for modern React interfaces.',
 }
 
+/** Both locales are built. English is served at `/` by a rewrite — ADR-361. */
+export function generateStaticParams(): { locale: string }[] {
+  return LOCALES.map((locale) => ({ locale }))
+}
+
 export interface RootLayoutProps {
   children: ReactNode
+  params: Promise<{ locale: string }>
 }
 
 /**
@@ -53,9 +67,17 @@ const boot = {
   'data-glass': studioDark.surface.glassLevel,
 }
 
-export default function RootLayout({ children }: RootLayoutProps) {
+export default async function RootLayout({ children, params }: RootLayoutProps) {
+  const { locale } = await params
+
+  // A path like `/de/blocks` reaches this layout with `de` in the segment. It is a 404, not a
+  // fallback to English: a URL that quietly serves another language is a URL nobody can share.
+  if (!isLocale(locale)) {
+    notFound()
+  }
+
   return (
-    <html className={`${sans.variable} ${mono.variable}`} lang="en" {...boot}>
+    <html className={`${sans.variable} ${mono.variable}`} lang={HTML_LANG[locale]} {...boot}>
       <head>
         {/*
           The one blocking script in the app — THEME_ENGINE.md § Colour mode. It applies a *stored*
@@ -66,7 +88,9 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <script dangerouslySetInnerHTML={{ __html: COLOR_MODE_SCRIPT }} />
       </head>
       <body>
-        {children}
+        <LocaleProvider dictionary={getDictionary(locale)} locale={locale}>
+          {children}
+        </LocaleProvider>
         <ThemeBoot />
       </body>
     </html>

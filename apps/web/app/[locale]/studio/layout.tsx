@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 
-import { PANEL_LAYOUT_SCRIPT } from '../../src/hooks/panel-layout'
-import '../../src/styles/studio.css'
+import { PANEL_LAYOUT_SCRIPT } from '../../../src/hooks/panel-layout'
+import '../../../src/styles/studio.css'
 
 export const metadata: Metadata = {
   title: 'Studio · Motion Studio',
