@@ -45,6 +45,7 @@ export const studioTheme: Dictionary['studio']['theme'] = {
   borders: 'Границы',
   none: 'Нет',
   subtle: 'Едва заметно',
+  lightLevel: 'Лёгкий',
   medium: 'Средне',
   strong: 'Сильно',
   hairline: 'Волосяная',

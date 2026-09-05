@@ -3,6 +3,8 @@
 import type { ContrastRepair } from '@motion-studio/theme'
 import { Button, Collapsible } from '@motion-studio/ui'
 
+import { useStudio } from '../../../../lib/i18n/studio-surface'
+
 export interface ContrastRepairItemProps {
   readonly repair: ContrastRepair
   /** `true` when the author declined this one and the failing pair is what ships. */
@@ -27,36 +29,42 @@ export function ContrastRepairItem({
   onKeepMine,
   onRepair,
 }: ContrastRepairItemProps) {
+  const { theme: copy } = useStudio()
+
+  const outcome = (kept ? copy.contrastKeepingYours : copy.contrastUsingStep)
+    .replace('{step}', String(repair.step))
+    .replace('{ratio}', ratio(repair.repaired))
+
   return (
     <li className="flex flex-col gap-1 border-border border-t pt-2 first:border-t-0 first:pt-0">
       <p className="text-[11px] text-foreground-muted leading-snug">
-        {repair.token} on {repair.against} was {ratio(repair.measured)} (needs {repair.required}:1)
+        {copy.contrastMeasured
+          .replace('{token}', repair.token)
+          .replace('{against}', repair.against)
+          .replace('{measured}', ratio(repair.measured))
+          .replace('{required}', String(repair.required))}
       </p>
-      <p className="text-[11px] text-foreground leading-snug">
-        {kept
-          ? `Keeping yours. Accent step ${repair.step} would measure ${ratio(repair.repaired)}.`
-          : `Using accent step ${repair.step} instead, which measures ${ratio(repair.repaired)}.`}
-      </p>
+      <p className="text-[11px] text-foreground leading-snug">{outcome}</p>
 
       <div className="flex items-center gap-1">
         {kept ? (
           <Button onClick={onRepair} size="sm" variant="secondary">
-            Repair it
+            {copy.repairIt}
           </Button>
         ) : (
           <Button onClick={onKeepMine} size="sm" variant="ghost">
-            Keep mine
+            {copy.keepMine}
           </Button>
         )}
-        <Collapsible trigger="Details">
+        <Collapsible trigger={copy.details}>
           <dl className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-0.5 px-1 py-1 text-[11px]">
-            <dt className="text-foreground-subtle">Yours</dt>
+            <dt className="text-foreground-subtle">{copy.yours}</dt>
             <dd className="font-mono">{repair.from}</dd>
-            <dt className="text-foreground-subtle">Repaired</dt>
+            <dt className="text-foreground-subtle">{copy.repaired}</dt>
             <dd className="font-mono">{repair.to}</dd>
-            <dt className="text-foreground-subtle">Measured</dt>
+            <dt className="text-foreground-subtle">{copy.measured}</dt>
             <dd>{ratio(repair.measured)}</dd>
-            <dt className="text-foreground-subtle">Required</dt>
+            <dt className="text-foreground-subtle">{copy.required}</dt>
             <dd>{repair.required}:1</dd>
           </dl>
         </Collapsible>
