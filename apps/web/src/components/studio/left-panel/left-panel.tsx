@@ -36,7 +36,13 @@ export function LeftPanel() {
   return (
     <Tabs
       aria-label={panels.panels}
-      className="h-full [&_[role=tablist]]:overflow-x-auto [&_[role=tablist]]:[scrollbar-width:none]"
+      /*
+       * Two panel-local overrides, both about width. The strip scrolls rather than clipping a tab,
+       * and its triggers are tighter here than the primitive's default: measured at the panel's
+       * 280 px, the five Russian labels need 305 px with `px-3` and 265 px with `px-2`, so «Слои»
+       * was reachable only by scrolling to a tab nothing suggested was there.
+       */
+      className="h-full [&_[role=tab]]:px-2 [&_[role=tablist]]:overflow-x-auto [&_[role=tablist]]:[scrollbar-width:none]"
       items={items}
       onValueChange={(next) => {
         if (isLeftTab(next)) {
