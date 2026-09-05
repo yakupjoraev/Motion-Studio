@@ -1,9 +1,16 @@
 'use client'
 
+import {
+  type RegistryCopy,
+  blockDescription,
+  blockName,
+  categoryName,
+} from '@motion-studio/blocks/i18n/translate'
 import { blockRegistry } from '@motion-studio/blocks/registry'
 import { BLOCK_CATEGORIES, type BlockCategory, type BlockDefinition } from '@motion-studio/schema'
 import { useDeferredValue, useMemo, useSyncExternalStore } from 'react'
 
+import { useRegistryCopy } from '../../../../lib/i18n/studio-surface'
 import { type FuzzyTarget, fuzzyScore } from '../../command-palette/fuzzy-match'
 
 /** Reads in a profile next to the command palette's own entries — PERFORMANCE.md § In development. */
@@ -13,24 +20,51 @@ const CATALOGUE = blockRegistry.list()
 
 /**
  * Prompt 37 § Search: name, tags, description and category, scored by the palette's own matcher
- * rather than a second one. The keyword list is built once — the registry is assembled from static
- * imports and cannot change while the app runs, so rebuilding it per keystroke would be work with a
- * constant answer.
+ * rather than a second one. The label is the name **on screen** — a reader who types what the card
+ * says and gets nothing concludes the palette is broken — and the English name stays a keyword, so
+ * an id or a name learned from the docs keeps working in a Russian session.
  */
-const TARGETS: ReadonlyMap<string, FuzzyTarget> = new Map(
-  CATALOGUE.map((definition) => [
-    definition.id,
-    {
-      label: definition.name,
-      keywords: [
-        ...definition.tags,
-        definition.description,
-        BLOCK_CATEGORIES[definition.category],
-        definition.category,
-      ],
-    },
-  ]),
-)
+const targetsOf = (copy: RegistryCopy | undefined): ReadonlyMap<string, FuzzyTarget> =>
+  new Map(
+    CATALOGUE.map((definition) => [
+      definition.id,
+      {
+        label: blockName(copy, definition.id, definition.name),
+        keywords: [
+          ...definition.tags,
+          definition.name,
+          blockDescription(copy, definition.id, definition.description),
+          categoryName(copy, definition.category, BLOCK_CATEGORIES[definition.category]),
+          definition.category,
+        ],
+      },
+    ]),
+  )
+
+/*
+ * Built once per language rather than per keystroke: the registry is assembled from static imports
+ * and a session holds one table, so this map has a constant answer and the surface has a 16 ms
+ * budget (PRODUCT.md § 2). `null` stands for English, which has no table.
+ */
+const ENGLISH = targetsOf(undefined)
+const TRANSLATED = new WeakMap<RegistryCopy, ReadonlyMap<string, FuzzyTarget>>()
+
+function targetsFor(copy: RegistryCopy | undefined): ReadonlyMap<string, FuzzyTarget> {
+  if (copy === undefined) {
+    return ENGLISH
+  }
+
+  const cached = TRANSLATED.get(copy)
+
+  if (cached !== undefined) {
+    return cached
+  }
+
+  const built = targetsOf(copy)
+  TRANSLATED.set(copy, built)
+
+  return built
+}
 
 export interface BlockSearchState {
   readonly blocks: readonly BlockDefinition[]
@@ -47,6 +81,7 @@ export interface BlockSearchState {
 export function searchBlocks(
   query: string,
   categories: ReadonlySet<BlockCategory>,
+  copy?: RegistryCopy | undefined,
 ): BlockSearchState {
   const start = performance.now()
   const pool =
@@ -54,7 +89,7 @@ export function searchBlocks(
       ? CATALOGUE
       : CATALOGUE.filter((definition) => categories.has(definition.category))
   const trimmed = query.trim()
-  const blocks = trimmed === '' ? pool : rank(pool, trimmed)
+  const blocks = trimmed === '' ? pool : rank(pool, trimmed, targetsFor(copy))
   const end = performance.now()
 
   // Cleared first: a measure per keystroke would otherwise fill the buffer with the same entry.
@@ -65,11 +100,15 @@ export function searchBlocks(
 }
 
 /** `Array.prototype.sort` is stable, so blocks that score the same stay in catalogue order. */
-function rank(pool: readonly BlockDefinition[], query: string): readonly BlockDefinition[] {
+function rank(
+  pool: readonly BlockDefinition[],
+  query: string,
+  targets: ReadonlyMap<string, FuzzyTarget>,
+): readonly BlockDefinition[] {
   const scored: { definition: BlockDefinition; score: number }[] = []
 
   for (const definition of pool) {
-    const score = fuzzyScore(TARGETS.get(definition.id) ?? { label: definition.name }, query)
+    const score = fuzzyScore(targets.get(definition.id) ?? { label: definition.name }, query)
 
     if (score !== null) {
       scored.push({ definition, score })
@@ -87,8 +126,9 @@ function rank(pool: readonly BlockDefinition[], query: string): readonly BlockDe
 export function useBlockSearch(query: string): BlockSearchState {
   const deferred = useDeferredValue(query)
   const categories = useSelectedCategories()
+  const copy = useRegistryCopy()
 
-  return useMemo(() => searchBlocks(deferred, categories), [categories, deferred])
+  return useMemo(() => searchBlocks(deferred, categories, copy), [categories, copy, deferred])
 }
 
 /** How many of the whole catalogue sit in each category — the number on a chip. */

@@ -12,6 +12,14 @@ export interface InsertBlockPayload {
   readonly index: number
   readonly slot: string
   readonly id?: NodeId | undefined
+  /**
+   * The text a block is inserted with, by block id — ADR-364, and the reason it is a payload rather
+   * than a lookup: this package must not import the registry's translations (§ 2, one-way
+   * dependencies), and the slots' default children need the same answer as their parent.
+   *
+   * Plain data, so a document ends up holding strings and nothing about a language.
+   */
+  readonly copy?: Readonly<Record<string, Readonly<Record<string, unknown>>>> | undefined
 }
 
 interface Placement {
@@ -20,6 +28,7 @@ interface Placement {
   readonly index: number
   readonly slot: string
   readonly id?: NodeId | undefined
+  readonly props?: Record<string, unknown> | undefined
 }
 
 /** Depth-first, so a slot's default children are themselves materialised — ADR-062. */
@@ -28,6 +37,7 @@ function materialize(
   context: CommandContext,
   placement: Placement,
   path: readonly BlockId[],
+  copy: InsertBlockPayload['copy'],
 ): void {
   const id = insertOneNode(draft, context, placement)
 
@@ -42,10 +52,19 @@ function materialize(
         )
       }
 
-      materialize(draft, context, { blockId: childBlockId, parentId: id, index, slot: slot.name }, [
-        ...path,
-        childBlockId,
-      ])
+      materialize(
+        draft,
+        context,
+        {
+          blockId: childBlockId,
+          parentId: id,
+          index,
+          slot: slot.name,
+          props: copy?.[childBlockId],
+        },
+        [...path, childBlockId],
+        copy,
+      )
     }
   }
 }
@@ -57,7 +76,13 @@ export function insertBlock(payload: InsertBlockPayload): Command<InsertBlockPay
     label: `Add ${humanize(payload.blockId)}`,
     payload,
     apply(draft, context) {
-      materialize(draft, context, payload, [payload.blockId])
+      materialize(
+        draft,
+        context,
+        { ...payload, props: payload.copy?.[payload.blockId] },
+        [payload.blockId],
+        payload.copy,
+      )
     },
   }
 }

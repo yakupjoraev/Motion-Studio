@@ -7,6 +7,9 @@ import { useToast } from '@motion-studio/ui'
 import { createId } from '@motion-studio/utils'
 import { useCallback } from 'react'
 
+import type { RegistryCopy } from '@motion-studio/blocks/i18n/translate'
+
+import { useRegistryCopy } from '../../../../lib/i18n/studio-surface'
 import { useStudioStore } from '../../../../store/editor-store'
 import { revealNode } from '../../canvas-area/canvas-handle'
 
@@ -21,7 +24,11 @@ export type InsertOutcome = { readonly inserted: NodeId } | { readonly rejected:
  * ADR-061: the id is chosen by the caller, because the caller is the one that has to select the
  * result and the command does not report what it created.
  */
-export function insertBlockAtSelection(definition: BlockDefinition): InsertOutcome {
+export function insertBlockAtSelection(
+  definition: BlockDefinition,
+  /** The session's own block copy — ADR-364. Absent in English, where the defaults already are. */
+  copy?: RegistryCopy | undefined,
+): InsertOutcome {
   const state = useStudioStore.getState()
   const target = commands.resolveInsertTarget({
     document: state.document,
@@ -44,6 +51,7 @@ export function insertBlockAtSelection(definition: BlockDefinition): InsertOutco
       slot: target.slot,
       index: target.index,
       id,
+      copy: copy?.defaults,
     }),
   )
   state.select([id], 'replace')
@@ -58,10 +66,11 @@ export function insertBlockAtSelection(definition: BlockDefinition): InsertOutco
  */
 export function useInsertBlock(): (definition: BlockDefinition) => void {
   const toast = useToast()
+  const copy = useRegistryCopy()
 
   return useCallback(
     (definition: BlockDefinition) => {
-      const outcome = insertBlockAtSelection(definition)
+      const outcome = insertBlockAtSelection(definition, copy)
 
       if ('rejected' in outcome) {
         toast({
@@ -75,6 +84,6 @@ export function useInsertBlock(): (definition: BlockDefinition) => void {
 
       revealNode(outcome.inserted)
     },
-    [toast],
+    [copy, toast],
   )
 }

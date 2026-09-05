@@ -10,7 +10,12 @@ import type { DragPayload, DropTarget } from './dnd.types'
  * A rejected target has no command — the reason was shown before the release, and the release does
  * nothing.
  */
-export function commandForDrop(target: DropTarget, payload: DragPayload): Command | null {
+export function commandForDrop(
+  target: DropTarget,
+  payload: DragPayload,
+  /** The text a newly inserted block starts with — ADR-364. Plain data; see `insertBlock`. */
+  copy?: Readonly<Record<string, Readonly<Record<string, unknown>>>> | undefined,
+): Command | null {
   if (target.indicator.kind === 'reject') {
     return null
   }
@@ -18,6 +23,6 @@ export function commandForDrop(target: DropTarget, payload: DragPayload): Comman
   const { parentId, slot, index } = target
 
   return payload.kind === 'palette-block'
-    ? commands.insertBlock({ blockId: payload.blockId, parentId, slot, index })
+    ? commands.insertBlock({ blockId: payload.blockId, parentId, slot, index, copy })
     : commands.moveNodes({ ids: payload.nodeIds, parentId, slot, index })
 }

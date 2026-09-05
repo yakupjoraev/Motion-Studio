@@ -94,6 +94,66 @@ describe('the Russian registry copy answers the registry', () => {
     expect([...missing]).toEqual([])
   })
 
+  /**
+   * The insert-time patch of ADR-364. It is applied over `definition.defaults` and then validated by
+   * the block's own schema, so a key the definition dropped would fail at the point a user inserts
+   * the block — a defect nobody would attribute to a translation. The parse is what this asserts.
+   */
+  it('patches defaults every block still declares, and the schema still accepts', () => {
+    const wrong: string[] = []
+
+    for (const [id, patch] of Object.entries(ruRegistryCopy.defaults)) {
+      const definition = definitions.find((one) => one.id === id)
+
+      if (definition === undefined) {
+        wrong.push(`${id}: no such block`)
+        continue
+      }
+
+      const defaults = definition.defaults as Record<string, unknown>
+
+      for (const key of Object.keys(patch)) {
+        if (!(key in defaults)) {
+          wrong.push(`${id}.${key}: not a prop of the block`)
+        }
+      }
+
+      const parsed = definition.propsSchema.safeParse({ ...defaults, ...patch })
+
+      if (!parsed.success) {
+        wrong.push(`${id}: ${parsed.error.issues[0]?.path.join('.')} rejected`)
+      }
+    }
+
+    expect(wrong).toEqual([])
+  })
+
+  /**
+   * Which blocks insert with English text, as a number rather than a surprise — ADR-364 asks for
+   * exactly this. One block is left: `code-block`, whose prose is the code sample itself.
+   */
+  it('covers every block whose defaults are prose', () => {
+    const prose = (value: unknown): boolean =>
+      typeof value === 'string' && /\p{L}{2}/u.test(value) && value.includes(' ')
+
+    const carries = (value: unknown): boolean =>
+      prose(value) ||
+      (Array.isArray(value) &&
+        value.some(
+          (row) =>
+            typeof row === 'object' && row !== null && Object.values(row).some((one) => prose(one)),
+        ))
+
+    const untranslated = definitions
+      .filter((definition) => ruRegistryCopy.defaults[definition.id] === undefined)
+      .filter((definition) =>
+        Object.values(definition.defaults as Record<string, unknown>).some(carries),
+      )
+      .map((definition) => definition.id)
+
+    expect(untranslated).toEqual(['code-block'])
+  })
+
   /*
    * The other direction. An entry nobody reads is a string that was translated once and then
    * renamed in the definition — the table would keep answering a question no control asks.

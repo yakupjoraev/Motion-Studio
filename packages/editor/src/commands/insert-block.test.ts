@@ -25,6 +25,48 @@ describe('insertBlock', () => {
     expect(validateDocument(document)).toEqual({ ok: true, value: undefined })
   })
 
+  /**
+   * ADR-364: a block inserted in a Russian session lands with Russian text, and the slots' default
+   * children land with theirs — a hero whose card says «Заголовок» while the hero above it says
+   * something else would be worse than no translation at all.
+   */
+  it('writes the copy the caller passes into the block and its default children', () => {
+    const harnessed = harness()
+
+    harnessed.store.getState().dispatch(
+      insertBlock({
+        blockId: SHELL,
+        parentId: id('root'),
+        index: 0,
+        slot: 'children',
+        copy: { card: { title: 'Заголовок' } },
+      }),
+    )
+
+    const document = harnessed.document()
+
+    expect(document.nodes[nodeId('node_2')]?.props['title']).toBe('Заголовок')
+    expect(document.nodes[nodeId('node_3')]?.props['title']).toBe('Заголовок')
+    // The document holds the strings, not the language: nothing about a locale is written down.
+    expect(validateDocument(document)).toEqual({ ok: true, value: undefined })
+  })
+
+  it('leaves the block on its own defaults when the caller passes no copy for it', () => {
+    const harnessed = harness()
+
+    harnessed.store.getState().dispatch(
+      insertBlock({
+        blockId: SHELL,
+        parentId: id('root'),
+        index: 0,
+        slot: 'children',
+        copy: { 'not-this-block': { title: 'Заголовок' } },
+      }),
+    )
+
+    expect(harnessed.document().nodes[nodeId('node_2')]?.props['title']).toBe('')
+  })
+
   it('inserts nothing extra for a block whose slots declare no defaults', () => {
     const harnessed = harness()
 

@@ -1,3 +1,4 @@
+import { registryCopy } from '@motion-studio/blocks/i18n'
 import { blockRegistry } from '@motion-studio/blocks/registry'
 import type { BlockCategory } from '@motion-studio/schema'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -16,6 +17,26 @@ const ids = (query: string, categories: ReadonlySet<BlockCategory> = NONE): read
   searchBlocks(query, categories).blocks.map((definition) => definition.id)
 
 afterEach(clearCategories)
+
+describe('searchBlocks in a Russian session', () => {
+  const russian = registryCopy('ru')
+
+  const found = (query: string): readonly string[] =>
+    searchBlocks(query, NONE, russian).blocks.map((definition) => definition.id)
+
+  /**
+   * The palette shows the translated name, so the search has to answer to it. The English name and
+   * the id keep working: they are what the documentation and a colleague's message call the block.
+   */
+  it('matches the name on the card', () => {
+    expect(found('Герой')[0]).toContain('hero')
+    expect(found('таблица тариф')[0]).toBe('pricing-table')
+  })
+
+  it('still matches the English name a reader brings from the docs', () => {
+    expect(found('pricing')[0]).toBe('pricing-table')
+  })
+})
 
 describe('searchBlocks', () => {
   it('returns the whole catalogue in registry order for an empty query', () => {
