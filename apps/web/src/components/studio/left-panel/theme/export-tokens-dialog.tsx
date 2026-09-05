@@ -41,14 +41,14 @@ export function ExportTokensDialog({ config }: ExportTokensDialogProps) {
 
   return (
     <Dialog
-      description="Four formats, generated from the same resolved theme."
+      description={copy.exportTokensDescription}
       onOpenChange={setOpen}
       open={open}
       size="lg"
       title={copy.exportTokens}
       trigger={
         <Button size="sm" variant="secondary">
-          Export tokens
+          {copy.exportTokens}
         </Button>
       }
     >

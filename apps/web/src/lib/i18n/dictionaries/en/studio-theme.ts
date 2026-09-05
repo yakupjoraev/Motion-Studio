@@ -46,6 +46,8 @@ export const studioTheme = {
   borders: 'Borders',
   none: 'None',
   subtle: 'Subtle',
+  /** The noise scale's third step — `light` as in faint, not as in the light colour mode. */
+  lightLevel: 'Light',
   medium: 'Medium',
   strong: 'Strong',
   hairline: 'Hairline',

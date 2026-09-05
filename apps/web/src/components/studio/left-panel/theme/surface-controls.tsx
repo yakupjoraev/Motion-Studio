@@ -14,50 +14,54 @@ import { useThemeEdit } from './use-theme-edit'
  * levels carry their opacity in the label, which is what the sketched slider was showing.
  */
 
-const GLASS: readonly SegmentedOption[] = [
-  { value: 'none', content: 'None', label: 'No glass' },
-  { value: 'subtle', content: 'Subtle', label: 'Subtle glass' },
-  { value: 'medium', content: 'Medium', label: 'Medium glass' },
-  { value: 'strong', content: 'Strong', label: 'Strong glass' },
-]
-
-const NOISE: readonly SegmentedOption[] = [
-  { value: 'none', content: 'None', label: 'No noise' },
-  { value: 'subtle', content: 'Subtle', label: 'Subtle noise' },
-  { value: 'light', content: 'Light', label: 'Light noise' },
-  { value: 'medium', content: 'Medium', label: 'Medium noise' },
-]
-
-const BORDERS: readonly SegmentedOption[] = [
-  { value: 'hairline', content: 'Hairline', label: 'Hairline borders' },
-  { value: 'solid', content: 'Solid', label: 'Solid borders' },
-  { value: 'none', content: 'None', label: 'No borders' },
-]
-
 export function SurfaceControls() {
   const { theme: copy } = useStudio()
   const { config, set } = useThemeEdit()
+
+  /*
+   * Built here rather than at module scope: a step's short word is what the segment shows and its
+   * long one is the accessible name, and both are strings the session's language decides.
+   */
+  const glass: readonly SegmentedOption[] = [
+    { value: 'none', content: copy.none, label: copy.noGlass },
+    { value: 'subtle', content: copy.subtle, label: copy.subtleGlass },
+    { value: 'medium', content: copy.medium, label: copy.mediumGlass },
+    { value: 'strong', content: copy.strong, label: copy.strongGlass },
+  ]
+
+  const noise: readonly SegmentedOption[] = [
+    { value: 'none', content: copy.none, label: copy.noNoise },
+    { value: 'subtle', content: copy.subtle, label: copy.subtleNoise },
+    { value: 'light', content: copy.lightLevel, label: copy.lightNoise },
+    { value: 'medium', content: copy.medium, label: copy.mediumNoise },
+  ]
+
+  const borders: readonly SegmentedOption[] = [
+    { value: 'hairline', content: copy.hairline, label: copy.hairlineBorders },
+    { value: 'solid', content: copy.solid, label: copy.solidBorders },
+    { value: 'none', content: copy.none, label: copy.noBorders },
+  ]
 
   return (
     <>
       <ThemeSegmentedRow
         label={copy.glass}
         onSelect={(value) => set('surface.glassLevel', value)}
-        options={GLASS}
+        options={glass}
         value={config.surface.glassLevel}
       />
 
       <ThemeSegmentedRow
         label={copy.noise}
         onSelect={(value) => set('surface.noiseLevel', value)}
-        options={NOISE}
+        options={noise}
         value={config.surface.noiseLevel}
       />
 
       <ThemeSegmentedRow
         label={copy.borders}
         onSelect={(value) => set('surface.borderStyle', value)}
-        options={BORDERS}
+        options={borders}
         value={config.surface.borderStyle}
       />
     </>
