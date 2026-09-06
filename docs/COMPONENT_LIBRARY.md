@@ -22,6 +22,7 @@ packages/blocks/src/marketing/pricing-table/
 ├── pricing-table.schema.ts    zod schema + control metadata
 ├── pricing-table.styles.ts    cva variants
 ├── pricing-table.motion.ts    default motion specs
+├── pricing-table.markup.ts    the codegen descriptor — what the exporter prints (ADR-249)
 ├── pricing-table.definition.ts  the BlockDefinition
 ├── pricing-table.stories.tsx  Storybook
 ├── pricing-table.test.tsx     render + a11y smoke test
@@ -534,13 +535,44 @@ half-finished block.
 
 ## Adding a block
 
-1. Create the directory with the nine files above.
-2. Write the schema first. It is the contract.
-3. Write the component against the schema's inferred type.
-4. Write `controls` — group into Layout / Style / Content.
-5. Declare `slots` if it accepts children.
-6. Declare `capabilities` including the cost class.
-7. Write the `codegen` descriptor and run `pnpm test:codegen -u` to create the golden file, then
-   **read the generated output** and confirm you would accept it in review.
-8. Story, tests, thumbnail.
-9. Add to the category index and the catalogue table above.
+A block is not one file, and the reason this section is a table rather than a list is that a block
+finished in `packages/blocks` and nowhere else is the defect this project keeps producing: the
+palette has it, the catalogue does not; the inspector has it, the Russian session does not; the
+export works, the thumbnail is missing. **The right-hand column is what makes each row survive
+someone forgetting it.** A row with no gate is a row that will be wrong within a month.
+
+### 1. Build it
+
+| Step | Where | What checks it |
+| --- | --- | --- |
+| Schema first — it is the contract | `<block>.schema.ts` | Registry-wide test: `defaults` and `previewProps` parse |
+| Component against the inferred type | `<block>.tsx` | `pnpm typecheck` |
+| `controls`, grouped Layout / Style / Content | `<block>.schema.ts` | Registry-wide test: every `controls[].path` exists in the schema |
+| `slots`, if it takes children | `<block>.definition.ts` | Registry-wide test: every `slots[].accepts` is a real block id |
+| `capabilities`, including the cost class | `<block>.definition.ts` | Registry-wide test; `defaultMotion` channels must be in `supportsMotion` |
+| The `codegen` descriptor, then **read the output** | `<block>.markup.ts` | `pnpm test:codegen -u` writes the golden; `pnpm test:compile` builds and type-checks it |
+| Render test and an axe test | `<block>.test.tsx` | `pnpm test` |
+| Story | `<block>.stories.tsx` | Storybook build in CI |
+| Export from the category index and the barrel | `src/<category>/index.ts`, `src/index.ts` | `pnpm check:registry`; the build asserts `blockRegistry` and `renderRegistry` have identical keys |
+
+### 2. Tell the rest of the product about it
+
+This half is the one that gets skipped.
+
+| Place | What goes there | What checks it |
+| --- | --- | --- |
+| **Thumbnail** | `pnpm generate:thumbnails` — one WebP per colour mode | Registry-wide test: a thumbnail exists; `--verify` in CI |
+| **Russian copy** | `packages/blocks/src/i18n/ru-blocks.ts` (name, description), `ru-labels.ts` / `ru-hints.ts` (its controls), `ru-defaults.ts` (the copy it arrives with — ADR-364) | `registry-copy.test.ts` fails on a block or control with no Russian |
+| **Narrow arrangement** | The `narrow` prop — `slider` or `stack` — or a recorded reason the block does not need one (ADR-356, ADR-357, ADR-358) | Nothing automatic. [RESPONSIVE_ENGINE.md](RESPONSIVE_ENGINE.md) states the two-arrangements rule, ADR-358 lists the six blocks excluded from it, and an unrecorded absence is a defect |
+| **Catalogue** | The category list in § Catalogue above, and its count in the heading | `catalogue-parity.test.ts` compares this document with `blockRegistry` in both directions |
+| **Landing and OG numbers** | `apps/web/src/components/landing/landing-stats.ts` | `landing-stats.test.ts` fails until the literal matches `DEFINITIONS.length` (ADR-370) |
+| **README stats** | `pnpm stats`, then the Project stats table | Nothing automatic — the command is the source, and the table is copied from its output |
+| **Screenshot baselines** | Two per block, light and dark | `gh workflow run visual.yml --ref main -f update-baselines=true` — never regenerate locally, the runner's fonts decide |
+| **`docs/` prose** | Only if the block introduces a new control kind, a new capability or a new slot rule | `links.test.ts` for the references; the parity test for the catalogue |
+
+### 3. Then check it as a user
+
+Insert it from the palette in a Russian session, resize the artboard to `base`, export it, and read
+the generated file. Five of the seven defects that opened milestone M15 in
+[ROADMAP.md](ROADMAP.md) were invisible to a green suite of eight thousand tests and visible in the
+first minute of doing exactly this.
