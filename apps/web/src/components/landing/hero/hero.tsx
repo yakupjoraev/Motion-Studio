@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { localeHref } from '../../../lib/i18n/locale-href'
 import { getRequestDictionary, getRequestLocale } from '../../../lib/i18n/request-locale'
 
+import { LANDING_STATS } from '../landing-stats'
+
 import { HeroDemoIsland } from './hero-demo-island'
 import { HeroDemoStatic } from './hero-demo-static'
 
@@ -87,9 +89,9 @@ export function Hero() {
           */}
           <dl className="grid w-full max-w-[26rem] grid-cols-3 gap-x-6 pt-4">
             {[
-              { label: hero.statBlocks, value: '72' },
-              { label: hero.statPresets, value: '51' },
-              { label: hero.statTargets, value: '4' },
+              { label: hero.statBlocks, value: String(LANDING_STATS.blocks) },
+              { label: hero.statPresets, value: String(LANDING_STATS.presets) },
+              { label: hero.statTargets, value: String(LANDING_STATS.exportTargets) },
             ].map((stat) => (
               <div className="flex flex-col gap-0.5" key={stat.label}>
                 <dt className="font-mono text-2xs text-foreground-muted uppercase tracking-[0.14em]">

@@ -172,7 +172,8 @@ See [PLAYGROUND.md](PLAYGROUND.md). Requirements:
 
 ## 7. Export
 
-See [EXPORT_ENGINE.md](EXPORT_ENGINE.md). Four targets:
+See [EXPORT_ENGINE.md](EXPORT_ENGINE.md). Five targets — this table said four until ADR-370, and
+`EXPORT_TARGETS` has held the fifth since the tokens printer landed:
 
 | Target | Output |
 | --- | --- |
@@ -180,6 +181,7 @@ See [EXPORT_ENGINE.md](EXPORT_ENGINE.md). Four targets:
 | **Next.js** | `app/page.tsx` + section components + `globals.css` + `tailwind.config.ts` + `package.json` |
 | **HTML** | Single `index.html` with inlined CSS and vanilla JS for interactions |
 | **JSON** | `.motion` document, portable and re-importable |
+| **Tokens** | The resolved theme as CSS variables, a Tailwind config, JSON, or Figma Tokens |
 
 Export dialog shows a diff-style preview with syntax highlighting, a file tree for
 multi-file targets, per-file copy, and download-as-zip. Options: TypeScript/JavaScript, include
@@ -191,8 +193,9 @@ CSS-Modules switch, because Tailwind is the model the code generator is built on
 formatting choice made at print time — see [EXPORT_ENGINE.md](EXPORT_ENGINE.md) § There is no styling
 option, and [ROADMAP.md](ROADMAP.md) § Post-v1 for what adding one would actually cost.
 
-**Done when:** each target's output compiles in a fresh scaffold with zero manual edits, and a
-golden-file test suite locks the output for every block.
+**Done when:** the code targets' output compiles in a fresh scaffold with zero manual edits — HTML,
+JSON and tokens emit no TypeScript to compile — and a golden-file test suite locks the output of
+every target for every block.
 
 ## 8. Command palette
 
@@ -245,7 +248,8 @@ Each flow is an E2E test. See [TESTING.md](TESTING.md).
 
 - [ ] All four flows pass as Playwright specs on Chromium, Firefox, WebKit.
 - [ ] 60+ blocks, 30+ motion presets, 12+ effects registered and documented.
-- [ ] All four export targets produce compiling output, locked by golden files.
+- [ ] All five export targets are locked by golden files; the two that emit TypeScript compile in a
+      fresh scaffold with no manual edits.
 - [ ] Canvas at 60 fps with 200 nodes; studio initial JS ≤ 250 kB gzip.
 - [ ] Lighthouse ≥ 95 × 4 on `/`, `/blocks`, `/docs`.
 - [ ] Zero axe violations on every surface; full keyboard operation verified.
