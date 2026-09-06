@@ -9,6 +9,16 @@ runs:
     # Before setup-node, so `cache: pnpm` has a package manager to find a store path for.
     - uses: pnpm/action-setup@v4
 
+    # And the store has to exist before `cache: pnpm` reads it. On a GitHub-hosted runner pnpm's
+    # default store path is already there; on the self-hosted one it is not, and the post-job cache
+    # step fails the whole job with "Path Validation Error: Path(s) specified in the action for
+    # caching do(es) not exist" — after every real step has passed (ADR-375).
+    - run: |
+        store="$HOME/.pnpm-store"
+        mkdir -p "$store"
+        pnpm config set store-dir "$store" --global
+      shell: bash
+
     - uses: actions/setup-node@v4
       with:
         node-version-file: .nvmrc
