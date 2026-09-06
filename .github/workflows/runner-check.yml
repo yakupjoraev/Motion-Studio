@@ -1,0 +1,17 @@
+# Temporary. Answers one question ADR-374 could not answer from documentation: does GitHub start a
+# job on a self-hosted runner while the account's billing is unresolved? Delete once it has.
+name: Runner check
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: [self-hosted, linux]
+    steps:
+      - name: Say where this ran
+        run: |
+          echo "runner: $RUNNER_NAME on $RUNNER_OS"
+          uname -a
+          nproc
+          docker version --format '{{.Server.Version}}' || echo "no docker daemon"
