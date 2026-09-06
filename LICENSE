@@ -1,21 +1,30 @@
-MIT License
+Copyright (c) 2026 Yakup Jorayev. All rights reserved.
 
-Copyright (c) 2026 Yakup Jorayev
+Motion Studio and its source code are proprietary. No licence to use, copy,
+modify, merge, publish, distribute, sublicense, or sell any part of this
+software or its source is granted, express or implied, except under a written
+agreement signed by the copyright holder.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+WHAT THE STUDIO PRODUCES IS YOURS
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+This licence covers the editor, not its output. The code Motion Studio
+generates and you export — a React component, a Next.js project, an HTML
+document, a `.motion` file, or a set of theme tokens — belongs to you. You may
+use it, modify it, ship it and sell it, commercially or otherwise, with no
+obligation to this project and no attribution. The exported files import
+nothing from this repository by design, so nothing follows them out.
+
+THIRD-PARTY COMPONENTS
+
+Parts of this software derive from third-party open-source projects under their
+own licences, which continue to apply to those parts. The notices are kept in
+`packages/ui/LICENSES.md` and `packages/blocks/LICENSES.md`.
+
+NO WARRANTY
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

@@ -15152,3 +15152,47 @@ the session that takes it what it is looking for.
   46.01 kB, blocks 130.12 kB.
 - A route renamed into a directory with glob characters now fails the gate loudly instead of
   shrinking the measurement.
+
+## ADR-372 — The repository is private and the licence is proprietary; the exported code is not
+
+**Date** 2026-09-06 · **Prompt** 66 · **Status** Accepted
+
+### Question
+The repository was made public on 2026-09-03 for a mechanical reason — Actions minutes are free for
+public repositories — and MIT was chosen long before there was a product to sell. The owner has since
+stated the intent to charge for Motion Studio, and that nobody should be able to take the source.
+
+### Options put to the owner
+Proprietary "all rights reserved", PolyForm Noncommercial, or BUSL 1.1. The owner's answer went
+past all three to the requirement underneath them: *people may use the product, and must not have
+access to the repository.* Only the first is compatible with that; the other two exist to let readers
+run the source, which is the thing being withdrawn.
+
+### Decision
+`LICENSE` is proprietary — © 2026 Yakup Jorayev, all rights reserved — and the repository becomes
+private. The two move together: MIT is a promise about published source, and a private repository
+promising MIT on its landing page is the incoherent combination this project spent a paragraph of
+`ROADMAP.md` warning itself about.
+
+**The output is carved out explicitly, in the licence itself.** A component, a Next project, an HTML
+document, a `.motion` file or a token set that a user exports is theirs — to modify, ship and sell,
+with no attribution and no obligation. Without that sentence the product's whole premise reverses:
+"take the code" cannot mean "take code you are not licensed to use". The carve-out costs nothing to
+grant, because the exported files already import nothing from this repository (ADR-259 and the
+dependency table in `EXPORT_ENGINE.md`), so there is nothing of ours to follow them out.
+
+MIT cannot be withdrawn from what was already published — every commit up to this one stays MIT for
+whoever holds a copy. Measured before deciding: **0 forks, 0 stars**, and `*.vercel.app` is served
+`noindex`, so the set of holders is very likely empty.
+
+### Consequences
+- Every MIT claim is gone from the surfaces that made it: `LICENSE`, the README badge and its licence
+  section, the landing hero eyebrow and footer in both locales, `docs/BRAND.md`, `DEVOPS.md`,
+  `DESIGN_REFERENCES.md`, `ROADMAP.md`. What replaced it says the true and more useful thing: your
+  code is yours.
+- Vendored third-party licences are unaffected — MIT permits use in a proprietary product provided
+  the notice is kept, which `packages/ui/LICENSES.md` does.
+- Actions minutes are billable again. The pipeline's shape, not the licence, is what has to answer
+  for that: ~15 jobs per push against 2 000 free minutes a month.
+- `ENGINEERING_CONTRACT` § 0's "read as a portfolio artifact" is now about the deployed product and
+  whoever is shown the repository directly, not about a public URL.

@@ -65,8 +65,11 @@ Not legal advice — the shape of the decision, for a conversation with someone 
 
 ## 4. Where it lives, and who can see the source
 
-Three coupled decisions. **Deciding them apart is how a project ends up publicly MIT-licensed with a
-private repository that pays for CI.**
+**Two of these three were decided on 2026-09-06 by the owner — ADR-372.** The repository is private
+and the licence is proprietary, with the exported code carved out as the user's. What this section
+still owns is the hosting question and, newly, the shape of a pipeline that now costs money: which
+checks run on every push and which run nightly. The reasoning below is kept because it is what the
+decision was made against.
 
 **Hosting — Vercel is enough, and a rented host would be a downgrade.** This is a Next.js app; ISR,
 image optimisation, the edge network and preview deployments are the platform's own. A VPS means

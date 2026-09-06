@@ -489,7 +489,7 @@ the gates is that a dependency upgrade cannot silently regress a perf or a11y bu
 - `README.md` with the architecture diagram, quick start, and GIF demos of each flow.
 - `CONTRIBUTING.md` with the real rules.
 - `docs/` complete and consistent with the code.
-- `LICENSE` (MIT).
+- `LICENSE` (proprietary, all rights reserved — ADR-372; the exported code is excluded from it).
 - Issue templates for bug, block request, preset request.
 - PR template with the verification checklist.
 - Topics set: `react`, `nextjs`, `typescript`, `design-tools`, `framer-motion`, `tailwindcss`,

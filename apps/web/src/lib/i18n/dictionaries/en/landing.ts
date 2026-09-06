@@ -8,7 +8,7 @@ export const landing = {
   ogDescription: 'Direct manipulation over real components, with code as the output format.',
 
   hero: {
-    eyebrow: 'Local-first · MIT · no account',
+    eyebrow: 'Local-first · no account · your code is yours',
     headline: 'Drag it. Tune it. Take the code.',
     subtitle:
       'A visual editor over a real React component registry. The inspector is generated from each component’s schema, and the export button emits the component you were just looking at.',

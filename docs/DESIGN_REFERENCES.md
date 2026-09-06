@@ -10,9 +10,10 @@ Motion Studio's visual bar is set by looking at the best work in the field. This
 which references are used, how they are used, and — importantly — where the line is between
 *learning a technique* and *taking someone's code*.
 
-This matters more here than in most projects. The repository is public, MIT-licensed, and its whole
-premise is that the code is trustworthy. A licence violation buried in an effect block would
-undermine that completely.
+This matters more here than in most projects. The product's whole premise is that the code it prints
+is trustworthy, and it prints component source into other people's repositories. A licence violation
+buried in an effect block would travel with every export — which is why the rule below is stricter
+than the repository being private would require (ADR-372).
 
 ## The references
 

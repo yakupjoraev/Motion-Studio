@@ -10,6 +10,6 @@ export const nav: Dictionary['nav'] = {
   openStudio: 'Открыть студию',
   skipToContent: 'Перейти к содержимому',
   language: 'Язык',
-  footerLicence: 'MIT',
+  footerLicence: 'Ваш код — ваш',
   footerTelemetry: 'Без телеметрии',
 }
