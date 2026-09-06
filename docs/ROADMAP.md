@@ -335,12 +335,22 @@ Each is a prompt in `prompts/`, so a session picks one up without re-deriving it
    crossing between the canvas and the layers tree — has no spec either. `DRAG_AND_DROP.md` § The four operations still says operations 2 and
    4 are unwired: reordering is only possible from the layers tree, and a user's first instinct is the
    canvas. This is the largest open item.
-2. **The studio's first load is 430 B over budget** (ADR-371). Not a prompt — a number with a
-   threshold, and the gate is red until it comes down.
-3. **`prompts/67` — the landing and the studio chrome through the design skills.**
-4. **`prompts/68` — the code panel beside the canvas**, collapsible. What makes this not a page
+2. **The `blog-index` template renders as a navbar and nothing else.** `editor/persistence.spec.ts`
+   — "every shipped template opens, reads as a page, and can be edited" — fails on it with a
+   **1 403 px** empty run against a 400 px ceiling, and the failure screenshot shows the canvas
+   holding the navbar with the four sections below it invisible. The document itself is intact: ten
+   nodes, a section with a container of heading, text and divider, a feature grid, a newsletter form
+   and a footer. Verified **not** to be a 2026-09-06 regression — the failure reproduces with that
+   day's canvas and import changes reverted. The other templates in the list pass, so it is this
+   template or a block only it uses.
+3. **The keyboard drag from the palette does not complete.** `a11y/keyboard-drag.spec.ts` —
+   "picks up, moves and drops with the keyboard alone" — never sees the `over … position n of m`
+   announcement. Also reproduced with 2026-09-06's changes reverted. Related to, but not the same
+   as, the canvas keyboard step ADR-359 measured.
+4. **`prompts/67` — the landing and the studio chrome through the design skills.**
+5. **`prompts/68` — the code panel beside the canvas**, collapsible. What makes this not a page
    builder currently lives behind a dialog nobody is told to open.
-5. **`prompts/69` — findability and ownership.** SEO, the privacy and terms pages, the domain, and
+6. **`prompts/69` — findability and ownership.** SEO, the privacy and terms pages, the domain, and
    the three coupled decisions below. Raised by the owner 2026-09-05.
 
 ### The four questions in prompt 69, and why they are one decision
