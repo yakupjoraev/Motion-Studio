@@ -379,14 +379,22 @@ fails if a GIF lands over 3 MB, which is the only automatic check these have.
 
 ## Deploy
 
-Vercel, `apps/web`, driven by `deploy.yml`. **The Git integration is disconnected on purpose**: with
-it connected the platform deploys every push itself, which both duplicates the build and puts a
-commit in production before a single gate has run.
+Vercel, `apps/web`, on **two paths that are deliberately different** — ADR-373.
 
-| Environment | Trigger | URL |
-| --- | --- | --- |
-| Production | Push to `main` | `motion-studio-y3dev.vercel.app` |
-| Preview | Every PR | `motion-studio-<hash>-y3dev.vercel.app`, posted as a comment |
+| Environment | Built by | Trigger | URL |
+| --- | --- | --- | --- |
+| Production | `deploy.yml`, from the artifact CI built | Push to `main`, after the gates | `motion-studio-y3dev.vercel.app` |
+| Preview | Vercel's Git integration | Every branch and pull request | `motion-studio-<hash>-y3dev.vercel.app`, posted as a comment |
+
+The split exists because the two have opposite requirements. A preview wants to be fast and costs
+nothing on the platform; production wants to be the exact bytes the pipeline tested, and must not
+exist before the gates say so. `apps/web/vercel.json` sets `git.deploymentEnabled.main` to `false`,
+which is what keeps the platform's hands off production — the integration being connected at all is
+what changed on 2026-09-06, and that flag is why it is safe.
+
+`deploy.yml`'s report job runs on the `deployment_status` event Vercel raises when a preview
+finishes, finds the pull request by branch, and edits its one comment. A branch with no open pull
+request still gets a preview and simply has nowhere to post it.
 
 No custom domain is registered, so those are the URLs the project serves. Storybook is not hosted
 anywhere: `release.yml` uploads its build as a release artifact, and hosting it is a roadmap entry.
