@@ -8,12 +8,20 @@ import { type ReactNode, createContext, useContext, useMemo, useState } from 're
 import { cloneDocument } from '../../../lib/documents/clone-document'
 import { downloadText } from '../../../lib/documents/download'
 import type { ImportRejection, ImportSuccess } from '../../../lib/documents/import-document'
-import { importDocument } from '../../../lib/documents/import-document'
 import { useStudio } from '../../../lib/i18n/studio-surface'
 import { entryOf, upsertEntry, writeLastOpenId } from '../../../lib/storage/document-index'
 import { loadSnapshot, saveDocument } from '../../../lib/storage/document-store'
 import { deferredBlockRegistry } from '../../../store/block-registry'
 import { useStudioStore } from '../../../store/editor-store'
+
+/**
+ * The import pipeline, fetched when something is actually imported — PERFORMANCE.md § Studio.
+ *
+ * It reaches the whole of `packages/schema`'s repair path: migration, structural validation, prop
+ * validation and `repairDocument`. That is ~6 KiB gzipped of code that runs when a person opens a
+ * `.motion` file or picks a template, and never when they open the studio (ADR-378).
+ */
+const importer = async () => (await import('../../../lib/documents/import-document')).importDocument
 
 /** What the report dialog shows, plus the bytes it offers back — a repair must not destroy the copy. */
 export interface PendingImport extends ImportSuccess {
@@ -28,7 +36,7 @@ export interface DocumentsValue {
   newFromTemplate(slug: string): Promise<void>
   saveAs(name: string): Promise<void>
   /** Runs the pipeline and opens the report; nothing reaches the store until `applyImport`. */
-  read(text: string, fileName: string): void
+  read(text: string, fileName: string): Promise<void>
   applyImport(): void
   dismissImport(): void
   downloadOriginal(): void
@@ -95,7 +103,7 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
           return
         }
 
-        const outcome = importDocument(await response.text(), deferredBlockRegistry)
+        const outcome = (await importer())(await response.text(), deferredBlockRegistry)
 
         if (!outcome.ok) {
           publish({ title: outcome.error.title, description: outcome.error.detail, tone: 'danger' })
@@ -111,8 +119,8 @@ export function DocumentsProvider({ children }: { children: ReactNode }) {
         await adopt(cloneDocument(useStudioStore.getState().document, { name }))
       },
 
-      read(text: string, fileName: string) {
-        const outcome = importDocument(text, deferredBlockRegistry)
+      async read(text: string, fileName: string) {
+        const outcome = (await importer())(text, deferredBlockRegistry)
 
         if (outcome.ok) {
           setRejection(null)

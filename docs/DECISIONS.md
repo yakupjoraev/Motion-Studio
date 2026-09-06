@@ -15442,3 +15442,42 @@ rather than as a squeezed one, which is the part no assertion covers.
 ### Consequences
 - One fewer visible control on a phone, and the pair returns at 640 px.
 - The same locale switch is used by the landing header, which inherits the phone shape.
+
+## ADR-378 — The import pipeline is fetched when something is imported
+
+**Date** 2026-09-06 · **Prompt** 66 · **Status** Accepted
+
+### Question
+ADR-371 made the budget gate honest and the honest number was **432 B over** the 250 KiB the contract
+gives `/studio`. § 9 forbids moving the threshold to meet the number, so the first load had to lose
+the bytes.
+
+### Measurement
+Per-chunk gzip off the build manifest, then the analyzer's module tree for the route's own chunk.
+`pnpm measure:routes --markers` was clean, so nothing on the mandatory-dynamic list had leaked in;
+the weight was ordinary code that simply did not need to be there. The largest such group:
+
+```
+packages/schema/src/document/repair.ts             3 KiB
+src/lib/documents/import-document.ts               2 KiB
+packages/schema/src/document/validate-structure.ts 1 KiB
+```
+
+All three arrive through one static import in `documents-context.tsx`, and every caller of it is
+already asynchronous: opening a `.motion` file, or fetching a template. **Nothing about opening the
+studio needs the import pipeline.**
+
+### Decision
+`importDocument` is fetched on use — one `await import(...)` behind a small `importer()` helper — and
+`DocumentsValue.read` becomes `Promise<void>`, which its only caller already awaited in a `.then`.
+
+### Verified
+`pnpm size-limit` on a fresh build: **253.07 kB, 2.92 kB under the limit**, from 256.43 kB over it.
+The documents unit suite is green (37 tests), and the import path is covered end to end by
+`editor/persistence.spec.ts`.
+
+### Consequences
+- The first import in a session pays one chunk fetch. It is a file dialog away, so the network cost
+  lands inside an interaction that is already asynchronous.
+- The margin is 2.9 kB, not 30. The next feature that touches the studio shell will need this
+  measurement again — which is what a gate that actually measures is for.
