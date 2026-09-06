@@ -87,6 +87,17 @@ export function NodeWrapper({ id, children, className, style, dropRef, drag }: N
       style={style}
       {...(drag?.attributes ?? {})}
       {...(drag?.listeners ?? {})}
+      /*
+       * The drag handle brings no role and no tab order — `useDraggableNode` strips both, because
+       * they belong to the surface (ADR-376). Here the surface is a box around a block that renders
+       * its own buttons and links: a `role="button"` around those is 82 axe `nested-interactive`
+       * violations, and a positive tabindex on every node is the "single tab stop" that
+       * ACCESSIBILITY.md § Canvas and CANVAS.md § Keyboard operation both specify, broken.
+       *
+       * `-1` rather than nothing: the element stays focusable programmatically, which is what a
+       * keyboard drag needs and what the specs focus directly.
+       */
+      tabIndex={-1}
     >
       {children}
     </div>

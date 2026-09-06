@@ -36,7 +36,9 @@ export function LocaleSwitch({ label }: LocaleSwitchProps) {
   return (
     <nav
       aria-label={label}
-      className="flex items-center gap-0.5 rounded-md border border-border-subtle p-0.5"
+      // No inner padding on a phone, where the group is one control and has to line up with the
+      // 44 px search button beside it; the padding is what separates two segments from their frame.
+      className="flex items-center gap-0.5 rounded-md border border-border-subtle sm:p-0.5"
     >
       {LOCALES.map((candidate) => {
         const current = candidate === locale
@@ -44,9 +46,22 @@ export function LocaleSwitch({ label }: LocaleSwitchProps) {
         return (
           <Link
             aria-current={current ? 'true' : undefined}
-            className={`rounded-[calc(var(--ms-radius-md)-2px)] px-2 py-1 font-mono text-2xs uppercase tracking-[0.14em] outline-none transition-colors focus-visible:shadow-focus ${
+            aria-label={LOCALE_NAME[candidate]}
+            /*
+             * Two shapes, not one shape scaled — ADR-377.
+             *
+             * A phone gets one control: the language it is *not* in, which is the only thing a tap
+             * can do here. Both segments plus the brand plus the search button were 3 px wider than a
+             * 320 px viewport, and two letters at `py-1` is a 22 px target — half of what a thumb
+             * needs. From `sm` up, both segments return at their original density, because a pointer
+             * user reads the pair as state and the room is there.
+             *
+             * Still two links to two real URLs either way: shareable, crawlable, and the choice still
+             * writes the cookie (ADR-362). The current one is hidden from sight, not from the page.
+             */
+            className={`flex min-h-11 items-center rounded-[calc(var(--ms-radius-md)-2px)] px-2.5 font-mono text-2xs uppercase tracking-[0.14em] outline-none transition-colors focus-visible:shadow-focus sm:min-h-0 sm:px-2 sm:py-1 ${
               current
-                ? 'bg-surface-2 text-foreground'
+                ? 'hidden bg-surface-2 text-foreground sm:flex'
                 : 'text-foreground-muted hover:text-foreground'
             }`}
             data-testid={`locale-switch-${candidate}`}

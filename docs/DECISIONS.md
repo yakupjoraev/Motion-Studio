@@ -15354,3 +15354,91 @@ exist here.
 - The Lighthouse jobs need a Chrome on the runner, which nothing has installed yet.
 - `RUNNER_LABELS` is a repository variable, so a fork or a clone of this repository without it fails
   at `runs-on` rather than silently running somewhere unexpected.
+
+## ADR-376 — A canvas node carries the drag, not a button role around the block's own controls
+
+**Date** 2026-09-06 · **Prompt** 66 · **Status** Accepted
+
+### Question
+Eight of the nine e2e shards were red, on `main`, since 2026-09-05 — before the CI outage and not
+caused by it. All eight failed on the same two cases: `has no axe violations in the studio`, dark and
+light, with **82 `nested-interactive` violations**.
+
+### Root cause
+`NodeWrapper` spreads dnd-kit's attributes, and those carry `role="button"` and `tabIndex={0}`
+(ADR-359). A canvas node is a box around a block, and blocks render their own buttons and links, so
+every node became a control wrapping controls — "Element has focusable descendants", once per node.
+
+The same attributes broke something already written down. ACCESSIBILITY.md § Canvas and CANVAS.md
+§ Keyboard operation both say the canvas is a **single tab stop**, with the layers tree as the
+accessible path through the document. ADR-359 changed that in code and said so in its consequences —
+"Every canvas node is now a tab stop … it is the right one" — without changing either document. § 8
+of the contract is explicit that the document changes first, in its own commit, or the code is wrong.
+Here the code was wrong.
+
+### Decision
+The drag handle stays; the widget semantics go. `NodeWrapper` spreads the handle first and then
+overrides `role` to nothing and `tabIndex` to `-1`, the way `layer-row.tsx` already overrides the
+same attributes for a tree row. What survives from the handle is the listeners, the ref, and
+`aria-roledescription` — everything the drag actually needs.
+
+`tabIndex={-1}` rather than dropping the attribute: the element stays focusable programmatically,
+which is what dnd-kit's keyboard sensor needs and what the e2e specs use when they focus a node
+directly.
+
+### Verified
+- `node-wrapper.test.tsx` asserts it, and was watched failing first.
+- `a11y/axe-all-routes.spec.ts -g studio`: **2 passed** in chrome, both modes — the 82 violations are
+  gone.
+- `editor/dnd-canvas.spec.ts`: **3 passed**, the mouse drag still reorders and one undo still puts it
+  back. The keyboard case stays `test.fixme` for the reason ADR-359 measured: an arrow moves one grid
+  cell against a section hundreds of pixels tall.
+
+### Consequences
+- A block's own buttons remain focusable, which is what the canvas looked like before ADR-359 and is
+  a separate question from this one: the specs' "single tab stop" is about the canvas chrome, and a
+  rendered block's internals have always been in the tab order.
+- Nothing about the drag changed for a mouse user.
+
+## ADR-377 — The documentation header is two shapes, not one shape scaled
+
+**Date** 2026-09-06 · **Prompt** 66 · **Status** Accepted
+
+### Question
+`a11y/docs.spec.ts` — "does not scroll the page sideways at 320 px" — went red after prompt 65, and
+`zoom-200.spec.ts` with it. Every documentation page had a horizontal scrollbar on a phone.
+
+### Measurement
+A diagnostic pass listed what crossed the viewport edge at 320 px, rather than guessing:
+
+```
+DIV  .ml-auto flex items-center gap-3   "ENRUSearch⌘K"   right: 323   (viewport 320)
+```
+
+**3 px**, and both halves of it arrived with the locale switch (ADR-361): the `EN|RU` pair, the word
+"Search" and the `⌘K` hint no longer fit beside the brand. Two more measurements came out of the same
+pass: the brand wrapped onto two lines inside a 56 px bar, and the locale segments were a **22 px**
+touch target — half of what a thumb needs.
+
+### Decision
+Not a hidden element and not a smaller font. Each control gets a phone shape and a pointer shape:
+
+- **Search** is a 44 × 44 icon button below `sm`, labelled for assistive technology and wordless on
+  screen; from `sm` up the label and the `⌘K` hint come back at their original 32 px height. A phone
+  has no ⌘ key, so the hint is the one thing on that button a phone cannot use.
+- **Language** shows one control on a phone — the language the reader is *not* in, at 44 px — and
+  both segments from `sm` up, where a pointer user reads the pair as state. Both are still links to
+  real URLs in both shapes, so ADR-362's shareable, crawlable, cookie-writing choice is untouched;
+  the current segment is hidden from sight, not removed from the page.
+- The header uses `gap-3 px-4` below `sm` and its original `gap-6 px-8` above, and the brand no
+  longer wraps.
+
+### Verified
+Measured on the built page at 320, 390 and 1280 px: **overflow 0** at all three, search 44 × 44 and
+the locale control 35 × 44 on the phone, 89 × 32 and 31 × 22 on the desktop. `a11y/docs.spec.ts`,
+`a11y/zoom-200.spec.ts` and `flows/language.spec.ts`: **34 passed**. Screenshots read as a header
+rather than as a squeezed one, which is the part no assertion covers.
+
+### Consequences
+- One fewer visible control on a phone, and the pair returns at 640 px.
+- The same locale switch is used by the landing header, which inherits the phone shape.

@@ -37,10 +37,12 @@ export default async function DocsLayout({ children, params }: DocsLayoutProps) 
       <header className="sticky top-0 z-20 border-border-subtle border-b bg-surface-0/80 backdrop-blur-[--ms-blur-md]">
         <nav
           aria-label={nav.main}
-          className="mx-auto flex h-14 w-full max-w-[88rem] items-center gap-6 px-5 sm:px-8"
+          className="mx-auto flex h-14 w-full max-w-[88rem] items-center gap-3 px-4 sm:gap-6 sm:px-8"
         >
+          {/* `whitespace-nowrap`: at 320 px the two words wrapped into two lines inside a 56 px bar,
+              which reads as a broken header rather than a compact one (ADR-377). */}
           <Link
-            className="rounded-sm font-medium text-sm tracking-tight outline-none focus-visible:shadow-focus"
+            className="whitespace-nowrap rounded-sm font-medium text-sm tracking-tight outline-none focus-visible:shadow-focus"
             href={localeHref(resolved, '/')}
           >
             {nav.brand}

@@ -39,5 +39,16 @@ export function useDraggableNode({
     attributes: { roleDescription: 'draggable layer' },
   })
 
-  return { attributes, isDragging, listeners, ref: setNodeRef }
+  /*
+   * The role and the tab order belong to the surface, not to the drag — ADR-376.
+   *
+   * dnd-kit hands out `role="button"` and `tabIndex={0}`, which fit a palette card and fit nothing
+   * else here. A layers row is a `treeitem` with a roving tabindex and always overrode both; a canvas
+   * node is a box around a block that renders its own buttons, and there the pair made every node a
+   * control wrapping controls — 82 axe `nested-interactive` violations. What is left is what the drag
+   * actually needs: the roledescription, the pointer to the instructions, and the disabled state.
+   */
+  const { role: _role, tabIndex: _tabIndex, ...dragAttributes } = attributes
+
+  return { attributes: dragAttributes, isDragging, listeners, ref: setNodeRef }
 }

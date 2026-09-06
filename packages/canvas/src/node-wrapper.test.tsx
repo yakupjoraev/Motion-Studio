@@ -74,6 +74,45 @@ describe('NodeWrapper', () => {
     expect(observed.map(([id]) => id)).toEqual([ID, other])
   })
 
+  /*
+   * ACCESSIBILITY.md § Canvas and CANVAS.md § Keyboard operation both say the canvas is a **single**
+   * tab stop, and a block renders its own buttons and links. dnd-kit's attributes carry
+   * `role="button"` and `tabIndex={0}`, which made every node a widget wrapping widgets: 82 axe
+   * `nested-interactive` violations, one per node, on a surface whose budget is zero (ADR-376).
+   */
+  it('takes the drag handle without becoming a control around the block’s own', () => {
+    const { cache } = fakeCache()
+
+    render(
+      <RectCacheContext.Provider value={cache}>
+        <NodeWrapper
+          drag={{
+            ref: () => undefined,
+            listeners: {},
+            // What `useDraggableNode` hands out since ADR-376: the drag's own description, and
+            // neither a role nor a tab order — those belong to the surface, which is this file.
+            attributes: {
+              'aria-roledescription': 'draggable layer',
+              'aria-disabled': false,
+            },
+            isDragging: false,
+          }}
+          id={ID}
+        >
+          <button type="button">Buy</button>
+        </NodeWrapper>
+      </RectCacheContext.Provider>,
+    )
+
+    const wrapper = screen.getByText('Buy').parentElement
+
+    expect(wrapper).not.toHaveAttribute('role')
+    expect(wrapper).toHaveAttribute('tabindex', '-1')
+    // What is worth keeping from the handle survives: the description a drag announces, and the
+    // element still being focusable so a keyboard drag can be started on it programmatically.
+    expect(wrapper).toHaveAttribute('aria-roledescription', 'draggable layer')
+  })
+
   it('keeps a class the caller adds beside its own', () => {
     const { cache } = fakeCache()
 

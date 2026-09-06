@@ -1,5 +1,6 @@
 'use client'
 
+import { SearchIcon } from '@motion-studio/icons'
 import { Suspense, lazy, useEffect, useState } from 'react'
 
 import { useDocs } from '../../lib/i18n/surfaces'
@@ -34,14 +35,22 @@ export function DocsSearch() {
 
   return (
     <>
+      {/*
+        Two shapes, not one shape scaled — ADR-377. Below `sm` this is a square icon button with a
+        44 px touch target and no words: at 320 px the word and the shortcut together were 3 px wider
+        than the viewport, and a phone has neither a ⌘ key nor room for a label it does not need. From
+        `sm` up, where a keyboard is likely and the space is there, the label and the shortcut return.
+      */}
       <button
-        className="flex h-8 items-center gap-2 rounded-md border border-border bg-surface-1 px-2.5 text-foreground-muted outline-none transition-colors hover:border-border-strong hover:text-foreground focus-visible:shadow-focus"
+        aria-label={docs.searchTrigger}
+        className="flex h-11 w-11 items-center justify-center rounded-md border border-border bg-surface-1 text-foreground-muted outline-none transition-colors hover:border-border-strong hover:text-foreground focus-visible:shadow-focus sm:h-8 sm:w-auto sm:gap-2 sm:px-2.5"
         data-testid="docs-search-trigger"
         onClick={() => setOpen(true)}
         type="button"
       >
-        <span className="text-xs">{docs.searchTrigger}</span>
-        <kbd className="rounded-[3px] border border-border-subtle bg-surface-2 px-1 font-mono text-[10px] text-foreground-muted">
+        <SearchIcon aria-hidden="true" className="size-4 sm:hidden" />
+        <span className="hidden text-xs sm:inline">{docs.searchTrigger}</span>
+        <kbd className="hidden rounded-[3px] border border-border-subtle bg-surface-2 px-1 font-mono text-[10px] text-foreground-muted sm:inline-block">
           ⌘K
         </kbd>
       </button>
