@@ -15250,3 +15250,53 @@ does nothing when a branch has no open one.
 - Two previews per pull request would be the failure mode if `deploymentEnabled.main` were dropped or
   the workflow were given its `pull_request` trigger back. Both are one line, and both are wrong.
 - The preview URL is no longer an output of a job we control; it arrives on the event payload.
+
+## ADR-374 — With no Actions minutes, the gates move to the machine that has them
+
+**Date** 2026-09-06 · **Prompt** 66 · **Status** Accepted
+
+### Question
+The repository went private (ADR-372) and every job on the first push came back with:
+
+> The job was not started because recent account payments have failed or your spending limit needs to
+> be increased.
+
+The owner's answer to paying is no. So the question is not which checks to buy — it is which checks
+survive with a budget of zero.
+
+### What was measured
+- **Vercel is unaffected.** The preview for the first pull request built and served the new copy:
+  deployment `6291521005`, HTTP 200, "Пятнадцать пакетов" and "Форматы 5" on the page. The platform
+  bills its own way and does not go through Actions.
+- **Every GitHub-hosted job is refused**, not queued and not slow — refused before it starts. There
+  is no partial service to ration.
+- **A self-hosted runner is not billed by GitHub**, so the full pipeline could run on the owner's
+  machine. It also only runs while that machine is on, and the pipeline is written for
+  `ubuntu-latest` — Docker, `apt`, three browsers.
+
+### Decision
+Three moves, in the order they matter.
+
+1. **Production goes back to the platform.** `apps/web/vercel.json` no longer disables `main`, so
+   Vercel deploys production on push. ADR-373's split is suspended, not reversed: it traded a rule
+   ("production only after the gates") for a working deploy, and the rule is worth nothing while
+   there are no gates to wait for. The two lines that restore it are in ADR-373.
+2. **The gate becomes the pre-push hook.** `lefthook.yml` runs lint, typecheck, the unit suite and
+   the build before every push — the four that finish in a couple of minutes on a warm cache. They
+   are also the four that caught most of what CI ever caught.
+3. **The six workflows are disabled** (`gh workflow disable`) rather than left to fail. A pipeline
+   that goes red on every push for a reason no commit can fix teaches everyone to ignore red, which
+   is the failure the deploy workflow's own comment warns about. `gh workflow enable <name>` puts
+   each back.
+
+**What is now unguarded, and it is worth naming:** e2e on three browsers, the accessibility sweep,
+the 208 screenshots, the Docker image, Lighthouse, and the export compile suite. They are run by
+hand — `docs/DEVOPS.md` § When CI cannot run lists the commands — and by hand means sometimes not at
+all. This is a real reduction in safety accepted for a real reason, not a claim that the checks were
+unnecessary.
+
+### The way out, when there is one
+Either Actions minutes become available again, or a self-hosted runner takes the pipeline. The
+runner is free of charge and the repository already has WSL2 with Docker on it; the work is
+registering it, giving the jobs `runs-on: [self-hosted, linux]`, and accepting that a push only gets
+checked while the machine is awake.
