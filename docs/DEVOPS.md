@@ -397,19 +397,48 @@ is that one flag plus enabling the workflow.
 deleted. Its report job runs on the `deployment_status` event Vercel raises when a preview finishes,
 finds the pull request by branch, and edits its one comment.
 
-### When CI cannot run
+### Where the jobs run
 
-The six workflows are disabled (ADR-374): GitHub refuses to start a job on a private repository whose
-billing is unresolved, and a pipeline that is red on every push for a reason no commit can fix is
-worse than no pipeline. `gh workflow enable CI` — and the same for `Deploy`, `Lighthouse`, `Visual`,
-`Export smoke` and `Release` — puts them back the moment minutes exist or a self-hosted runner does.
+GitHub refuses to start a job on GitHub-hosted machines for this repository — it is private and the
+account's billing is unresolved (ADR-374). **Self-hosted runners are not refused and not billed**,
+measured rather than assumed (ADR-375), so the pipeline runs on the owner's machine.
 
-What the pre-push hook covers automatically: `pnpm lint`, `pnpm typecheck`, `pnpm test:unit`,
-`pnpm build`. What has to be run by hand, and is worth running before anything that reaches
-production:
+Every job reads its labels from a repository variable:
+
+```yaml
+runs-on: ${{ fromJSON(vars.RUNNER_LABELS) }}
+```
+
+`RUNNER_LABELS` is `["self-hosted","linux"]`. `gh variable set RUNNER_LABELS --body '["ubuntu-latest"]'`
+moves the whole pipeline back to GitHub's machines in one command, the day minutes exist again.
+
+**Three runners** are installed in the Ubuntu WSL2 distro as systemd services — `motion-studio-wsl`,
+`-2`, `-3` — because the e2e matrix is nine jobs and one runner takes them one at a time. They run as
+root (`RUNNER_ALLOW_RUNASROOT=1`), which ADR-375 argues for.
+
+Two things keep them online, and both were found by watching jobs sit `queued`:
+
+- `~/.wslconfig` sets `vmIdleTimeout`, and
+- a Windows scheduled task, **`KeepWSLAwake`**, holds an open session
+  (`wsl.exe -d Ubuntu -u root -e sleep infinity`) at logon. WSL stops a distro nobody is talking to,
+  and a stopped distro takes the runner service with it however healthy `systemctl` says it is.
+
+To add or replace a runner:
 
 ```bash
-pnpm test:e2e            # three browsers, ~17 min on one worker
+gh api -X POST repos/<owner>/<repo>/actions/runners/registration-token --jq .token
+wsl -d Ubuntu -- bash -lc "cd /root/actions-runner && RUNNER_ALLOW_RUNASROOT=1 ./config.sh \
+  --url https://github.com/<owner>/<repo> --token <token> --name <name> \
+  --labels self-hosted,linux,x64,wsl --work _work --unattended --replace"
+wsl -d Ubuntu -- bash -lc "cd /root/actions-runner && ./svc.sh install root && ./svc.sh start"
+```
+
+**Checks only run while that machine is on.** What the pre-push hook covers on every push regardless:
+`pnpm lint`, `pnpm typecheck`, `pnpm test:unit`, `pnpm build` — about three and a half minutes on a
+warm cache. Everything else is worth running by hand when the machine is off:
+
+```bash
+pnpm test:e2e            # three browsers
 pnpm test:e2e:a11y       # the axe sweep
 pnpm test:compile        # the exported project builds and type-checks
 pnpm size-limit          # after a build — the four route budgets
