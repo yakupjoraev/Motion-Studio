@@ -435,6 +435,20 @@ wsl -d Ubuntu -- bash -lc "cd /root/actions-runner && RUNNER_ALLOW_RUNASROOT=1 .
 wsl -d Ubuntu -- bash -lc "cd /root/actions-runner && ./svc.sh install root && ./svc.sh start"
 ```
 
+### What is red on the runners, and why (2026-09-06)
+
+The pipeline runs; three of its jobs do not pass yet, and none of the three is about the code:
+
+- **`lighthouse`, both form factors** — `pnpm/action-setup` dies with `ENOTEMPTY: directory not
+  empty, rmdir '/root/setup-pnpm/…'`. The three runners are all installed as root and share one
+  `$HOME`, so two jobs installing pnpm at the same time fight over the same directory. The fix is a
+  `HOME` per runner in each systemd unit (or a user per runner), and it is untried.
+- **`docker`** — the image build cannot reach `registry.npmjs.org` from inside the container:
+  `ConnectTimeoutError` on the corepack download. Docker's WSL integration is on and the daemon is
+  reachable; this is the container's network, not the switch.
+- **`e2e`, most shards** — red, and worth reading against the two specs `ROADMAP.md` § M15 records as
+  failing before 2026-09-06 as well as against the shared-`$HOME` race above.
+
 **Checks only run while that machine is on.** What the pre-push hook covers on every push regardless:
 `pnpm lint`, `pnpm typecheck`, `pnpm test:unit`, `pnpm build` — about three and a half minutes on a
 warm cache. Everything else is worth running by hand when the machine is off:
