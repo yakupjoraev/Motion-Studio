@@ -21,7 +21,7 @@ env:
 
 jobs:
   lighthouse:
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(vars.RUNNER_LABELS) }}
     strategy:
       # Both legs always run: a desktop regression and a mobile one are different regressions, and
       # stopping the second leg because the first failed hides half the answer.

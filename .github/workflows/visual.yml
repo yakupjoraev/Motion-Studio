@@ -42,7 +42,7 @@ jobs:
     if: >-
       github.event_name != 'pull_request' ||
       contains(github.event.pull_request.labels.*.name, 'visual')
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(vars.RUNNER_LABELS) }}
     # Informational: a red shot is evidence for a person, not a veto — see the header.
     continue-on-error: true
     permissions:

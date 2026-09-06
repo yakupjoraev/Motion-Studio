@@ -15300,3 +15300,57 @@ Either Actions minutes become available again, or a self-hosted runner takes the
 runner is free of charge and the repository already has WSL2 with Docker on it; the work is
 registering it, giving the jobs `runs-on: [self-hosted, linux]`, and accepting that a push only gets
 checked while the machine is awake.
+
+## ADR-375 — The pipeline runs on a self-hosted runner inside WSL2
+
+**Date** 2026-09-06 · **Prompt** 66 · **Status** Accepted
+
+### Question
+ADR-374 left the project with no automated checks and named a self-hosted runner as the way out,
+with one thing unknown: GitHub refuses to start jobs on this account's private repository, and no
+documentation says whether that refusal also covers runners it does not own and does not bill.
+
+### Criterion (set before the experiment)
+A temporary workflow, `runs-on: [self-hosted, linux]`, dispatched by hand. If the job starts, the
+pipeline can come back; if it is refused like the others, the only remaining options cost money.
+
+### Measurement
+**It started and it passed.** The job ran on `motion-studio-wsl` — Linux 6.18 WSL2, 28 cores — while
+every GitHub-hosted job on the same repository was still being refused for billing. The refusal is
+about GitHub's machines, not about Actions.
+
+Two things the same run measured:
+
+- **WSL shuts an idle VM down**, and the runner goes offline with it. The dispatched job sat
+  `queued` until the distro was woken by hand, then completed in seconds. `~/.wslconfig` now sets
+  `vmIdleTimeout=-1`.
+- **Docker is not reachable from inside the distro** — `The command 'docker' could not be found in
+  this WSL 2 distro` — because Docker Desktop's WSL integration is off for Ubuntu. The `docker` job
+  is the one part of the pipeline that stays red until that switch is on; it is a checkbox in Docker
+  Desktop, not a code change.
+
+### Decision
+The runner is registered as a systemd service in the Ubuntu distro, labelled `self-hosted,linux`, and
+every job's `runs-on` reads a repository variable:
+
+```yaml
+runs-on: ${{ fromJSON(vars.RUNNER_LABELS) }}
+```
+
+`RUNNER_LABELS` is `["self-hosted","linux"]` today. Setting it back to `["ubuntu-latest"]` moves the
+whole pipeline to GitHub's machines in one click, the day minutes exist again — which is the point of
+the indirection: the way back must not be a nineteen-line diff across six files.
+
+It runs as root, which `config.sh` refuses by default and `RUNNER_ALLOW_RUNASROOT=1` permits. Accepted
+deliberately: the distro's only user is root, the repository is private, and the only code the runner
+executes is this project's own. A second user would buy isolation from a threat model that does not
+exist here.
+
+### Consequences
+- **Checks only run while the machine is on.** That is the real price, and it is paid per push.
+- **The e2e matrix is nine jobs and there is one runner**, so they queue instead of fanning out. A
+  full pipeline is now serial. Registering two more runners on the same machine is the fix if the
+  wall-clock becomes the problem; 28 cores are not the constraint.
+- The Lighthouse jobs need a Chrome on the runner, which nothing has installed yet.
+- `RUNNER_LABELS` is a repository variable, so a fork or a clone of this repository without it fails
+  at `runs-on` rather than silently running somewhere unexpected.

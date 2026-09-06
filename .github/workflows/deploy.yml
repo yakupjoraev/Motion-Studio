@@ -40,7 +40,7 @@ env:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(vars.RUNNER_LABELS) }}
     # `vars` rather than `secrets`, because a condition cannot read a secret.
     if: ${{ vars.VERCEL_ENABLED == 'true' && github.event_name != 'deployment_status' }}
     steps:
@@ -69,7 +69,7 @@ jobs:
       github.event_name == 'deployment_status' &&
       github.event.deployment_status.state == 'success' &&
       github.event.deployment_status.environment != 'Production'
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(vars.RUNNER_LABELS) }}
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup

@@ -26,7 +26,7 @@ env:
 
 jobs:
   quality:
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(vars.RUNNER_LABELS) }}
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
@@ -41,7 +41,7 @@ jobs:
           fail_ci_if_error: false
 
   graph:
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(vars.RUNNER_LABELS) }}
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
@@ -60,14 +60,14 @@ jobs:
   # breaking a golden comparison: the output changes, the golden updates, and the result no longer
   # compiles.
   compile-exports:
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(vars.RUNNER_LABELS) }}
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - run: pnpm test:compile
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(vars.RUNNER_LABELS) }}
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
@@ -80,7 +80,7 @@ jobs:
   # request, and it is not a reason to stop one: the workshop is a development tool, not a shipped
   # surface. `pnpm build` above already covers everything that ships.
   storybook:
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(vars.RUNNER_LABELS) }}
     continue-on-error: true
     steps:
       - uses: actions/checkout@v7
@@ -99,7 +99,7 @@ jobs:
   # ADR-332 measured what a shared runner does to a timing budget: `benchmarkIndex` moved by 27 %
   # inside a single Lighthouse run. A budget is only comparable to itself — ADR-280.
   e2e:
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(vars.RUNNER_LABELS) }}
     strategy:
       fail-fast: false
       matrix:
@@ -135,7 +135,7 @@ jobs:
   # because none of them can be checked anywhere else: that the Dockerfile builds at all, that the
   # image stays under its budget, and that the thing inside it answers.
   docker:
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(vars.RUNNER_LABELS) }}
     steps:
       - uses: actions/checkout@v7
       - uses: docker/setup-buildx-action@v3
