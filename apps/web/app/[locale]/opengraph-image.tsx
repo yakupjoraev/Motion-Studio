@@ -1,5 +1,7 @@
 import { ImageResponse } from 'next/og'
 
+import { LANDING_STATS } from '../../src/components/landing/landing-stats'
+
 export const alt = 'Motion Studio — drag it, tune it, take the code'
 
 export const size = { width: 1200, height: 630 }
@@ -51,9 +53,9 @@ export default function OpengraphImage() {
       </div>
 
       <div style={{ display: 'flex', gap: 40, fontSize: 22, color: '#9d9daa', letterSpacing: 2 }}>
-        <div style={{ display: 'flex' }}>72 blocks</div>
-        <div style={{ display: 'flex' }}>51 motion presets</div>
-        <div style={{ display: 'flex' }}>4 export targets</div>
+        <div style={{ display: 'flex' }}>{LANDING_STATS.blocks} blocks</div>
+        <div style={{ display: 'flex' }}>{LANDING_STATS.presets} motion presets</div>
+        <div style={{ display: 'flex' }}>{LANDING_STATS.exportTargets} export targets</div>
       </div>
     </div>,
     size,

@@ -90,7 +90,7 @@ test.describe('the landing page', () => {
       ['effects', 'Every effect is a component'],
       ['inspector', 'Change a value'],
       ['export', 'The export is the component'],
-      ['architecture', 'Seventeen packages'],
+      ['architecture', 'Fifteen packages'],
       ['stack', 'The stack, with the actual reasons'],
     ] as const) {
       await expect(page.locator(`#${id}`), `#${id} is named by its heading`).toHaveAccessibleName(

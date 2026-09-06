@@ -16,7 +16,7 @@ export interface SectionProps {
  * the section — the information survives, the device does not pretend to.
  *
  * The region is named by its heading first and its coordinate second, so a reader moving by landmark
- * hears "Seventeen packages, one direction. 05 / shape" rather than "05 / shape" — ADR-299.
+ * hears "Fifteen packages, one direction. 05 / shape" rather than "05 / shape" — ADR-299.
  */
 export function Section({ label, id, children }: SectionProps) {
   return (
