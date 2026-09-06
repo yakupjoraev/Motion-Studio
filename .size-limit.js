@@ -18,7 +18,7 @@
  *
  * Run `pnpm --filter web build` first. `pnpm measure:routes` prints the same numbers in both units.
  */
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, globSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 const NEXT = join(process.cwd(), 'apps', 'web', '.next')
@@ -62,12 +62,43 @@ const filesOf = (page) => {
 /** The chunks only this route loads: everything the landing does not also load. */
 const shared = new Set(filesOf(`${LOCALE}/page`))
 
+/**
+ * `size-limit` reads every `path` as a glob, and since ADR-361 a route's own chunk lives at
+ * `static/chunks/app/[locale]/studio/page-<hash>.js` — where `[locale]` is a character class
+ * matching none of `l`, `o`, `c`, `a`, `e`. The file matched nothing, was measured as nothing, and
+ * the gate reported the studio 28.5 kB lighter than it is (ADR-371).
+ *
+ * A backslash does not fix it: Node's `glob` treats `\` as a path separator on Windows, so the
+ * escaped pattern matches nothing there either — measured, both forms return zero files. `?` matches
+ * one character on every platform, so each special character becomes one, and the count is asserted:
+ * a pattern that resolves to anything other than the single file it was built from throws rather
+ * than quietly measuring the wrong set.
+ */
+const patternFor = (file) => {
+  const path = `apps/web/.next/${file}`
+
+  if (!existsSync(join(process.cwd(), path))) {
+    throw new Error(`${path} is in the manifest and not on disk — the build is incomplete`)
+  }
+
+  const pattern = path.replace(/[!*?[\]{}()]/g, '?')
+  const matched = globSync(pattern)
+
+  if (matched.length !== 1) {
+    throw new Error(
+      `${pattern} matches ${matched.length} files — the budget would measure the wrong set`,
+    )
+  }
+
+  return pattern
+}
+
 export default [
   ...FIRST_LOAD.map(({ name, page, limit }) => ({
     name,
     limit: `${limit} B`,
     gzip: true,
-    path: filesOf(page).map((file) => `apps/web/.next/${file}`),
+    path: filesOf(page).map(patternFor),
   })),
   ...ROUTE_CHUNK.map(({ name, page, limit }) => ({
     name,
@@ -75,6 +106,6 @@ export default [
     gzip: true,
     path: filesOf(page)
       .filter((file) => !shared.has(file))
-      .map((file) => `apps/web/.next/${file}`),
+      .map(patternFor),
   })),
 ]

@@ -323,6 +323,7 @@ out to be different claims.
 | ✅ | `prompts/63` — the narrow choice across the catalogue, and six recorded exclusions | ADR-358 |
 | ✅ | `prompts/64` — a canvas node is a drag source: sections reorder by dragging, one undo puts them back | ADR-359 |
 | ✅ | `prompts/65` — the product speaks Russian: routing, the choice, every interface surface, both catalogues and the blocks' own copy. The `/docs` bodies stay English by the owner's decision | ADR-360…369 |
+| ✅ | `prompts/66` — the positioning, the three messages and their proof, in `docs/BRAND.md`. Writing the proof column found three numbers the product was printing wrong and a budget gate that had stopped measuring a route | ADR-370, ADR-371 |
 
 ### Open, in the order it is being done
 
@@ -334,8 +335,8 @@ Each is a prompt in `prompts/`, so a session picks one up without re-deriving it
    crossing between the canvas and the layers tree — has no spec either. `DRAG_AND_DROP.md` § The four operations still says operations 2 and
    4 are unwired: reordering is only possible from the layers tree, and a user's first instinct is the
    canvas. This is the largest open item.
-2. **`prompts/66` — the marketing for the product itself**, written with the brand/design/slides skills:
-   positioning, landing copy, launch material.
+2. **The studio's first load is 430 B over budget** (ADR-371). Not a prompt — a number with a
+   threshold, and the gate is red until it comes down.
 3. **`prompts/67` — the landing and the studio chrome through the design skills.**
 4. **`prompts/68` — the code panel beside the canvas**, collapsible. What makes this not a page
    builder currently lives behind a dialog nobody is told to open.
