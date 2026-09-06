@@ -12,12 +12,19 @@ pre-commit:
     secrets:
       run: pnpm check:secrets {staged_files}
 
+# These four are the whole gate while GitHub Actions is unavailable (ADR-374). They are the checks
+# that finish in a couple of minutes on a warm cache; e2e, Lighthouse, Docker and the screenshots are
+# run by hand — `docs/DEVOPS.md` § When CI cannot run says which command and when.
 pre-push:
   commands:
+    lint:
+      run: pnpm lint
     typecheck:
       run: pnpm typecheck
     unit:
       run: pnpm test:unit
+    build:
+      run: pnpm build
 
 commit-msg:
   commands:
