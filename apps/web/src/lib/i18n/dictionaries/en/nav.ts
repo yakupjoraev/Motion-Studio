@@ -8,6 +8,6 @@ export const nav = {
   openStudio: 'Open the studio',
   skipToContent: 'Skip to content',
   language: 'Language',
-  footerLicence: 'MIT',
+  footerLicence: 'Your code is yours',
   footerTelemetry: 'No telemetry',
 }

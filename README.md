@@ -8,7 +8,7 @@ Infinite canvas · production-grade block registry · live motion engine · real
 [![CI](https://github.com/yakupjoraev/Motion-Studio/actions/workflows/ci.yml/badge.svg)](https://github.com/yakupjoraev/Motion-Studio/actions/workflows/ci.yml)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict%2C%20zero%20any-3178c6?style=flat-square)](docs/ENGINEERING_CONTRACT.md)
 [![Lighthouse](https://img.shields.io/badge/Lighthouse-95%2B%20%C3%97%204-0cce6b?style=flat-square)](docs/PERFORMANCE.md)
-[![License](https://img.shields.io/badge/license-MIT-8b5cf6?style=flat-square)](LICENSE)
+[![License](https://img.shields.io/badge/license-proprietary-8b5cf6?style=flat-square)](LICENSE)
 
 ![Composing a landing page in the studio: blocks dropped on the canvas, a theme applied, the headline edited, and a Next.js project exported](docs/assets/demos/compose-page.gif)
 
@@ -207,4 +207,9 @@ component source, which is precisely what this project's export engine produces.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+Proprietary — © 2026 Yakup Jorayev, all rights reserved. See [LICENSE](LICENSE).
+
+**What the studio exports is yours.** The licence covers the editor, not its output: a component,
+a Next.js project or a `.motion` file you export is yours to use, modify and sell, with no
+attribution and no obligation. Exported files import nothing from this repository, so nothing
+follows them out.

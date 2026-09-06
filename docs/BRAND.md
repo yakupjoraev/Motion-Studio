@@ -84,7 +84,7 @@ printing.
 | The blocks are real React components, not pictures | The gallery and the studio render the registry; the block page prints its source with the shipped exporter | Open `/blocks/<slug>`, copy the component, paste it into a project |
 | Motion is tunable, not a fixed demo | 51 presets across six channels plus curve and spring editors | Apply a preset, drag its stiffness, watch the curve and the exported numbers follow |
 | The export compiles | The compile suite builds the emitted project and type-checks it in CI | `pnpm test:compile` |
-| It is yours, offline, with no account | Local-first persistence in IndexedDB; the only server route is the container's health check; MIT | Load `/studio`, go offline, keep working; read the network panel |
+| What you export is yours, offline, with no account | Local-first persistence in IndexedDB; the only server route is the container's health check; the licence covers the editor and explicitly not its output | Load `/studio`, go offline, keep working; read the network panel |
 | It is responsive in a way you can see | The artboard is the band the block asks for ([ADR-356](DECISIONS.md)) | Switch the breakpoint and watch the block re-arrange rather than scale |
 | The code is reviewed as code | 8,370 unit tests, 215 end-to-end tests across three browsers, 208 screenshot baselines, budgets enforced in CI | The CI badge, then [TESTING.md](TESTING.md) |
 
@@ -116,8 +116,9 @@ is checked; "it sounds about right" is the banned fourth way with a stopwatch mi
 > looks right, you export it — React, Next.js, standalone HTML, a portable `.motion` document, or
 > the theme as tokens — and what you get is ordinary React with ordinary Tailwind classes and no
 > import from this project, so you have taken a component rather than a dependency. It runs entirely
-> in the browser: local-first, MIT, no account and no backend. The compile suite in CI builds the
-> emitted project and type-checks it, which is why the export is a claim we are willing to print.
+> in the browser: local-first, no account and no backend, and what you export is yours to sell. The
+> compile suite in CI builds the emitted project and type-checks it, which is why the export is a
+> claim we are willing to print.
 
 ## Message by audience
 

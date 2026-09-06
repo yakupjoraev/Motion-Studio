@@ -357,14 +357,16 @@ Each is a prompt in `prompts/`, so a session picks one up without re-deriving it
 - **Hosting: Vercel is enough.** ISR, image optimisation, previews and the edge network are the
   platform's own; a rented VPS means maintaining all of it by hand for nothing. Point a domain at it.
   Revisit only when there is a backend with state — the v2 account, not v1.
-- **Private repository has a price that is already documented.** It was made public deliberately:
-  Actions minutes are free for public repositories, and the pipeline stopped for a week when billing
-  failed. Fifteen jobs, nine e2e shards and two Lighthouse runs would be billed again. **And private
-  does not sit with MIT** — the licence is promised on the landing and in the README. Either both
-  change together or neither does. Also worth weighing: the repository is currently the portfolio
-  artifact `ENGINEERING_CONTRACT` § 0 describes. `DESIGN_REFERENCES.md` names
-   impeccable.style as the bar for the whole product, and the landing was built against it by eye
-   rather than through the process. Verdict to be reported per surface, not "looks fine".
+- **Decided 2026-09-06 (ADR-372): the repository is private and the licence is proprietary.** The
+  owner intends to sell the product, and readable source is what they do not want. Both changed
+  together, because a private repository promising MIT on its landing page is the incoherent
+  combination. The price is the one already documented: Actions minutes are free only for public
+  repositories, and the pipeline stopped for a week the last time billing decided a run. That is now
+  a CI-shape question — which checks run on every push and which run nightly — not a licence
+  question.
+- **The design pass has not been run through the skills.** `DESIGN_REFERENCES.md` names
+  impeccable.style as the bar for the whole product, and the landing was built against it by eye
+  rather than through the process. Verdict to be reported per surface, not "looks fine".
 
 ### The rule this milestone runs on
 
@@ -389,7 +391,7 @@ What is actually different, and is already built:
 | Output | A React/Next project with types and idiomatic Tailwind, and a suite that compiles and typechecks it | A hosted page, or dead exported HTML |
 | Blocks | Production React components whose inspector is generated from their own zod schema | A closed list only the vendor can extend |
 | Motion | 51 presets, six channels, a curve editor — and the animation is in the exported code | A checkbox for "fade in" |
-| Ownership | Local-first, MIT, no account, no backend | The vendor's servers |
+| Ownership | Local-first, no account, no backend, and the exported code is the user's outright | The vendor's servers |
 
 **The gap is presentation, not architecture.** The export dialog is where the product's whole reason
 to exist is kept, and a user has to guess to open it.
