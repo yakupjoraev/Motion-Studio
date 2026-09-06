@@ -25,6 +25,7 @@ repeating. That is what keeps a session's context small.
 | [PRODUCT.md](PRODUCT.md) | Feature specification, surfaces, user flows, acceptance criteria |
 | [ROADMAP.md](ROADMAP.md) | Build order, milestones, definition of done per milestone |
 | [GLOSSARY.md](GLOSSARY.md) | Exact meaning of every domain term used in code and docs |
+| [BRAND.md](BRAND.md) | Positioning, the three messages and their proof, the pitches, and the voice the copy holds |
 
 ### Engineering foundations
 | Document | Owns |
