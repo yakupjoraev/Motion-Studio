@@ -9,20 +9,21 @@ runs:
     # Before setup-node, so `cache: pnpm` has a package manager to find a store path for.
     - uses: pnpm/action-setup@v4
 
-    # And the store has to exist before `cache: pnpm` reads it. On a GitHub-hosted runner pnpm's
-    # default store path is already there; on the self-hosted one it is not, and the post-job cache
-    # step fails the whole job with "Path Validation Error: Path(s) specified in the action for
-    # caching do(es) not exist" — after every real step has passed (ADR-375).
-    - run: |
-        store="$HOME/.pnpm-store"
-        mkdir -p "$store"
-        pnpm config set store-dir "$store" --global
-      shell: bash
-
     - uses: actions/setup-node@v4
       with:
         node-version-file: .nvmrc
         cache: pnpm
+
+    # The store has to exist before the post-job cache step reads it. On a GitHub-hosted runner it
+    # already does; on the self-hosted one it does not, and the job fails in its post step with
+    # "Path Validation Error: Path(s) specified in the action for caching do(es) not exist" — after
+    # every real step has passed (ADR-375).
+    #
+    # It sits **after** `setup-node` on purpose. `pnpm` is a Node script and the WSL distro has no
+    # system Node, so running it any earlier is `exit code 127` in a job whose every other step is
+    # fine. Measured, in the run that taught me this.
+    - run: mkdir -p "$(pnpm store path --silent)"
+      shell: bash
 
     - run: pnpm install --frozen-lockfile
       shell: bash
