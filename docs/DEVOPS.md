@@ -379,23 +379,25 @@ fails if a GIF lands over 3 MB, which is the only automatic check these have.
 
 ## Deploy
 
-Vercel, `apps/web`. **Both environments come from the platform's Git integration** while Actions is
-unavailable — ADR-374.
+Vercel, `apps/web`, on **two paths that are deliberately different** — ADR-373.
 
 | Environment | Built by | Trigger | URL |
 | --- | --- | --- | --- |
-| Production | Vercel's Git integration | Push to `main` | `motion-studio-y3dev.vercel.app` |
+| Production | `deploy.yml`, from the artifact CI built | Push to `main`, after the gates | `motion-studio-y3dev.vercel.app` |
 | Preview | Vercel's Git integration | Every branch and pull request | `motion-studio-<hash>-y3dev.vercel.app` |
 
-This is not the shape the project wants. ADR-373 split them on purpose — preview from the platform,
-production from `deploy.yml` after the gates, with `git.deploymentEnabled.main` set to `false` in
-`apps/web/vercel.json` to keep the platform out of production. That split is **suspended**, because
-it buys "production only after the gates" and there are currently no gates to wait for. Restoring it
-is that one flag plus enabling the workflow.
+The split exists because the two have opposite requirements. A preview wants to be fast and costs
+nothing on the platform; production wants to be the exact bytes the pipeline tested, and must not
+exist before the gates say so. `apps/web/vercel.json` sets `git.deploymentEnabled.main` to `false`,
+which is what keeps the platform's hands off production.
 
-`deploy.yml` still holds the production path and the preview report, and it is disabled rather than
-deleted. Its report job runs on the `deployment_status` event Vercel raises when a preview finishes,
-finds the pull request by branch, and edits its one comment.
+It was suspended for part of 2026-09-06 — with Actions refusing every job there were no gates for
+production to wait for, so the platform deployed both (ADR-374). The self-hosted runner (ADR-375)
+brought the gates back and the flag with them.
+
+`deploy.yml`'s report job runs on the `deployment_status` event Vercel raises when a preview
+finishes, finds the pull request by branch, and edits its one comment. A branch with no open pull
+request still gets a preview and simply has nowhere to post it.
 
 ### Where the jobs run
 
