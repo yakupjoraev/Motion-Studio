@@ -15196,3 +15196,57 @@ whoever holds a copy. Measured before deciding: **0 forks, 0 stars**, and `*.ver
   for that: ~15 jobs per push against 2 000 free minutes a month.
 - `ENGINEERING_CONTRACT` § 0's "read as a portfolio artifact" is now about the deployed product and
   whoever is shown the repository directly, not about a public URL.
+
+## ADR-373 — Previews come from the platform, production comes from the pipeline
+
+**Date** 2026-09-06 · **Prompt** 66 · **Status** Accepted
+
+### Question
+ADR-346 disconnected Vercel's Git integration because the platform deployed every push itself,
+commenting on a pull request before a single gate had run. Since ADR-372 the repository is private,
+so Actions minutes are billed, and the owner asked whether the build should go back to the platform.
+
+### Measurement
+Per-job minutes from the run of 2026-09-05, which is what a push to `main` actually costs:
+
+```
+e2e, nine jobs (3 browsers × 3 shards)   34 min
+quality (lint, types, 8,370 unit tests)   9 min
+Lighthouse mobile + desktop              15 min
+Visual, 208 baselines                     8 min
+docker                                    5 min
+build + compile-exports + graph + smoke    3 min
+Deploy (deploy + report)                  ~6 min
+                                        ────────
+                                          80 min   → 25 pushes inside the 2,000 free minutes
+```
+
+**Moving the deploy to the platform saves 6 minutes of 80 — 7 %.** Minutes are therefore not the
+reason to do it, and the estimate that said "about a quarter" was made by eye before this table
+existed.
+
+### Decision
+Take the platform's previews and keep production in the pipeline.
+
+- **Previews** — Vercel's Git integration, on every branch and pull request. It builds them for free,
+  it needs no token handling in a workflow, and a preview is disposable by definition: nothing about
+  it needs to be the bytes a gate approved.
+- **Production** — `deploy.yml` on `main`, `--prebuilt`, exactly as before. What ships is the
+  artifact CI built and tested, and it ships after the gates rather than beside them.
+  `apps/web/vercel.json` sets `git.deploymentEnabled.main` to `false`, which is what makes the two
+  paths coexist rather than race.
+
+The real argument is not the 6 minutes: **the deploy stops depending on GitHub billing.** The
+pipeline has already stopped for a week once because a payment failed, and it took the deploy with
+it. Preview and production now fail independently.
+
+The report job moves to the `deployment_status` event, because there is no longer a deploy step of
+ours to hang it off. It finds the pull request by branch — `deployment_status` carries none — and
+does nothing when a branch has no open one.
+
+### Consequences
+- One manual step, and only one: the project has to be connected to the repository in Vercel, which
+  also means granting the Vercel GitHub App access to a repository that is now private.
+- Two previews per pull request would be the failure mode if `deploymentEnabled.main` were dropped or
+  the workflow were given its `pull_request` trigger back. Both are one line, and both are wrong.
+- The preview URL is no longer an output of a job we control; it arrives on the event payload.

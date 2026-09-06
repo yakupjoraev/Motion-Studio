@@ -1,4 +1,11 @@
-# DEVOPS.md § Deploy. Vercel, `apps/web`, preview per pull request and production on `main`.
+# DEVOPS.md § Deploy. Vercel, `apps/web`. **Two paths, and they are not the same path** (ADR-373):
+#
+# - **Preview** — Vercel's own Git integration builds every branch and pull request. Nothing in this
+#   file does that any more; the platform is faster at it and, since the repository went private
+#   (ADR-372), Actions minutes are billed while Vercel's preview builds are not.
+# - **Production** — this workflow, on `main`, and `apps/web/vercel.json` sets
+#   `git.deploymentEnabled.main` to `false` so the platform keeps its hands off it. Production goes
+#   out after the gates, from the artifact CI built, which is the rule the whole pipeline exists for.
 #
 # **The app needs no environment variables to run** — no backend, no secrets, no database. The three
 # secrets below are Vercel's own credentials for pushing a build, and they are the only ones this
@@ -11,9 +18,11 @@
 name: Deploy
 
 on:
-  pull_request:
   push:
     branches: [main]
+  # Vercel reports its preview builds to GitHub as deployment statuses. This is how the report job
+  # learns a preview exists and where it is, now that this workflow no longer creates one.
+  deployment_status:
   workflow_dispatch:
 
 concurrency:
@@ -23,6 +32,7 @@ concurrency:
 permissions:
   contents: read
   pull-requests: write
+  deployments: read
 
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -32,39 +42,33 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     # `vars` rather than `secrets`, because a condition cannot read a secret.
-    if: ${{ vars.VERCEL_ENABLED == 'true' }}
-    outputs:
-      url: ${{ steps.deploy.outputs.url }}
+    if: ${{ vars.VERCEL_ENABLED == 'true' && github.event_name != 'deployment_status' }}
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
 
       - name: Pull the environment
         run: >
-          pnpm dlx vercel@latest pull --yes
-          --environment=${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
+          pnpm dlx vercel@latest pull --yes --environment=production
           --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Build
-        run: >
-          pnpm dlx vercel@latest build
-          ${{ github.ref == 'refs/heads/main' && '--prod' || '' }}
-          --token=${{ secrets.VERCEL_TOKEN }}
+        run: pnpm dlx vercel@latest build --prod --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy
-        id: deploy
         run: |
-          url=$(pnpm dlx vercel@latest deploy --prebuilt \
-            ${{ github.ref == 'refs/heads/main' && '--prod' || '' }} \
+          url=$(pnpm dlx vercel@latest deploy --prebuilt --prod \
             --token=${{ secrets.VERCEL_TOKEN }})
-          echo "url=${url}" >> "$GITHUB_OUTPUT"
           echo "### Deployed: ${url}" >> "$GITHUB_STEP_SUMMARY"
 
-  # The two numbers a reviewer would otherwise open two dashboards for. Posted on the preview, where
-  # a regression is still cheap to fix.
+  # The two numbers a reviewer would otherwise open two dashboards for, posted on the preview where a
+  # regression is still cheap to fix. It runs on Vercel's preview, not on one of ours: `target_url` is
+  # the deployment the platform just finished.
   report:
-    needs: deploy
-    if: ${{ github.event_name == 'pull_request' && needs.deploy.result == 'success' }}
+    if: >
+      github.event_name == 'deployment_status' &&
+      github.event.deployment_status.state == 'success' &&
+      github.event.deployment_status.environment != 'Production'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -74,7 +78,7 @@ jobs:
         # `MS_LH_URL` rather than `--url`: the flag leaves `lighthouserc.cjs` free to start a local
         # server, which this job has no build for.
         env:
-          MS_LH_URL: ${{ needs.deploy.outputs.url }}
+          MS_LH_URL: ${{ github.event.deployment_status.target_url }}
         run: |
           npx --yes @lhci/cli@0.15.1 collect
           node -e "
@@ -101,6 +105,23 @@ jobs:
         with:
           script: |
             const { readFileSync } = require('node:fs')
+
+            // A `deployment_status` event carries no pull request, so the branch finds it. No open
+            // pull request means a branch pushed on its own: the preview is still built and there is
+            // simply nowhere to post, which is not a failure.
+            const ref = context.payload.deployment.ref
+            const { data: pulls } = await github.rest.pulls.list({
+              ...context.repo,
+              state: 'open',
+              head: `${context.repo.owner}:${ref}`,
+            })
+            const pull = pulls[0]
+
+            if (pull === undefined) {
+              core.info(`No open pull request for ${ref}; the preview has nowhere to be commented on.`)
+              return
+            }
+
             const lighthouse = readFileSync('/tmp/lighthouse.txt', 'utf8')
             const sizes = JSON.parse(readFileSync('/tmp/size.json', 'utf8'))
             const rows = sizes
@@ -112,7 +133,7 @@ jobs:
               .join('\n')
 
             const body = [
-              `**Preview** ${{ needs.deploy.outputs.url }}`,
+              `**Preview** ${context.payload.deployment_status.target_url}`,
               '',
               `**Lighthouse** ${lighthouse}`,
               '',
@@ -123,7 +144,7 @@ jobs:
 
             const { data: comments } = await github.rest.issues.listComments({
               ...context.repo,
-              issue_number: context.issue.number,
+              issue_number: pull.number,
             })
             const mine = comments.find(
               (comment) => comment.user.type === 'Bot' && comment.body.startsWith('**Preview**'),
@@ -136,7 +157,7 @@ jobs:
             } else {
               await github.rest.issues.createComment({
                 ...context.repo,
-                issue_number: context.issue.number,
+                issue_number: pull.number,
                 body,
               })
             }
