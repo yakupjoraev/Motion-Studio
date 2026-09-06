@@ -15049,3 +15049,106 @@ is "does anything reference this string at all", and a looser answer cannot fail
   which the test checks and their contents it does not.
 - The reverse direction is already covered elsewhere: a string in the source and not in a dictionary
   shows up as English on screen, and the two catalogue tables fail on it by name (ADR-365, ADR-368).
+
+## ADR-370 — A number in the copy is counted, or it is a claim nobody checks
+
+**Date** 2026-09-06 · **Prompt** 66 · **Status** Accepted
+
+### Question
+`prompts/66` says every number in the marketing copy goes through `pnpm stats` rather than being
+remembered. Writing the proof column of [BRAND.md](BRAND.md) meant checking each one, and three of
+them were wrong.
+
+### Measurement
+- The landing's architecture band is headed **"Seventeen packages, one direction"** and then draws
+  **fifteen** boxes. Both readings were defensible when the page was written: seventeen counts the
+  workspace members (fourteen packages, two apps, `e2e`), fifteen counts what the diagram shows and
+  what the README and `docs/ARCHITECTURE.md` say. A reader who counts the boxes finds the heading
+  wrong either way.
+- The hero and the OG image print **"4 export targets"**. `EXPORT_TARGETS` has held five since the
+  tokens printer landed — `react`, `next`, `html`, `json`, `tokens` — and the export dialog renders
+  all five off that same array. The landing has understated the product for as long as it has
+  existed.
+- `pnpm stats` printed **"Studio first-load JS   no build to measure"** against a complete build. It
+  looks up `/studio/page` in `app-build-manifest.json`, and the routes have carried a locale segment
+  since ADR-361, so the lookup missed and the function returned `null` — the same shape of silent
+  failure as the cached-log defect that once printed "Unit tests 0 in 0 files".
+
+### Criterion (set before deciding)
+A number belongs in a component only if something fails when it stops being true. Anything else is a
+claim with no owner, and the three above are what that costs.
+
+### Decision
+`apps/web/src/components/landing/landing-stats.ts` holds the three counts the landing and the OG
+image print, and `landing-stats.test.ts` compares each with the registry it describes — `DEFINITIONS`,
+`PRESETS`, `EXPORT_TARGETS`. The literals stay literals rather than `DEFINITIONS.length`: the hero is
+a Server Component on the route with the smallest budget in the repository, and importing the block
+registry to print one integer puts seventy-two block modules in its graph. The test carries the
+import instead, where it costs nothing.
+
+The heading becomes **fifteen** — the number the diagram beside it draws, and the one the README and
+the architecture document already use. Counting workspace members is the reading that has to go: `e2e`
+is a test project and `apps/storybook` is a development host, and neither is a package the product is
+made of.
+
+`scripts/stats.ts` looks up `/[locale]/studio/page`, the key `.size-limit.js` has used since
+ADR-361, and now **throws** when a page is absent from a manifest that exists. Missing build and
+missing route are different answers and only one of them is the reader's fault.
+
+### Consequences
+- Three numbers on the landing are now covered by a unit test; the fourth surface that prints
+  numbers, the README, is covered by `pnpm stats` and by nothing else.
+- `e2e/a11y/landing.spec.ts` and the ADR-299 example in `section-rail.tsx` name the new heading.
+- A future route rename fails `pnpm stats` loudly instead of printing "no build to measure".
+
+## ADR-371 — The budget gate stopped measuring the route it names, and the studio is over
+
+**Date** 2026-09-06 · **Prompt** 66 · **Status** Accepted
+
+### Question
+`pnpm stats` and `pnpm size-limit` disagreed about the studio's first load by 28 kB while both
+claimed to read the same file list. One of them was wrong, and a budget nobody can reproduce is not
+a budget.
+
+### Measurement
+`size-limit` resolves every `path` as a glob. Since ADR-361 a route's own chunk is written to
+`static/chunks/app/[locale]/studio/page-<hash>.js`, and `[locale]` is a character class matching one
+of `l`, `o`, `c`, `a`, `e` — so the pattern matched **no file at all**, and the plugin measured the
+21 chunks it could find:
+
+```
+studio, per-file gzip level 9, 22 files   256.43 kB   (250.4 KiB)
+the route's own chunk, excluded            28.48 kB
+what the gate had been reporting          227.95 kB   "28.05 kB less than limit"
+```
+
+A backslash does not fix it. Measured on this machine: `.../app/\[locale\]/studio/page-*.js` matches
+zero files, because Node's `glob` reads `\` as a path separator on Windows. `?` matches one character
+everywhere, so each special character becomes one and the match count is asserted.
+
+The same hole was under the other three budgets: the landing reads 110.42 kB rather than 107.81, and
+the playground chunk 46.15 kB rather than 29.69.
+
+### What the honest number says
+**The studio is 430 B over its 250 KiB budget** — 256.43 kB against 256 000 B. It has been over since
+somewhere in prompts 63–65 and no gate could say so, which is the part that matters: the defect is
+not the 430 B, it is that a budget stopped being checked and stayed green for three prompts.
+
+### Decision
+The config builds a `?`-substituted pattern per file, checks the file exists on disk, and throws
+unless the pattern resolves to exactly one file. `scripts/stats.ts` compresses at level 9 like
+`@size-limit/file` does, so the README's number and the gate's number are the same measurement rather
+than two nearby ones.
+
+The 430 B are **not** paid for by moving the threshold. ENGINEERING_CONTRACT § 6 states 250 kB and
+§ 9 forbids choosing a threshold to match the number you got; what the studio carries has to come
+down instead. That is its own piece of work with its own measurement, and this entry is what tells
+the session that takes it what it is looking for.
+
+### Consequences
+- `pnpm size-limit` is red on `main` until the studio's first load loses 430 B. It was red before
+  this commit too; it just could not say so.
+- The three other budgets keep their margins with the true numbers: landing 12.46 kB, playground
+  46.01 kB, blocks 130.12 kB.
+- A route renamed into a directory with glob characters now fails the gate loudly instead of
+  shrinking the measurement.

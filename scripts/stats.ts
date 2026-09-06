@@ -104,7 +104,13 @@ const e2eTests = (): { files: number; cases: number; unique: number } => {
 
 /**
  * The route's first load, gzipped, off the build manifest — the same file list `.size-limit.js`
- * measures, so the README and the budget gate cannot disagree.
+ * measures, so the README and the budget gate cannot disagree. The locale segment comes from there
+ * too: the routes have carried one since ADR-361, both locales load the same JavaScript, and a page
+ * key written without it silently matched nothing (ADR-370).
+ *
+ * Missing manifest and missing page are different answers. The first is "you have not built yet";
+ * the second is "this script is looking for a route that no longer exists", and printing the same
+ * soft line for both is how these two numbers went unmeasured for three prompts.
  */
 const firstLoad = (page: string): number | null => {
   const manifest = join(ROOT, 'apps', 'web', '.next', 'app-build-manifest.json')
@@ -117,12 +123,17 @@ const firstLoad = (page: string): number | null => {
   const files = pages[page]
 
   if (files === undefined) {
-    return null
+    throw new Error(
+      `${page} is not in the build manifest — the route was renamed and this script was not.`,
+    )
   }
 
+  // Level 9, because `@size-limit/file` compresses at level 9 and this number is printed next to
+  // that gate's budget in the README. Level 6 — Node's default — reads 0.4 KiB heavier on the
+  // studio, which is the whole margin the budget has.
   return files.reduce(
     (total, file) =>
-      total + gzipSync(readFileSync(join(ROOT, 'apps', 'web', '.next', file))).length,
+      total + gzipSync(readFileSync(join(ROOT, 'apps', 'web', '.next', file)), { level: 9 }).length,
     0,
   )
 }
@@ -143,8 +154,8 @@ const blocksByCategory = blocks()
 const presetsByChannel = presets()
 const unit = unitTests()
 const e2e = e2eTests()
-const studio = firstLoad('/studio/page')
-const landing = firstLoad('/page')
+const studio = firstLoad('/[locale]/studio/page')
+const landing = firstLoad('/[locale]/page')
 
 if (json) {
   console.log(
