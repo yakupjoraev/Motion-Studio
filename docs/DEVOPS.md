@@ -446,8 +446,8 @@ The pipeline runs; three of its jobs do not pass yet, and none of the three is a
 - **`docker`** — the image build cannot reach `registry.npmjs.org` from inside the container:
   `ConnectTimeoutError` on the corepack download. Docker's WSL integration is on and the daemon is
   reachable; this is the container's network, not the switch.
-- **`e2e`, most shards** — red, and worth reading against the two specs `ROADMAP.md` § M15 records as
-  failing before 2026-09-06 as well as against the shared-`$HOME` race above.
+- **`e2e`, most shards** — red, and worth reading against `ROADMAP.md` § M15 — the specs it records
+  as failing before 2026-09-06 — as well as against the shared-`$HOME` race above.
 
 **Checks only run while that machine is on.** What the pre-push hook covers on every push regardless:
 `pnpm lint`, `pnpm typecheck`, `pnpm test:unit`, `pnpm build` — about three and a half minutes on a
