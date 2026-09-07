@@ -324,6 +324,7 @@ out to be different claims.
 | ✅ | `prompts/64` — a canvas node is a drag source: sections reorder by dragging, one undo puts them back | ADR-359 |
 | ✅ | `prompts/65` — the product speaks Russian: routing, the choice, every interface surface, both catalogues and the blocks' own copy. The `/docs` bodies stay English by the owner's decision | ADR-360…369 |
 | ✅ | `prompts/66` — the positioning, the three messages and their proof, in `docs/BRAND.md`. Writing the proof column found three numbers the product was printing wrong and a budget gate that had stopped measuring a route | ADR-370, ADR-371 |
+| ✅ | A band aligned its children, so everything inside it was drawn 0 px wide: six of the eight templates read as a navbar and nothing else on the canvas, and a heading or a paragraph placed straight into a band was invisible **in the exported page too**. The canvas now matches the exported markup box for box | ADR-379, ADR-380 |
 
 ### Open, in the order it is being done
 
@@ -335,22 +336,14 @@ Each is a prompt in `prompts/`, so a session picks one up without re-deriving it
    crossing between the canvas and the layers tree — has no spec either. `DRAG_AND_DROP.md` § The four operations still says operations 2 and
    4 are unwired: reordering is only possible from the layers tree, and a user's first instinct is the
    canvas. This is the largest open item.
-2. **The `blog-index` template renders as a navbar and nothing else.** `editor/persistence.spec.ts`
-   — "every shipped template opens, reads as a page, and can be edited" — fails on it with a
-   **1 403 px** empty run against a 400 px ceiling, and the failure screenshot shows the canvas
-   holding the navbar with the four sections below it invisible. The document itself is intact: ten
-   nodes, a section with a container of heading, text and divider, a feature grid, a newsletter form
-   and a footer. Verified **not** to be a 2026-09-06 regression — the failure reproduces with that
-   day's canvas and import changes reverted. The other templates in the list pass, so it is this
-   template or a block only it uses.
-3. **The keyboard drag from the palette does not complete.** `a11y/keyboard-drag.spec.ts` —
+2. **The keyboard drag from the palette does not complete.** `a11y/keyboard-drag.spec.ts` —
    "picks up, moves and drops with the keyboard alone" — never sees the `over … position n of m`
    announcement. Also reproduced with 2026-09-06's changes reverted. Related to, but not the same
    as, the canvas keyboard step ADR-359 measured.
-4. **`prompts/67` — the landing and the studio chrome through the design skills.**
-5. **`prompts/68` — the code panel beside the canvas**, collapsible. What makes this not a page
+3. **`prompts/67` — the landing and the studio chrome through the design skills.**
+4. **`prompts/68` — the code panel beside the canvas**, collapsible. What makes this not a page
    builder currently lives behind a dialog nobody is told to open.
-6. **`prompts/69` — findability and ownership.** SEO, the privacy and terms pages, the domain, and
+5. **`prompts/69` — findability and ownership.** SEO, the privacy and terms pages, the domain, and
    the three coupled decisions below. Raised by the owner 2026-09-05.
 
 ### The four questions in prompt 69, and why they are one decision
