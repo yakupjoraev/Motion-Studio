@@ -1,5 +1,6 @@
 'use client'
 
+import { LAYOUT_TRANSPARENT_CLASS } from '@motion-studio/canvas'
 import { MotionNode, presetRegistry } from '@motion-studio/motion'
 import type { MotionChannel, MotionSpec } from '@motion-studio/schema'
 import type { ReactNode } from 'react'
@@ -42,6 +43,9 @@ function AnimatedNode({
 
   return (
     <MotionNode
+      // ADR-379: the box the engine animates is one the exported file does not have, so it wears the
+      // classes that keep it out of the layout.
+      className={LAYOUT_TRANSPARENT_CLASS}
       key={replays}
       motion={motion}
       paused={paused}

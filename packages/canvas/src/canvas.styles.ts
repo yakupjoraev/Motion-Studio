@@ -43,11 +43,27 @@ export const MARQUEE_CLASS =
   'absolute hidden data-[active]:block border border-canvas-selection bg-canvas-selection/10 left-[var(--ms-marquee-x,0px)] top-[var(--ms-marquee-y,0px)] h-[var(--ms-marquee-h,0px)] w-[var(--ms-marquee-w,0px)]'
 
 /**
+ * ADR-379. What a box the exporter does not print has to wear so that it changes no layout.
+ *
+ * The studio puts elements around a block that the export has neither of: this wrapper, and the box
+ * the motion engine animates — `collect-motion` merges a preset's wrapper into the block's own tag,
+ * so `motion.section` is what a person reads in the exported file. Left alone, such a box is sized by
+ * its content in a parent that aligns its children, and a block root that declares
+ * `container-type: inline-size` (the idiom of ADR-184) has no intrinsic width to give it: measured on
+ * the canvas, a heading 0 px wide where the same markup without the box gives it 1 024.
+ *
+ * `inherit` takes the parent's own computed value, so the block is handed the alignment the parent
+ * would have applied to it directly — `stretch` fills, `center` centres — without the box having to
+ * know which kind of block is inside it. It composes down a chain of these boxes for the same reason.
+ */
+export const LAYOUT_TRANSPARENT_CLASS =
+  'flex self-stretch [align-items:inherit] [flex-direction:inherit] [justify-content:inherit]'
+
+/**
  * `contain: layout paint` bounds invalidation to the subtree, per PERFORMANCE.md § Canvas specifics:
  * editing one node must not make the browser re-lay-out the page around it.
  *
  * The two `data-resizing` rules are the transient half of a resize: the gesture writes the draft size
  * into the variables at frame rate and the store hears one `setProp` on release.
  */
-export const NODE_WRAPPER_CLASS =
-  '[contain:layout_paint] data-[resizing]:w-[var(--ms-node-w)] data-[resizing]:h-[var(--ms-node-h)]'
+export const NODE_WRAPPER_CLASS = `[contain:layout_paint] ${LAYOUT_TRANSPARENT_CLASS} data-[resizing]:w-[var(--ms-node-w)] data-[resizing]:h-[var(--ms-node-h)]`

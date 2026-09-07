@@ -113,6 +113,28 @@ describe('NodeWrapper', () => {
     expect(wrapper).toHaveAttribute('aria-roledescription', 'draggable layer')
   })
 
+  /*
+   * ADR-379: the box is the studio's own, so it may not take part in the layout as a box of its own.
+   * A parent that aligns its children sizes them by content, and a block root that declares
+   * `container-type: inline-size` contributes nothing to such a size — measured on the canvas, a
+   * heading 0 px wide where the exported markup gives it 1 024. So the wrapper fills the space the
+   * block would have been given and passes the parent's own alignment down to it.
+   */
+  it('fills its parent instead of sizing itself by the block inside it', () => {
+    const { cache } = fakeCache()
+
+    mount(cache)
+
+    const wrapper = screen.getByText('content').parentElement
+
+    expect(wrapper).toHaveClass('self-stretch', 'flex')
+    expect(wrapper).toHaveClass(
+      '[flex-direction:inherit]',
+      '[align-items:inherit]',
+      '[justify-content:inherit]',
+    )
+  })
+
   it('keeps a class the caller adds beside its own', () => {
     const { cache } = fakeCache()
 

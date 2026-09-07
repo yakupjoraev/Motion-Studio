@@ -45,6 +45,7 @@ export type {
   SelectionMode,
 } from './canvas.types'
 export { NodeWrapper, type NodeDragHandle, type NodeWrapperProps } from './node-wrapper'
+export { LAYOUT_TRANSPARENT_CLASS } from './canvas.styles'
 export { Scene, type SceneProps } from './scene/scene'
 export { Artboard, type ArtboardProps } from './scene/artboard'
 export {

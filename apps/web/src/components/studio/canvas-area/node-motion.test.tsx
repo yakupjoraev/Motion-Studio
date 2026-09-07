@@ -40,6 +40,21 @@ describe('NodeMotion', () => {
     expect(wrapper?.style.transform).toContain('16px')
   })
 
+  /*
+   * ADR-379. The box the engine animates is the studio's own — `collect-motion` merges a preset's
+   * wrapper into the block's tag, so the exported file has no such element — and a box the export
+   * does not print may not change the layout. Without this the studio sized it by its content, and a
+   * block dropped into a band that aligns its children came out 0 px wide.
+   */
+  it('keeps the box it animates out of the layout', () => {
+    mount({ entrance })
+
+    expect(wrapperOf(screen.getByTestId('block'))).toHaveClass(
+      'self-stretch',
+      '[align-items:inherit]',
+    )
+  })
+
   // A channel switched off in the panel is still stored, and a stored-but-off channel is not motion.
   it('leaves a node whose only channel is disabled unwrapped', () => {
     const off: Readonly<Partial<Record<MotionChannel, MotionSpec>>> = {

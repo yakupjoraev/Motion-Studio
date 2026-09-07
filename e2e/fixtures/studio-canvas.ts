@@ -180,13 +180,15 @@ export class StudioCanvas {
    * The element a css-engine preset wrapped, addressed by the class the preset gave it.
    *
    * The class is the product's own contract — a preset's `className` is what its `@keyframes` select
-   * and what the export prints — so a spec about a css preset is a spec about that class. `^=` rather
-   * than an exact match, because a preset whose keyframes differ per parameters names its animation
-   * after a digest of them (ADR-349).
+   * and what the export prints — so a spec about a css preset is a spec about that class. Matched
+   * anywhere in the attribute rather than at its start: a preset whose keyframes differ per parameters
+   * names its animation after a digest of them (ADR-349), so the name is a prefix; and the element
+   * carries the classes that keep the studio's own box out of the layout as well (ADR-379), so which
+   * class comes first is an ordering nothing should depend on. The names are unique to their presets.
    */
   motionWrapper(className: string): Locator {
     return this.page
-      .locator(`[data-node-id] [class^="${className}"], [data-node-id][class^="${className}"]`)
+      .locator(`[data-node-id] [class*="${className}"], [data-node-id][class*="${className}"]`)
       .first()
   }
 }
