@@ -340,10 +340,20 @@ Each is a prompt in `prompts/`, so a session picks one up without re-deriving it
    "picks up, moves and drops with the keyboard alone" — never sees the `over … position n of m`
    announcement. Also reproduced with 2026-09-06's changes reverted. Related to, but not the same
    as, the canvas keyboard step ADR-359 measured.
-3. **`prompts/67` — the landing and the studio chrome through the design skills.**
-4. **`prompts/68` — the code panel beside the canvas**, collapsible. What makes this not a page
+3. **The press is unanswered for the first 1.7 s.** `flows/open-studio.spec.ts` fails, and the spec is
+   right: measured on a 400 kbit/s, 300 ms connection, pressing **Open the studio** on the landing
+   leaves the landing on screen with no sign of anything happening until **1 966 ms**, when the route
+   commits and `CanvasPlaceholder` appears; the canvas itself lands after 4.5 s. Once the route
+   commits ADR-353 holds — a direct cold load of `/studio` at the same throttle shows the placeholder
+   at 1 864 ms and holds it — so what is missing is feedback on the **press**, before the router can
+   commit anything. Two candidates measured and one rejected: turning the CTA's `prefetch` back on
+   changes nothing, because what is slow is the payload the router is waiting for. The remaining shape
+   is pending state on the link itself (`useLinkStatus`), which makes it a client component and a
+   visual decision — so it belongs with `prompts/67` rather than to a passing fix.
+4. **`prompts/67` — the landing and the studio chrome through the design skills.**
+5. **`prompts/68` — the code panel beside the canvas**, collapsible. What makes this not a page
    builder currently lives behind a dialog nobody is told to open.
-5. **`prompts/69` — findability and ownership.** SEO, the privacy and terms pages, the domain, and
+6. **`prompts/69` — findability and ownership.** SEO, the privacy and terms pages, the domain, and
    the three coupled decisions below. Raised by the owner 2026-09-05.
 
 ### The four questions in prompt 69, and why they are one decision
