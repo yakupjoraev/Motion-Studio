@@ -155,6 +155,14 @@ test.describe('persistence', () => {
   test('every shipped template opens, reads as a page, and can be edited', async () => {
     await studio.inspector.setBreakpoint('xl')
 
+    /*
+     * The runs are collected and asserted once at the end rather than per template. Asserting inside
+     * the loop stops at the first one, and a defect the whole corpus shares then reads as one bad
+     * template: ADR-379 was found under a failure that named `blog-index` while five other templates
+     * had the same hole behind it.
+     */
+    const runs: Array<readonly [string, number]> = []
+
     for (const slug of templateSlugs()) {
       await studio.file.newFromTemplate(slug)
 
@@ -165,9 +173,11 @@ test.describe('persistence', () => {
       await studio.canvas.selectNth(1)
       await expect(studio.canvas.selectionChip(), `${slug} is editable`).toBeVisible()
 
-      expect(await studio.canvas.largestEmptyRun(), `${slug} has a hole in it`).toBeLessThan(
-        MAX_EMPTY_RUN,
-      )
+      runs.push([slug, await studio.canvas.largestEmptyRun()])
     }
+
+    expect(runs.filter(([, run]) => run >= MAX_EMPTY_RUN), 'templates with a hole in them').toEqual(
+      [],
+    )
   })
 })
