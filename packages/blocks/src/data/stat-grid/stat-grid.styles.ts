@@ -36,7 +36,7 @@ export const columnsClass = (columns: number): string => {
  * rather than the order they are written. Composed, the grid painted itself `surface-1` and every divider vanished
  * into it — measured at 1440 in light mode, which is where a white gap on a white plate is invisible.
  */
-export const statGridStyles = cva('@container/frame list-none p-0', {
+export const statGridStyles = cva('@container/frame w-full list-none p-0', {
   variants: {
     dividers: {
       true: 'gap-px overflow-hidden rounded-xl border border-border bg-border',

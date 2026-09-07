@@ -42,6 +42,22 @@ describe('Text', () => {
     expect(screen.getByText('Wide').className).toContain('max-w-none')
   })
 
+  /*
+   * ADR-380. Every other root in the catalogue that spends an auto margin spends a width beside it,
+   * and this one is why the rule is worth a test: an auto margin cancels a flex parent's stretch, and
+   * a root with `container-type: inline-size` has no intrinsic width to fall back on, so the
+   * paragraph came out 0 px wide and 720 px tall — invisible on the canvas and in the export.
+   */
+  it('spends a width beside every auto margin', () => {
+    for (const align of ['start', 'center', 'end'] as const) {
+      const className = textStyles({ align })
+
+      if (/\b(?:mx|ml|mr)-auto\b/.test(className)) {
+        expect(className, align).toContain('w-full')
+      }
+    }
+  })
+
   it('collapses columns below the medium breakpoint', () => {
     renderBlock(definition, Text, { columns: 3, text: 'Three' })
 

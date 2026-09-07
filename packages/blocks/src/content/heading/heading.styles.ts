@@ -5,7 +5,7 @@ import { cva } from 'class-variance-authority'
  * glyphs rather than a colour, so it needs `text-transparent` — and the token pair is the theme's,
  * which is what keeps it readable in both colour modes.
  */
-export const headingStyles = cva('@container/frame m-0', {
+export const headingStyles = cva('@container/frame m-0 w-full', {
   variants: {
     size: {
       sm: 'text-base',

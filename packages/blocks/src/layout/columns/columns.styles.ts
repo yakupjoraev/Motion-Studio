@@ -5,7 +5,7 @@ import { cva } from 'class-variance-authority'
  * `reverseOnMobile` is one class rather than a second DOM order — the reading order stays the
  * document's, which is the point of making it a prop.
  */
-export const columnsStyles = cva('@container/frame flex flex-col @min-[768px]/frame:grid', {
+export const columnsStyles = cva('@container/frame flex w-full flex-col @min-[768px]/frame:grid', {
   variants: {
     split: {
       '1-1': '@min-[768px]/frame:grid-cols-2',

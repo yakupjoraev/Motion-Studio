@@ -9,7 +9,7 @@ import type { GridProps } from './grid.types'
  * Explicit mode is `grid-cols-N`; auto-fit is the arbitrary value most builders do not offer, and
  * the four minimums are the card widths it is actually used for.
  */
-export const gridStyles = cva('@container/frame', {
+export const gridStyles = cva('@container/frame w-full', {
   variants: {
     columns: {
       1: 'grid-cols-1',

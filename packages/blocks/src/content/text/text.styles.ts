@@ -6,7 +6,14 @@ import { cva } from 'class-variance-authority'
  * out of a document at runtime is never literal at build time. `MEASURE_CH` in the schema is the same
  * table as a number, and the block's test asserts the two agree.
  */
-export const textStyles = cva('@container/frame mb-0 text-pretty', {
+/**
+ * `w-full` beside `@container/frame` is ADR-380, and it belongs to every root in this catalogue that
+ * makes itself a container-query root: a container root's inline size may not depend on its contents,
+ * so it contributes nothing to an intrinsic width. Dropped straight into a band — which aligns its
+ * children and therefore sizes them by content — the paragraph came out 0 px wide and 552 px tall, on
+ * the canvas and in the exported page alike. The measure still caps it: `max-w-[NNch]` below.
+ */
+export const textStyles = cva('@container/frame mb-0 w-full text-pretty', {
   variants: {
     size: {
       sm: 'text-sm',
@@ -25,6 +32,7 @@ export const textStyles = cva('@container/frame mb-0 text-pretty', {
       wide: 'max-w-[75ch]',
       full: 'max-w-none',
     },
+    /** The auto margin centres the measure inside the parent; the width it needs is in the base. */
     align: {
       start: 'text-left',
       center: 'mx-auto text-center',
