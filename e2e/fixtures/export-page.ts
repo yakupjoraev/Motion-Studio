@@ -154,9 +154,15 @@ export class ExportPage {
       .evaluateAll((rows) => rows.map((row) => row.getAttribute('data-file-row') ?? ''))
   }
 
-  /** Waits for the whole run, which is what the status line reports when it stops saying "Generating". */
+  /**
+   * Waits for the whole run, which is what the status line reports when it stops saying "Generating".
+   *
+   * Both plural forms: the line has been `{count, one: file, other: files} in {ms} ms` since the
+   * dialog was translated, and the two targets that print exactly one file — HTML and JSON — say
+   * "1 file in", which the plural spelling never matched.
+   */
   async settled(): Promise<void> {
-    await expect(this.status()).toContainText('files in', { timeout: 30_000 })
+    await expect(this.status()).toContainText(/\d+ files? in \d+ ms/, { timeout: 30_000 })
   }
 
   async selectFile(path: string): Promise<void> {
