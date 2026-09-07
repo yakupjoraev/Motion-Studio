@@ -227,6 +227,13 @@ inspector and this engine read; the containment element is part of the block's o
 containment element the canvas added would exist in the preview and not in the export, and the cell
 would read `@md:` in the studio and nothing at all after export.
 
+**A containment element declares a width** (ADR-380). `container-type: inline-size` is size
+containment in the inline axis, so the element's width may not depend on its contents — which means it
+contributes nothing at all to a parent that sizes its children by content, and a parent that aligns
+them does exactly that. Six roots declared the containment and no width, and every one of them was
+drawn 0 px wide inside a band: on the canvas and in the exported page alike.
+`packages/blocks/src/test/container-roots.test.ts` holds the rule, one case per styles file.
+
 Not the default — container queries in a canvas that is itself scaled by a transform behave
 subtly differently from a real page, and using them everywhere would make the preview less
 trustworthy. Concretely: a `@container` reports the **untransformed** inline size, so a cell 320 px

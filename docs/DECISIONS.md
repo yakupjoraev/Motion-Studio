@@ -15481,3 +15481,103 @@ The documents unit suite is green (37 tests), and the import path is covered end
   lands inside an interaction that is already asynchronous.
 - The margin is 2.9 kB, not 30. The next feature that touches the studio shell will need this
   measurement again — which is what a gate that actually measures is for.
+
+## ADR-379 — A box the export does not print inherits its parent's alignment
+
+**Date** 2026-09-07 · **Prompt** M15 · **Status** Accepted
+
+### Question
+`editor/persistence.spec.ts` — "every shipped template opens, reads as a page, and can be edited" —
+failed on `blog-index` with a 1 403 px empty run against a 400 px ceiling, and the canvas showed the
+navbar with four sections below it invisible. The document was intact: ten nodes, every one of them
+present in the DOM. What was drawing them at nothing?
+
+### Measurement
+The heading in that section measured **0 × 150** on the canvas. The same document with the studio's
+own boxes lifted out of the DOM — which is the markup the exporter prints, because `collect-motion`
+merges a preset's wrapper into the block's own tag rather than wrapping it — measured **570 × 38**.
+So the defect was the studio's, not the document's and not the block's.
+
+Two boxes stand between a block and its parent on the canvas and in neither export: `NodeWrapper`,
+which carries `data-node-id` for hit testing and the rect cache, and the element the motion engine
+animates. Both were plain `div`s. A parent that aligns its children — `items-start`, which is the
+**default** of the section schema — sizes them by content, and a block root that declares
+`container-type: inline-size` (ADR-184) is size-contained in the inline axis, so it contributes
+nothing to such a size. The box came out 0 px wide and took the block with it.
+
+Six of the eight shipped templates were affected. The spec named one because a loop of assertions
+stops at the first failure.
+
+### Criterion (set before measuring)
+The canvas is a preview of the export, so: **every node's box on the canvas equals the box the same
+markup gives it without the studio's own elements, within 1 px** — width, height and left edge. A
+probe document put a fill child, an intrinsic child, a button and a centred paragraph under each of
+the three alignments a band can apply, 33 boxes in all.
+
+| Candidate | Boxes that differed |
+| --- | --- |
+| As it was | 10 of 33 |
+| `align-self: stretch` on the boxes | 10 of 33 — the fills came right and every intrinsic child lost its alignment, badge 467 px and 947 px off |
+| **Inherit the parent's alignment** | **0 of 33** |
+
+### Decision
+`LAYOUT_TRANSPARENT_CLASS` — `flex self-stretch [align-items:inherit] [flex-direction:inherit]
+[justify-content:inherit]` — is worn by both boxes: `NODE_WRAPPER_CLASS` composes it, and the studio's
+`NodeMotion` hands it to `MotionNode` as its `className`.
+
+`inherit` is what makes this need no per-block knowledge. The box fills the space the block would have
+been given, and hands the block the alignment the parent would have applied to it directly: a fill
+child fills, an intrinsic child stays its own size and lands where the parent's `align-items` puts it.
+It composes down a chain of such boxes, because each one inherits the value the one above resolved.
+
+### Verified
+0 of 33 boxes differ on the probe. All eight templates render at the same height as their exported
+markup, and their largest empty runs — 112, 191, 272, 276, 286, 289, 290, 298 px — are all under the
+400 px ceiling, from 1 403 px at the worst. `editor/` is green in Chrome.
+
+### Consequences
+- The two boxes are `display: flex` with one child each. That is a flex container per node on the
+  canvas; the export has neither box, so nothing follows for the shipped page.
+- A selector that assumed the preset's class comes first in the attribute is now wrong, because these
+  classes are written before it. `StudioCanvas.motionWrapper` matches the class anywhere in the
+  attribute instead — an ordering nothing should have depended on.
+- The rule this leaves behind: **a box the export does not print may not size itself.** A third one
+  would wear the same class.
+
+## ADR-380 — A container-query root declares a width
+
+**Date** 2026-09-07 · **Prompt** M15 · **Status** Accepted
+
+### Question
+With ADR-379 in place, a heading and a paragraph dropped straight into a band were still 0 px wide —
+`h2` 0 × 72 and `p` 0 × 552 — and this time **the exported page measured the same**. So there was a
+second defect behind the first, and it was the blocks' own.
+
+### Measurement
+`container-type: inline-size` is size containment in the inline axis: the element's width may not
+depend on its contents, so it contributes nothing to a parent sizing its children by content. A band
+aligns its children, which is exactly that. Six roots in the catalogue declared the containment and no
+width — `heading`, `text`, `quote`, `grid`, `columns`, `stat-grid` — while the other 25 roots that
+make themselves frame containers all carry `w-full` or a length. `text` also spends `mx-auto` on a
+centred measure, and an auto margin cancels a flex parent's stretch, so it collapsed even inside a
+container that stretches its children.
+
+### Decision
+The six roots declare `w-full`, the width the rest of the catalogue already declares, and `text` puts
+it in the base so `align: start` gets it too — `max-w-[NNch]` still caps the measure and `mx-auto`
+still centres it.
+
+The rule is held by `packages/blocks/src/test/container-roots.test.ts`, one case per styles file: a
+class list that names `@container/frame` also names a width. It reads the source rather than a rendered
+block, because a block that only collapses at one prop combination would pass a test that rendered the
+defaults. Proved by removing `w-full` from `heading`: red, naming the file and the class list.
+
+### Verified
+The probe's plain heading measures 1 024 px and its paragraph 586 px, matching the exported markup
+exactly. `pnpm test` is green — 14 packages, `blocks` 2 253 tests.
+
+### Consequences
+- A heading in a centred band now fills the measure and centres its text, where before it shrank to
+  fit — which is to say it was 0 px wide. Nothing that was visible changed size.
+- The rule is the price of the container-query idiom: a block that wants to be sized by its contents
+  may not be a container-query root, and the test says so at the moment it is written.

@@ -382,6 +382,30 @@ Why this re-renders correctly and cheaply:
 - Children are passed through, so a block controls its own layout and the editor does not inject
   wrappers into the layout tree.
 
+### The boxes the export does not have
+
+The last line above is the intent; two elements are the exception, and both are the studio's own. The
+`NodeWrapper` carries `data-node-id` for hit testing, the rect cache and the drag layer, and the
+motion engine animates a box of its own — the export has neither, because `collect-motion` merges a
+preset's wrapper into the block's tag and prints `motion.section`.
+
+Both therefore wear `LAYOUT_TRANSPARENT_CLASS` (ADR-379):
+
+```
+flex self-stretch [align-items:inherit] [flex-direction:inherit] [justify-content:inherit]
+```
+
+Left as plain boxes they were **sized by their content**, and a block root that declares
+`container-type: inline-size` (RESPONSIVE_ENGINE.md § Container queries) has no intrinsic width to
+give one: a heading in a band came out 0 px wide where the exported markup gives it 1 024. `inherit`
+takes the parent's own computed value, so each box fills the space the block would have been given and
+hands the block the alignment the parent would have applied to it directly — a fill child fills, an
+intrinsic child keeps its size and lands where `align-items` puts it. The rule to keep: **a box the
+export does not print may not size itself.**
+
+The other half of the same defect belongs to the blocks: a container-query root declares a width
+(ADR-380), held by `packages/blocks/src/test/container-roots.test.ts`.
+
 ## Performance
 
 | Technique | Where |
