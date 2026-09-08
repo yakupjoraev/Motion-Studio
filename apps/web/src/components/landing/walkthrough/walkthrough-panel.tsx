@@ -46,7 +46,7 @@ export function WalkthroughPanel({
   return (
     <div className="grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-[minmax(0,15rem)_minmax(0,1fr)]">
       <div className="bg-surface-1">
-        <p className="px-4 py-2.5 font-mono text-xs text-foreground-muted uppercase tracking-[0.12em]">
+        <p className="px-4 py-2.5 font-mono text-foreground-muted text-xs uppercase tracking-[0.12em]">
           {labels.panelTitle}
         </p>
         <div className={ROW}>
@@ -63,7 +63,7 @@ export function WalkthroughPanel({
         className={`flex flex-col items-center justify-center gap-3 bg-surface-1 ${compact ? 'p-4' : 'p-8'}`}
       >
         <div
-          className={`grid w-full max-w-[18rem] place-content-center border border-border bg-surface-2 font-mono text-xs text-foreground-muted uppercase tracking-[0.12em] ${compact ? 'h-16' : 'h-28'}`}
+          className={`grid w-full max-w-[18rem] place-content-center border border-border bg-surface-2 font-mono text-foreground-muted text-xs uppercase tracking-[0.12em] ${compact ? 'h-16' : 'h-28'}`}
           style={{
             borderRadius: `${values.radius}px`,
             boxShadow: `0 0 ${24 * values.glow}px ${6 * values.glow}px var(--ms-color-accent-muted)`,
@@ -71,7 +71,7 @@ export function WalkthroughPanel({
         >
           {labels.card}
         </div>
-        <p className="font-mono text-xs text-foreground-muted uppercase tracking-[0.12em]">
+        <p className="font-mono text-foreground-muted text-xs uppercase tracking-[0.12em]">
           {caption}
         </p>
       </div>

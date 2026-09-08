@@ -44,7 +44,7 @@ export function ExportReveal() {
             <span className="font-mono text-xs uppercase tracking-[0.12em]" id="export-file">
               {EXPORT_SAMPLE_PATH}
             </span>
-            <span className="font-mono text-xs text-foreground-muted uppercase tracking-[0.12em]">
+            <span className="font-mono text-foreground-muted text-xs uppercase tracking-[0.12em]">
               {formatPlural(locale, EXPORT_SAMPLE_FILES.length, copy.fileCount)}
             </span>
           </figcaption>

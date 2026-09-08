@@ -43,7 +43,7 @@ export function Problem() {
             <div className="flex flex-col gap-4 bg-surface-1 p-6 sm:p-8" key={side.kind}>
               <div className="flex flex-col gap-1">
                 <h3 className="font-medium text-lg tracking-tight">{side.kind}</h3>
-                <p className="font-mono text-xs text-foreground-muted uppercase tracking-[0.12em]">
+                <p className="font-mono text-foreground-muted text-xs uppercase tracking-[0.12em]">
                   {side.examples}
                 </p>
               </div>

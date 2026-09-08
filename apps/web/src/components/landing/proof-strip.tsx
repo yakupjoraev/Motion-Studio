@@ -34,7 +34,7 @@ export function ProofStrip() {
                 The number leads and it is display type, not a mono caption: this band exists to be
                 read across the page at a glance, and the label under it says what was counted.
               */}
-              <dd className="font-display text-4xl leading-none tracking-[-0.02em] tabular-nums">
+              <dd className="font-display text-4xl tabular-nums leading-none tracking-[-0.02em]">
                 {figure.value}
               </dd>
               <dt className="text-foreground-muted text-sm">{figure.label}</dt>

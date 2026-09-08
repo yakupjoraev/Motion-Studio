@@ -104,6 +104,15 @@ test.describe('dragging a node on the canvas', () => {
 
     // `Enter` picks up — held `Space` pans the canvas, so it cannot also be the pick-up key (ADR-136).
     await page.keyboard.press('Enter')
+
+    /*
+     * Wait for the pick-up to be announced before stepping, which is what a person does too: the
+     * announcement is the drag reporting that it knows where it is. Pressing straight through passed
+     * against a dev server and failed against a production build, because there the arrow arrived
+     * before the first collision pass had run and the step had no zone to count positions in.
+     */
+    await expect(page.locator('#ms-dnd-announcer')).toContainText(/position \d+ of \d+/)
+
     await page.keyboard.press('ArrowUp')
     await page.keyboard.press('Enter')
 
@@ -168,19 +177,36 @@ test.describe('dragging a node on the canvas', () => {
     const studio = new StudioPage(page)
     const announcer = page.locator('#ms-dnd-announcer')
 
+    /*
+     * The assertion is that the announced position *moves*, not that it is a particular number.
+     * dnd-kit announces on `over` and a reorder inside one container never changes it (ADR-381), so
+     * what this guards is that a move is announced at all. Pinning "3 of 3" then "2 of 3" also
+     * asserted how many siblings had been measured by the time of the press, which is a property of
+     * the machine: it held here and timed out on a runner carrying nine shards.
+     */
+    const position = async (): Promise<string> => {
+      const said = (await announcer.textContent()) ?? ''
+
+      return /position (\d+) of \d+/.exec(said)?.[1] ?? ''
+    }
+
     await studio.canvas.nodes().nth(3).focus()
     await page.keyboard.press('Enter')
 
-    await expect(announcer).toContainText('position 3 of 3')
+    await expect.poll(position).not.toBe('')
 
-    // dnd-kit announces when the zone changes, and a reorder inside one container never changes it.
-    await page.keyboard.press('ArrowUp')
-
-    await expect(announcer).toContainText('position 2 of 3')
+    const first = await position()
 
     await page.keyboard.press('ArrowUp')
 
-    await expect(announcer).toContainText('position 1 of 3')
+    await expect.poll(position).not.toBe(first)
+
+    const second = await position()
+
+    await page.keyboard.press('ArrowUp')
+
+    await expect.poll(position).not.toBe(second)
+    expect(Number(second)).toBeLessThan(Number(first))
 
     await page.keyboard.press('Escape')
   })

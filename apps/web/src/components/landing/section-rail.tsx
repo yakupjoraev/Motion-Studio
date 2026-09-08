@@ -27,7 +27,7 @@ export function Section({ label, id, children }: SectionProps) {
     >
       <div className="mx-auto w-full max-w-[76rem] px-5 sm:px-8 lg:pl-[7.5rem]">
         <p
-          className="pt-8 font-mono text-xs text-foreground-muted uppercase tracking-[0.16em] lg:absolute lg:top-20 lg:left-8 lg:w-[5rem] lg:pt-0 lg:text-right"
+          className="pt-8 font-mono text-foreground-muted text-xs uppercase tracking-[0.16em] lg:absolute lg:top-20 lg:left-8 lg:w-[5rem] lg:pt-0 lg:text-right"
           id={`${id}-label`}
         >
           {label}

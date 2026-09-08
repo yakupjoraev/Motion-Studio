@@ -50,7 +50,7 @@ export function Hero() {
 
       <div className="relative mx-auto grid w-full max-w-[76rem] gap-12 px-5 pt-16 pb-20 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,28rem)] lg:items-center lg:gap-16 lg:pt-24 lg:pb-28 lg:pl-[7.5rem]">
         <div className="flex flex-col items-start gap-6">
-          <p className="rounded-full border border-border bg-surface-1 px-3 py-1 font-mono text-xs text-foreground-muted uppercase tracking-[0.16em]">
+          <p className="rounded-full border border-border bg-surface-1 px-3 py-1 font-mono text-foreground-muted text-xs uppercase tracking-[0.16em]">
             {hero.eyebrow}
           </p>
 
