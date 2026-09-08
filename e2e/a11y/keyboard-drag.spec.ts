@@ -12,9 +12,10 @@ import { settled } from '../fixtures/settle'
  * `Space` picks a palette card up and `Enter` inserts it; in the tree it is the mirror image, because
  * a row is already in the document and `Space` selects it — ADR-136.
  *
- * Operation 1 works end to end. Operation 3's *drag* does not — a row begins inside its own zone and
- * the position never moves from there (ADR-327) — so what is asserted for the tree is the reorder
- * shortcut, which is the path a keyboard user is given, and the drag is `fixme`.
+ * Operations 1, 2 and 4 work end to end; 2 and 4 are asserted in `editor/dnd-canvas.spec.ts`, where
+ * the canvas geometry they depend on lives. Operation 3's *drag* still does not choose a position
+ * (ADR-327, re-measured under ADR-381), so what is asserted for the tree is the reorder shortcut,
+ * which is the path a keyboard user is given, and that one case is `fixme` with its diagnosis.
  */
 test.describe('operation 1 — a palette card into the canvas', () => {
   test('inserts on Enter, which is the primary keyboard path', async ({ page }) => {
@@ -147,23 +148,46 @@ test.describe('operation 3 — a layers row to another position', () => {
       .toMatch(/Dropped .* at position \d+\./)
   })
 
-  test.fixme('chooses a different position inside the drag — ADR-327', async () => {
-    // Measured: eight ArrowDowns leave the target at "position 1 of 2", and the drop commits that.
+  /*
+   * ADR-327, still open, and re-measured after ADR-381 rather than re-assumed. The step is no longer
+   * the problem: the zone under a tree drag is the row's *parent* (`Grid`, children `f003, f004`),
+   * the surface supplies both boxes, the dragged row is excluded, and the getter computes a
+   * destination past the remaining sibling's midpoint. What does not happen is the move: the
+   * announcement stays at "position 1 of 2" and the getter is called once. The canvas path with the
+   * same code steps and announces (`editor/dnd-canvas.spec.ts`), so what differs is the tree's own
+   * geometry — `layerRects` reports the strip of ADR-133, in the panel's coordinates, while
+   * `collisionRect` is the viewport's. That comparison is the next measurement, not a guess to fix.
+   */
+  test.fixme('chooses a different position inside the drag', async ({ page }) => {
+    const studio = new StudioPage(page)
+
+    await studio.open('responsive-grid')
+    await studio.layers.select('node_f003')
+
+    const announcer = page.locator('#ms-dnd-announcer')
+    const position = async (): Promise<string> => {
+      const said = (await announcer.textContent()) ?? ''
+
+      return /position (\d+) of \d+/.exec(said)?.[1] ?? ''
+    }
+
+    await page.keyboard.press('Enter')
+    await settled(page)
+    await expect.poll(position).not.toBe('')
+
+    const before = await position()
+
+    await page.keyboard.press('ArrowDown')
+
+    // One press, one position — the number in the announcement is the assertion, not a pixel count.
+    await expect.poll(position).not.toBe(before)
   })
 })
 
 /*
- * DRAG_AND_DROP.md § The four operations: "Operations 1 and 3 are wired; 2 and 4 need a canvas node to
- * be a drag *source*, which is the work that follows." `useDraggableNode` is attached to layer rows
- * only, so there is no gesture on the canvas for a keyboard or a pointer to perform — an unbuilt
- * feature rather than an accessibility defect, recorded in ACCESSIBILITY_AUDIT.md as one.
+ * Operations 2 and 4 are wired (ADR-359 for the source, ADR-381 for the keyboard step) and asserted
+ * in `editor/dnd-canvas.spec.ts`: a keyboard drag that reorders the canvas and announces a new
+ * position on every press, and a pointer drag across both surfaces in either direction. They live
+ * there rather than here because they need a composed page with siblings at the top level — the
+ * level a canvas drag operates on — which is the fixture that file builds.
  */
-test.describe('operations 2 and 4 — a canvas node as a drag source', () => {
-  test.skip('moves a node within the canvas by keyboard', () => {
-    // Unwired: the canvas registers no draggable node.
-  })
-
-  test.skip('moves a node between the canvas and the tree by keyboard', () => {
-    // Unwired: the canvas registers no draggable node.
-  })
-})

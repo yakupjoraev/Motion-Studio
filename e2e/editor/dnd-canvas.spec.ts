@@ -17,6 +17,20 @@ import { StudioPage } from '../fixtures/studio-page'
  */
 const PAGE = ['navbar', 'hero-centered', 'feature-grid']
 
+/**
+ * The ids of a composed document are generated, so a cross-surface spec reads the canvas for the id
+ * and asks the tree for that row — the two surfaces are only comparable through the node they share.
+ */
+async function nodeIdAt(studio: StudioPage, index: number): Promise<string> {
+  const id = await studio.canvas.nodes().nth(index).getAttribute('data-node-id')
+
+  if (id === null) {
+    throw new Error(`canvas node ${index} carries no id`)
+  }
+
+  return id
+}
+
 test.describe('dragging a node on the canvas', () => {
   test.beforeEach(async ({ page }) => {
     const studio = new StudioPage(page)
@@ -74,18 +88,10 @@ test.describe('dragging a node on the canvas', () => {
   })
 
   /*
-   * ADR-359 § What is not finished. The pick-up works — `Enter` on a focused node starts the drag and
-   * the live region announces "Hero — centred over Container, position 7 of 7" — and `Esc` cancels it.
-   * What does not work is the step: an arrow moves the drag point one 8 px grid cell, and a page
-   * section is hundreds of pixels tall, so the position never changes and the drop lands where it
-   * started. Measured in the browser: five presses, five identical announcements.
-   *
-   * The fix is a step of one *position* rather than one grid cell, which needs the sensor to know the
-   * boxes of the zone's children. An attempt at that is described in the ADR and is not in the tree:
-   * it made no difference in the browser, and untested code that changes nothing is worse than an
-   * honest gap. `fixme` rather than deleted, so the next session starts from the diagnosis.
+   * ADR-381: one press, one position. A grid cell is 8 px and a page section is hundreds of pixels
+   * tall, so the step that mattered was never the one ADR-127 gives a nudge.
    */
-  test.fixme('is operable from the keyboard', async ({ page }) => {
+  test('is operable from the keyboard', async ({ page }) => {
     const studio = new StudioPage(page)
 
     const before = await studio.layers.names()
@@ -99,9 +105,83 @@ test.describe('dragging a node on the canvas', () => {
     // `Enter` picks up — held `Space` pans the canvas, so it cannot also be the pick-up key (ADR-136).
     await page.keyboard.press('Enter')
     await page.keyboard.press('ArrowUp')
-    await page.keyboard.press('ArrowUp')
     await page.keyboard.press('Enter')
 
     await expect.poll(() => studio.layers.names()).not.toEqual(before)
+  })
+
+  /*
+   * Operation 4 of DRAG_AND_DROP.md § The four operations, which had no spec at all: the same source
+   * carries across the two surfaces, and `DropZone.surface` (ADR-181) is what keeps the two zones a
+   * node registers apart. Asserted by the document changing, because that is the only thing a
+   * cross-surface drop is for.
+   */
+  test('carries a node from the canvas into the layers tree', async ({ page }) => {
+    const studio = new StudioPage(page)
+
+    const before = await studio.layers.names()
+    const from = await studio.canvas.nodes().nth(3).boundingBox()
+    const onto = await studio.layers.row(await nodeIdAt(studio, 1)).boundingBox()
+
+    expect(from).not.toBeNull()
+    expect(onto).not.toBeNull()
+
+    // Split the way every other drag in this suite is: the short first move crosses the 4 px
+    // activation distance, and one long move would outrun dnd-kit's collision pass.
+    await page.mouse.move((from?.x ?? 0) + 20, (from?.y ?? 0) + 10)
+    await page.mouse.down()
+    await page.mouse.move((from?.x ?? 0) + 20, (from?.y ?? 0) + 22, { steps: 5 })
+    await page.mouse.move(
+      (onto?.x ?? 0) + (onto?.width ?? 0) / 2,
+      (onto?.y ?? 0) + (onto?.height ?? 0) / 2,
+      { steps: 25 },
+    )
+    await page.mouse.up()
+
+    await expect.poll(() => studio.layers.names()).not.toEqual(before)
+  })
+
+  test('carries a row from the layers tree onto the canvas', async ({ page }) => {
+    const studio = new StudioPage(page)
+
+    const before = await studio.layers.names()
+    const from = await studio.layers.row(await nodeIdAt(studio, 3)).boundingBox()
+    const onto = await studio.canvas.nodes().nth(1).boundingBox()
+
+    expect(from).not.toBeNull()
+    expect(onto).not.toBeNull()
+
+    await page.mouse.move((from?.x ?? 0) + 40, (from?.y ?? 0) + 8)
+    await page.mouse.down()
+    await page.mouse.move((from?.x ?? 0) + 40, (from?.y ?? 0) + 20, { steps: 5 })
+    await page.mouse.move(
+      (onto?.x ?? 0) + (onto?.width ?? 0) / 2,
+      (onto?.y ?? 0) + (onto?.height ?? 0) / 2,
+      { steps: 25 },
+    )
+    await page.mouse.up()
+
+    await expect.poll(() => studio.layers.names()).not.toEqual(before)
+  })
+
+  test('says which position the drag is on, on every press', async ({ page }) => {
+    const studio = new StudioPage(page)
+    const announcer = page.locator('#ms-dnd-announcer')
+
+    await studio.canvas.nodes().nth(3).focus()
+    await page.keyboard.press('Enter')
+
+    await expect(announcer).toContainText('position 3 of 3')
+
+    // dnd-kit announces when the zone changes, and a reorder inside one container never changes it.
+    await page.keyboard.press('ArrowUp')
+
+    await expect(announcer).toContainText('position 2 of 3')
+
+    await page.keyboard.press('ArrowUp')
+
+    await expect(announcer).toContainText('position 1 of 3')
+
+    await page.keyboard.press('Escape')
   })
 })

@@ -15581,3 +15581,78 @@ exactly. `pnpm test` is green — 14 packages, `blocks` 2 253 tests.
   fit — which is to say it was 0 px wide. Nothing that was visible changed size.
 - The rule is the price of the container-query idiom: a block that wants to be sized by its contents
   may not be a container-query root, and the test says so at the moment it is written.
+
+## ADR-381 — A keyboard step is one position, and a drag owns the keyboard while it is in flight
+
+**Date** 2026-09-08 · **Prompt** 64 · **Status** Accepted
+
+### Question
+ADR-359 left operation 2's keyboard path open with a measurement: `Enter` picked a canvas node up
+and `Esc` cancelled it, but an arrow moved the drag one 8 px grid cell against a section hundreds of
+pixels tall, so five presses produced five identical announcements. A previous attempt at the fix
+type-checked and changed nothing in the browser, and was not kept. What was actually in the way?
+
+### Measurement
+Instrumented in the browser on a composed page — navbar 65 px, hero 569 px, feature grid 623.6 px —
+with the getter, the resolver and the drop each printing what they saw. Three defects, in the order
+they blocked the gesture:
+
+1. **The step.** The drag point for a keyboard drag is the centre of the box being translated
+   (`dragPoint`), and `placeInSlot` changes position when that point crosses a **sibling's midpoint**.
+   From the grid's centre to the hero's midpoint is ~570 px: **71 presses** at 8 px each. The unit was
+   wrong, not the arithmetic.
+2. **`Enter` was two commands.** dnd-kit's activator picked the node up, and the studio's
+   `enter-container` binding ran on the same press and isolated it. From then on `resolveDropTarget`
+   started inside the dragged node, found no slot, and returned `null`: every announcement after the
+   first read "is not over a valid target". On the drop press the map ran *first* — it is registered
+   before dnd-kit's own document listener — so the drop resolved against an isolated document and
+   landed nowhere.
+3. **`Mod+Shift+↑` did two things at once**, found by the guard above rather than by a spec. The
+   tree's key map read only `Mod` on an arrow, so in the layers panel the press reordered the layer —
+   and the `select-parent` binding then ran on the same event and walked the selection. SHORTCUTS.md
+   gives `Mod+↑`/`↓` to the tree and `Mod+Shift+↑` to § Selection, so the map was wrong, not the
+   binding. `editor/selection.spec.ts` passed throughout because it asserted the selection label and
+   nothing about the document's order.
+4. **One id for two surfaces.** `useDraggableNode` registered `useDraggable({ id: nodeId })` on both
+   the canvas and the layers tree, and dnd-kit keys draggables by id, so it kept whichever registered
+   last. Measured at the drop: `over` was `tree:…` and the point was `{x: 139.5, y: 183}` — the
+   coordinates of a layers row, for a drag begun on the canvas. `useDropZone` had already solved this
+   for zones by putting the surface in the id (ADR-181); the source never did.
+
+### Decision
+- **The step is one position, along the axis its zone flows.** `pointForPosition` is the inverse of
+  `placeInSlot` and lives beside it, so a step is read with the same function that resolves the drop
+  and the two cannot disagree. Across that axis, with no zone under the drag, or past either end of
+  the list, the grid-cell path of ADR-127 stands unchanged — the last of those is how a press leaves
+  a container.
+- **The geometry arrives from the surface**, as a `siblings(zone)` prop, for the reason ADR-181 gives
+  for rects: `dnd` must not import `canvas`, and only the surface that drew a zone knows where its
+  positions are.
+- **A drag owns the keyboard while it is in flight.** `ShortcutHost` moved inside `DndHost` and runs
+  with `enabled: !dragging`. Every key a drag uses is a key the studio also binds — `Enter` drops and
+  `enter-container` isolates, `Esc` cancels and `Esc` leaves the level, the arrows step a position and
+  they also nudge — so ownership is the answer, not a special case per binding. `useShortcuts` also
+  stands aside for a press whose default is already prevented, which is the same rule for a key
+  claimed by a component rather than by a surface.
+- **A tree arrow with `Shift` belongs to the binding that owns it.** `resolveTreeKey` returns `null`
+  for `Mod+Shift`+arrow, which is what its own header already promised: "one press is one of these,
+  and never two".
+- **A source is identified by its surface and its node**, `dragSourceId`. Nothing outside dnd-kit
+  reads `active.id`, so the payload — which is what a command is built from — is untouched.
+
+### Consequences
+- `editor/dnd-canvas.spec.ts`: the keyboard case is no longer `fixme`, the announcement reports a new
+  position on every press, and **operation 4 has a spec at last** — a node from the canvas into the
+  layers tree and a row from the tree onto the canvas, both with the pointer, both changing the
+  document. Seven cases, green in chrome.
+- `a11y/keyboard-drag.spec.ts` — "picks up, moves and drops with the keyboard alone" — passes without
+  being touched.
+- Verified: `pnpm lint`, `pnpm typecheck`, `pnpm test` (8 371 unit tests), `pnpm build`. Studio
+  first-load **253.61 kB** against a 256 kB budget, up 0.54 kB.
+- **ADR-327 stays open, and was re-measured rather than re-assumed.** In the tree the step is no
+  longer the problem: the zone under the drag is the row's parent, the surface supplies both boxes,
+  the dragged row is excluded, and a destination past the remaining sibling's midpoint is computed —
+  and the announcement still does not move. The canvas path with the same code steps and announces,
+  so what differs is the tree's own geometry: `layerRects` reports the strip of ADR-133 in the
+  panel's coordinates, while `collisionRect` is the viewport's. That comparison is the next
+  measurement. The e2e case carries the diagnosis.

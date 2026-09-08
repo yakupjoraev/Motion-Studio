@@ -324,23 +324,21 @@ out to be different claims.
 | ✅ | `prompts/64` — a canvas node is a drag source: sections reorder by dragging, one undo puts them back | ADR-359 |
 | ✅ | `prompts/65` — the product speaks Russian: routing, the choice, every interface surface, both catalogues and the blocks' own copy. The `/docs` bodies stay English by the owner's decision | ADR-360…369 |
 | ✅ | `prompts/66` — the positioning, the three messages and their proof, in `docs/BRAND.md`. Writing the proof column found three numbers the product was printing wrong and a budget gate that had stopped measuring a route | ADR-370, ADR-371 |
+| ✅ | Dragging a node with the keyboard picked up and never stepped, so nothing moved. Three defects, one gesture: an arrow moved 8 px where a position is ~570 px away, `Enter` both picked the node up and isolated it, and the canvas and the layers tree registered the drag under one id — so the drop resolved against the layers panel's coordinates. Operation 4 has a spec at last, in both directions | ADR-381 |
 | ✅ | A band aligned its children, so everything inside it was drawn 0 px wide: six of the eight templates read as a navbar and nothing else on the canvas, and a heading or a paragraph placed straight into a band was invisible **in the exported page too**. The canvas now matches the exported markup box for box | ADR-379, ADR-380 |
 
 ### Open, in the order it is being done
 
 Each is a prompt in `prompts/`, so a session picks one up without re-deriving it.
 
-1. **`prompts/64`, the part left open — the keyboard step.** The pick-up and the cancel work; an arrow
-   moves one 8 px grid cell against a section hundreds of pixels tall, so the position never changes.
-   ADR-359 § What is not finished has the measurement and the shape of the fix. Operation 4 — a drag
-   crossing between the canvas and the layers tree — has no spec either. `DRAG_AND_DROP.md` § The four operations still says operations 2 and
-   4 are unwired: reordering is only possible from the layers tree, and a user's first instinct is the
-   canvas. This is the largest open item.
-2. **The keyboard drag from the palette does not complete.** `a11y/keyboard-drag.spec.ts` —
-   "picks up, moves and drops with the keyboard alone" — never sees the `over … position n of m`
-   announcement. Also reproduced with 2026-09-06's changes reverted. Related to, but not the same
-   as, the canvas keyboard step ADR-359 measured.
-3. **The press is unanswered for the first 1.7 s.** `flows/open-studio.spec.ts` fails, and the spec is
+1. **A tree row still cannot choose a position inside its drag** — ADR-327, the one case left of the
+   four operations. Re-measured under ADR-381 rather than re-assumed: the step is computed, the zone
+   is the row's parent and both sibling boxes are supplied, and the announcement still does not move.
+   The canvas path with the same code works, so the difference is that `layerRects` reports the strip
+   of ADR-133 in the panel's coordinates while the drag's own box is in the viewport's. That
+   comparison is the next measurement. The keyboard path a user is given — `Mod+↑`/`↓` — reorders and
+   announces, so this is a second route to a function that works.
+2. **The press is unanswered for the first 1.7 s.** `flows/open-studio.spec.ts` fails, and the spec is
    right: measured on a 400 kbit/s, 300 ms connection, pressing **Open the studio** on the landing
    leaves the landing on screen with no sign of anything happening until **1 966 ms**, when the route
    commits and `CanvasPlaceholder` appears; the canvas itself lands after 4.5 s. Once the route
@@ -350,10 +348,10 @@ Each is a prompt in `prompts/`, so a session picks one up without re-deriving it
    changes nothing, because what is slow is the payload the router is waiting for. The remaining shape
    is pending state on the link itself (`useLinkStatus`), which makes it a client component and a
    visual decision — so it belongs with `prompts/67` rather than to a passing fix.
-4. **`prompts/67` — the landing and the studio chrome through the design skills.**
-5. **`prompts/68` — the code panel beside the canvas**, collapsible. What makes this not a page
+3. **`prompts/67` — the landing and the studio chrome through the design skills.**
+4. **`prompts/68` — the code panel beside the canvas**, collapsible. What makes this not a page
    builder currently lives behind a dialog nobody is told to open.
-6. **`prompts/69` — findability and ownership.** SEO, the privacy and terms pages, the domain, and
+5. **`prompts/69` — findability and ownership.** SEO, the privacy and terms pages, the domain, and
    the three coupled decisions below. Raised by the owner 2026-09-05.
 
 ### The four questions in prompt 69, and why they are one decision

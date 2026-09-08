@@ -34,8 +34,11 @@ accessible, and retrofitting keyboard drag onto HTML5 DnD is not possible.
 
 All four end in a command. Nothing about drag state lives in the document until drop.
 
-Operations 1, 2 and 3 are wired. Both surfaces register a zone per node, under the same node id and
-with different geometry, so a zone states which surface drew it — `DropZone.surface` (ADR-181).
+All four are wired. Both surfaces register a zone per node, under the same node id and with
+different geometry, so a zone states which surface drew it — `DropZone.surface` (ADR-181). A **source**
+carries the same identity for the same reason: dnd-kit keys draggables by id, and under one id it kept
+whichever surface registered last, so a drag begun on the canvas resolved against the layers panel's
+coordinates (`dragSourceId`, ADR-381).
 
 **Which node a canvas drag carries** is the same question as which node a click selects, and it has
 the same answer: the nodes at the current level — the children of the isolation, or of the root when
@@ -43,10 +46,16 @@ there is none (ADR-359). A node below that level is reached by entering its pare
 through it. Left alone, the two gestures would disagree from the same pixel: a press selects the
 section and a drag would carry the paragraph inside it.
 
-Operation 4 — carrying a drag across the two surfaces — follows from the same source and is not yet
-covered by a spec. **Keyboard drag on the canvas picks up and cancels but does not step**: an arrow
-moves one 8 px grid cell and a page section is hundreds of pixels tall, so the position never changes.
-ADR-359 § What is not finished carries the measurement and the shape of the fix.
+Operation 4 — carrying a drag across the two surfaces — follows from the same source, and both
+directions are covered by `editor/dnd-canvas.spec.ts`: a node from the canvas into the tree, and a row
+from the tree onto the canvas.
+
+**A keyboard step is one position, not one grid cell** (ADR-381). The drag point of a keyboard drag is
+the centre of the box being translated, and a position changes when that point crosses a sibling's
+midpoint — which against a 623 px section is 71 presses at ADR-127's 8 px. The step is computed with
+`pointForPosition`, the inverse of the `placeInSlot` that resolves the drop, over boxes the surface
+supplies. **While a drag is in flight it owns the keyboard**: every key it uses is a key the studio
+also binds, so `ShortcutHost` stands down for the duration rather than each binding guarding itself.
 
 ## Sensors
 
@@ -64,11 +73,21 @@ const sensors = useSensors(
 
 - **4 px activation distance.** Below that a pointer-down is a selection. Users click far more
   often than they drag, and a 0 px threshold makes selection feel unstable.
-- **Keyboard sensor** with a custom coordinate getter: `Space`/`Enter` picks up, arrows move by one
-  grid cell — `gridSize × zoom` screen pixels, which is one cell *as it appears* (ADR-127) —
-  `Space`/`Enter` drops, `Esc` cancels. Between containers, arrows move through drop targets rather
-  than by pixels: a press whose step would leave the current container jumps to the next one in
-  document order instead, so the mode switch is the boundary itself rather than a threshold near it.
+- **Keyboard sensor** with a custom coordinate getter: `Space`/`Enter` picks up, `Space`/`Enter`
+  drops, `Esc` cancels. An arrow answers in three modes, asked in this order (ADR-381):
+  1. **Along the axis the zone under the drag flows** — a column on the vertical arrows, a row on the
+     horizontal ones, a grid on all four — a press moves **one position**. The destination comes from
+     `pointForPosition`, the inverse of the `placeInSlot` that resolves the drop, so a step and the
+     indicator cannot disagree about where the node would land. The boxes it counts against are the
+     zone's children, supplied by the surface that drew the zone.
+  2. **Across that axis, or where no zone can state its positions**, a press moves one grid cell —
+     `gridSize × zoom` screen pixels, which is one cell *as it appears* (ADR-127).
+  3. **Past either end of the list**, a press leaves for the next container in document order, so the
+     mode switch is the boundary itself rather than a threshold near it.
+- **While a drag is in flight it owns the keyboard.** `ShortcutHost` sits inside the drag context and
+  runs with `enabled: !dragging`: `Enter` drops where `enter-container` would isolate, `Esc` cancels
+  where it would leave the level, the arrows step where they would nudge. `useShortcuts` also stands
+  aside for any press whose default a handler has already prevented (ADR-381).
 
 Both sensors cancel on `Esc` and on `visibilitychange`. Leaving the window for another application
 fires neither, so the provider delivers the same cancel key on `blur` — ADR-128.

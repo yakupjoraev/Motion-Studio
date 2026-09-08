@@ -291,7 +291,7 @@ behaviour (ADR-329):
 | --- | --- |
 | `axe-all-routes.spec.ts` | Zero violations on six routes plus the studio, in **both colour modes** |
 | `keyboard-only-compose.spec.ts` | A four-section page inserted with nothing but key presses, and the inspector reached from the canvas |
-| `keyboard-drag.spec.ts` | All four drag operations, including the two that are unwired and the one that jams (ADR-327) |
+| `keyboard-drag.spec.ts` | The palette and the tree; operations 2 and 4 are in `editor/dnd-canvas.spec.ts`, and the tree's own position step still jams (ADR-327) |
 | `focus-restore.spec.ts` | Every dialog, and the command palette, returning focus to what opened it |
 | `live-regions.spec.ts` | Selection from either surface, the drag sequence, and a command's result |
 | `reduced-motion.spec.ts` | No transform keyframes and no unreadable line on any route; hidden controls appear on focus |
@@ -314,13 +314,13 @@ Stated honestly rather than hidden:
   through the layers tree and inspector, not a spatial description of the canvas.
 - **HTML export approximates some motion presets.** Each approximation is listed in the export
   warnings.
-- **A keyboard drag works from the palette and not from the layers tree.** A card is picked up, moved
-  over a section and dropped there; a row is picked up, announces "position 1 of 2" and drops back
-  where it began, however many times the arrow keys are pressed — ADR-327 has both measurements. The
-  tree's keyboard path to the same function is `Mod+↑`/`↓`, which reorders and announces the result.
-- **Dragging a node on the canvas does not exist yet** — for any input device. `useDraggableNode` is
-  attached to layer rows only, so operations 2 and 4 of DRAG_AND_DROP.md § The four operations have no
-  gesture to make accessible.
+- **A keyboard drag works from the palette and on the canvas, and not from the layers tree.** A card
+  is picked up, moved over a section and dropped there; a canvas node steps one position per press,
+  announces each one and drops where it says (ADR-381); a tree row is picked up, announces
+  "position 1 of 2" and drops back where it began, however many times the arrow keys are pressed.
+  ADR-327 has that measurement and ADR-381 § Consequences has the part of it that is still unexplained
+  — the tree reports its geometry in the panel's coordinates, the drag in the viewport's. The tree's
+  keyboard path to the same function is `Mod+↑`/`↓`, which reorders and announces the result.
 - **There are two text tiers, not three.** `foreground-subtle` resolves to the same ramp step as
   `foreground-muted` because no step between them meets 4.5 : 1 (ADR-323). The call sites still say
   which tier they mean, so the tier returns when the ramp gains a step.
