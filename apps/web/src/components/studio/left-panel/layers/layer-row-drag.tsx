@@ -61,6 +61,7 @@ export function LayerRowDrag({ row, span, onDragChange, ...rest }: LayerRowDragP
     blockId: row.blockId,
     nodeIds: dragged,
     labels,
+    surface: 'tree',
     // The root is the document; a locked layer is one the user pinned down. Neither moves.
     disabled: row.locked || row.parentId === null,
   })

@@ -66,6 +66,7 @@ export function useNodeDrag({
     blockId,
     nodeIds: dragged,
     labels,
+    surface: 'canvas',
     // The root is the document; a locked node is one the user pinned down; a hidden one has no box to
     // grab. A node below the current level is reached by entering its parent, not by dragging through.
     disabled: disabled || locked || hidden || !atCurrentLevel,
