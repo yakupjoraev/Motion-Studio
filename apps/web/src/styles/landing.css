@@ -197,6 +197,21 @@
   }
 }
 
+/*
+ * Arrive on entry, once, with no JavaScript and no observer: `view()` is the element's own progress
+ * through the viewport, so each one animates on its own way in. The base state is the end state, so
+ * an engine without the timeline and a reader who asked for less motion both get the finished page.
+ */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    [data-ms-enter] {
+      animation: ms-hero-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 6% cover 34%;
+    }
+  }
+}
+
 @keyframes ms-hpin-fill {
   from {
     transform: scaleX(0);

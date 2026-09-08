@@ -127,6 +127,10 @@ export const landing = {
 
   stack: {
     rail: '06 / stack',
+    groupFrame: 'Frame',
+    groupState: 'State and data',
+    groupInteraction: 'Interaction',
+    groupChoice: 'A decision',
     heading: 'The stack, with the actual reasons.',
     introBefore: 'Every one of these is written down at length in',
     introAfter: ', with the alternatives that were rejected and why.',

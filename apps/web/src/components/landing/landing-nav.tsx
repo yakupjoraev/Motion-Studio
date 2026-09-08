@@ -61,7 +61,7 @@ export function LandingNav() {
           <LocaleSwitch label={nav.language} />
 
           <Link
-            className="rounded-md bg-accent px-3 py-1.5 font-medium text-foreground-onAccent text-sm outline-none transition-colors hover:bg-accent-hover focus-visible:shadow-focus"
+            className="bg-accent px-3.5 py-1.5 font-medium text-foreground-onAccent text-xs uppercase tracking-[0.08em] outline-none transition-colors hover:bg-accent-hover focus-visible:shadow-focus"
             href={href('/studio')}
             prefetch={false}
           >

@@ -130,6 +130,10 @@ export const landing: Dictionary['landing'] = {
 
   stack: {
     rail: '06 / стек',
+    groupFrame: 'Каркас',
+    groupState: 'Состояние и данные',
+    groupInteraction: 'Взаимодействие',
+    groupChoice: 'Решение',
     heading: 'Стек и настоящие причины выбора.',
     introBefore: 'Каждый пункт подробно расписан в',
     introAfter: ' — вместе с отвергнутыми вариантами и причинами отказа.',

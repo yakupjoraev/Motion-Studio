@@ -10,6 +10,11 @@ import { Section } from './section-rail'
  * matters most here — a screen reader reads it as four nested lists with headings rather than as a
  * wall of box-drawing characters. The `alt` a diagram usually needs is the markup itself.
  *
+ * **Drawn as a section cut rather than as four cards.** The claim is that dependency runs one way,
+ * downward, and strata separated by hairlines with an arrow down their edge say that; four rounded
+ * boxes in a column say "four things". Each layer arrives on its own way into the viewport, which is
+ * a CSS view timeline on the element itself and nothing else.
+ *
  * Package names are not translated: `editor` is what the directory is called in both languages.
  * What each one *does* is prose, and that is what the dictionary carries.
  */
@@ -58,38 +63,50 @@ export function Architecture() {
           {architecture.intro}
         </SectionIntro>
 
-        <ol className="flex flex-col gap-3">
-          {layers.map((layer, index) => (
-            <li
-              className="rounded-xl border border-border bg-surface-1 p-4 sm:p-5"
-              key={layer.title}
-            >
-              <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                <h3 className="font-mono text-xs uppercase tracking-[0.12em]">
-                  <span className="text-foreground-muted">
-                    {String(index + 1).padStart(2, '0')} ·{' '}
-                  </span>
-                  {layer.title}
-                </h3>
-                <p className="text-foreground-muted text-sm">{layer.note}</p>
-              </div>
+        <div className="relative">
+          {/* The direction, drawn once down the whole cut. */}
+          <span
+            aria-hidden="true"
+            className="absolute top-2 bottom-8 left-0 hidden w-px bg-border lg:block"
+          />
+          <span
+            aria-hidden="true"
+            className="absolute bottom-3 left-[-4px] hidden text-[10px] text-foreground-muted leading-none lg:block"
+          >
+            ▼
+          </span>
 
-              <ul className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-                {layer.packages.map((entry) => (
-                  <li
-                    className="rounded-md border border-border-subtle bg-surface-2 px-3 py-2"
-                    key={entry.name}
-                  >
-                    <p className="font-mono text-xs">{entry.name}</p>
-                    <p className="text-foreground-muted text-xs leading-snug">{entry.detail}</p>
-                  </li>
-                ))}
-              </ul>
-            </li>
-          ))}
-        </ol>
+          <ol className="flex flex-col lg:pl-8">
+            {layers.map((layer, index) => (
+              <li
+                className="grid gap-x-8 gap-y-3 border-border border-t py-6 lg:grid-cols-[minmax(0,15rem)_minmax(0,1fr)]"
+                data-ms-enter
+                key={layer.title}
+              >
+                <div className="flex flex-col gap-1">
+                  <h3 className="flex items-baseline gap-2 font-mono text-xs uppercase tracking-[0.16em]">
+                    <span className="text-[var(--ms-l-accent)] tabular-nums">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                    {layer.title}
+                  </h3>
+                  <p className="text-foreground-muted text-sm leading-snug">{layer.note}</p>
+                </div>
 
-        <p className="text-foreground-muted text-sm">{architecture.footnote}</p>
+                <ul className="grid gap-x-8 gap-y-3 sm:grid-cols-2">
+                  {layer.packages.map((entry) => (
+                    <li className="flex flex-col gap-0.5" key={entry.name}>
+                      <p className="font-mono text-[13px] text-foreground">{entry.name}</p>
+                      <p className="text-foreground-muted text-xs leading-snug">{entry.detail}</p>
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        <p className="text-foreground-muted text-sm lg:pl-8">{architecture.footnote}</p>
       </div>
     </Section>
   )

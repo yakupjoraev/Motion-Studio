@@ -10,23 +10,46 @@ import { Section } from './section-rail'
  * So the reasons are the real ones, including the two rejections, because a stack list that only
  * says yes tells a reader nothing about how the choices were made.
  *
+ * **Grouped into four, not listed as eleven.** A spec table with a hairline under every row is the
+ * laziest shape a list can take and the hardest to read: nothing in it is more important than
+ * anything else. The groups are what a reader is actually asking — what is the frame, what holds the
+ * state, what handles interaction, and what was decided rather than chosen from a menu.
+ *
  * A library's name and version are the same in both languages; only the reason is translated.
  */
 export function Stack() {
   const { stack } = getRequestDictionary().landing
 
-  const choices = [
-    { name: 'Next.js 15', reason: stack.next },
-    { name: 'TypeScript 5.6, strict', reason: stack.typescript },
-    { name: 'Zustand 5', reason: stack.zustand },
-    { name: 'Immer 10', reason: stack.immer },
-    { name: 'Zod 3', reason: stack.zod },
-    { name: 'Tailwind v4', reason: stack.tailwind },
-    { name: 'Motion 11', reason: stack.motion },
-    { name: 'dnd-kit', reason: stack.dndKit },
-    { name: 'CodeMirror 6', reason: stack.codemirror },
-    { name: 'Biome', reason: stack.biome },
-    { name: stack.noBackendName, reason: stack.noBackend },
+  const groups = [
+    {
+      title: stack.groupFrame,
+      choices: [
+        { name: 'Next.js 15', reason: stack.next },
+        { name: 'TypeScript 5.6, strict', reason: stack.typescript },
+        { name: 'Tailwind v4', reason: stack.tailwind },
+        { name: 'Biome', reason: stack.biome },
+      ],
+    },
+    {
+      title: stack.groupState,
+      choices: [
+        { name: 'Zustand 5', reason: stack.zustand },
+        { name: 'Immer 10', reason: stack.immer },
+        { name: 'Zod 3', reason: stack.zod },
+      ],
+    },
+    {
+      title: stack.groupInteraction,
+      choices: [
+        { name: 'Motion 11', reason: stack.motion },
+        { name: 'dnd-kit', reason: stack.dndKit },
+        { name: 'CodeMirror 6', reason: stack.codemirror },
+      ],
+    },
+    {
+      title: stack.groupChoice,
+      choices: [{ name: stack.noBackendName, reason: stack.noBackend }],
+    },
   ]
 
   return (
@@ -37,17 +60,27 @@ export function Stack() {
           {stack.introAfter}
         </SectionIntro>
 
-        <dl className="grid gap-px overflow-hidden rounded-xl border border-border bg-border">
-          {choices.map((choice) => (
-            <div
-              className="grid gap-1 bg-surface-1 px-4 py-3.5 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)] sm:gap-6 sm:px-5"
-              key={choice.name}
-            >
-              <dt className="font-mono text-xs tracking-tight">{choice.name}</dt>
-              <dd className="text-foreground-muted text-sm leading-relaxed">{choice.reason}</dd>
-            </div>
+        <div className="grid gap-x-12 gap-y-10 lg:grid-cols-2">
+          {groups.map((group) => (
+            <section className="flex flex-col gap-5" data-ms-enter key={group.title}>
+              <h3 className="flex items-center gap-3 font-mono text-[10px] text-foreground-muted uppercase tracking-[0.22em]">
+                <span aria-hidden="true" className="h-px w-6 bg-[var(--ms-l-accent)]" />
+                {group.title}
+              </h3>
+
+              <dl className="flex flex-col gap-5">
+                {group.choices.map((choice) => (
+                  <div className="flex flex-col gap-1" key={choice.name}>
+                    <dt className="font-mono text-[13px] text-foreground">{choice.name}</dt>
+                    <dd className="text-foreground-muted text-sm leading-relaxed">
+                      {choice.reason}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
           ))}
-        </dl>
+        </div>
       </div>
     </Section>
   )
