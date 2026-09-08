@@ -158,6 +158,17 @@ export function useShortcuts<Ctx>({
     const resolvedPlatform = platform ?? currentPlatform()
 
     const onKeyDown = (event: KeyboardEvent): void => {
+      /*
+       * A press a handler inside the application already spent is not a shortcut — ADR-381. The
+       * canvas case is the one that found this: dnd-kit's keyboard activator calls `preventDefault`
+       * to pick a node up, and `enter-container` ran on the same press and isolated the node that
+       * was in flight. Ownership was already the model here (`delegated`, the text-entry guard);
+       * this is the same rule for a key claimed by a component rather than by a surface.
+       */
+      if (event.defaultPrevented) {
+        return
+      }
+
       const { shortcut } = resolveShortcut(
         registry,
         event,

@@ -59,8 +59,10 @@ export function resolveTreeKey(press: KeyPress, state: TreeKeyState): TreeKeyAct
   if (press.key === 'ArrowDown' || press.key === 'ArrowUp') {
     const step = press.key === 'ArrowDown' ? 1 : -1
 
+    // `Mod+↑`/`↓` is the tree's own reorder; `Mod+Shift+↑` is § Selection's "select parent", and it
+    // belongs to that binding alone — the map read only `Mod` and did both from one press (ADR-381).
     if (press.modKey) {
-      return { kind: 'reorder', id: row.id, delta: step }
+      return press.shiftKey ? null : { kind: 'reorder', id: row.id, delta: step }
     }
 
     const next = state.rows[at + step]

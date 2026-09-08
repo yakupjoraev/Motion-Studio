@@ -284,6 +284,61 @@ describe('running a shortcut', () => {
   })
 })
 
+describe('a key another handler already spent', () => {
+  /*
+   * ADR-381: `Enter` on a canvas node picks the node up for a drag — dnd-kit's activator calls
+   * `preventDefault` — and the studio's `enter-container` binding ran on the same press, isolating
+   * the node that was in flight. Measured in the browser: the drag stayed alive and every drop
+   * target after it resolved to nothing, because the resolver was looking inside the dragged node.
+   */
+  it('stands aside when the default is already prevented', () => {
+    const run = vi.fn()
+    const registry = build([
+      {
+        id: 'enter-container',
+        keys: 'enter',
+        label: 'Enter container',
+        group: 'Selection',
+        scope: 'canvas',
+        run,
+      },
+    ])
+
+    render(<Harness registry={registry} />)
+
+    const canvas = screen.getByTestId('canvas')
+
+    canvas.focus()
+    canvas.addEventListener('keydown', (event) => event.preventDefault())
+    press(canvas, 'Enter', { code: 'Enter', bubbles: true, cancelable: true })
+
+    expect(run).not.toHaveBeenCalled()
+  })
+
+  it('still runs for a key nobody claimed', () => {
+    const run = vi.fn()
+    const registry = build([
+      {
+        id: 'enter-container',
+        keys: 'enter',
+        label: 'Enter container',
+        group: 'Selection',
+        scope: 'canvas',
+        run,
+      },
+    ])
+
+    render(<Harness registry={registry} />)
+
+    const canvas = screen.getByTestId('canvas')
+
+    canvas.focus()
+    press(canvas, 'Enter', { code: 'Enter', bubbles: true, cancelable: true })
+
+    expect(run).toHaveBeenCalledTimes(1)
+  })
+})
+
 describe('a delegated binding (ADR-150)', () => {
   it('matches, so the registry knows the key is taken, and then stands aside', () => {
     const run = vi.fn()

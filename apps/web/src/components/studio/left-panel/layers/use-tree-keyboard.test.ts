@@ -87,6 +87,17 @@ describe('resolveTreeKey — SHORTCUTS.md § Layers tree', () => {
     expect(on('a', 'ArrowUp', { mod: true })).toEqual({ kind: 'reorder', id: id('a'), delta: -1 })
   })
 
+  /*
+   * SHORTCUTS.md gives `Mod+↑`/`↓` to the tree ("move the layer among its siblings") and
+   * `Mod+Shift+↑` to the selection map ("select parent"). The map read only `Mod`, so a press with
+   * `Shift` reordered the document *and* walked the selection — two actions from one press, which is
+   * the thing this file's own header forbids (ADR-381).
+   */
+  it('leaves Mod+Shift and an arrow to the binding that owns it', () => {
+    expect(on('a', 'ArrowUp', { mod: true, shift: true })).toBeNull()
+    expect(on('a', 'ArrowDown', { mod: true, shift: true })).toBeNull()
+  })
+
   it('toggles visibility and lock on the bindings § Edit already owns', () => {
     expect(on('a', 'h', { mod: true, shift: true })).toEqual({ kind: 'visibility', id: id('a') })
     expect(on('a', 'L', { mod: true, shift: true })).toEqual({ kind: 'lock', id: id('a') })

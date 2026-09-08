@@ -1,5 +1,6 @@
 'use client'
 
+import { useDragActive } from '@motion-studio/dnd'
 import { useShortcuts } from '@motion-studio/hooks'
 import { useToast } from '@motion-studio/ui'
 import dynamic from 'next/dynamic'
@@ -47,7 +48,16 @@ export function ShortcutHost({ canvas = null, panels = null }: ShortcutHostProps
     [canvas, notify, panels],
   )
 
-  useShortcuts({ registry: studioShortcuts, context })
+  /*
+   * A drag owns the keyboard while it is in flight — ADR-381. Every key it uses is a key the studio
+   * also binds: `Enter` drops and `enter-container` isolates, `Esc` cancels and `Esc` leaves the
+   * level, the arrows step a position and they also nudge. Measured in the browser: on the drop
+   * press the map ran first, isolated the node that was in flight, and the resolver then found no
+   * slot at all, so the drop landed nowhere.
+   */
+  const dragging = useDragActive()
+
+  useShortcuts({ enabled: !dragging, registry: studioShortcuts, context })
 
   return (
     <>

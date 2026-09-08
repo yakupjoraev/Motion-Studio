@@ -248,9 +248,11 @@ export function StudioShell({ canvas }: StudioShellProps) {
 
             <StatusBar />
           </div>
-        </DndHost>
 
-        <ShortcutHost panels={panels} />
+          {/* Inside the drag context on purpose: while a drag is in flight it owns the keyboard, and
+              the map has to be able to see that — ADR-381. */}
+          <ShortcutHost panels={panels} />
+        </DndHost>
 
         {/* Open on a flag, mounted from the first open onwards, its chunk prefetched on idle. */}
         {exportMounted ? <ExportDialog /> : null}
