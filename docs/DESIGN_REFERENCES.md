@@ -40,12 +40,29 @@ The reference applies everywhere. What changes is **loudness**, not standard of 
 
 | Surface | How impeccable applies | Loudness |
 | --- | --- | --- |
-| Landing page | Fully. Aurora, mesh gradients, glass, spotlight, scroll choreography, text reveals. This page should be indistinguishable in quality from the reference. | **Maximum** |
+| Landing page | Fully, **and in its own palette** — see below. This page should be indistinguishable in quality from the reference. | **Maximum** |
 | Block gallery | Fully on the previews; restrained on the surrounding chrome so the blocks are the subject | High on content |
 | Docs site | Typographic treatment, surface depth, code-block finish, subtle gradient accents | Medium |
 | Blocks in the registry | Fully. Every hero, card, pricing table and CTA is held to the reference's standard — this is the product's actual output | **Maximum** |
 | Effects category | Fully. This category *is* the reference's vocabulary, implemented properly | **Maximum** |
 | Studio chrome | Craft level: surface precision, micro-interaction quality, glass on floating panels, hairline treatment, motion timing. **Not** visual loudness. | **Low, high craft** |
+
+### The landing has its own palette, on purpose
+
+The studio is near-black with a violet accent because an instrument recedes behind the work. The
+landing's job is the opposite, and for a while it simply inherited the tool's tokens — which put it in
+the exact costume every generated developer-tool page wears: dark ground, violet glow, glass cards.
+That was inheritance, not a decision (ADR-385).
+
+The landing is a **drafting sheet**: cool vellum, ink type, a millimetre grid ruled heavier every ten
+squares, dimension lines that measure what they sit under, monospace call-outs, and one hot ink accent
+— vermilion — that appears nowhere else in the product. Dark mode is a blueprint: deep indigo, cyan
+hairlines, the same red. The marks are the product's own vocabulary rather than borrowed decoration:
+this editor rules its canvas, prints coordinates, snaps to edges and measures gaps.
+
+It lives in `apps/web/src/styles/landing.css` as one block of token overrides on `.ms-landing`, and
+nowhere else. A document shown *inside* a frame on that page keeps a product theme, because it is the
+visitor's page rather than our marketing.
 
 ### Why the chrome is the exception
 

@@ -15814,3 +15814,63 @@ the composite action.
     is `resolute`. The other two WebKit shards installed from the same lists on the same distro, so
     what is intermittent is the concurrent apt, not the naming — three jobs on one machine also share
     `/var/lib/apt`.
+
+## ADR-385 — The landing gets its own world, and it is not the studio's
+
+**Date** 2026-09-08 · **Prompt** 67 · **Status** Accepted
+
+### Question
+The owner's verdict on the redesigned first screen was that it is the default AI look. He is right, and
+the interesting part is why it happened: nobody chose near-black with a violet accent for this page.
+`theme-boot.tsx` applies `studioDark` to the root of the whole app, so the landing inherited the
+instrument's palette, and the design skills' own list of tells names that exact combination first.
+
+Two questions follow. Is the landing allowed a palette the product does not use? And if so, which one,
+argued rather than picked.
+
+### Decision
+**Yes, and the reason is in the documents already.** `UI_GUIDELINES.md` § Character makes the studio
+dark because a tool sits behind the user's work and must never compete with it.
+`DESIGN_REFERENCES.md` § Applying it per surface puts the studio chrome at **low loudness, high
+craft** and the landing at **maximum**. Those are opposite jobs, and one palette cannot serve both:
+the chrome's whole argument is that it recedes.
+
+The landing's world is a **drafting sheet**: cool vellum, ink type, a millimetre grid with a heavier
+rule every ten squares, dimension lines that measure what they sit under, monospace call-outs, and one
+hot ink accent — vermilion, the red pencil on a print — that appears nowhere else in the product. Dark
+is a real blueprint (deep indigo, cyan hairlines, the same red) rather than the same page dimmed.
+
+The vocabulary is not borrowed from a mood board. This editor rules its canvas, prints coordinates,
+snaps to edges and measures gaps: the marks on the page are the ones the product itself draws, which is
+the difference between a theme and a costume.
+
+### How it is applied
+One block of `--ms-color-*` overrides on `.ms-landing`, so every band moves together. A page that
+changes world halfway down is broken, and repainting section by section is exactly that for as long as
+it takes.
+
+**The Tailwind bridge is re-declared inside the same block, and that is load-bearing.** A custom
+property is substituted on the element it is *declared* on: `--color-surface-0: var(--ms-color-surface-0)`
+resolves on the root, and descendants inherit the value it already resolved to. Overriding
+`--ms-color-surface-0` further down therefore changes nothing a utility class reads. Measured on the
+header: computed background `oklab(0.095 …)` while its own `--ms-color-surface-0` said vellum.
+`to-tailwind.ts` re-declares the block for `[data-color-mode]` for this reason; this is that block for
+this surface.
+
+The page inside the hero's frame keeps a **product** theme (`studio-light`), because it is the
+visitor's document rather than our marketing: the sheet is the brand, what is on the artboard is theirs.
+
+### Measurement
+- White on the accent **6.31 : 1**, ink on vellum **15.97 : 1**, muted body on vellum **6.67 : 1** — read
+  off the painted pixels through a canvas, not computed from the token strings (the mistake ADR-383
+  records).
+- Landing first load **116.17 kB** against a 120 KiB budget. Getting there needed the preset table out
+  of the eagerly rendered frame: `PRESETS` in `hero-window.tsx` cost 14 kB of theme engine on a route
+  that renders the frame server-side, so the scope moved into the lazy island.
+
+### Consequences
+- The studio, the gallery, the docs and every exported block are untouched: this is one class on one
+  surface.
+- The visual baselines for the landing all move, which prompt 67 already expects.
+- `DESIGN_REFERENCES.md` § Applying it per surface now has a row that says the landing has its own
+  palette, so the next person does not "fix" it back to the studio's.
