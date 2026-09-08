@@ -58,9 +58,11 @@ export default async function HomePage({ params }: HomePageProps) {
         {nav.skipToContent}
       </a>
 
-      <LandingNav />
+      <div className="ms-landing">
+        <LandingNav />
+      </div>
 
-      <main id="main">
+      <main className="ms-landing" id="main">
         <LandingDictionary value={dictionary.landing}>
           <Hero />
           <ProofStrip />
@@ -74,7 +76,7 @@ export default async function HomePage({ params }: HomePageProps) {
         </LandingDictionary>
       </main>
 
-      <footer className="border-border-subtle border-t">
+      <footer className="ms-landing border-border-subtle border-t">
         <div className="mx-auto flex w-full max-w-[76rem] flex-wrap items-center gap-x-6 gap-y-2 px-5 py-8 font-mono text-foreground-muted text-xs uppercase tracking-[0.12em] sm:px-8 lg:pl-[7.5rem]">
           <span>{nav.brand}</span>
           <span>{nav.footerLicence}</span>

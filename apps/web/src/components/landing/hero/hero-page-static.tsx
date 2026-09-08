@@ -2,14 +2,9 @@ import Image from 'next/image'
 
 import { getRequestDictionary } from '../../../lib/i18n/request-locale'
 
-import { DRAGGED_BLOCK, STAGE } from './hero-stage'
+import { STAGE } from './hero-stage'
+import { HERO_THUMBNAIL } from './hero-thumbnail'
 import { HeroWindow } from './hero-window'
-
-import manifest from '../../../../public/thumbnails/thumbnails.json'
-
-const THUMBNAIL = (
-  manifest as Record<string, { dark: { src: string; blurDataUrl: string } } | undefined>
-)[DRAGGED_BLOCK.id]
 
 /**
  * The frame before the island arrives, the whole of it when JavaScript never does, and what a phone
@@ -31,19 +26,15 @@ export function HeroPageStatic() {
           className="relative w-full overflow-hidden bg-surface-0"
           style={{ aspectRatio: `${STAGE.width} / ${STAGE.height}` }}
         >
-          {THUMBNAIL === undefined ? null : (
-            <Image
-              alt=""
-              blurDataURL={THUMBNAIL.dark.blurDataUrl}
-              className="h-full w-full object-cover"
-              height={200}
-              placeholder="blur"
-              priority
-              sizes="(min-width: 64rem) 46rem, 100vw"
-              src={THUMBNAIL.dark.src}
-              width={320}
-            />
-          )}
+          <Image
+            alt=""
+            className="h-full w-full object-cover"
+            height={HERO_THUMBNAIL.height}
+            priority
+            sizes="(min-width: 64rem) 46rem, 100vw"
+            src={HERO_THUMBNAIL.src}
+            width={HERO_THUMBNAIL.width}
+          />
           <span className="absolute top-0 left-0 rounded-br-md bg-surface-2 px-2.5 py-1 font-mono text-2xs text-foreground-muted uppercase tracking-[0.16em]">
             {hero.demoBlock}
           </span>

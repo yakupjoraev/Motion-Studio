@@ -1,11 +1,166 @@
 /*
+ * THE LANDING'S OWN WORLD
+ *
+ * The studio is dark by instrument-design: a tool sits behind the user's work and never competes with
+ * it (UI_GUIDELINES.md § Character). The landing has the opposite job, and inheriting the tool's
+ * palette put it in the exact costume every generated dev-tool page wears — near-black ground, violet
+ * accent, glass cards. That is a default, not a decision, and the page is where the product is
+ * supposed to have a face.
+ *
+ * So this surface is a drafting sheet: cool vellum, ink type, a millimetre grid, dimension lines with
+ * arrows and monospace call-outs, and one hot ink accent that is not on any other surface. It is not
+ * decoration borrowed from a mood board — it is what this product is about. The editor rules its
+ * canvas, prints coordinates, snaps to edges and measures gaps; the page is that drawing of itself.
+ *
+ * Dark is a real blueprint rather than "the same page, darker": deep indigo, cyan hairlines, the same
+ * vermilion. Both are defined here and nowhere else.
+ *
+ * **The product's own tokens are remapped inside `.ms-landing`.** Every band on this page is built
+ * from `surface-*`, `foreground-*`, `border-*` and `accent`, so one block of overrides moves the whole
+ * page into this world at once and no section can be left behind in the old one — § 4.11 of the taste
+ * pass calls a page that flips theme mid-scroll broken, and a section-by-section repaint is exactly
+ * that for as long as it takes.
+ */
+
+.ms-landing {
+  /* Vellum: cool, not cream. A warm paper ground with brass accents is its own tired default. */
+  --ms-l-paper: oklch(0.968 0.004 250);
+  --ms-l-raised: oklch(0.995 0.0015 250);
+  --ms-l-sunk: oklch(0.945 0.006 250);
+  --ms-l-ink: oklch(0.215 0.03 258);
+  --ms-l-ink-soft: oklch(0.455 0.025 258);
+  --ms-l-line: oklch(0.855 0.018 250);
+  --ms-l-line-strong: oklch(0.755 0.025 250);
+  --ms-l-grid: oklch(0.9 0.016 250);
+  --ms-l-grid-fine: oklch(0.952 0.007 250);
+  /* Red pencil. The mark an engineer makes on a print, and the one colour on the page. */
+  --ms-l-accent: oklch(0.585 0.2 32);
+  --ms-l-accent-strong: oklch(0.505 0.19 32);
+  --ms-l-accent-ink: oklch(0.99 0 0);
+  --ms-l-accent-wash: oklch(0.585 0.2 32 / 0.1);
+
+  --ms-color-surface-0: var(--ms-l-paper);
+  --ms-color-surface-1: var(--ms-l-raised);
+  --ms-color-surface-2: var(--ms-l-sunk);
+  --ms-color-surface-3: var(--ms-l-line);
+  --ms-color-surface-inset: var(--ms-l-sunk);
+  --ms-color-foreground: var(--ms-l-ink);
+  --ms-color-foreground-muted: var(--ms-l-ink-soft);
+  --ms-color-foreground-subtle: var(--ms-l-ink-soft);
+  --ms-color-foreground-onAccent: var(--ms-l-accent-ink);
+  --ms-color-border: var(--ms-l-line);
+  --ms-color-border-strong: var(--ms-l-line-strong);
+  --ms-color-border-subtle: var(--ms-l-line);
+  --ms-color-accent: var(--ms-l-accent-strong);
+  --ms-color-accent-hover: var(--ms-l-accent);
+  --ms-color-accent-active: var(--ms-l-accent-strong);
+  --ms-color-accent-muted: var(--ms-l-accent-wash);
+  --ms-color-accent-ring: var(--ms-l-accent);
+  --ms-color-info: var(--ms-l-ink-soft);
+
+  /*
+   * The Tailwind bridge, re-declared here, and it is not redundant.
+   *
+   * `--color-surface-0: var(--ms-color-surface-0)` is declared on the root, and a custom property is
+   * substituted on the element it is declared on — descendants inherit the value it already resolved
+   * to. Overriding `--ms-color-*` further down therefore changes nothing a utility class reads, which
+   * is measured: the header kept `oklab(0.095 …)` while its own `--ms-color-surface-0` said vellum.
+   * `to-tailwind.ts` re-declares the same block for `[data-color-mode]` for exactly this reason, and
+   * this is that block for this surface.
+   */
+  --color-surface-0: var(--ms-color-surface-0);
+  --color-surface-1: var(--ms-color-surface-1);
+  --color-surface-2: var(--ms-color-surface-2);
+  --color-surface-3: var(--ms-color-surface-3);
+  --color-surface-inset: var(--ms-color-surface-inset);
+  --color-foreground: var(--ms-color-foreground);
+  --color-foreground-muted: var(--ms-color-foreground-muted);
+  --color-foreground-subtle: var(--ms-color-foreground-subtle);
+  --color-foreground-onAccent: var(--ms-color-foreground-onAccent);
+  --color-border: var(--ms-color-border);
+  --color-border-strong: var(--ms-color-border-strong);
+  --color-border-subtle: var(--ms-color-border-subtle);
+  --color-accent: var(--ms-color-accent);
+  --color-accent-hover: var(--ms-color-accent-hover);
+  --color-accent-active: var(--ms-color-accent-active);
+  --color-accent-muted: var(--ms-color-accent-muted);
+  --color-accent-ring: var(--ms-color-accent-ring);
+  --color-info: var(--ms-color-info);
+
+  background-color: var(--ms-l-paper);
+  color: var(--ms-l-ink);
+}
+
+/*
+ * Blueprint. Cyan on indigo is what a real print looks like, and the accent stays the same red so the
+ * two modes are one brand rather than two palettes.
+ */
+@media (prefers-color-scheme: dark) {
+  .ms-landing {
+    --ms-l-paper: oklch(0.225 0.055 258);
+    --ms-l-raised: oklch(0.265 0.05 258);
+    --ms-l-sunk: oklch(0.2 0.05 258);
+    --ms-l-ink: oklch(0.955 0.008 250);
+    --ms-l-ink-soft: oklch(0.775 0.03 240);
+    --ms-l-line: oklch(0.4 0.06 250);
+    --ms-l-line-strong: oklch(0.52 0.07 245);
+    --ms-l-grid: oklch(0.315 0.06 255);
+    --ms-l-grid-fine: oklch(0.25 0.05 258);
+    --ms-l-accent: oklch(0.685 0.19 36);
+    --ms-l-accent-strong: oklch(0.64 0.2 34);
+    --ms-l-accent-ink: oklch(0.16 0.04 258);
+    --ms-l-accent-wash: oklch(0.685 0.19 36 / 0.16);
+  }
+}
+
+/*
+ * The sheet itself: a millimetre grid with a heavier rule every ten squares, which is graph paper and
+ * is also the canvas's own grid at the canvas's own sizes (CANVAS.md § Grid: 8 px, heavier at 80).
+ */
+.ms-sheet {
+  background-image: linear-gradient(to right, var(--ms-l-grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--ms-l-grid) 1px, transparent 1px),
+    linear-gradient(to right, var(--ms-l-grid-fine) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--ms-l-grid-fine) 1px, transparent 1px);
+  background-size: 80px 80px, 80px 80px, 8px 8px, 8px 8px;
+  background-position: 0 0;
+}
+
+/*
+ * A dimension line: the rule, a tick at each end, and the measurement sitting on it. Drawn with
+ * borders rather than SVG so it inherits the ink colour and costs no request.
+ */
+.ms-dim {
+  position: relative;
+  height: 1px;
+  background: var(--ms-l-line-strong);
+}
+
+.ms-dim::before,
+.ms-dim::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  width: 1px;
+  height: 9px;
+  background: var(--ms-l-line-strong);
+}
+
+.ms-dim::before {
+  left: 0;
+}
+
+.ms-dim::after {
+  right: 0;
+}
+
+/*
  * The landing's own motion. Durations and easings are tokens, so a reduced-motion preference zeroes
  * every one of them and the page arrives in its end state with no rule of its own — ADR-021.
  *
  * What the first screen animates and what it does not: the `<h1>` is the LCP element and nothing
- * touches it (PERFORMANCE.md § Images). Everything that moves is the canvas assembling around type
- * that is already painted, in the order the product itself works in — the rules draw, the frame
- * lifts, the card lands, the code line writes itself.
+ * touches it (PERFORMANCE.md § Images). Everything that moves is the sheet being drawn around type
+ * that is already painted: the rules run out, the dimensions measure, the frame lifts.
  */
 
 @keyframes ms-hero-rise {
@@ -66,6 +221,48 @@
 
 [data-ms-write] {
   animation: ms-hero-write var(--ms-duration-slower) var(--ms-ease-standard) both;
+  animation-delay: var(--ms-hero-delay, 0ms);
+}
+
+/*
+ * A number that counts to itself, in CSS.
+ *
+ * `@property` gives the custom property a type, which is what makes it interpolate at all: an
+ * untyped one animates as a string and jumps. The number is then printed by `counter()`, so what
+ * moves is one integer per figure and there is no per-frame JavaScript and no re-render — which is
+ * the same trade the product's own `counter` preset makes (`packages/motion` § entrance).
+ *
+ * Under reduced motion the duration token is zero, so the figure is simply its final value.
+ */
+@property --ms-count {
+  syntax: '<integer>';
+  initial-value: 0;
+  inherits: false;
+}
+
+@keyframes ms-count-up {
+  from {
+    --ms-count: 0;
+  }
+  to {
+    --ms-count: var(--ms-count-to);
+  }
+}
+
+/* No script, no observer: the figure is its value. This is also what a printed page gets. */
+[data-ms-count]::after {
+  counter-reset: ms-figure var(--ms-count-to);
+  content: counter(ms-figure);
+}
+
+/* Script is here and the band has not been reached yet, so the count has somewhere to start. */
+[data-counting='waiting'] [data-ms-count]::after {
+  counter-reset: ms-figure 0;
+}
+
+[data-counting='running'] [data-ms-count]::after {
+  counter-reset: ms-figure var(--ms-count);
+  animation: ms-count-up var(--ms-duration-slowest) var(--ms-ease-decelerate) both;
   animation-delay: var(--ms-hero-delay, 0ms);
 }
 

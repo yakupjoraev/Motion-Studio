@@ -5,101 +5,112 @@ import { getRequestDictionary, getRequestLocale } from '../../../lib/i18n/reques
 
 import { HeroPageIsland } from './hero-page-island'
 import { HeroPageStatic } from './hero-page-static'
+import { STAGE } from './hero-stage'
 
 /**
- * The first screen, and the only one that has to do two jobs at once: say what the product is, and
- * be it.
+ * The first screen, drawn as a sheet.
+ *
+ * The type sits on graph paper with the marks a drawing carries — a corner origin, a dimension line
+ * across the frame with its measurement on it — and the frame under it holds the running product. The
+ * marks are not decoration: this editor rules its canvas, prints coordinates and measures gaps, so
+ * the page is a drawing of the thing it is selling.
  *
  * **The LCP element is the `<h1>`, server-rendered, with nothing animating it in** — PERFORMANCE.md
- * § Images. Everything that moves arrives after that paint: the rules draw themselves, the frame
- * lifts, and the page inside it is real blocks out of the shipped registry with a real block on a
- * card beside them. A visitor who drags that card onto the page has used the product before deciding
- * whether to open it, which is the only argument this page can make that a screenshot cannot.
+ * § Images. What moves arrives after that paint: the rules run out from the corner, the dimension
+ * measures itself, the frame lifts.
  */
 export function Hero() {
   const locale = getRequestLocale()
   const { hero } = getRequestDictionary().landing
 
   return (
-    <section className="relative isolate overflow-hidden border-border-subtle border-b" id="hero">
-      {/*
-        The ground, in three layers, all decorative and all behind text that is already painted.
+    <section className="ms-sheet relative isolate border-border border-b" id="hero">
+      <div className="mx-auto w-full max-w-[84rem] px-5 pt-10 pb-14 sm:px-8 lg:px-12 lg:pt-14 lg:pb-16">
+        {/* The origin. Every drawing has one, and on this one it is where the reading starts. */}
+        <div className="relative mb-10 lg:mb-14">
+          <span
+            aria-hidden="true"
+            className="absolute -top-4 left-0 h-4 w-px bg-[var(--ms-l-line-strong)]"
+            data-ms-column
+          />
+          <span
+            aria-hidden="true"
+            className="absolute -top-px right-0 left-0 h-px origin-left bg-[var(--ms-l-line-strong)]"
+            data-ms-rule
+          />
+          <span className="absolute -top-6 left-2 font-mono text-[10px] text-[var(--ms-l-ink-soft)] tracking-[0.2em]">
+            0,0
+          </span>
+        </div>
 
-        The lattice is the canvas's own dot grid at the canvas's own size: the page is laid out on the
-        surface the product draws on, which is the one piece of decoration here that is also an
-        argument.
-      */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 [background-size:32px_32px] [background:radial-gradient(circle_at_1px_1px,color-mix(in_oklch,var(--ms-color-foreground)_10%,transparent)_1px,transparent_0)] [mask-image:radial-gradient(64rem_40rem_at_22%_34%,#000,transparent_78%)]"
-      />
+        <div className="grid gap-x-12 gap-y-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:items-end">
+          <div className="flex flex-col items-start gap-6">
+            <p className="inline-flex items-center gap-2 font-mono text-[11px] text-[var(--ms-l-ink-soft)] uppercase tracking-[0.24em]">
+              <span aria-hidden="true" className="block h-px w-8 bg-[var(--ms-l-accent)]" />
+              {hero.eyebrow}
+            </p>
 
-      {/* Light on that surface. Two cores and a floor wash, so the bottom of the screen is lit
-          surface rather than void — the reference's whole trick for a dark page that is not flat. */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 [background:radial-gradient(52rem_30rem_at_6%_-4%,color-mix(in_oklch,var(--ms-color-accent)_38%,transparent),transparent_70%),radial-gradient(44rem_26rem_at_72%_-8%,color-mix(in_oklch,var(--ms-color-info)_26%,transparent),transparent_68%),radial-gradient(70rem_32rem_at_40%_116%,color-mix(in_oklch,var(--ms-color-accent)_18%,transparent),transparent_72%)]"
-      />
+            <h1 className="max-w-[18ch] text-balance font-display text-[clamp(2.75rem,6.4vw,5.25rem)] leading-[0.92] tracking-[-0.035em]">
+              {hero.headline}
+            </h1>
 
-      {/* The two rules the composition hangs off: the top one lit where the first core falls on it,
-          the left one running the height of the screen. They draw themselves on load. */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-px [background:linear-gradient(90deg,transparent,color-mix(in_oklch,var(--ms-color-accent)_60%,transparent)_18%,color-mix(in_oklch,var(--ms-color-info)_28%,transparent)_46%,transparent_78%)]"
-        data-ms-rule
-      />
-      <div
-        aria-hidden="true"
-        className="ms-ruler-y pointer-events-none absolute top-0 bottom-0 left-0 hidden w-6 lg:block"
-        data-ms-column
-        style={{ ['--ms-hero-delay' as string]: '80ms' }}
-      />
+            {/* A rule run out under the type, the way a drawing closes a block of it. */}
+            <span
+              aria-hidden="true"
+              className="ms-dim w-full max-w-[38rem]"
+              data-ms-rule
+              style={{ ['--ms-hero-delay' as string]: '120ms' }}
+            />
+          </div>
 
-      <div className="relative mx-auto grid w-full max-w-[84rem] items-center gap-10 px-5 pt-14 pb-14 sm:px-8 lg:grid-cols-[minmax(0,30rem)_minmax(0,1fr)] lg:gap-12 lg:pt-16 lg:pb-16 lg:pl-[7.5rem]">
-        <div className="flex flex-col items-start gap-6 [container-type:inline-size]">
-          <p className="rounded-full border border-border bg-surface-1/80 px-3 py-1 font-mono text-foreground-muted text-xs uppercase tracking-[0.16em] backdrop-blur-sm">
-            {hero.eyebrow}
-          </p>
+          <div className="flex flex-col items-start gap-6 lg:pb-2">
+            <p className="max-w-[38ch] text-[var(--ms-l-ink-soft)] text-base leading-relaxed">
+              {hero.subtitle}
+            </p>
 
-          <h1 className="text-balance font-display text-display-1">{hero.headline}</h1>
-
-          <p className="max-w-[46ch] text-foreground-muted text-lg leading-relaxed">
-            {hero.subtitle}
-          </p>
-
-          <div
-            className="flex flex-wrap items-center gap-3 pt-1"
-            data-ms-rise
-            style={{ ['--ms-hero-delay' as string]: '160ms' }}
-          >
-            <Link
-              className="rounded-md bg-accent px-5 py-3 font-medium text-foreground-onAccent outline-none transition-[background-color,transform] duration-[--ms-duration-fast] ease-[--ms-ease-standard] hover:bg-accent-hover focus-visible:shadow-focus active:translate-y-px"
-              href={localeHref(locale, '/studio')}
-              prefetch={false}
-            >
-              {hero.openStudio}
-            </Link>
-            <Link
-              className="rounded-md border border-border bg-surface-1/70 px-5 py-3 font-medium outline-none backdrop-blur-sm transition-[border-color,transform] duration-[--ms-duration-fast] ease-[--ms-ease-standard] hover:border-border-strong focus-visible:shadow-focus active:translate-y-px"
-              href={localeHref(locale, '/playground')}
-              prefetch={false}
-            >
-              {hero.tryPlayground}
-            </Link>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+              <Link
+                className="bg-[var(--ms-l-accent-strong)] px-6 py-3.5 font-medium text-[var(--ms-l-accent-ink)] text-sm uppercase tracking-[0.1em] outline-none transition-[background-color,transform] duration-[--ms-duration-fast] ease-[--ms-ease-standard] hover:bg-[var(--ms-l-accent)] focus-visible:shadow-focus active:translate-y-px"
+                href={localeHref(locale, '/studio')}
+                prefetch={false}
+              >
+                {hero.openStudio}
+              </Link>
+              <Link
+                className="group inline-flex items-center gap-2 border-[var(--ms-l-ink)] border-b pb-0.5 font-medium text-sm outline-none focus-visible:shadow-focus"
+                href={localeHref(locale, '/playground')}
+                prefetch={false}
+              >
+                {hero.tryPlayground}
+                <span
+                  aria-hidden="true"
+                  className="transition-transform duration-[--ms-duration-fast] ease-[--ms-ease-standard] group-hover:translate-x-1"
+                >
+                  →
+                </span>
+              </Link>
+            </div>
           </div>
         </div>
 
         {/*
-          The stage runs off the right edge of the container on purpose: a page continues past the
-          window it is being edited in, and a frame that ends politely inside the margin says the
-          opposite. Below `lg` it comes back inside and holds its aspect ratio.
+          The frame, full width under the drawing rather than beside it. A page being edited is the
+          widest thing on this screen because it is the subject; the copy is the caption.
         */}
         <div
-          className="lg:-mr-8 xl:-mr-20"
+          className="mt-12 lg:mt-16"
           data-ms-rise
-          style={{ ['--ms-hero-delay' as string]: '220ms' }}
+          style={{ ['--ms-hero-delay' as string]: '160ms' }}
         >
           <HeroPageIsland fallback={<HeroPageStatic />} />
+
+          {/* The frame, measured. This number is the width the page inside is laid out at. */}
+          <div aria-hidden="true" className="mt-4 flex items-center gap-3">
+            <span className="ms-dim flex-1" data-ms-rule />
+            <span className="font-mono text-[10px] text-[var(--ms-l-ink-soft)] tracking-[0.18em]">
+              {STAGE.width} PX
+            </span>
+          </div>
         </div>
       </div>
     </section>

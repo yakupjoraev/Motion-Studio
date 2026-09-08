@@ -1,6 +1,7 @@
 'use client'
 
 import { type SnapCandidate, canvasRect, computeSnap } from '@motion-studio/canvas'
+import { PRESETS, ThemeScope } from '@motion-studio/theme'
 import { clamp } from '@motion-studio/utils'
 import {
   type ReactNode,
@@ -166,124 +167,132 @@ export function HeroPagePreview({ fallback }: HeroPagePreviewProps) {
   return (
     <figure className="m-0 flex flex-col gap-3">
       <HeroWindow>
-        <PreviewFrame
-          className="w-full overflow-hidden bg-surface-0"
-          height={STAGE.height}
-          testId="hero-stage"
-          width={STAGE.width}
-        >
-          <div className="relative h-full w-full" ref={stage}>
-            {pageProps === null
-              ? fallback
-              : STAGE_PAGE.map((block, index) => (
-                  <div key={block.id}>
-                    <BlockRender
-                      category={block.category}
-                      fallback={<span className="block h-24" />}
-                      id={block.id}
-                      props={pageProps[index] ?? {}}
-                    />
+        {/*
+          The page inside wears the shipped `studio-light` theme: a theme is a scope of CSS variables
+          (THEME_ENGINE.md § Scoped themes), so the frame carries its own without touching the sheet
+          around it, and a light document on a light sheet is what someone building a landing page in
+          this editor would be looking at.
+        */}
+        <ThemeScope theme={PRESETS['studio-light']}>
+          <PreviewFrame
+            className="w-full overflow-hidden bg-surface-0"
+            height={STAGE.height}
+            testId="hero-stage"
+            width={STAGE.width}
+          >
+            <div className="relative h-full w-full" ref={stage}>
+              {pageProps === null
+                ? fallback
+                : STAGE_PAGE.map((block, index) => (
+                    <div key={block.id}>
+                      <BlockRender
+                        category={block.category}
+                        fallback={<span className="block h-24" />}
+                        id={block.id}
+                        props={pageProps[index] ?? {}}
+                      />
 
-                    {/* The hero's place in the page, immediately under the navbar. */}
-                    {index === 0 ? (
-                      <div className="relative" ref={slotRef}>
-                        <div
-                          className={`transition-opacity duration-[--ms-duration-base] ease-[--ms-ease-standard] ${ghost}`}
-                        >
-                          {heroProps === null ? (
-                            <span className="block h-[420px]" />
-                          ) : (
-                            <BlockRender
-                              category={DRAGGED_BLOCK.category}
-                              fallback={<span className="block h-[420px]" />}
-                              id={DRAGGED_BLOCK.id}
-                              props={heroProps[0] ?? {}}
-                            />
-                          )}
-                        </div>
+                      {/* The hero's place in the page, immediately under the navbar. */}
+                      {index === 0 ? (
+                        <div className="relative" ref={slotRef}>
+                          <div
+                            className={`transition-opacity duration-[--ms-duration-base] ease-[--ms-ease-standard] ${ghost}`}
+                          >
+                            {heroProps === null ? (
+                              <span className="block h-[420px]" />
+                            ) : (
+                              <BlockRender
+                                category={DRAGGED_BLOCK.category}
+                                fallback={<span className="block h-[420px]" />}
+                                id={DRAGGED_BLOCK.id}
+                                props={heroProps[0] ?? {}}
+                              />
+                            )}
+                          </div>
 
-                        {/*
+                          {/*
                           The empty slot wears the canvas's own marks rather than a caption: a dashed
                           outline and a node chip at its top-left, exactly where the studio draws the
                           name of the thing under the pointer. Armed, both take the accent.
                         */}
-                        {placed ? null : (
-                          <span
-                            aria-hidden="true"
-                            className={`pointer-events-none absolute inset-2 rounded-md border border-dashed transition-colors duration-[--ms-duration-fast] ${
-                              armed
-                                ? 'border-accent bg-accent-muted/25'
-                                : 'border-border-strong bg-surface-0/55'
-                            }`}
-                          >
+                          {placed ? null : (
                             <span
-                              className={`absolute top-0 left-0 rounded-tl-md rounded-br-md px-2.5 py-1 font-mono text-[13px] uppercase tracking-[0.16em] transition-colors duration-[--ms-duration-fast] ${
+                              aria-hidden="true"
+                              className={`pointer-events-none absolute inset-2 rounded-md border border-dashed transition-colors duration-[--ms-duration-fast] ${
                                 armed
-                                  ? 'bg-accent text-foreground-onAccent'
-                                  : 'bg-surface-2 text-foreground-muted'
+                                  ? 'border-accent bg-accent-muted/25'
+                                  : 'border-border-strong bg-surface-0/55'
                               }`}
                             >
-                              {hero.demoSlot}
+                              <span
+                                className={`absolute top-0 left-0 rounded-tl-md rounded-br-md px-2.5 py-1 font-mono text-[13px] uppercase tracking-[0.16em] transition-colors duration-[--ms-duration-fast] ${
+                                  armed
+                                    ? 'bg-accent text-foreground-onAccent'
+                                    : 'bg-surface-2 text-foreground-muted'
+                                }`}
+                              >
+                                {hero.demoSlot}
+                              </span>
                             </span>
-                          </span>
-                        )}
-                      </div>
-                    ) : null}
-                  </div>
-                ))}
+                          )}
+                        </div>
+                      ) : null}
+                    </div>
+                  ))}
 
-            {guides.map((guide) => (
-              <span
-                aria-hidden="true"
-                className="absolute z-30 bg-canvas-guide"
-                key={`${guide.axis}-${guide.value}`}
-                style={
-                  guide.axis === 'x'
-                    ? { left: percent(guide.value, STAGE.width), top: 0, bottom: 0, width: 2 }
-                    : { top: percent(guide.value, STAGE.height), left: 0, right: 0, height: 2 }
-                }
-              />
-            ))}
-
-            {placed ? null : (
-              <button
-                aria-label={hero.demoBlockLabel}
-                className={`${CARD_SURFACE} cursor-grab touch-none active:cursor-grabbing motion-safe:transition-[left,top] motion-safe:duration-[--ms-duration-instant]`}
-                data-dragging={String(dragging)}
-                onKeyDown={(event) => {
-                  const step = event.shiftKey ? 10 : 1
-                  const moves: Readonly<Record<string, readonly [number, number]>> = {
-                    ArrowLeft: [-step, 0],
-                    ArrowRight: [step, 0],
-                    ArrowUp: [0, -step],
-                    ArrowDown: [0, step],
+              {guides.map((guide) => (
+                <span
+                  aria-hidden="true"
+                  className="absolute z-30 bg-canvas-guide"
+                  key={`${guide.axis}-${guide.value}`}
+                  style={
+                    guide.axis === 'x'
+                      ? { left: percent(guide.value, STAGE.width), top: 0, bottom: 0, width: 2 }
+                      : { top: percent(guide.value, STAGE.height), left: 0, right: 0, height: 2 }
                   }
-                  const move = moves[event.key]
+                />
+              ))}
 
-                  if (move !== undefined) {
-                    event.preventDefault()
-                    nudge(move[0], move[1])
+              {placed ? null : (
+                <button
+                  aria-label={hero.demoBlockLabel}
+                  className={`${CARD_SURFACE} cursor-grab touch-none active:cursor-grabbing motion-safe:transition-[left,top] motion-safe:duration-[--ms-duration-instant]`}
+                  data-dragging={String(dragging)}
+                  onKeyDown={(event) => {
+                    const step = event.shiftKey ? 10 : 1
+                    const moves: Readonly<Record<string, readonly [number, number]>> = {
+                      ArrowLeft: [-step, 0],
+                      ArrowRight: [step, 0],
+                      ArrowUp: [0, -step],
+                      ArrowDown: [0, step],
+                    }
+                    const move = moves[event.key]
 
-                    return
-                  }
+                    if (move !== undefined) {
+                      event.preventDefault()
+                      nudge(move[0], move[1])
 
-                  if (event.key === 'Enter' && overSlot(position.x, position.y)) {
-                    event.preventDefault()
-                    setPlaced(true)
-                  }
-                }}
-                onPointerCancel={release}
-                onPointerDown={onPointerDown}
-                onPointerMove={onPointerMove}
-                onPointerUp={release}
-                style={cardBox(position.x, position.y)}
-                type="button"
-              >
-                <HeroCardFace category={hero.demoBlockCategory} name={hero.demoBlock} />
-              </button>
-            )}
-          </div>
-        </PreviewFrame>
+                      return
+                    }
+
+                    if (event.key === 'Enter' && overSlot(position.x, position.y)) {
+                      event.preventDefault()
+                      setPlaced(true)
+                    }
+                  }}
+                  onPointerCancel={release}
+                  onPointerDown={onPointerDown}
+                  onPointerMove={onPointerMove}
+                  onPointerUp={release}
+                  style={cardBox(position.x, position.y)}
+                  type="button"
+                >
+                  <HeroCardFace category={hero.demoBlockCategory} name={hero.demoBlock} />
+                </button>
+              )}
+            </div>
+          </PreviewFrame>
+        </ThemeScope>
       </HeroWindow>
 
       <figcaption className="flex min-h-[2.6em] flex-wrap items-center gap-x-4 gap-y-1 font-mono text-2xs text-foreground-muted uppercase leading-[1.3] tracking-[0.14em]">
