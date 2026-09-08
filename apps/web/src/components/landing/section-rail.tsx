@@ -5,6 +5,14 @@ export interface SectionProps {
   readonly label: string
   readonly id: string
   readonly children: ReactNode
+  /**
+   * Content that runs the full width of the page rather than the reading column.
+   *
+   * A slot rather than a negative margin on the child: this container is not centred — it carries the
+   * rail's own left inset — so `margin-inline: calc(50% - 50vw)` inside it lands off-centre and hangs
+   * the bleed over the right edge. Measured at 1440: 44 px short on the left and 44 px past the right.
+   */
+  readonly bleed?: ReactNode
 }
 
 /**
@@ -18,7 +26,7 @@ export interface SectionProps {
  * The region is named by its heading first and its coordinate second, so a reader moving by landmark
  * hears "Fifteen packages, one direction. 05 / shape" rather than "05 / shape" — ADR-299.
  */
-export function Section({ label, id, children }: SectionProps) {
+export function Section({ label, id, children, bleed }: SectionProps) {
   return (
     <section
       aria-labelledby={`${id}-heading ${id}-label`}
@@ -34,6 +42,7 @@ export function Section({ label, id, children }: SectionProps) {
         </p>
         {children}
       </div>
+      {bleed}
     </section>
   )
 }

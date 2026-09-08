@@ -45,39 +45,35 @@ const PROPS: Readonly<Record<string, Record<string, unknown>>> = {
 }
 
 /**
- * The featured tile is roughly three times the area of a card, and the values above were measured for
- * a 128 px one (ADR-301). Blur and count are the two that read as "wrong scale" rather than "same
- * effect, bigger": a 56 px blur over 17 rem of surface is a smear, and 130 particles over it is a
- * sparse dusting. Checked at the tile's own size, in both colour modes.
+ * The values above were measured for a 128 px card (ADR-301) and every tile on the rail is now the
+ * size the featured tile used to be, so the corrections measured for that size apply to all of them:
+ * a 56 px blur over that much surface is a smear rather than the same effect larger.
  */
-const FEATURED_PROPS: Readonly<Record<string, Record<string, unknown>>> = {
+const RAIL_PROPS: Readonly<Record<string, Record<string, unknown>>> = {
   'aurora-background': { blur: 104, intensity: 0.85, speed: 0.85 },
 }
 
 export function EffectGridLive() {
   const { effects } = useLanding()
 
+  const cards = effectCards(effects)
+
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {effectCards(effects).map((card, index) => {
+    <>
+      {cards.map((card, index) => {
         const Effect = effectComponents[card.id as keyof typeof effectComponents] as
           | ComponentType<Record<string, unknown>>
           | undefined
-        const featured = index === 0
-
         return (
-          <EffectShell card={card} featured={featured} key={card.id}>
+          <EffectShell card={card} index={index} key={card.id} total={cards.length}>
             {Effect === undefined ? null : (
               <Suspense fallback={null}>
-                <Effect
-                  {...(PROPS[card.id] ?? {})}
-                  {...(featured ? (FEATURED_PROPS[card.id] ?? {}) : {})}
-                />
+                <Effect {...(PROPS[card.id] ?? {})} {...(RAIL_PROPS[card.id] ?? {})} />
               </Suspense>
             )}
           </EffectShell>
         )
       })}
-    </div>
+    </>
   )
 }

@@ -127,6 +127,139 @@
 }
 
 /*
+ * A HORIZONTAL PIN, IN CSS
+ *
+ * The section stands still while its track travels sideways, and there is no JavaScript in it at all:
+ * the runway carries a `view-timeline`, the track's animation is driven by that timeline, and the
+ * browser does the arithmetic on the compositor. The taste pass bans `window.addEventListener`
+ * ('scroll') for this, GSAP is not in this project by decision (ADR-349), and the product's own scroll
+ * bus measures the *document*, not a section, so it cannot drive a pin.
+ *
+ * **The fallback is the base state, not an afterthought.** Where the timeline is unsupported, and
+ * wherever reduced motion is asked for, none of the rules below apply and what is left is a track you
+ * scroll by hand with snap points. That is the same answer the shipped `horizontal-scroll` preset
+ * gives under reduced motion: the track, at its start, scrollable by hand.
+ */
+.ms-hpin {
+  --ms-hpin-card: clamp(17rem, 24vw, 25rem);
+  --ms-hpin-gap: 1.5rem;
+  --ms-hpin-edge: max(1.25rem, 5vw);
+  --ms-hpin-track: calc(
+    var(--ms-hpin-count) *
+    var(--ms-hpin-card) +
+    (var(--ms-hpin-count) - 1) *
+    var(--ms-hpin-gap) +
+    2 *
+    var(--ms-hpin-edge)
+  );
+  /*
+   * `100vw`, not `100%`: this value is used in `height` and in a transform, and a percentage inside a
+   * custom property resolves against whatever the *use site* means by it — in `height` that is the
+   * parent's height, which collapsed the runway to one viewport and the travel to nothing (measured:
+   * the track sat at 0 at every scroll position). The cost is the scrollbar's width of travel.
+   */
+  --ms-hpin-travel: max(0px, calc(var(--ms-hpin-track) - 100vw));
+
+  position: relative;
+  /*
+   * Full width of the page, not of the reading column: the section hands this element out through its
+   * own `bleed` slot, so there is no negative margin to get wrong. `100vw` would count the scrollbar
+   * and put the page into horizontal scroll.
+   */
+  width: 100%;
+}
+
+.ms-hpin-stage {
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.ms-hpin-stage::-webkit-scrollbar {
+  display: none;
+}
+
+.ms-hpin-track {
+  display: flex;
+  gap: var(--ms-hpin-gap);
+  padding-inline: var(--ms-hpin-edge);
+  align-items: stretch;
+}
+
+.ms-hpin-card {
+  flex: 0 0 var(--ms-hpin-card);
+  scroll-snap-align: center;
+}
+
+@keyframes ms-hpin-travel {
+  to {
+    transform: translate3d(calc(var(--ms-hpin-travel) * -1), 0, 0);
+  }
+}
+
+@keyframes ms-hpin-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/*
+ * The head of the pinned stage. A reader held in one place for two viewports of scrolling has lost
+ * the section's heading off the top of the screen, so the coordinate stays with them and a rule fills
+ * as the track travels. It exists only where the pin does; a scrolled-by-hand track has its own
+ * scrollbar-shaped answer already.
+ */
+.ms-hpin-head {
+  display: none;
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .ms-hpin {
+      height: calc(100svh + var(--ms-hpin-travel));
+      view-timeline-name: --ms-hpin-scroll;
+      view-timeline-axis: block;
+    }
+
+    .ms-hpin-stage {
+      position: sticky;
+      top: 0;
+      display: flex;
+      align-items: center;
+      height: 100svh;
+      overflow-x: clip;
+      scroll-snap-type: none;
+    }
+
+    .ms-hpin-track {
+      width: max-content;
+      /*
+       * `contain` is the range where a subject taller than the scrollport covers it completely, which
+       * is exactly the stretch the stage is pinned for.
+       */
+      animation: ms-hpin-travel linear both;
+      animation-timeline: --ms-hpin-scroll;
+      animation-range: contain 0% contain 100%;
+      will-change: transform;
+    }
+
+    .ms-hpin-head {
+      display: flex;
+    }
+
+    .ms-hpin-fill {
+      transform-origin: left center;
+      animation: ms-hpin-fill linear both;
+      animation-timeline: --ms-hpin-scroll;
+      animation-range: contain 0% contain 100%;
+    }
+  }
+}
+
+/*
  * A dimension line: the rule, a tick at each end, and the measurement sitting on it. Drawn with
  * borders rather than SVG so it inherits the ink colour and costs no request.
  */

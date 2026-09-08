@@ -13,12 +13,16 @@ const Live = lazy(async () => ({ default: (await import('./effect-grid-live')).E
 
 export interface EffectGridIslandProps {
   readonly fallback: ReactNode
+  /** The island's own element is the track, so the rail's class belongs to it and not to a wrapper. */
+  readonly className?: string
 }
 
-export function EffectGridIsland({ fallback }: EffectGridIslandProps) {
+export function EffectGridIsland({ fallback, className }: EffectGridIslandProps) {
   const { ref, mounted } = useIslandMount()
 
   return (
-    <div ref={ref}>{mounted ? <Suspense fallback={fallback}>{<Live />}</Suspense> : fallback}</div>
+    <div className={className} ref={ref}>
+      {mounted ? <Suspense fallback={fallback}>{<Live />}</Suspense> : fallback}
+    </div>
   )
 }
