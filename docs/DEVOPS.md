@@ -435,19 +435,42 @@ wsl -d Ubuntu -- bash -lc "cd /root/actions-runner && RUNNER_ALLOW_RUNASROOT=1 .
 wsl -d Ubuntu -- bash -lc "cd /root/actions-runner && ./svc.sh install root && ./svc.sh start"
 ```
 
-### What is red on the runners, and why (2026-09-06)
+### What is red on the runners, and why (2026-09-08)
 
-The pipeline runs; three of its jobs do not pass yet, and none of the three is about the code:
+The pipeline runs. What is red is worth separating into "the machine" and "the product", because for
+two days everything looked like the second and was the first.
 
-- **`lighthouse`, both form factors** — `pnpm/action-setup` dies with `ENOTEMPTY: directory not
-  empty, rmdir '/root/setup-pnpm/…'`. The three runners are all installed as root and share one
-  `$HOME`, so two jobs installing pnpm at the same time fight over the same directory. The fix is a
-  `HOME` per runner in each systemd unit (or a user per runner), and it is untried.
+**Fixed 2026-09-08 (ADR-382), and this is what nine of fifteen red jobs were:**
+
+- `pnpm/action-setup` installed into `~/setup-pnpm`, and the three runners are installed as root out
+  of one `$HOME`. Parallel jobs installed into and cleaned up one directory: `ENOTEMPTY: directory
+  not empty, rmdir '/root/setup-pnpm/node_modules/.pnpm'`, every time, in the install step. `dest:
+  ${{ runner.temp }}/setup-pnpm` gives each runner its own, and `RUNNER_TEMP` is per runner
+  (`/root/actions-runner{,-2,-3}/_work/_temp`).
+- `Deploy` failed **after** its build and its deployment had both passed. WSL puts the Windows `pnpm`
+  on PATH through `/mnt/c` and there is no Linux one until the action adds it, so `setup-node` asked
+  that binary for a store path and got `/root/setup-pnpm/node_modules/.bin/store/v11`, which exists
+  on neither side. The store is now cached only where a runner would lose it.
+
+**Still red, and none of it is the install:**
+
+- **`lighthouse`, both form factors** — `Unable to connect to Chrome`, `ECONNREFUSED
+  127.0.0.1:<port>`, with Chrome's own log written under `/mnt/c/…`. `ChromeLauncher` is starting the
+  **Windows** Chrome through WSL interop and then cannot reach its DevTools port. Same root as the
+  export-smoke failure. The fix is a Chromium inside the distro plus `CHROME_PATH`, or
+  `appendWindowsPath=false` in `/etc/wsl.conf` — which is the owner's machine and every WSL shell on
+  it, so it is a decision rather than a patch.
 - **`docker`** — the image build cannot reach `registry.npmjs.org` from inside the container:
   `ConnectTimeoutError` on the corepack download. Docker's WSL integration is on and the daemon is
   reachable; this is the container's network, not the switch.
-- **`e2e`, most shards** — red, and worth reading against `ROADMAP.md` § M15 — the specs it records
-  as failing before 2026-09-06 — as well as against the shared-`$HOME` race above.
+- **`e2e`, some shards** — `flows/open-studio.spec.ts`, which is a product defect with its
+  measurement in `ROADMAP.md` § M15, not a runner problem.
+
+**A spec that passes here and fails there is usually asserting the machine.** Two keyboard cases did:
+one pinned the announced position to "3 of 3" then "2 of 3", which is a count of how many siblings had
+been measured by the time of the press, and one pressed an arrow immediately after the pick-up,
+before the first collision pass had run. Nine shards on one machine have neither. Both now wait for
+the announcement and compare against the previous value.
 
 **Checks only run while that machine is on.** What the pre-push hook covers on every push regardless:
 `pnpm lint`, `pnpm typecheck`, `pnpm test:unit`, `pnpm build` — about three and a half minutes on a

@@ -324,6 +324,8 @@ out to be different claims.
 | ✅ | `prompts/64` — a canvas node is a drag source: sections reorder by dragging, one undo puts them back | ADR-359 |
 | ✅ | `prompts/65` — the product speaks Russian: routing, the choice, every interface surface, both catalogues and the blocks' own copy. The `/docs` bodies stay English by the owner's decision | ADR-360…369 |
 | ✅ | `prompts/66` — the positioning, the three messages and their proof, in `docs/BRAND.md`. Writing the proof column found three numbers the product was printing wrong and a budget gate that had stopped measuring a route | ADR-370, ADR-371 |
+| ✅ | CI came back red on every push without a line of failing code: three runners share one home, so `pnpm/action-setup` installed into one directory from nine parallel jobs, and WSL's PATH gave `setup-node` the Windows `pnpm`, which reported a store path that exists on neither side | ADR-382 |
+| ✅ | `prompts/67`, surface 1 of 5 — the landing. Six of the skills' nine findings were this product's own decisions and are retired with the measurement that retired them; the three that were real were a five-element hero, a page written at 10-11 px including its own navigation, and six identical effect cards | ADR-383 |
 | ✅ | Dragging a node with the keyboard picked up and never stepped, so nothing moved. Three defects, one gesture: an arrow moved 8 px where a position is ~570 px away, `Enter` both picked the node up and isolated it, and the canvas and the layers tree registered the drag under one id — so the drop resolved against the layers panel's coordinates. Operation 4 has a spec at last, in both directions | ADR-381 |
 | ✅ | A band aligned its children, so everything inside it was drawn 0 px wide: six of the eight templates read as a navbar and nothing else on the canvas, and a heading or a paragraph placed straight into a band was invisible **in the exported page too**. The canvas now matches the exported markup box for box | ADR-379, ADR-380 |
 
@@ -348,7 +350,22 @@ Each is a prompt in `prompts/`, so a session picks one up without re-deriving it
    changes nothing, because what is slow is the payload the router is waiting for. The remaining shape
    is pending state on the link itself (`useLinkStatus`), which makes it a client component and a
    visual decision — so it belongs with `prompts/67` rather than to a passing fix.
-3. **`prompts/67` — the landing and the studio chrome through the design skills.**
+3. **`prompts/67`, surfaces 2 to 5 — the design pass, continued.** Surface 1 (the landing) is done
+   (ADR-383). The order and the bar per surface come from `DESIGN_REFERENCES.md` § Applying it per
+   surface, which is loudness, not standard of finish:
+   - **the studio chrome** — low loudness, high craft. Its own test is in that document: screenshot
+     the studio with a document open, and the user's design should be the only thing the eye goes to.
+   - **`/blocks`** — maximum on the previews, restrained around them. `prompts/67` lists four
+     measured defects to resolve here: seven container blocks whose thumbnails render blank, three
+     showing "No image yet", `input-field` shown in its error state, `particles` nearly invisible in
+     light mode, `bento-grid` cells that barely separate, and `testimonial-marquee` clipped by its
+     frame.
+   - **`/docs`** — medium: typographic treatment, surface depth, code-block finish.
+   - **`/playground`** — the smallest, and the one nobody has looked at twice.
+
+   One question is already open and belongs to surface 2: `SectionIntro` puts a big headline left and
+   a small explainer right on every band, which `tasteskill` § 4.7 bans as a split header. It is the
+   page's structural rhythm, so changing it is a composition decision rather than a polish item.
 4. **`prompts/68` — the code panel beside the canvas**, collapsible. What makes this not a page
    builder currently lives behind a dialog nobody is told to open.
 5. **`prompts/69` — findability and ownership.** SEO, the privacy and terms pages, the domain, and
