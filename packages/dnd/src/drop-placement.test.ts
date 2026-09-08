@@ -2,7 +2,12 @@ import { nodeId } from '@motion-studio/schema'
 import type { Rect } from '@motion-studio/utils'
 import { describe, expect, it } from 'vitest'
 
-import { LINE_THICKNESS_PX, type PlacementChild, placeInSlot } from './drop-placement'
+import {
+  LINE_THICKNESS_PX,
+  type PlacementChild,
+  placeInSlot,
+  pointForPosition,
+} from './drop-placement'
 
 const rect = (x: number, y: number, width: number, height: number): Rect => ({
   x,
@@ -125,5 +130,90 @@ describe('placeInSlot', () => {
 
       expect(placement.indicator.rect).toEqual({ x: 100, y: 0, width: 100, height: 100 })
     })
+  })
+})
+
+describe('pointForPosition', () => {
+  /**
+   * The one property worth asserting: a point this function returns is a point `placeInSlot` reads
+   * back as the position it was asked for. Anything else is an implementation detail of the midpoint
+   * comparison, and a keyboard step is only correct if the two agree.
+   */
+  const readsBackAs = (
+    orientation: 'vertical' | 'horizontal' | 'grid',
+    children: readonly PlacementChild[],
+    container: Rect,
+    position: number,
+  ): number | null => {
+    const point = pointForPosition({ orientation, position, point: { x: 10, y: 10 }, children })
+
+    return point === null ? null : placeInSlot({ orientation, point, container, children }).position
+  }
+
+  it('reads back as every position in a column', () => {
+    expect([0, 1, 2, 3].map((p) => readsBackAs('vertical', column, CONTAINER, p))).toEqual([
+      0, 1, 2, 3,
+    ])
+  })
+
+  it('reads back as every position in a row', () => {
+    const row = [child('a', rect(0, 0, 100, 100)), child('b', rect(100, 0, 100, 100))]
+
+    expect([0, 1, 2].map((p) => readsBackAs('horizontal', row, rect(0, 0, 200, 100), p))).toEqual([
+      0, 1, 2,
+    ])
+  })
+
+  it('reads back as every position in a grid', () => {
+    const cells = [
+      child('a', rect(0, 0, 100, 100)),
+      child('b', rect(120, 0, 100, 100)),
+      child('c', rect(0, 120, 100, 100)),
+    ]
+
+    expect([0, 1, 2, 3].map((p) => readsBackAs('grid', cells, rect(0, 0, 220, 220), p))).toEqual([
+      0, 1, 2, 3,
+    ])
+  })
+
+  it('has no point for a position the list does not have', () => {
+    expect(
+      pointForPosition({
+        orientation: 'vertical',
+        position: -1,
+        point: { x: 0, y: 0 },
+        children: column,
+      }),
+    ).toBeNull()
+    expect(
+      pointForPosition({
+        orientation: 'vertical',
+        position: 4,
+        point: { x: 0, y: 0 },
+        children: column,
+      }),
+    ).toBeNull()
+  })
+
+  it('leaves the cross axis where the drag already is', () => {
+    const point = pointForPosition({
+      orientation: 'vertical',
+      position: 1,
+      point: { x: 137, y: 0 },
+      children: column,
+    })
+
+    expect(point?.x).toBe(137)
+  })
+
+  it('fills an empty slot at its only position', () => {
+    const point = pointForPosition({
+      orientation: 'vertical',
+      position: 0,
+      point: { x: 5, y: 5 },
+      children: [],
+    })
+
+    expect(point).toEqual({ x: 5, y: 5 })
   })
 })

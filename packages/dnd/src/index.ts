@@ -40,7 +40,7 @@ export {
   type DraggableBlockOptions,
 } from './use-draggable-block'
 export { useDragActive } from './use-drag-active'
-export { useDraggableNode, type DraggableNodeOptions } from './use-draggable-node'
+export { dragSourceId, useDraggableNode, type DraggableNodeOptions } from './use-draggable-node'
 export { dropZoneId, useDropZone, type DropZoneOptions } from './use-drop-zone'
 export {
   AUTO_PAN_MAX_SPEED_PX,
@@ -59,8 +59,10 @@ export { edgeSpeed, type EdgeBox, type EdgeSpeedOptions } from './auto/edge-spee
 export {
   LINE_THICKNESS_PX,
   placeInSlot,
+  pointForPosition,
   type Placement,
   type PlacementChild,
+  type PositionPointArgs,
 } from './drop-placement'
 export {
   DropIndicatorLayer,

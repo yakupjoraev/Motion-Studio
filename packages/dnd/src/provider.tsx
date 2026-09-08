@@ -24,8 +24,15 @@ import {
 } from './announcements'
 import { useAnnouncerContainer } from './announcer-container'
 import { rectCacheCollision } from './collision/rect-cache-collision'
-import type { DragPayload, DropTarget, DropTargetResolver, ZoneRectSource } from './dnd.types'
+import type {
+  DragPayload,
+  DropTarget,
+  DropTargetResolver,
+  DropZone,
+  ZoneRectSource,
+} from './dnd.types'
 import { dragPoint } from './drag-point'
+import type { PlacementChild } from './drop-placement'
 import { DropIndicatorLayer } from './indicators/drop-indicator-layer'
 import { createIndicatorHandle } from './indicators/indicator-handle'
 import { useDropResolution } from './indicators/use-drop-resolution'
@@ -38,6 +45,11 @@ import { POINTER_SENSOR_OPTIONS } from './sensors/pointer-sensor'
 export interface DndProviderProps {
   /** Live geometry per zone, from whichever surface drew it. A prop, because `dnd` must not import `canvas`. */
   readonly rects: ZoneRectSource
+  /**
+   * The boxes of a zone's children, in document order — for the same reason and from the same place.
+   * A keyboard step is one position, and a position is where a sibling's box ends (ADR-381).
+   */
+  readonly siblings: (zone: DropZone) => readonly PlacementChild[]
   readonly zoom: () => number
   readonly gridSize: () => number
   /** Prompt 28's `resolveDropTarget`, bound to the document and registry the host owns. */
@@ -54,6 +66,7 @@ export interface DndProviderProps {
  */
 export function DndProvider({
   rects,
+  siblings,
   zoom,
   gridSize,
   resolveTarget,
@@ -70,8 +83,8 @@ export function DndProvider({
     useSensor(PointerSensor, POINTER_SENSOR_OPTIONS),
     useSensor(KeyboardSensor, {
       coordinateGetter: useMemo(
-        () => canvasAwareCoordinateGetter({ zoom, gridSize }),
-        [zoom, gridSize],
+        () => canvasAwareCoordinateGetter({ zoom, gridSize, siblings }),
+        [zoom, gridSize, siblings],
       ),
       scrollBehavior: 'smooth',
     }),
@@ -121,9 +134,19 @@ export function DndProvider({
       drag.current === null ? null : describe(drag.current.active, drag.current.over).target,
   })
 
+  /**
+   * Whether the drag is being driven by the keyboard, which decides whether a move is announced.
+   * dnd-kit announces on `over`, and a reorder inside one container never changes it — ADR-381. The
+   * pointer is excluded rather than forgotten: `onDragMove` fires per pixel there, and describing a
+   * drag runs the resolver over the document, which is the per-move cost § Performance rules out.
+   */
+  const byKeyboard = useRef(false)
+
   const announcements = useMemo<Announcements>(
     () => ({
       onDragStart: ({ active }) => announceDragStart(describe(active, null).label),
+      onDragMove: ({ active, over }) =>
+        byKeyboard.current ? announceDragOver(describe(active, over)) : undefined,
       onDragOver: ({ active, over }) => announceDragOver(describe(active, over)),
       onDragEnd: ({ active, over }) => announceDragEnd(describe(active, over)),
       onDragCancel: ({ active }) => announceDragCancel(describe(active, null).label),
@@ -165,7 +188,8 @@ export function DndProvider({
       onDragOver={({ active, over }) => {
         drag.current = { active, over }
       }}
-      onDragStart={({ active }) => {
+      onDragStart={({ active, activatorEvent }) => {
+        byKeyboard.current = activatorEvent instanceof KeyboardEvent
         drag.current = { active, over: null }
         setPayload(dragPayload(active.data.current))
       }}

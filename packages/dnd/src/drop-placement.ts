@@ -45,6 +45,76 @@ export function placeInSlot({ orientation, point, container, children }: Placeme
   return { position, indicator: { kind: 'line', rect: lineRect(children, position, axis), axis } }
 }
 
+export interface PositionPointArgs {
+  readonly orientation: SlotOrientation
+  /** The position the caller wants; `null` comes back when the slot has no such position. */
+  readonly position: number
+  /** Where the drag is now — the axis the slot does not flow along is kept as it is. */
+  readonly point: Point
+  readonly children: readonly PlacementChild[]
+}
+
+/**
+ * The inverse of `placeInSlot`: the point that resolves to a given position. A keyboard step is one
+ * *position*, not one grid cell (ADR-127 is the cell, and a section is hundreds of pixels tall), and
+ * the only honest way to move by a position is to ask the resolver's own geometry where that position
+ * begins. Anything else is a second opinion about where a drop lands.
+ */
+export function pointForPosition({
+  orientation,
+  position,
+  point,
+  children,
+}: PositionPointArgs): Point | null {
+  if (position < 0 || position > children.length) {
+    return null
+  }
+
+  if (children.length === 0) {
+    return point
+  }
+
+  if (orientation === 'grid') {
+    return gridPoint(position, children)
+  }
+
+  const axis = orientation === 'horizontal' ? 'x' : 'y'
+  const edges = children.map((child) => midpoint(child.rect, axis)).sort(ascending)
+  const before = edges[position - 1]
+  const after = edges[position]
+  // Between the two midpoints that separate the positions, so a rect of zero size cannot land the
+  // point exactly on a boundary the comparison reads the other way.
+  const coordinate =
+    before === undefined
+      ? (after ?? 0) - 1
+      : after === undefined
+        ? before + 1
+        : (before + after) / 2
+
+  return axis === 'x' ? { x: coordinate, y: point.y } : { x: point.x, y: coordinate }
+}
+
+const ascending = (first: number, second: number): number => first - second
+
+/**
+ * Reading order, so a position is a cell: the centre of the child that currently holds it, and one
+ * step past the last child for the empty cell at the end. Document order is the reading order the
+ * grid lays out, which is what makes indexing `children` the right move here.
+ */
+function gridPoint(position: number, children: readonly PlacementChild[]): Point {
+  const occupant = children[position]?.rect
+
+  if (occupant !== undefined) {
+    return { x: midpoint(occupant, 'x'), y: midpoint(occupant, 'y') }
+  }
+
+  const last = children[children.length - 1]?.rect
+
+  return last === undefined
+    ? { x: 0, y: 0 }
+    : { x: last.x + last.width + 1, y: midpoint(last, 'y') }
+}
+
 const midpoint = (rect: Rect, axis: 'x' | 'y'): number =>
   axis === 'x' ? rect.x + rect.width / 2 : rect.y + rect.height / 2
 

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ANNOUNCER_CONTAINER_ID } from './announcer-container'
 import type { DropTargetResolver } from './dnd.types'
-import { HERO, ROOT, acceptAt, rejectWith, renderDnd, zone } from './test/harness'
+import { HERO, ROOT, acceptAt, rect, rejectWith, renderDnd, zone } from './test/harness'
 import { stubPointerEvents } from './test/pointer'
 
 /** dnd-kit's live region, which is the string a screen reader reads. */
@@ -163,6 +163,39 @@ describe('DndProvider', () => {
 
     expect(announcer?.parentElement).toBe(document.body)
     expect(container.contains(announcer ?? null)).toBe(false)
+  })
+
+  it('announces a new position inside the zone it is already over', async () => {
+    /*
+     * The keyboard case ADR-381 measured in the browser: a step now moves the drag by a position, but
+     * the zone under it never changes, and dnd-kit only announces when `over` does. A screen reader
+     * user heard "position 3 of 3" five presses in a row while the drop point moved past two
+     * siblings.
+     */
+    const byDepth: DropTargetResolver = (attempt) => ({
+      parentId: attempt.zone.parentId,
+      slot: attempt.zone.slot,
+      index: attempt.point.y > 10 ? 1 : 0,
+      orientation: attempt.zone.orientation,
+      indicator: { kind: 'line', rect: rect(0, 0, 100, 1), axis: 'y' },
+    })
+
+    // The sibling's box is what a step is measured against, and jsdom measures nothing on its own.
+    renderDnd({ resolveTarget: byDepth, siblings: { [HERO]: rect(0, 100, 400, 100) } })
+
+    const card = screen.getByTestId('palette-card')
+
+    card.focus()
+    fireEvent.keyDown(card, { key: ' ', code: 'Space' })
+    await flush()
+
+    expect(announced()).toContain('position 1 of 2')
+
+    // One press, one position: the step clears the sibling's midpoint rather than 8 px of grid.
+    fireEvent.keyDown(document, { key: 'ArrowDown', code: 'ArrowDown' })
+    await flush()
+
+    expect(announced()).toBe('Aurora hero, marketing block over Section, position 2 of 2.')
   })
 
   it('drags with the keyboard from pick-up to drop', async () => {

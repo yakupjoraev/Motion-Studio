@@ -1,6 +1,9 @@
+import { nodeId } from '@motion-studio/schema'
 import { describe, expect, it } from 'vitest'
 
+import type { DropZone } from '../dnd.types'
 import type { EdgeRect } from '../drag-point'
+import type { PlacementChild } from '../drop-placement'
 import {
   type KeyboardDragContext,
   canvasAwareCoordinateGetter,
@@ -33,6 +36,7 @@ function context({
   const rect = overId === null ? undefined : ZONES[overId]
 
   return {
+    active: null,
     collisionRect: dragged,
     over: overId === null || rect === undefined ? null : { id: overId, rect },
     droppableRects: new Map(Object.entries(ZONES)),
@@ -41,7 +45,7 @@ function context({
 }
 
 const move = (code: string, zoom: number, situation?: Situation) =>
-  canvasAwareCoordinateGetter({ zoom: () => zoom, gridSize: () => 8 })(
+  canvasAwareCoordinateGetter({ zoom: () => zoom, gridSize: () => 8, siblings: () => [] })(
     new KeyboardEvent('keydown', { code }),
     { currentCoordinates: { x: 180, y: 80 }, context: context(situation) },
   )
@@ -71,7 +75,11 @@ describe('canvasAwareCoordinateGetter', () => {
   })
 
   it('does not move when nothing has been measured yet', () => {
-    const getter = canvasAwareCoordinateGetter({ zoom: () => 1, gridSize: () => 8 })
+    const getter = canvasAwareCoordinateGetter({
+      zoom: () => 1,
+      gridSize: () => 8,
+      siblings: () => [],
+    })
 
     expect(
       getter(new KeyboardEvent('keydown', { code: 'ArrowDown' }), {
@@ -114,5 +122,86 @@ describe('canvasAwareCoordinateGetter', () => {
     expect(
       move('ArrowDown', 1, { overId: 'bottom', dragged: box(180, 390, 40, 10) }),
     ).toBeUndefined()
+  })
+})
+
+/**
+ * ADR-359 measured the gap this covers, in the browser and with these numbers: a page of a navbar, a
+ * hero and a feature grid, the grid picked up, and five presses that produced five identical
+ * announcements because a grid cell is 8 px and the hero is 569 px tall.
+ */
+describe('a step of one position', () => {
+  const NAVBAR = nodeId('node_navbar')
+  const HERO = nodeId('node_hero')
+  const GRID = nodeId('node_grid')
+
+  const BOXES: Readonly<Record<string, PlacementChild>> = {
+    [NAVBAR]: { id: NAVBAR, rect: { x: 344, y: -554, width: 375, height: 65 } },
+    [HERO]: { id: HERO, rect: { x: 344, y: -473, width: 375, height: 569 } },
+    [GRID]: { id: GRID, rect: { x: 344, y: 112, width: 375, height: 623.5625 } },
+  }
+
+  const PAGE: DropZone = {
+    parentId: nodeId('node_page'),
+    slot: 'children',
+    orientation: 'vertical',
+    label: 'Page',
+    childIds: [NAVBAR, HERO, GRID],
+    surface: 'canvas',
+  }
+
+  const DRAGGED = box(344, 112, 375, 623.5625)
+  const CURRENT = { x: 344, y: 112 }
+
+  const press = (code: string, zone: DropZone = PAGE) =>
+    canvasAwareCoordinateGetter({
+      zoom: () => 1,
+      gridSize: () => 8,
+      siblings: (asked) => asked.childIds.flatMap((id) => BOXES[id] ?? []),
+    })(new KeyboardEvent('keydown', { code }), {
+      currentCoordinates: CURRENT,
+      context: {
+        active: {
+          data: {
+            current: {
+              kind: 'canvas-nodes',
+              blockId: 'section',
+              nodeIds: [GRID],
+              labels: ['Feature grid'],
+            },
+          },
+        },
+        collisionRect: DRAGGED,
+        over: {
+          id: 'canvas:node_page/children',
+          rect: box(344, -598, 375, 1289.5625),
+          data: { current: zone },
+        },
+        droppableRects: new Map([['canvas:node_page/children', box(344, -598, 375, 1289.5625)]]),
+        droppableContainers: { getEnabled: () => [{ id: 'canvas:node_page/children' }] },
+      },
+    })
+
+  it('moves the drag past the neighbour it has to clear', () => {
+    // The grid's centre is at y 423.78 and the positions either side of the hero are separated by the
+    // midpoints of the navbar (-521.5) and the hero (-188.5): the step lands between them, at -355.
+    expect(press('ArrowUp')).toEqual({ x: 344, y: 112 + (-355 - 423.78125) })
+  })
+
+  it('is one press per position, in both directions', () => {
+    const up = press('ArrowUp')
+    const down = press('ArrowDown')
+
+    // Down from the last position has nowhere to go, so the grid-cell path answers instead.
+    expect(down).toEqual({ x: 344, y: 120 })
+    expect(up?.y).toBeLessThan(0)
+  })
+
+  it('leaves the cross axis to the grid cell it always was', () => {
+    expect(press('ArrowRight')).toEqual({ x: 352, y: 112 })
+  })
+
+  it('steps by pixels when the zone declares no children with boxes', () => {
+    expect(press('ArrowUp', { ...PAGE, childIds: [] })).toEqual({ x: 344, y: 104 })
   })
 })

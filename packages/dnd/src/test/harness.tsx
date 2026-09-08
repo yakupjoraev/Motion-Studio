@@ -4,6 +4,7 @@ import { type RenderResult, render } from '@testing-library/react'
 import { vi } from 'vitest'
 
 import type { DropTarget, DropTargetResolver, DropZone, ZoneRectSource } from '../dnd.types'
+import type { PlacementChild } from '../drop-placement'
 import { DndProvider } from '../provider'
 import { useDraggableBlock } from '../use-draggable-block'
 import { useDraggableNode } from '../use-draggable-node'
@@ -25,6 +26,18 @@ export function fakeRects(entries: Readonly<Record<string, Rect>>): ZoneRectSour
   return {
     get: (zone: DropZone): Rect | undefined => entries[zone.parentId],
   }
+}
+
+/** The same for a zone's children, which is what a keyboard step counts positions against. */
+export function fakeSiblings(
+  entries: Readonly<Record<string, Rect>>,
+): (zone: DropZone) => readonly PlacementChild[] {
+  return (zone) =>
+    zone.childIds.flatMap((id) => {
+      const box = entries[id]
+
+      return box === undefined ? [] : [{ id, rect: box }]
+    })
 }
 
 export const zone = (overrides: Partial<DropZone> = {}): DropZone => ({
@@ -77,6 +90,7 @@ function CanvasNode({
 }: { readonly ids: readonly NodeId[]; readonly labels: readonly string[] }) {
   const first = ids[0] ?? HERO
   const { attributes, listeners, ref } = useDraggableNode({
+    surface: 'canvas',
     nodeId: first,
     blockId: blockId('hero-aurora'),
     nodeIds: ids,
@@ -105,6 +119,8 @@ export interface HarnessOptions {
   readonly labels?: readonly string[]
   readonly zoom?: number
   readonly gridSize?: number
+  /** Boxes for a zone's children, keyed by node id — the geometry a surface would supply. */
+  readonly siblings?: Readonly<Record<string, Rect>>
 }
 
 export function renderDnd(options: HarnessOptions = {}): RenderResult & {
@@ -119,6 +135,7 @@ export function renderDnd(options: HarnessOptions = {}): RenderResult & {
       onDrop={onDrop}
       rects={fakeRects(options.rects ?? { [ROOT]: rect(0, 0, 400, 400) })}
       resolveTarget={options.resolveTarget ?? acceptAt(1)}
+      siblings={fakeSiblings(options.siblings ?? {})}
       zoom={() => options.zoom ?? 1}
     >
       <PaletteCard />

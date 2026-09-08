@@ -7,6 +7,8 @@ import {
   type DropSurface,
   type DropTarget,
   type DropTargetResolver,
+  type DropZone,
+  type PlacementChild,
   type ZoneRectSource,
   commandForDrop,
   draggedNodeIds,
@@ -49,6 +51,21 @@ export function DndHost({ children }: DndHostProps) {
     }),
     [],
   )
+
+  /**
+   * A keyboard step is one position, and only the surface that drew the zone knows where its
+   * positions are — ADR-381. Document order, unmeasured children dropped, the same way
+   * `resolveDropTarget` reads them.
+   */
+  const siblings = useCallback((zone: DropZone): readonly PlacementChild[] => {
+    const source = rectsFor(zone.surface)
+
+    return zone.childIds.flatMap((id) => {
+      const rect = source.get(id)
+
+      return rect === undefined ? [] : [{ id, rect }]
+    })
+  }, [])
 
   const resolveTarget = useCallback<DropTargetResolver>(({ payload, zone, point }) => {
     const state = useStudioStore.getState()
@@ -97,6 +114,7 @@ export function DndHost({ children }: DndHostProps) {
       onDrop={onDrop}
       rects={rects}
       resolveTarget={resolveTarget}
+      siblings={siblings}
       zoom={zoom}
     >
       {children}
