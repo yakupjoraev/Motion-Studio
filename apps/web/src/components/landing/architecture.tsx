@@ -85,7 +85,7 @@ export function Architecture() {
               >
                 <div className="flex flex-col gap-1">
                   <h3 className="flex items-baseline gap-2 font-mono text-xs uppercase tracking-[0.16em]">
-                    <span className="text-[var(--ms-l-accent)] tabular-nums">
+                    <span className="text-[var(--ms-l-accent-strong)] tabular-nums">
                       {String(index + 1).padStart(2, '0')}
                     </span>
                     {layer.title}

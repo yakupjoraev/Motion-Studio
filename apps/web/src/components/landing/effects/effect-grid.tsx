@@ -27,7 +27,20 @@ export function EffectGrid() {
     <Section
       bleed={
         <div className="ms-hpin" style={{ ['--ms-hpin-count' as string]: String(cards.length) }}>
-          <div className="relative ms-hpin-stage">
+          {/*
+            Where the timeline is unsupported and under reduced motion this track is scrolled by
+            hand, which makes it a scrollable region — and a scrollable region without a tab stop
+            leaves everything past its right edge unreachable from the keyboard. Same rule, same
+            reason as the export sample's `pre` (ADR-298); axe names it `scrollable-region-focusable`.
+          */}
+          <div
+            aria-labelledby="effects-heading"
+            className="relative ms-hpin-stage"
+            // biome-ignore lint/a11y/useSemanticElements: a region that scrolls is a div with a role, not a landmark element
+            role="region"
+            // biome-ignore lint/a11y/noNoninteractiveTabindex: the tab stop is what makes the far end of the track reachable
+            tabIndex={0}
+          >
             {/* The coordinate stays with a reader the pin has held for two viewports, and the rule
                 fills as the track travels. Both live only where the pin does. */}
             <div

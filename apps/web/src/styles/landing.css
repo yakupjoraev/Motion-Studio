@@ -56,7 +56,16 @@
   --ms-color-accent-active: var(--ms-l-accent-strong);
   --ms-color-accent-muted: var(--ms-l-accent-wash);
   --ms-color-accent-ring: var(--ms-l-accent);
-  --ms-color-info: var(--ms-l-ink-soft);
+  /*
+   * The syntax colours. The code sample is tokenised into `success` (a string), `info` (a number),
+   * `accent` (a keyword) and `foreground-muted` (a comment), and the studio's values for those are
+   * tuned for a near-black panel: axe measured the string at **2.5 : 1** on this page's white one.
+   * These are the same four hues at a lightness that clears 4.5 : 1 on paper.
+   */
+  --ms-color-success: oklch(0.475 0.115 155);
+  --ms-color-warning: oklch(0.5 0.115 75);
+  --ms-color-danger: oklch(0.49 0.17 25);
+  --ms-color-info: oklch(0.475 0.135 250);
 
   /*
    * The Tailwind bridge, re-declared here, and it is not redundant.
@@ -85,6 +94,9 @@
   --color-accent-active: var(--ms-color-accent-active);
   --color-accent-muted: var(--ms-color-accent-muted);
   --color-accent-ring: var(--ms-color-accent-ring);
+  --color-success: var(--ms-color-success);
+  --color-warning: var(--ms-color-warning);
+  --color-danger: var(--ms-color-danger);
   --color-info: var(--ms-color-info);
 
   background-color: var(--ms-l-paper);
@@ -110,6 +122,12 @@
     --ms-l-accent-strong: oklch(0.64 0.2 34);
     --ms-l-accent-ink: oklch(0.16 0.04 258);
     --ms-l-accent-wash: oklch(0.685 0.19 36 / 0.16);
+
+    /* The same four hues, lifted to read on indigo rather than on vellum. */
+    --ms-color-success: oklch(0.78 0.13 155);
+    --ms-color-warning: oklch(0.82 0.12 78);
+    --ms-color-danger: oklch(0.72 0.16 25);
+    --ms-color-info: oklch(0.78 0.11 240);
   }
 }
 
@@ -223,17 +241,18 @@
  * the argument only needs making once — after that the page is a page and the card beside it is the
  * thing to touch. Under reduced motion none of this applies and the page is simply built.
  */
+/* Clipped rather than faded, for the reason `ms-hero-rise` gives: the ink stays ink at every frame. */
 @keyframes ms-build-fill {
   0% {
-    opacity: 0;
+    clip-path: inset(0 0 100% 0);
     transform: translate3d(0, 6px, 0);
   }
   38% {
-    opacity: 0;
+    clip-path: inset(0 0 100% 0);
     transform: translate3d(0, 6px, 0);
   }
   100% {
-    opacity: 1;
+    clip-path: inset(0 0 0 0);
     transform: none;
   }
 }
@@ -279,11 +298,9 @@
 /* The card is picked up and set down beside the page, once the page it belongs to exists. */
 @keyframes ms-card-in {
   from {
-    opacity: 0;
     transform: translate3d(52px, -14px, 0) rotate(2.5deg);
   }
   to {
-    opacity: 1;
     transform: none;
   }
 }
@@ -451,13 +468,20 @@
  * that is already painted: the rules run out, the dimensions measure, the frame lifts.
  */
 
+/*
+ * Movement, and no fade — deliberately.
+ *
+ * A contrast checker reads the colour that is actually painted, and text at 40 % opacity over vellum
+ * is a different colour: axe scanned the page one second in and reported `#959ba4 on #eef1f4, 2.46:1`
+ * for copy whose settled value is 6.67:1. An entrance that fades text therefore fails an
+ * accessibility gate at every frame but the last. Translating it does not, and a masked or displaced
+ * arrival reads sharper than a dissolve anyway.
+ */
 @keyframes ms-hero-rise {
   from {
-    opacity: 0;
-    transform: translate3d(0, 14px, 0) scale(0.985);
+    transform: translate3d(0, 16px, 0);
   }
   to {
-    opacity: 1;
     transform: none;
   }
 }
