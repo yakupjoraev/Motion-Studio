@@ -44,7 +44,7 @@ export const STAGE_PAGE: readonly StageBlock[] = [
 export const DRAGGED_BLOCK: StageBlock = { id: 'hero-aurora' as BlockId, category: 'hero' }
 
 /**
- * The same block as a list, because `useStageProps` takes one and a fresh `[DRAGGED_BLOCK]` written
+ * The same block as a list, because `useBlockProps` takes one and a fresh `[DRAGGED_BLOCK]` written
  * at the call site is a new array on every render — which makes its effect a loop that reloads the
  * definition forever and starves the tab. Measured as a page that painted and then answered no
  * pointer event at all.

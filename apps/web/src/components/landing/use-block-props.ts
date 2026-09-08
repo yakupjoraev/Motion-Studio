@@ -4,7 +4,7 @@ import { loadBlockDefinition } from '@motion-studio/blocks/lazy'
 import type { UnknownProps } from '@motion-studio/schema'
 import { useEffect, useState } from 'react'
 
-import type { StageBlock } from './hero-stage'
+import type { StageBlock } from './hero/hero-stage'
 
 /**
  * Each block's own `previewProps`, fetched from the category's metadata module.
@@ -16,7 +16,7 @@ import type { StageBlock } from './hero-stage'
  * Nothing is rendered until every one has landed. A page that fills in block by block is three
  * layout shifts on the first screen, which is the one place PERFORMANCE.md § Budgets has no room.
  */
-export function useStageProps(blocks: readonly StageBlock[]): readonly UnknownProps[] | null {
+export function useBlockProps(blocks: readonly StageBlock[]): readonly UnknownProps[] | null {
   const [props, setProps] = useState<readonly UnknownProps[] | null>(null)
 
   useEffect(() => {

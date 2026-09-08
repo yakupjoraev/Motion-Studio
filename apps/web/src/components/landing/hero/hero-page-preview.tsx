@@ -15,6 +15,7 @@ import { useLanding } from '../../../lib/i18n/surfaces'
 import { BlockRender } from '../../gallery/block-render'
 import { PreviewFrame } from '../../gallery/preview-frame'
 
+import { useBlockProps } from '../use-block-props'
 import { CARD_SURFACE, HeroCardFace, cardBox } from './hero-drag-card'
 import {
   CARD,
@@ -27,7 +28,6 @@ import {
 } from './hero-stage'
 import { HeroWindow } from './hero-window'
 import { useSlotBox } from './use-slot-box'
-import { useStageProps } from './use-stage-props'
 
 const percent = (value: number, of: number): string => `${(value / of) * 100}%`
 
@@ -81,8 +81,8 @@ export function HeroPagePreview({ fallback }: HeroPagePreviewProps) {
   const [dragging, setDragging] = useState(false)
   const [placed, setPlaced] = useState(false)
   const { ref: slotRef, box: slot } = useSlotBox()
-  const pageProps = useStageProps(STAGE_PAGE)
-  const heroProps = useStageProps(DRAGGED_BLOCKS)
+  const pageProps = useBlockProps(STAGE_PAGE)
+  const heroProps = useBlockProps(DRAGGED_BLOCKS)
 
   const overSlot = useCallback(
     (x: number, y: number): boolean => {
