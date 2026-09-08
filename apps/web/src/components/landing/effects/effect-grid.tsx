@@ -28,8 +28,8 @@ export function EffectGrid() {
         <EffectGridIsland
           fallback={
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {effectCards(effects).map((card) => (
-                <EffectShell card={card} key={card.id} />
+              {effectCards(effects).map((card, index) => (
+                <EffectShell card={card} featured={index === 0} key={card.id} />
               ))}
             </div>
           }

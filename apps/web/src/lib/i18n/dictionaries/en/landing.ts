@@ -8,15 +8,12 @@ export const landing = {
   ogDescription: 'Direct manipulation over real components, with code as the output format.',
 
   hero: {
-    eyebrow: 'Local-first · no account · your code is yours',
+    eyebrow: 'Local-first, no account',
     headline: 'Drag it. Tune it. Take the code.',
     subtitle:
-      'A visual editor over a real React component registry. The inspector is generated from each component’s schema, and the export button emits the component you were just looking at.',
+      'A visual editor over a real React registry. Export emits the component you were just looking at.',
     openStudio: 'Open the studio',
     tryPlayground: 'Try the playground',
-    statBlocks: 'Blocks',
-    statPresets: 'Presets',
-    statTargets: 'Targets',
     demoNavbar: 'Navbar',
     demoFooter: 'Footer',
     demoBlock: 'Hero',
@@ -24,6 +21,13 @@ export const landing = {
     /** `{x}` and `{y}` are the dragged block's canvas coordinates. */
     demoLiveCaption: 'x {x}  ·  y {y}  ·  snapping to siblings',
     demoBlockLabel: 'Hero block. Drag it, or move it with the arrow keys.',
+  },
+
+  proof: {
+    blocks: 'Blocks',
+    presets: 'Motion presets',
+    targets: 'Export targets',
+    summary: 'Everything below is in the build you can open right now.',
   },
 
   problem: {

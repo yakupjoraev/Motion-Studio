@@ -15700,3 +15700,71 @@ Two facts, read off the runners rather than inferred from the logs alone:
 - The Windows `pnpm` on the distro's PATH is left alone rather than hidden with
   `appendWindowsPath=false` in `/etc/wsl.conf`: that is the owner's machine, it would change how
   every WSL shell behaves, and no job needs it once nothing asks a Windows binary for a Linux path.
+
+## ADR-383 — The design pass, surface 1: what the reference actually objected to on the landing
+
+**Date** 2026-09-08 · **Prompt** 67 · **Status** Accepted
+
+### Question
+`DESIGN_REFERENCES.md` puts the landing at **maximum** loudness and says it "should be
+indistinguishable in quality from the reference". The owner's instruction is that the design skills
+are not optional for visual work. Run against `impeccable` and `tasteskill`, which of their findings
+are real defects here, and which are this product's own decisions?
+
+### What the skills flagged, and what survived contact with the page
+Six of the nine findings were **not** defects, and each was retired by a measurement rather than by
+an opinion:
+
+1. **"The hero's preview is a div-based fake product UI"** — the single most-cited AI tell. It is not
+   a mock: the block is a `<button>` with `cursor: grab` whose position runs through `computeSnap`
+   from `packages/canvas`, the same function the studio calls on every drag. Dragged it in a browser:
+   `x 236 → 288`, `y 116 → 173`, snap guides drawn. The readout under it is that state, not
+   decoration.
+2. **"`x 236 · y 116` is fake precision"** — same measurement retires it. Those are the live values.
+3. **"The keyboard path the label promises is broken"** — `ArrowRight` moved nothing, which looked
+   like the defect closed this morning. It is not: `ArrowDown` moves (`y 173 → 179`, one unit per
+   press), and the block was already at `clamp`'s right edge. Nothing to fix.
+4. **"Section numbers (`02 / эффекты`) are a template eyebrow"** — ADR-299 already decided this: the
+   rail is the page laid out on a ruler because the product is an editor with rulers down two edges of
+   its canvas, and the label is the section's coordinate. `craft-floor` allows exactly this case —
+   numbers where the sequence carries information.
+5. **"Six radii on one page is a broken shape system"** — they are `RADIUS` tokens (`xs` 4 … `full`),
+   which is one scale used at six steps. The rule asks for a scale, and there is one.
+6. **"173 contrast failures"** — an artefact of my own probe: this project writes colour in `oklch`
+   and the probe parsed the three components as sRGB. Contrast here is under axe in CI, which is
+   green.
+
+Three findings were real, and all three are the same failure: the page was written in the voice of a
+spec sheet, and a spec sheet is not a maximum-loudness surface.
+
+### Decision
+- **The hero holds four text elements, not five.** The three numbers moved out to their own band
+  directly under it (`proof-strip.tsx`), where a proof strip belongs. A hero is the claim and the way
+  in; the numbers answer the question the claim raises, which is the next moment.
+- **The numbers are display type, not a mono caption.** 72 / 51 / 5 at `4xl` with the label under
+  each, because the band exists to be read across the page at a glance.
+- **The subtitle is 16 words, down from 33.** Two lines instead of four. The eyebrow lost its third
+  clause and its decorative dash.
+- **Nothing on the page is 10 px any more except the labels inside the demo artboard.** Navigation
+  links, section coordinates, card headings and the code listing moved up one step **within the
+  existing scale** (`2xs` → `xs`/`sm`): forty caps-mono navigation links at 10 px is a ruler tick
+  pretending to be a link. The artboard's own labels stay 10 px, because there they are interface
+  inside a drawing of interface.
+- **The effects grid has a subject.** Six identical cards in three columns told the reader all six
+  matter equally; the first tile is now two columns by two rows. It spans only from `lg`, where the
+  grid is three columns and one 2×2 tile plus five cards fills nine cells exactly. Below that it is
+  two columns and six cards already fit.
+- **The featured tile gets its own effect values**, not stretched ones. ADR-301 measured the card
+  values for a 128 px tile; a 56 px blur over 17 rem is a smear. `FEATURED_PROPS` carries blur 104,
+  intensity 0.85, speed 0.85, checked at that size in both modes.
+
+### Consequences
+- Em-dashes stay in Russian body copy. `tasteskill` bans the character outright as an LLM tell, but in
+  Russian a dash is punctuation, and replacing it with a hyphen would be a language error rather than
+  a design decision. It was removed where it was decoration (the hero eyebrow).
+- `SectionIntro`'s "big headline left, explainer right" is the pattern `tasteskill` § 4.7 bans as a
+  split header. It is used on every band, so changing it is a composition decision for the whole page
+  rather than a polish item, and it is the next surface's first question.
+- Verified: `pnpm lint`, `pnpm typecheck`, `pnpm test`, the skill's own `detect.mjs` (clean), and the
+  page read in a browser at 1440 and 390 in both colour modes. Visual baselines move with the type
+  step and are regenerated in CI, not locally.

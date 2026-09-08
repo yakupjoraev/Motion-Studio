@@ -3,8 +3,6 @@ import Link from 'next/link'
 import { localeHref } from '../../../lib/i18n/locale-href'
 import { getRequestDictionary, getRequestLocale } from '../../../lib/i18n/request-locale'
 
-import { LANDING_STATS } from '../landing-stats'
-
 import { HeroDemoIsland } from './hero-demo-island'
 import { HeroDemoStatic } from './hero-demo-static'
 
@@ -52,7 +50,7 @@ export function Hero() {
 
       <div className="relative mx-auto grid w-full max-w-[76rem] gap-12 px-5 pt-16 pb-20 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,28rem)] lg:items-center lg:gap-16 lg:pt-24 lg:pb-28 lg:pl-[7.5rem]">
         <div className="flex flex-col items-start gap-6">
-          <p className="rounded-full border border-border bg-surface-1 px-3 py-1 font-mono text-2xs text-foreground-muted uppercase tracking-[0.18em]">
+          <p className="rounded-full border border-border bg-surface-1 px-3 py-1 font-mono text-xs text-foreground-muted uppercase tracking-[0.16em]">
             {hero.eyebrow}
           </p>
 
@@ -80,29 +78,6 @@ export function Hero() {
               {hero.tryPlayground}
             </Link>
           </div>
-
-          {/*
-            A three-column grid with labels short enough that none of them can wrap. The first
-            version put label and value on one line and wrapped to two the moment Geist Mono
-            replaced the fallback — 22 px that moved the rest of the page, and 0.073 of a 0.02 CLS
-            budget (ADR-295). A fixed column count cannot do that.
-          */}
-          <dl className="grid w-full max-w-[26rem] grid-cols-3 gap-x-6 pt-4">
-            {[
-              { label: hero.statBlocks, value: String(LANDING_STATS.blocks) },
-              { label: hero.statPresets, value: String(LANDING_STATS.presets) },
-              { label: hero.statTargets, value: String(LANDING_STATS.exportTargets) },
-            ].map((stat) => (
-              <div className="flex flex-col gap-0.5" key={stat.label}>
-                <dt className="font-mono text-2xs text-foreground-muted uppercase tracking-[0.14em]">
-                  {stat.label}
-                </dt>
-                <dd className="font-mono text-foreground-muted text-sm tabular-nums">
-                  {stat.value}
-                </dd>
-              </div>
-            ))}
-          </dl>
         </div>
 
         <HeroDemoIsland fallback={<HeroDemoStatic />} />

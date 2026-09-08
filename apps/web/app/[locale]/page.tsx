@@ -7,6 +7,7 @@ import { ExportReveal } from '../../src/components/landing/export-reveal'
 import { Hero } from '../../src/components/landing/hero/hero'
 import { LandingNav } from '../../src/components/landing/landing-nav'
 import { Problem } from '../../src/components/landing/problem'
+import { ProofStrip } from '../../src/components/landing/proof-strip'
 import { Stack } from '../../src/components/landing/stack'
 import { InspectorWalkthrough } from '../../src/components/landing/walkthrough/inspector-walkthrough'
 import { getDictionary } from '../../src/lib/i18n/dictionary'
@@ -62,6 +63,7 @@ export default async function HomePage({ params }: HomePageProps) {
       <main id="main">
         <LandingDictionary value={dictionary.landing}>
           <Hero />
+          <ProofStrip />
           <Problem />
           <EffectGrid />
           <InspectorWalkthrough />
@@ -73,7 +75,7 @@ export default async function HomePage({ params }: HomePageProps) {
       </main>
 
       <footer className="border-border-subtle border-t">
-        <div className="mx-auto flex w-full max-w-[76rem] flex-wrap items-center gap-x-6 gap-y-2 px-5 py-8 font-mono text-2xs text-foreground-muted uppercase tracking-[0.14em] sm:px-8 lg:pl-[7.5rem]">
+        <div className="mx-auto flex w-full max-w-[76rem] flex-wrap items-center gap-x-6 gap-y-2 px-5 py-8 font-mono text-xs text-foreground-muted uppercase tracking-[0.12em] sm:px-8 lg:pl-[7.5rem]">
           <span>{nav.brand}</span>
           <span>{nav.footerLicence}</span>
           <span>{nav.footerTelemetry}</span>

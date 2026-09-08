@@ -65,7 +65,7 @@ export function Architecture() {
               key={layer.title}
             >
               <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                <h3 className="font-mono text-2xs uppercase tracking-[0.14em]">
+                <h3 className="font-mono text-xs uppercase tracking-[0.12em]">
                   <span className="text-foreground-muted">
                     {String(index + 1).padStart(2, '0')} ·{' '}
                   </span>

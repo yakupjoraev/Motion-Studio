@@ -41,10 +41,10 @@ export function ExportReveal() {
 
         <figure className="m-0 overflow-hidden rounded-xl border border-border bg-surface-1">
           <figcaption className="flex flex-wrap items-center gap-x-4 gap-y-1 border-border-subtle border-b px-4 py-2.5">
-            <span className="font-mono text-2xs uppercase tracking-[0.14em]" id="export-file">
+            <span className="font-mono text-xs uppercase tracking-[0.12em]" id="export-file">
               {EXPORT_SAMPLE_PATH}
             </span>
-            <span className="font-mono text-2xs text-foreground-muted uppercase tracking-[0.14em]">
+            <span className="font-mono text-xs text-foreground-muted uppercase tracking-[0.12em]">
               {formatPlural(locale, EXPORT_SAMPLE_FILES.length, copy.fileCount)}
             </span>
           </figcaption>
@@ -60,7 +60,7 @@ export function ExportReveal() {
           */}
           <pre
             aria-labelledby="export-file"
-            className="overflow-x-auto px-4 py-4 font-mono text-2xs leading-[1.7] focus-visible:-outline-offset-2 focus-visible:outline-2 focus-visible:outline-accent-ring sm:text-xs"
+            className="overflow-x-auto px-4 py-4 font-mono text-xs leading-[1.7] focus-visible:-outline-offset-2 focus-visible:outline-2 focus-visible:outline-accent-ring sm:text-sm"
             // biome-ignore lint/a11y/useSemanticElements: <section> cannot replace <pre> — the white-space handling is what makes the sample readable
             role="region"
             // biome-ignore lint/a11y/noNoninteractiveTabindex: a region that scrolls has to be focusable, or the part of the file past the right edge is unreachable

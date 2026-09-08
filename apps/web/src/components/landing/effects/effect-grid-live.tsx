@@ -44,21 +44,35 @@ const PROPS: Readonly<Record<string, Record<string, unknown>>> = {
   particles: { tint: 'accent', intensity: 1, speed: 0.6, count: 130, size: 2.5, seed: 7 },
 }
 
+/**
+ * The featured tile is roughly three times the area of a card, and the values above were measured for
+ * a 128 px one (ADR-301). Blur and count are the two that read as "wrong scale" rather than "same
+ * effect, bigger": a 56 px blur over 17 rem of surface is a smear, and 130 particles over it is a
+ * sparse dusting. Checked at the tile's own size, in both colour modes.
+ */
+const FEATURED_PROPS: Readonly<Record<string, Record<string, unknown>>> = {
+  'aurora-background': { blur: 104, intensity: 0.85, speed: 0.85 },
+}
+
 export function EffectGridLive() {
   const { effects } = useLanding()
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {effectCards(effects).map((card) => {
+      {effectCards(effects).map((card, index) => {
         const Effect = effectComponents[card.id as keyof typeof effectComponents] as
           | ComponentType<Record<string, unknown>>
           | undefined
+        const featured = index === 0
 
         return (
-          <EffectShell card={card} key={card.id}>
+          <EffectShell card={card} featured={featured} key={card.id}>
             {Effect === undefined ? null : (
               <Suspense fallback={null}>
-                <Effect {...(PROPS[card.id] ?? {})} />
+                <Effect
+                  {...(PROPS[card.id] ?? {})}
+                  {...(featured ? (FEATURED_PROPS[card.id] ?? {}) : {})}
+                />
               </Suspense>
             )}
           </EffectShell>

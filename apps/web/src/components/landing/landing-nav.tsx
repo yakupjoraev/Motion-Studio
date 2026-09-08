@@ -47,7 +47,7 @@ export function LandingNav() {
           {links.map((link) => (
             <li key={link.href}>
               <Link
-                className="rounded-sm font-mono text-2xs text-foreground-muted uppercase tracking-[0.14em] outline-none transition-colors hover:text-foreground focus-visible:shadow-focus"
+                className="rounded-sm font-mono text-sm text-foreground-muted uppercase tracking-[0.12em] outline-none transition-colors hover:text-foreground focus-visible:shadow-focus"
                 href={href(link.href)}
                 prefetch={false}
               >
