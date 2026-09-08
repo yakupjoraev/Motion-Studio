@@ -14,13 +14,15 @@ export const landing = {
       'A visual editor over a real React registry. Export emits the component you were just looking at.',
     openStudio: 'Open the studio',
     tryPlayground: 'Try the playground',
-    demoNavbar: 'Navbar',
-    demoFooter: 'Footer',
-    demoBlock: 'Hero',
+    demoBlock: 'Hero, aurora',
+    demoBlockCategory: 'Hero',
+    demoSlot: 'Hero slot',
     demoStaticCaption: 'Interactive demo — open the studio',
     /** `{x}` and `{y}` are the dragged block's canvas coordinates. */
     demoLiveCaption: 'x {x}  ·  y {y}  ·  snapping to siblings',
     demoBlockLabel: 'Hero block. Drag it, or move it with the arrow keys.',
+    demoPlaced: 'Block placed · the page laid it out at 1280 px',
+    demoUndo: 'Undo',
   },
 
   proof: {

@@ -14,12 +14,14 @@ export const landing: Dictionary['landing'] = {
       'Визуальный редактор поверх настоящего реестра React. Экспорт отдаёт ровно тот компонент, который вы смотрели.',
     openStudio: 'Открыть студию',
     tryPlayground: 'Открыть песочницу',
-    demoNavbar: 'Навбар',
-    demoFooter: 'Футер',
-    demoBlock: 'Герой',
+    demoBlock: 'Герой, аврора',
+    demoBlockCategory: 'Герой',
+    demoSlot: 'Слот героя',
     demoStaticCaption: 'Интерактивное демо — откройте студию',
     demoLiveCaption: 'x {x}  ·  y {y}  ·  привязка к соседям',
     demoBlockLabel: 'Блок героя. Тяните мышью или двигайте стрелками.',
+    demoPlaced: 'Блок на странице · разложен по ширине 1280 px',
+    demoUndo: 'Отменить',
   },
 
   proof: {

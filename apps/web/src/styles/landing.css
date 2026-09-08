@@ -1,0 +1,106 @@
+/*
+ * The landing's own motion. Durations and easings are tokens, so a reduced-motion preference zeroes
+ * every one of them and the page arrives in its end state with no rule of its own — ADR-021.
+ *
+ * What the first screen animates and what it does not: the `<h1>` is the LCP element and nothing
+ * touches it (PERFORMANCE.md § Images). Everything that moves is the canvas assembling around type
+ * that is already painted, in the order the product itself works in — the rules draw, the frame
+ * lifts, the card lands, the code line writes itself.
+ */
+
+@keyframes ms-hero-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ms-hero-rule {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes ms-hero-column {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+/* A line that writes itself. `clip-path` composites; an animated width would lay the page out again. */
+@keyframes ms-hero-write {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+[data-ms-rise] {
+  animation: ms-hero-rise var(--ms-duration-slower) var(--ms-ease-decelerate) both;
+  animation-delay: var(--ms-hero-delay, 0ms);
+}
+
+[data-ms-rule] {
+  transform-origin: left center;
+  animation: ms-hero-rule var(--ms-duration-slowest) var(--ms-ease-standard) both;
+  animation-delay: var(--ms-hero-delay, 0ms);
+}
+
+[data-ms-column] {
+  transform-origin: center top;
+  animation: ms-hero-column var(--ms-duration-slowest) var(--ms-ease-standard) both;
+  animation-delay: var(--ms-hero-delay, 0ms);
+}
+
+[data-ms-write] {
+  animation: ms-hero-write var(--ms-duration-slower) var(--ms-ease-standard) both;
+  animation-delay: var(--ms-hero-delay, 0ms);
+}
+
+/*
+ * The rules the hero is laid out on: the canvas's own two, drawn as tick marks rather than as a
+ * border. The heavy tick every tenth is the studio's ruler exactly — CANVAS.md § Rulers.
+ */
+.ms-ruler-x {
+  background-image: repeating-linear-gradient(
+      to right,
+      color-mix(in oklch, var(--ms-color-foreground) 22%, transparent) 0 1px,
+      transparent 1px 80px
+    ),
+    repeating-linear-gradient(
+      to right,
+      color-mix(in oklch, var(--ms-color-foreground) 9%, transparent) 0 1px,
+      transparent 1px 8px
+    );
+  background-size: 100% 10px, 100% 5px;
+  background-position: left bottom;
+  background-repeat: no-repeat, no-repeat;
+}
+
+.ms-ruler-y {
+  background-image: repeating-linear-gradient(
+      to bottom,
+      color-mix(in oklch, var(--ms-color-foreground) 22%, transparent) 0 1px,
+      transparent 1px 80px
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      color-mix(in oklch, var(--ms-color-foreground) 9%, transparent) 0 1px,
+      transparent 1px 8px
+    );
+  background-size: 10px 100%, 5px 100%;
+  background-position: right top;
+  background-repeat: no-repeat, no-repeat;
+}
