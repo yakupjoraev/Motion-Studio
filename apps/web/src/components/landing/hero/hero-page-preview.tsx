@@ -185,16 +185,32 @@ export function HeroPagePreview({ fallback }: HeroPagePreviewProps) {
                 ? fallback
                 : STAGE_PAGE.map((block, index) => (
                     <div key={block.id}>
-                      <BlockRender
-                        category={block.category}
-                        fallback={<span className="block h-24" />}
-                        id={block.id}
-                        props={pageProps[index] ?? {}}
-                      />
+                      {/*
+                        Each block stands up inside its own plan: the dashed outline first, then the
+                        real component in it. The index staggers them, so the page is drawn in the
+                        order it is read — `landing.css` § The page, built.
+                      */}
+                      <div
+                        className="ms-build"
+                        style={{
+                          ['--ms-build-index' as string]: String(index === 0 ? 0 : index + 1),
+                        }}
+                      >
+                        <BlockRender
+                          category={block.category}
+                          fallback={<span className="block h-24" />}
+                          id={block.id}
+                          props={pageProps[index] ?? {}}
+                        />
+                      </div>
 
                       {/* The hero's place in the page, immediately under the navbar. */}
                       {index === 0 ? (
-                        <div className="relative" ref={slotRef}>
+                        <div
+                          className="ms-build relative"
+                          ref={slotRef}
+                          style={{ ['--ms-build-index' as string]: '1' }}
+                        >
                           <div
                             className={`transition-opacity duration-[--ms-duration-base] ease-[--ms-ease-standard] ${ghost}`}
                           >
@@ -256,7 +272,7 @@ export function HeroPagePreview({ fallback }: HeroPagePreviewProps) {
               {placed ? null : (
                 <button
                   aria-label={hero.demoBlockLabel}
-                  className={`${CARD_SURFACE} cursor-grab touch-none active:cursor-grabbing motion-safe:transition-[left,top] motion-safe:duration-[--ms-duration-instant]`}
+                  className={`${CARD_SURFACE} ms-card-in cursor-grab touch-none active:cursor-grabbing motion-safe:transition-[left,top] motion-safe:duration-[--ms-duration-instant]`}
                   data-dragging={String(dragging)}
                   onKeyDown={(event) => {
                     const step = event.shiftKey ? 10 : 1

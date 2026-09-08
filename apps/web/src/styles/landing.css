@@ -212,6 +212,89 @@
   }
 }
 
+/*
+ * THE PAGE, BUILT
+ *
+ * The first screen used to hold a framed window with a page inside it, which is a screenshot however
+ * live its contents are. Instead the page is drawn the way a drawing is: the plan first, in dashed
+ * outline, and then the real block standing up inside it, one after another.
+ *
+ * It runs once on arrival rather than on a loop. A hero that keeps rebuilding itself is a fidget, and
+ * the argument only needs making once — after that the page is a page and the card beside it is the
+ * thing to touch. Under reduced motion none of this applies and the page is simply built.
+ */
+@keyframes ms-build-fill {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 6px, 0);
+  }
+  38% {
+    opacity: 0;
+    transform: translate3d(0, 6px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ms-build-plan {
+  0% {
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  55% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.ms-build {
+  position: relative;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ms-build > * {
+    animation: ms-build-fill 1100ms var(--ms-ease-decelerate) both;
+    animation-delay: calc(var(--ms-build-index, 0) * 260ms + 200ms);
+  }
+
+  .ms-build::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+    border: 1px dashed var(--ms-l-accent);
+    background: var(--ms-l-accent-wash);
+    animation: ms-build-plan 1100ms linear both;
+    animation-delay: calc(var(--ms-build-index, 0) * 260ms + 200ms);
+  }
+}
+
+/* The card is picked up and set down beside the page, once the page it belongs to exists. */
+@keyframes ms-card-in {
+  from {
+    opacity: 0;
+    transform: translate3d(52px, -14px, 0) rotate(2.5deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ms-card-in {
+    animation: ms-card-in 720ms var(--ms-ease-decelerate) both;
+    animation-delay: 1450ms;
+  }
+}
+
 @keyframes ms-hpin-fill {
   from {
     transform: scaleX(0);

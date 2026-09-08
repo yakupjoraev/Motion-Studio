@@ -108,7 +108,7 @@ export function Hero() {
           <div aria-hidden="true" className="mt-4 flex items-center gap-3">
             <span className="ms-dim flex-1" data-ms-rule />
             <span className="font-mono text-[10px] text-[var(--ms-l-ink-soft)] tracking-[0.18em]">
-              {STAGE.width} PX
+              {STAGE.width} PX · LG
             </span>
           </div>
         </div>
