@@ -7,23 +7,29 @@ runs:
   using: composite
   steps:
     # Before setup-node, so `cache: pnpm` has a package manager to find a store path for.
+    #
+    # `dest` is per-runner, and that is the whole point: the three self-hosted runners run as root and
+    # share one `$HOME`, so the action's default `~/setup-pnpm` is a single directory that every
+    # parallel job installs into and cleans up behind. Measured across nine e2e shards plus docker and
+    # quality: `ENOTEMPTY: directory not empty, rmdir '/root/setup-pnpm/node_modules/.pnpm'`, every
+    # time, in the install step before any real work. `RUNNER_TEMP` is one per runner.
     - uses: pnpm/action-setup@v4
+      with:
+        dest: ${{ runner.temp }}/setup-pnpm
 
     - uses: actions/setup-node@v4
       with:
         node-version-file: .nvmrc
-        cache: pnpm
-
-    # The store has to exist before the post-job cache step reads it. On a GitHub-hosted runner it
-    # already does; on the self-hosted one it does not, and the job fails in its post step with
-    # "Path Validation Error: Path(s) specified in the action for caching do(es) not exist" — after
-    # every real step has passed (ADR-375).
-    #
-    # It sits **after** `setup-node` on purpose. `pnpm` is a Node script and the WSL distro has no
-    # system Node, so running it any earlier is `exit code 127` in a job whose every other step is
-    # fine. Measured, in the run that taught me this.
-    - run: mkdir -p "$(pnpm store path --silent)"
-      shell: bash
+        # The store is cached where it would otherwise be thrown away, and not where it survives.
+        #
+        # A GitHub-hosted runner is new every job, so the cache is what makes an install fast there.
+        # The self-hosted one keeps its store on disk between jobs — and asking for the cache there
+        # fails the job *after every real step has passed*: WSL puts the Windows `pnpm` on PATH
+        # through /mnt/c, so `setup-node` resolves that one and reads back a store path that exists
+        # on neither side (measured: `/root/setup-pnpm/node_modules/.bin/store/v11`), which its post
+        # step then reports as "Path Validation Error". ADR-382 replaces the `mkdir` of ADR-375,
+        # which created that path and so hid the mismatch rather than fixing it.
+        cache: ${{ runner.environment == 'self-hosted' && '' || 'pnpm' }}
 
     - run: pnpm install --frozen-lockfile
       shell: bash

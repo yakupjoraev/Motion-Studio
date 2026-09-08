@@ -15656,3 +15656,47 @@ they blocked the gesture:
   so what differs is the tree's own geometry: `layerRects` reports the strip of ADR-133 in the
   panel's coordinates, while `collisionRect` is the viewport's. That comparison is the next
   measurement. The e2e case carries the diagnosis.
+
+## ADR-382 — The runners share a home, and WSL puts Windows on their PATH
+
+**Date** 2026-09-08 · **Prompt** M15 (infrastructure) · **Status** Accepted
+
+### Question
+Every push since the pipeline moved onto the owner's machine has come back red without a line of
+failing code: on `f2bcc0a`, nine of fifteen CI jobs died in the install step and `Deploy` was marked
+failed after its build and its deployment had both succeeded. ADR-375 recorded the second symptom and
+patched around it. What is actually wrong?
+
+### Measurement
+Two facts, read off the runners rather than inferred from the logs alone:
+
+1. `ls -d /root/actions-runner*/_work/_temp` — three runners, each with its **own** `RUNNER_TEMP`,
+   all running as root out of one `$HOME`. `pnpm/action-setup` installs into `~/setup-pnpm` by
+   default, so three jobs that start together install into and clean up one directory. The failure is
+   always the same line, always before any real work: `ENOTEMPTY: directory not empty, rmdir
+   '/root/setup-pnpm/node_modules/.pnpm'`.
+2. `which -a pnpm` inside the distro returns **one** path, and it is
+   `/mnt/c/Users/…/AppData/Roaming/npm/pnpm` — the Windows executable, reached through WSL's
+   interop PATH. There is no Linux `pnpm` before `action-setup` adds one. That is why
+   `actions/setup-node` with `cache: pnpm` reads back `/root/setup-pnpm/node_modules/.bin/store/v11`
+   as the store path: it asked the Windows binary. The path exists on neither side, so the post step
+   reports "Path Validation Error" and fails a job whose every step passed.
+
+### Decision
+- **`dest: ${{ runner.temp }}/setup-pnpm`.** One install directory per runner, which is the same
+  answer as a separate `$HOME` per service and does not depend on how the machine is provisioned.
+  A runner rebuilt from scratch inherits the fix from the repository.
+- **The store is cached where it would be thrown away, and not where it survives.**
+  `cache: ${{ runner.environment == 'self-hosted' && '' || 'pnpm' }}`. A GitHub-hosted runner is new
+  every job and needs the cache; the self-hosted one keeps `/root/.local/share/pnpm/store` between
+  jobs and needs nothing. Both modes stay usable, which matters because `RUNNER_LABELS` is one
+  `gh variable set` away from moving the pipeline back.
+- **The `mkdir -p "$(pnpm store path --silent)"` of ADR-375 is removed.** It created the path the
+  mismatch pointed at, so the post step stopped complaining while still caching a directory nothing
+  reads. A patch that makes a wrong answer quiet is worse than the red job it silenced.
+
+### Consequences
+- Nothing about the pipeline's definition changes: same jobs, same gates, same order.
+- The Windows `pnpm` on the distro's PATH is left alone rather than hidden with
+  `appendWindowsPath=false` in `/etc/wsl.conf`: that is the owner's machine, it would change how
+  every WSL shell behaves, and no job needs it once nothing asks a Windows binary for a Linux path.
