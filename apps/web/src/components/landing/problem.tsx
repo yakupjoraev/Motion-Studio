@@ -4,14 +4,16 @@ import { SectionIntro } from './section-intro'
 import { Section } from './section-rail'
 
 /**
- * VISION.md § The problem, as the page's argument. Two columns and a rule between them, because the
- * claim is literally that there is a gap between two things — a three-card grid would flatten the
- * one shape the section is about.
+ * VISION.md § The problem, as the page's argument — and as a drawing of itself.
  *
- * The claim opens the section and the two columns are its evidence, which is the order every other
- * band of this page is built in. It read the other way round until the side-by-side against the
- * reference (ADR-297): the heading alone left the right half of the first screen of the argument
- * empty, and it was the only section on the page that did.
+ * The claim is that two kinds of tool leave a hole between them, so the two sides sit apart with the
+ * hole between them and a dimension line across it, which is the mark a drawing uses to say "this
+ * distance is the subject". The conclusion is written in that gap rather than trailing after the
+ * cards, because the conclusion *is* the gap.
+ *
+ * The two sides drift apart as the band is read. Under reduced motion, and on an engine without view
+ * timelines, they are simply already apart — the composition carries the argument on its own and the
+ * motion only points at it.
  */
 export function Problem() {
   const { problem } = getRequestDictionary().landing
@@ -22,25 +24,32 @@ export function Problem() {
       examples: problem.designExamples,
       can: problem.designCan,
       cannot: problem.designCannot,
+      className: 'ms-split-a',
     },
     {
       kind: problem.libraryKind,
       examples: problem.libraryExamples,
       can: problem.libraryCan,
       cannot: problem.libraryCannot,
+      className: 'ms-split-b',
     },
   ]
 
   return (
     <Section id="problem" label={problem.rail}>
-      <div className="flex flex-col gap-10 py-16 lg:py-24">
+      <div className="flex flex-col gap-12 py-16 lg:py-24">
         <SectionIntro heading={problem.heading} id="problem-heading">
           {problem.intro}
         </SectionIntro>
 
-        <div className="grid gap-px overflow-hidden rounded-xl border border-border bg-border md:grid-cols-2">
-          {sides.map((side) => (
-            <div className="flex flex-col gap-4 bg-surface-1 p-6 sm:p-8" key={side.kind}>
+        <div className="ms-split grid items-stretch gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,23rem)_minmax(0,1fr)] lg:gap-0">
+          {sides.map((side, index) => (
+            <article
+              className={`${side.className} flex flex-col gap-4 border border-border bg-surface-1 p-6 sm:p-8 ${
+                index === 1 ? 'lg:order-3' : ''
+              }`}
+              key={side.kind}
+            >
               <div className="flex flex-col gap-1">
                 <h3 className="font-medium text-lg tracking-tight">{side.kind}</h3>
                 <p className="font-mono text-foreground-muted text-xs uppercase tracking-[0.12em]">
@@ -49,14 +58,31 @@ export function Problem() {
               </div>
               <p className="text-foreground-muted">{side.can}</p>
               <p className="border-border-subtle border-t pt-4 text-foreground">{side.cannot}</p>
-            </div>
+            </article>
           ))}
-        </div>
 
-        <p className="max-w-[46ch] text-balance text-lg text-foreground-muted leading-relaxed">
-          {problem.conclusionLead}{' '}
-          <strong className="font-medium text-foreground">{problem.conclusionStrong}</strong>
-        </p>
+          {/* The hole, measured. */}
+          <div className="flex flex-col items-center justify-center gap-4 px-2 py-6 text-center lg:order-2 lg:px-8">
+            <div aria-hidden="true" className="flex w-full items-center">
+              <span className="relative h-px flex-1 bg-border">
+                <span className="ms-split-seam absolute inset-0 block bg-[var(--ms-l-accent)]" />
+              </span>
+            </div>
+
+            <p className="text-balance leading-relaxed">
+              <span className="block text-foreground-muted text-sm">{problem.conclusionLead}</span>
+              <strong className="mt-2 block font-medium text-[1.0625rem] text-foreground leading-snug">
+                {problem.conclusionStrong}
+              </strong>
+            </p>
+
+            <div aria-hidden="true" className="flex w-full items-center">
+              <span className="relative h-px flex-1 bg-border">
+                <span className="ms-split-seam absolute inset-0 block bg-[var(--ms-l-accent)]" />
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
     </Section>
   )

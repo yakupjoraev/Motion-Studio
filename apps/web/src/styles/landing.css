@@ -260,6 +260,63 @@
 }
 
 /*
+ * THE GAP, DRAWN
+ *
+ * The section's claim is that two kinds of tool leave a hole between them. So the two sides drift
+ * apart as the band is read and the hole gets a dimension line across it, which is the mark a drawing
+ * uses for exactly this. Same timeline mechanism as the pin, same fallback: without support, and
+ * under reduced motion, the two sides simply sit where they are and the line is already drawn.
+ *
+ * The travel is 2 % of a column, not a leap. The point is that the reader notices the hole, not the
+ * animation.
+ */
+@keyframes ms-split-left {
+  from {
+    transform: translate3d(2.5%, 0, 0);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes ms-split-right {
+  from {
+    transform: translate3d(-2.5%, 0, 0);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .ms-split {
+      view-timeline-name: --ms-split;
+      view-timeline-axis: block;
+    }
+
+    .ms-split-a {
+      animation: ms-split-left linear both;
+      animation-timeline: --ms-split;
+      animation-range: entry 25% contain 35%;
+    }
+
+    .ms-split-b {
+      animation: ms-split-right linear both;
+      animation-timeline: --ms-split;
+      animation-range: entry 25% contain 35%;
+    }
+
+    .ms-split-seam {
+      transform-origin: left center;
+      animation: ms-hpin-fill linear both;
+      animation-timeline: --ms-split;
+      animation-range: entry 45% contain 45%;
+    }
+  }
+}
+
+/*
  * A dimension line: the rule, a tick at each end, and the measurement sitting on it. Drawn with
  * borders rather than SVG so it inherits the ink colour and costs no request.
  */
