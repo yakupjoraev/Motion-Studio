@@ -6,7 +6,8 @@ import { useEffect, useRef, useState } from 'react'
 
 import { useLanding } from '../../../lib/i18n/surfaces'
 
-import { END, START, WalkthroughPanel } from './walkthrough-values'
+import { WalkthroughBand } from './walkthrough-band'
+import { END, START, WalkthroughRows, WalkthroughSubject } from './walkthrough-values'
 
 /**
  * The value follows the scroll — `prompts/51`: "as the visitor scrolls, a value in a mock inspector
@@ -49,23 +50,30 @@ export function WalkthroughLive({ note }: WalkthroughLiveProps) {
 
   // The middle half of the pass carries the whole change, so the ends are settled rather than moving.
   const eased = clamp((progress - 0.25) / 0.5, 0, 1)
+  const labels = {
+    panelTitle: inspector.panelTitle,
+    radius: inspector.radius,
+    glow: inspector.glow,
+    card: inspector.card,
+  }
+  const values = {
+    radius: Math.round(lerp(START.radius, END.radius, eased)),
+    glow: lerp(START.glow, END.glow, eased),
+  }
 
   return (
-    <div className="flex flex-col gap-3" ref={frame}>
-      <WalkthroughPanel
-        caption={inspector.scrollPosition.replace('{percent}', String(Math.round(eased * 100)))}
-        labels={{
-          panelTitle: inspector.panelTitle,
-          radius: inspector.radius,
-          glow: inspector.glow,
-          card: inspector.card,
-        }}
-        values={{
-          radius: Math.round(lerp(START.radius, END.radius, eased)),
-          glow: lerp(START.glow, END.glow, eased),
-        }}
+    <div ref={frame}>
+      <WalkthroughBand
+        note={note}
+        rows={<WalkthroughRows labels={labels} values={values} />}
+        subject={
+          <WalkthroughSubject
+            caption={inspector.scrollPosition.replace('{percent}', String(Math.round(eased * 100)))}
+            labels={labels}
+            values={values}
+          />
+        }
       />
-      <p className="text-foreground-muted text-sm">{note}</p>
     </div>
   )
 }

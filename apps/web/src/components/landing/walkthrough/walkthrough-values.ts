@@ -1,4 +1,9 @@
-export { WalkthroughPanel, type WalkthroughValues } from './walkthrough-panel'
+export {
+  WalkthroughRows,
+  WalkthroughSubject,
+  type WalkthroughPanelLabels,
+  type WalkthroughValues,
+} from './walkthrough-panel'
 
 /** The two ends of the scrub. The static pair shows exactly these, so the two variants agree. */
 export const START = { radius: 2, glow: 0 } as const
