@@ -33,3 +33,24 @@ runs:
 
     - run: pnpm install --frozen-lockfile
       shell: bash
+
+    # The three runners share one host, so they share one `localhost`, and every suite that serves the
+    # app binds the same default 3000. Measured on `b874db3`: seven of nine e2e shards ended before
+    # their first spec with `http://localhost:3000/studio is already used`, and the same collision is
+    # available to `Visual` and to both Lighthouse legs whenever they overlap.
+    #
+    # A runner runs one job at a time, so a port derived from the runner cannot collide — including
+    # with a job written later, which is why this is here and not nine numbers in a matrix.
+    # `playwright.config.ts`, `visual.config.ts` and `lighthouserc.cjs` all read these two, and
+    # `next start` reads `PORT` itself. 3000 and 6006 are left free: the `docker` job publishes the
+    # image on the ports DEVOPS.md prints, and it does not run this action.
+    - name: A port per runner
+      shell: bash
+      run: |
+        index=$(printf '%s' "$RUNNER_NAME" | grep -oE '[0-9]+$' || true)
+        # The first runner's name ends in no digit at all, and `08` read as octal is an arithmetic
+        # error rather than a port.
+        index=$((10#${index:-1}))
+        echo "PORT=$((3000 + index))" >> "$GITHUB_ENV"
+        echo "STORYBOOK_PORT=$((6006 + index))" >> "$GITHUB_ENV"
+        echo "this runner serves on $((3000 + index)), Storybook on $((6006 + index))"

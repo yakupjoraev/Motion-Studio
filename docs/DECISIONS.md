@@ -15768,3 +15768,49 @@ spec sheet, and a spec sheet is not a maximum-loudness surface.
 - Verified: `pnpm lint`, `pnpm typecheck`, `pnpm test`, the skill's own `detect.mjs` (clean), and the
   page read in a browser at 1440 and 390 in both colour modes. Visual baselines move with the type
   step and are regenerated in CI, not locally.
+
+## ADR-384 — One host, one localhost: a port belongs to a runner, not to a suite
+
+**Date** 2026-09-08 · **Prompt** M15 (infrastructure) · **Status** Accepted
+
+### Question
+ADR-382 fixed the install step, and the first pipeline that got past it — `b874db3` — was still red in
+seven of nine e2e shards. None of them ran a spec. What stops a shard that installed correctly?
+
+### Measurement
+Read off the failing jobs rather than inferred:
+
+1. Seven shards end at the same line, before the first test:
+   `Error: http://localhost:3000/studio is already used, make sure that nothing is running on the
+   port/url or set reuseExistingServer:true`. `reuseExistingServer` is already `!CI`, and correctly
+   so: reusing a server in CI would test whatever build happened to be up.
+2. The three runners are three services on one machine (`DESKTOP-9M9M484`), so they share one network
+   namespace. `playwright.config.ts` defaults to 3000, `visual.config.ts` to 3000 and 6007, and
+   `lighthouserc.cjs` to 3000 — every suite that serves the app asks for the same port, and at most
+   one job on the host can have it.
+
+### Decision
+The port is derived from `RUNNER_NAME` in the composite setup action: `PORT=3000+index`,
+`STORYBOOK_PORT=6006+index`, where `index` is the digits the runner's name ends in, or 1 when it ends
+in none. Every job that serves anything already calls that action, and all three configs already read
+those two variables.
+
+A runner runs one job at a time, so this cannot collide **by construction** — including with a job
+written later, which is the reason it is not nine numbers in an e2e matrix. 3000 and 6006 are left
+free for the `docker` job, which publishes the image on the ports `DEVOPS.md` prints and does not use
+the composite action.
+
+### Consequences
+- Nothing changes on a GitHub-hosted runner, where each job has a machine to itself: the derived port
+  differs, and no suite hardcodes one.
+- Two failures on the same run are **not** addressed here, because neither is the repository's:
+  - `docker` never reaches the build. `docker/setup-buildx-action` resolves
+    `/mnt/c/Program Files/Docker/Docker/resources/bin/docker` through WSL interop, and that binary
+    answers `The command 'docker' could not be found in this WSL 2 distro`. Same PATH as ADR-382,
+    same conclusion: it is the owner's machine, so it is Docker Desktop's WSL integration or
+    `appendWindowsPath=false`, not a patch in a workflow.
+  - `e2e (webkit, 2)` failed in `playwright install --with-deps`: `Unable to locate package libicu74`,
+    `libvpx9`, `libx264-164`. Playwright's dependency list names Ubuntu 24.04 packages and the distro
+    is `resolute`. The other two WebKit shards installed from the same lists on the same distro, so
+    what is intermittent is the concurrent apt, not the naming — three jobs on one machine also share
+    `/var/lib/apt`.

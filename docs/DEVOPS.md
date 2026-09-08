@@ -440,6 +440,14 @@ wsl -d Ubuntu -- bash -lc "cd /root/actions-runner && ./svc.sh install root && .
 The pipeline runs. What is red is worth separating into "the machine" and "the product", because for
 two days everything looked like the second and was the first.
 
+**Fixed 2026-09-08 (ADR-384), and this is what seven of nine e2e shards were once they installed:**
+
+- Three runners on one host share one `localhost`, and every suite that serves the app defaulted to
+  port 3000: `http://localhost:3000/studio is already used`, before the first spec. The composite
+  setup action now derives `PORT` and `STORYBOOK_PORT` from `RUNNER_NAME` (3001/3002/3003 and
+  6007/6008/6009 here), which cannot collide because a runner runs one job at a time. 3000 and 6006
+  stay free for `docker`, the one job that does not use the action.
+
 **Fixed 2026-09-08 (ADR-382), and this is what nine of fifteen red jobs were:**
 
 - `pnpm/action-setup` installed into `~/setup-pnpm`, and the three runners are installed as root out
@@ -460,9 +468,16 @@ two days everything looked like the second and was the first.
   export-smoke failure. The fix is a Chromium inside the distro plus `CHROME_PATH`, or
   `appendWindowsPath=false` in `/etc/wsl.conf` — which is the owner's machine and every WSL shell on
   it, so it is a decision rather than a patch.
-- **`docker`** — the image build cannot reach `registry.npmjs.org` from inside the container:
-  `ConnectTimeoutError` on the corepack download. Docker's WSL integration is on and the daemon is
-  reachable; this is the container's network, not the switch.
+- **`docker`** — the job no longer reaches the build. `docker/setup-buildx-action` resolves
+  `/mnt/c/Program Files/Docker/Docker/resources/bin/docker` through interop, and that binary answers
+  `The command 'docker' could not be found in this WSL 2 distro`. Same PATH as the `pnpm` case above,
+  same conclusion: Docker Desktop's WSL integration for this distro, or `appendWindowsPath=false`.
+  (Before the runners lost their Docker, this job failed differently — `ConnectTimeoutError` on the
+  corepack download inside the image. That one is the container's network and is still unproven.)
+- **`e2e`, WebKit, intermittently** — `playwright install --with-deps` exits 100 with `Unable to
+  locate package libicu74`, `libvpx9`, `libx264-164`. Playwright names Ubuntu 24.04 packages and the
+  distro is `resolute`; the other WebKit shards install from the same lists on the same distro, so
+  what is intermittent is three jobs sharing `/var/lib/apt`, not the naming.
 - **`e2e`, some shards** — `flows/open-studio.spec.ts`, which is a product defect with its
   measurement in `ROADMAP.md` § M15, not a runner problem.
 
