@@ -41,10 +41,17 @@ Found while working in the product, not by reading it:
 
 - **Block thumbnails are dark on dark** and several read as empty rectangles in the palette. Prompt 57
   recorded seven container blocks rendering blank and three showing "No image yet".
-- **`input-field` is shown in its error state** in the catalogue — a bad `previewProps` choice.
+- ~~**`input-field` is shown in its error state** in the catalogue — a bad `previewProps` choice.~~
+  **Withdrawn (ADR-386).** The definition already records the opposite decision — the wiring of label,
+  hint and error is what the block is for, and the invalid state is the one an author most needs to
+  see — and the owner's call is that the definition is right. The catalogue keeps it.
 - **`particles` is nearly invisible in light mode**; `bento-grid` cells barely separate from the page in
-  either mode.
-- **`testimonial-marquee` is clipped** by the bottom of its thumbnail frame.
+  either mode. **Restated by measurement (ADR-386):** `particles` is invisible in *both* modes on
+  `/blocks`, and not because of the palette — its points are 1.4 px wide and the card scales them to
+  0.46 px. Same cause as the faint slot tile: the stage's scale, not the colour.
+- **`testimonial-marquee` is clipped** by the bottom of its thumbnail frame. **Not on `/blocks`
+  (ADR-386):** it fills 87 % of its card and is whole. The two blocks that were cut off there were
+  `hero-split` and `contact-form`, and both now fit.
 
 ## The bar
 

@@ -15874,3 +15874,96 @@ visitor's document rather than our marketing: the sheet is the brand, what is on
 - The visual baselines for the landing all move, which prompt 67 already expects.
 - `DESIGN_REFERENCES.md` § Applying it per surface now has a row that says the landing has its own
   palette, so the next person does not "fix" it back to the studio's.
+
+## ADR-386 — A catalogue card's stage is as tall as its block, from a table of measurements
+
+**Date** 2026-09-09 · **Prompt** 67 · **Status** Accepted
+
+### Question
+Surface 3 of the design pass is `/blocks`. `DESIGN_REFERENCES.md` § Applying it per surface puts the
+gallery at **high loudness on content**: the previews are the subject and the chrome around them
+recedes. Measured against that, the previews were not the subject.
+
+Every card laid its block out on one stage — 1024 × 640 — and scaled it to the card's width, a factor
+of 0.339. The consequences, over all 72 cards:
+
+- **36 cards were more air than block.** The block covered ≤ 50 % of the picture's height: `divider`
+  2 %, `badge` 4 %, `breadcrumbs` 4 %, `button` 7 %, `heading` 8 %. Prompt 57 recorded these as
+  "thumbnails that read as empty plates"; the plates were the stage, not the blocks.
+- **Two cards were cut off.** `hero-split` needs 960 stage pixels and `contact-form` 685, against the
+  stage's 640 — 149 % and 106 % of the frame, clipped by its `overflow: hidden`.
+- **The dashed tile that stands in for a container's slot was invisible**: 1.13 : 1 against the frame
+  in dark, 1.06 : 1 in light, and its 2 px border scaled to 0.68 px. Seven layout cards showed
+  nothing at all. In `section` it was worse than faint — it had **zero width**, for the reason ADR-380
+  records: a section's default alignment is `start`, so a child with no content is measured at its
+  content width.
+
+### Criterion (set before measuring)
+A picture is the subject when the block fills it: no card below 50 % and no card clipped, in both
+colour modes, at no cost to the CLS budget (0.02, `PERFORMANCE.md`).
+
+### The candidates, and why the obvious one lost
+A transform does not participate in layout, so the frame cannot take its height from a scaled stage.
+Three ways to get one:
+
+1. **`zoom` instead of `transform`.** `zoom` does affect layout, so `height: auto` would work. It
+   fails across engines: `zoom: calc(100cqw / 1024px)` resolved in Chrome (0.337) but Firefox returned
+   1 — it does not accept container-query units there — and WebKit applied the factor while reporting
+   a 26.7 px root font size and an unscaled layout. A literal `zoom: 0.339` works in all three, but
+   the factor is only known to the browser.
+2. **Measure in the visitor's browser** on mount. Correct in every engine, and it costs the budget it
+   was meant to respect: **CLS 0.157 on load and 0.667 after a scroll** against 0.02, because the card
+   paints one box and then another. `useLayoutEffect` does not help — the placeholder was already
+   painted in an earlier frame.
+3. **Ship the measurements.** The heights are properties of the blocks, not of the visit: measure all
+   72 once in a browser, put them in `card-stage.ts`, and let the server render the right ratio.
+
+### Decision
+Candidate 3. `apps/web/src/components/gallery/card-stage.ts` holds the measured height of every block
+at 1024 px and derives the stage from it: the smallest step of `[280, 400, 520, 640, 760, 880, 1060]`
+that holds the block plus 48 px of air, with the leftover split evenly above and below it. A block
+that reports no height of its own is an effect layer — it fills its parent absolutely — and gets the
+640 px plate.
+
+**The steps are a scale rather than an exact fit** because the name sits under the picture: sizing each
+stage exactly left every card in a row a different height and put the row's three names on three
+different lines. Neighbours now usually land on the same step.
+
+The slot tile is held to the 3 : 1 that WCAG 1.4.11 asks of a graphic that carries meaning, since on
+those seven cards it *is* the picture: `foreground-subtle` at 65 % is the quietest step that reaches it
+in both modes, measured at **3.69 : 1** and **3.01 : 1**. Its border is 6 stage pixels, which is the two
+screen pixels a dashed line needs to read as dashed, and it is `self-stretch`.
+
+### Measurement
+| | Before | After |
+| --- | --- | --- |
+| Cards where the block covers ≤ 50 % of the picture | 36 | 17, all of them on the 95 px floor |
+| Cards clipped by the frame | 2 | 0 |
+| CLS, load / after scrolling the whole page | 0 / 0 | 0 / 0 |
+| Slot tile against the frame, dark / light | 1.13 / 1.06 | 3.69 / 3.01 |
+| Picture heights in use | 217 px, all 72 | 95, 136, 176, 217, 258, 360 px |
+
+The 17 remaining are blocks shorter than the floor — `divider` lays out at 46 px, `badge` at 28 — and
+the floor exists so the picture is not smaller than the name and description under it (88 screen
+pixels). They read as a small block centred in a small plate rather than as an empty plate.
+
+### Consequences
+- **A table of measurements goes stale silently**, so `e2e/gallery/card-stage.spec.ts` measures every
+  block and fails with the number to write down. Proved by putting 200 in `navbar`'s row: *"navbar:
+  table says 200, measured 65"*. The `gallery/` directory is added to the CI e2e command; Firefox and
+  WebKit are unaffected, since `playwright.config.ts` limits them to `flows/` and `a11y/`.
+- The card publishes its expected height as `data-block-height`, because `e2e` is a package and
+  reaching into `apps/web/src` across that boundary is banned — and a spec holding its own copy of 72
+  numbers is two tables that disagree by the second edit.
+- **A 1 px detail inside a block is still invisible at this scale**, and that is now the honest limit
+  of the card: `divider`'s hairline is 0.34 px on screen and its token is 1.2 : 1 against the page in
+  light. Nothing but abandoning the scale fixes it, and the scale is a recorded decision
+  (`preview-frame.tsx`: a block laid out at one width is a different component at another). Raised for
+  the owner rather than worked around.
+- `input-field` keeps its error state in the catalogue. Prompt 67 lists it as a bad `previewProps`
+  choice; the owner's call is that the definition's own comment is right — the wiring of label, hint
+  and error is what the block is for — so the prompt is corrected instead of the block.
+- The public pages still ignore the system colour preference (`ThemeBoot` applies `studioDark` when
+  nothing is stored), so light mode is reachable only through a stored choice. That is ADR-318's
+  recorded open question and this entry does not settle it; both modes were checked by storing the
+  preference.
