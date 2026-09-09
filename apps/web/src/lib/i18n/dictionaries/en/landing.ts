@@ -9,6 +9,10 @@ export const landing = {
 
   hero: {
     eyebrow: 'Local-first, no account',
+    /* The three the headline promises, said beside the frame that does them. */
+    reelDrag: 'Drag a block onto the page',
+    reelTune: 'Tune its props in the inspector',
+    reelExport: 'Take the component it exports',
     headline: 'Drag it. Tune it. Take the code.',
     subtitle:
       'A visual editor over a real React registry. Export emits the component you were just looking at.',
@@ -55,7 +59,6 @@ export const landing = {
     heading: 'Every effect is a component with a schema.',
     intro:
       'Not a snippet to paste and patch. Each one is parameterised, tunable in the inspector, correct under reduced motion, and exportable as source you can read.',
-    stackTitle: 'Effect stack',
     auroraName: 'Aurora',
     auroraDescription: 'Two-hue blurred fields drifting on unrelated periods behind the content.',
     meshName: 'Mesh gradient',
@@ -64,9 +67,6 @@ export const landing = {
     borderBeamName: 'Border beam',
     borderBeamDescription:
       'A lit arc travelling around the node’s own border, masked from a conic gradient.',
-    shineName: 'Shine',
-    shineDescription:
-      'One tilted highlight crossing the surface and then waiting — a material catching the light.',
     beamsName: 'Beams',
     beamsDescription: 'Tilted bands of light sweeping across the surface on staggered cycles.',
     particlesName: 'Particles',
@@ -85,9 +85,12 @@ export const landing = {
     card: 'Card',
     stepRadius: 'Radius',
     /* The presets' and the effect's own names, as the studio's own panels print them. */
+    stepBorder: 'Border',
     stepFlip: 'Flip in',
     stepScale: 'Scale in',
     stepFloat: 'Float',
+    stepOrbit: 'Orbit',
+    stepLift: 'Lift',
     stepGlow: 'Glow',
     /** `{applied}` of `{total}` rows are on the subject. */
     applied: '{applied} of {total} applied',

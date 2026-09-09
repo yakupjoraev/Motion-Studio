@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useLocale } from '../../lib/i18n/locale-context'
 import { useNav } from '../../lib/i18n/surfaces'
 import { LocaleSwitch } from '../nav/locale-switch'
+import { NavLink } from '../nav/nav-link'
 
 /**
  * Nothing here prefetches. `/studio` is a 373 kB route, and a landing page that downloads it for a
@@ -23,8 +24,11 @@ export function LandingNav() {
   const { href } = useLocale()
   const nav = useNav()
 
+  /*
+   * No `/studio` here: the accent button on the right of this same bar is the studio, and one bar
+   * offering the same destination twice makes the reader choose between two identical doors.
+   */
   const links = [
-    { href: '/studio', label: nav.studio },
     { href: '/playground', label: nav.playground },
     { href: '/blocks', label: nav.blocks },
     { href: '/docs', label: nav.docs },
@@ -46,13 +50,12 @@ export function LandingNav() {
         <ul className="hidden flex-1 items-center gap-5 sm:flex">
           {links.map((link) => (
             <li key={link.href}>
-              <Link
+              <NavLink
                 className="rounded-sm font-mono text-foreground-muted text-sm uppercase tracking-[0.12em] outline-none transition-colors hover:text-foreground focus-visible:shadow-focus"
                 href={href(link.href)}
-                prefetch={false}
               >
                 {link.label}
-              </Link>
+              </NavLink>
             </li>
           ))}
         </ul>
@@ -60,13 +63,13 @@ export function LandingNav() {
         <div className="ml-auto flex items-center gap-3">
           <LocaleSwitch label={nav.language} />
 
-          <Link
+          <NavLink
             className="bg-accent px-3.5 py-1.5 font-medium text-foreground-onAccent text-xs uppercase tracking-[0.08em] outline-none transition-colors hover:bg-accent-hover focus-visible:shadow-focus"
             href={href('/studio')}
-            prefetch={false}
+            pendingEdge="over"
           >
             {nav.openStudio}
-          </Link>
+          </NavLink>
         </div>
       </nav>
     </header>

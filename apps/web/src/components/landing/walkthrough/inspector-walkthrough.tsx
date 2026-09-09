@@ -26,9 +26,12 @@ export function InspectorWalkthrough() {
     panelTitle: inspector.panelTitle,
     card: inspector.card,
     stepRadius: inspector.stepRadius,
+    stepBorder: inspector.stepBorder,
     stepFlip: inspector.stepFlip,
     stepScale: inspector.stepScale,
     stepFloat: inspector.stepFloat,
+    stepOrbit: inspector.stepOrbit,
+    stepLift: inspector.stepLift,
     stepGlow: inspector.stepGlow,
   }
 

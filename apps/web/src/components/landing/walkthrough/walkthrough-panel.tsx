@@ -4,9 +4,12 @@ export interface WalkthroughPanelLabels {
   readonly panelTitle: string
   readonly card: string
   readonly stepRadius: string
+  readonly stepBorder: string
   readonly stepFlip: string
   readonly stepScale: string
   readonly stepFloat: string
+  readonly stepOrbit: string
+  readonly stepLift: string
   readonly stepGlow: string
 }
 
@@ -81,9 +84,10 @@ export interface WalkthroughSubjectProps {
 /**
  * The thing the stack is applied to, drawn on the sheet.
  *
- * Only `transform`, `border-radius` and `box-shadow` move, and all three are composited. The
- * transition is on the element rather than on a keyframe track because the stack can be taken hold of
- * at any point: a reader who picks a row gets the same 400 ms move to that state as the cycle does.
+ * The transition is on the element rather than on a keyframe track because the stack can be taken
+ * hold of at any point: a reader who picks a row gets the same 260 ms move to that state as the cycle
+ * does. `border-width` is in the list because a row applies it, and a width that jumps while the
+ * corner rounds smoothly reads as two different components.
  */
 export function WalkthroughSubject({
   applied,
@@ -96,7 +100,7 @@ export function WalkthroughSubject({
       className={`flex w-full flex-col items-center justify-center gap-5 ${half ? 'min-h-[22vh]' : 'min-h-[44vh]'}`}
     >
       <div
-        className="grid max-h-[17rem] w-full max-w-[26rem] flex-1 place-content-center border border-border bg-surface-1 font-mono text-foreground-muted text-xs uppercase tracking-[0.14em] transition-[transform,border-radius,box-shadow] duration-[400ms] ease-[--ms-ease-standard]"
+        className="grid max-h-[17rem] w-full max-w-[26rem] flex-1 place-content-center border border-border bg-surface-1 font-mono text-foreground-muted text-xs uppercase tracking-[0.14em] transition-[transform,border-radius,border-width,border-color,box-shadow] duration-[260ms] ease-[--ms-ease-standard]"
         style={walkthroughStyle(applied)}
       >
         {labels.card}

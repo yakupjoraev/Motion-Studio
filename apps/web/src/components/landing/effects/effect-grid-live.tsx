@@ -1,126 +1,78 @@
 'use client'
 
 import { components as effectComponents } from '@motion-studio/blocks/effects'
-import { type ComponentType, Suspense, useEffect, useState } from 'react'
+import { type ComponentType, Suspense } from 'react'
 
 import { useLanding } from '../../../lib/i18n/surfaces'
-import { useInView } from '../use-in-view'
 
 import { effectCards } from './effect-cards'
-import { EffectStack } from './effect-stack'
+import { EFFECT_GRID_CLASS } from './effect-grid-class'
 import { EffectStage } from './effect-stage'
 
 /**
- * The catalogue's own components, with the catalogue's own defaults, one at a time.
+ * The catalogue's own components, with the catalogue's own defaults, all of them running.
  *
  * Reduced motion is each effect's own responsibility and every one of them honours it
  * (ANIMATION_SYSTEM.md § Reduced motion). That is the point of using the shipped components here: the
- * page cannot be more correct than the product, and it cannot be less. The cycle itself is the band's,
- * so the band stops it under reduced motion too — the effects would be still and the plate would be
- * changing subject every few seconds for no reason a reader asked for.
+ * page cannot be more correct than the product, and it cannot be less. Nothing on this band switches
+ * or cycles: the effects are the content, and content a reader has to click through is content the
+ * page is hiding.
  */
 /*
- * The plate is most of a viewport rather than a 128 px tile, so the catalogue's defaults do not apply:
- * ADR-301 measured them for the small card. Blur scales with area, a beam's width has to grow with the
- * surface it crosses, and a two-pixel arc is a hairline on an artboard.
+ * Every value is set for the cell it lands in. ADR-301 measured the catalogue's defaults for a 128 px
+ * tile; blur scales with area, a beam's width has to grow with the surface it crosses, and a 2 px arc
+ * is a hairline on a plate. The lead cell is four times the area of the others, so it carries the
+ * effect that has the most to say at that size.
  */
 const PROPS: Readonly<Record<string, Record<string, unknown>>> = {
   'aurora-background': {
     tint: 'accent',
     secondaryTint: 'info',
     intensity: 1,
-    speed: 1.1,
-    blur: 120,
-    /* Off, for the reason it was measured off on the small tile: at any size the reader meets on a
-       phone the grain is the loudest thing on the plate and it reads as noise, not as light. */
+    speed: 1.15,
+    blur: 132,
+    /* Off, and measured off: at any size a phone shows, the grain is the loudest thing on the plate
+       and it reads as noise rather than as light. */
     grain: false,
     scrim: false,
   },
+  beams: { tint: 'accent', intensity: 1, speed: 1.1, count: 4, width: 88, angle: -24 },
+  'border-beam': { tint: 'accent', intensity: 1, speed: 1.5, borderWidth: 5, arc: 85 },
+  /* Eighty is the schema's ceiling; past it the field reads as noise. */
+  particles: { tint: 'accent', intensity: 1, speed: 1.35, count: 80, size: 3.5, seed: 7 },
   'mesh-gradient': {
     tint: 'accent',
     secondaryTint: 'info',
     tertiaryTint: 'success',
-    intensity: 0.95,
-    speed: 1.3,
-    blur: 104,
-    spread: 72,
+    intensity: 1,
+    speed: 1.4,
+    blur: 88,
+    spread: 74,
     scrim: false,
   },
-  beams: { tint: 'accent', intensity: 1, speed: 1, count: 4, width: 104, angle: -22 },
-  'border-beam': { tint: 'accent', intensity: 1, speed: 1.4, borderWidth: 5, arc: 80 },
-  /*
-   * The shine travels in the first fifth of its cycle and waits out the rest, which is the effect's
-   * whole character on a card someone is sitting in front of. Here the plate holds it for a few
-   * seconds and then moves on, so the wait has to be short enough to be seen inside that window.
-   */
-  shine: { tint: 'accent', intensity: 0.85, speed: 2.2, width: 52, angle: 18 },
-  /* Eighty is the schema's ceiling and the field reads as noise past it. */
-  particles: { tint: 'accent', intensity: 1, speed: 1.2, count: 80, size: 3.5, seed: 7 },
 }
-
-/** How long one effect holds the plate. Long enough to watch a cycle of it, short enough to wait for. */
-const DWELL = 5200
-
-const prefersReducedMotion = (): boolean =>
-  typeof window !== 'undefined' &&
-  typeof window.matchMedia === 'function' &&
-  window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 export function EffectGridLive() {
   const { effects } = useLanding()
   const cards = effectCards(effects)
-  const { ref, seen } = useInView()
-  const [active, setActive] = useState(0)
-  const [held, setHeld] = useState(false)
-
-  useEffect(() => {
-    if (held || !seen || prefersReducedMotion()) {
-      return
-    }
-
-    const timer = window.setInterval(() => {
-      setActive((index) => (index + 1) % cards.length)
-    }, DWELL)
-
-    return () => {
-      window.clearInterval(timer)
-    }
-  }, [cards.length, held, seen])
-
-  const card = cards[active] ?? cards[0]
-
-  if (card === undefined) {
-    return null
-  }
-
-  const Effect = effectComponents[card.id as keyof typeof effectComponents] as
-    | ComponentType<Record<string, unknown>>
-    | undefined
 
   return (
-    <div
-      className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,15rem)_minmax(0,1fr)] lg:gap-8"
-      ref={ref}
-    >
-      <EffectStack
-        active={active}
-        cards={cards}
-        onPick={(index) => {
-          setActive(index)
-          setHeld(true)
-        }}
-        title={effects.stackTitle}
-      />
+    <div className={EFFECT_GRID_CLASS}>
+      {cards.map((card, index) => {
+        const Effect = effectComponents[card.id as keyof typeof effectComponents] as
+          | ComponentType<Record<string, unknown>>
+          | undefined
 
-      <EffectStage card={card}>
-        {Effect === undefined ? null : (
-          <Suspense fallback={null}>
-            {/* `key` so switching layers remounts rather than restyling: an effect's animation is
-                declared on mount, and a swapped prop set would leave the old one mid-cycle. */}
-            <Effect key={card.id} {...(PROPS[card.id] ?? {})} />
-          </Suspense>
-        )}
-      </EffectStage>
+        return (
+          <EffectStage card={card} key={card.id} lead={index === 0}>
+            {Effect === undefined ? null : (
+              <Suspense fallback={null}>
+                <Effect {...(PROPS[card.id] ?? {})} />
+              </Suspense>
+            )}
+          </EffectStage>
+        )
+      })}
     </div>
   )
 }

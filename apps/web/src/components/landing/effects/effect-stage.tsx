@@ -6,25 +6,31 @@ export interface EffectStageProps {
   readonly card: EffectCard
   /** The live effect, when one has mounted. The plate is identical either way, so nothing shifts. */
   readonly children?: ReactNode
+  /** The lead cell is twice the width and twice the height of the others on `lg`. */
+  readonly lead?: boolean
 }
 
+const PLATE = 'ms-stage m-0 flex min-w-0 flex-col border border-border'
+
 /**
- * The plate the effect is shown on: one artboard, most of the band, blueprint in both colour modes.
+ * One plate: the effect at a size worth seeing, its name and the registry's own description under it.
  *
- * Six tiles in a track gave every effect a third of a column and a light ground, and the light ground
- * is what killed them — these are effects made of light, and vellum has none to give. The band now
- * shows one at a time, at a size where an aurora reads as an aurora, on the print the light shows on.
+ * **Blueprint in both colour modes.** These are effects made of light, and the band used to show them
+ * on vellum, where a beam at the catalogue's own intensity is a smudge — `particles` measured
+ * invisible in *both* modes. The plate is the print the light is shown on.
+ *
+ * **Not six equal tiles.** A row of identical cards is the layout every generated page reaches for,
+ * and it also gives every effect the same third of a column whether or not it needs one: the aurora
+ * wants area, the border beam wants an edge. The lead cell takes four times the room.
  *
  * `isolate` and `overflow-hidden` because an effect paints into its parent absolutely: the same
  * containment the canvas gives a node.
  */
-export function EffectStage({ card, children }: EffectStageProps) {
+export function EffectStage({ card, children, lead = false }: EffectStageProps) {
   return (
-    <figure className="ms-stage m-0 flex min-w-0 flex-col border border-border">
-      {/* The plate is the subject of the band, so it takes the room: a beam crossing 340 px is a
-          detail, the same beam crossing 900 is the effect. */}
+    <figure className={`${PLATE} ${lead ? 'lg:col-span-2 lg:row-span-2' : ''}`}>
       <div
-        className="relative isolate min-h-[20rem] w-full flex-1 overflow-hidden lg:min-h-[30rem]"
+        className={`relative isolate w-full flex-1 overflow-hidden ${lead ? 'min-h-[18rem] lg:min-h-[34rem]' : 'min-h-[13rem] lg:min-h-[15.5rem]'}`}
         data-testid="effect-stage"
       >
         {children}

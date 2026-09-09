@@ -13,11 +13,15 @@ export interface WalkthroughLiveProps {
   readonly note: string
 }
 
-/** One row on or off. Long enough to read the row that changed, short enough to hold a whole pass. */
-const STEP_MS = 900
+/**
+ * One row on or off. Fast enough that a reader sees the stack build rather than waits for it: eight
+ * rows at 420 ms is a 3.4 s pass in each direction, and the subject's own transition is 260 ms, so
+ * each row's change is finished before the next one lands.
+ */
+const STEP_MS = 420
 
 /** The pause at each end of the pass, so the full stack and the bare subject are both legible. */
-const HOLD_MS = 1400
+const HOLD_MS = 900
 
 const prefersReducedMotion = (): boolean =>
   typeof window !== 'undefined' &&
@@ -91,9 +95,12 @@ export function WalkthroughLive({ note }: WalkthroughLiveProps) {
     panelTitle: inspector.panelTitle,
     card: inspector.card,
     stepRadius: inspector.stepRadius,
+    stepBorder: inspector.stepBorder,
     stepFlip: inspector.stepFlip,
     stepScale: inspector.stepScale,
     stepFloat: inspector.stepFloat,
+    stepOrbit: inspector.stepOrbit,
+    stepLift: inspector.stepLift,
     stepGlow: inspector.stepGlow,
   }
 

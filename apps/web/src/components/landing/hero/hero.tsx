@@ -5,6 +5,7 @@ import { getRequestDictionary, getRequestLocale } from '../../../lib/i18n/reques
 
 import { HeroPageIsland } from './hero-page-island'
 import { HeroPageStatic } from './hero-page-static'
+import { HeroReel } from './hero-reel'
 import { STAGE } from './hero-stage'
 
 /**
@@ -43,7 +44,7 @@ export function Hero() {
           </span>
         </div>
 
-        <div className="grid gap-x-12 gap-y-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:items-end">
+        <div className="flex flex-col gap-10">
           <div className="flex flex-col items-start gap-6">
             <p className="inline-flex items-center gap-2 font-mono text-[11px] text-[var(--ms-l-ink-soft)] uppercase tracking-[0.24em]">
               <span aria-hidden="true" className="block h-px w-8 bg-[var(--ms-l-accent)]" />
@@ -63,53 +64,63 @@ export function Hero() {
             />
           </div>
 
-          <div className="flex flex-col items-start gap-6 lg:pb-2">
-            <p className="max-w-[38ch] text-[var(--ms-l-ink-soft)] text-base leading-relaxed">
-              {hero.subtitle}
-            </p>
+          <div className="grid gap-x-12 gap-y-10 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)] lg:items-start">
+            <div className="flex flex-col items-start gap-6">
+              <p className="max-w-[38ch] text-[var(--ms-l-ink-soft)] text-base leading-relaxed">
+                {hero.subtitle}
+              </p>
 
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-              <Link
-                className="bg-[var(--ms-l-accent-strong)] px-6 py-3.5 font-medium text-[var(--ms-l-accent-ink)] text-sm uppercase tracking-[0.1em] outline-none transition-[background-color,transform] duration-[--ms-duration-fast] ease-[--ms-ease-standard] hover:bg-[var(--ms-l-accent)] focus-visible:shadow-focus active:translate-y-px"
-                href={localeHref(locale, '/studio')}
-                prefetch={false}
-              >
-                {hero.openStudio}
-              </Link>
-              <Link
-                className="group inline-flex items-center gap-2 border-[var(--ms-l-ink)] border-b pb-0.5 font-medium text-sm outline-none focus-visible:shadow-focus"
-                href={localeHref(locale, '/playground')}
-                prefetch={false}
-              >
-                {hero.tryPlayground}
-                <span
-                  aria-hidden="true"
-                  className="transition-transform duration-[--ms-duration-fast] ease-[--ms-ease-standard] group-hover:translate-x-1"
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+                <Link
+                  className="bg-[var(--ms-l-accent-strong)] px-6 py-3.5 font-medium text-[var(--ms-l-accent-ink)] text-sm uppercase tracking-[0.1em] outline-none transition-[background-color,transform] duration-[--ms-duration-fast] ease-[--ms-ease-standard] hover:bg-[var(--ms-l-accent)] focus-visible:shadow-focus active:translate-y-px"
+                  href={localeHref(locale, '/studio')}
+                  prefetch={false}
                 >
-                  →
-                </span>
-              </Link>
+                  {hero.openStudio}
+                </Link>
+                <Link
+                  className="group inline-flex items-center gap-2 border-[var(--ms-l-ink)] border-b pb-0.5 font-medium text-sm outline-none focus-visible:shadow-focus"
+                  href={localeHref(locale, '/playground')}
+                  prefetch={false}
+                >
+                  {hero.tryPlayground}
+                  <span
+                    aria-hidden="true"
+                    className="transition-transform duration-[--ms-duration-fast] ease-[--ms-ease-standard] group-hover:translate-x-1"
+                  >
+                    →
+                  </span>
+                </Link>
+              </div>
             </div>
-          </div>
-        </div>
 
-        {/*
-          The frame, full width under the drawing rather than beside it. A page being edited is the
-          widest thing on this screen because it is the subject; the copy is the caption.
+            {/*
+          The frame, beside the copy rather than under it, and **not** the width of the screen.
+
+          It used to run the full container under everything else: 1216 px of frame holding a 1280 px
+          stage at 0.95, 855 px tall, which made the first screen one enormous picture of the product
+          with the copy as its caption. The owner's verdict was that it is too big. Beside the subtitle
+          it is 517 px tall, the whole screen is one screen, the page inside is still the shipped
+          components at the `lg` breakpoint, and the card is still a target a mouse has no trouble with
+          — the part that had to survive the shrink.
         */}
-        <div
-          className="mt-12 lg:mt-16"
-          data-ms-rise
-          style={{ ['--ms-hero-delay' as string]: '160ms' }}
-        >
-          <HeroPageIsland fallback={<HeroPageStatic />} />
+            <div
+              className="w-full max-w-[34rem] lg:justify-self-end"
+              data-ms-rise
+              style={{ ['--ms-hero-delay' as string]: '160ms' }}
+            >
+              <HeroPageIsland fallback={<HeroPageStatic />} />
 
-          {/* The frame, measured. This number is the width the page inside is laid out at. */}
-          <div aria-hidden="true" className="mt-4 flex items-center gap-3">
-            <span className="ms-dim flex-1" data-ms-rule />
-            <span className="font-mono text-[10px] text-[var(--ms-l-ink-soft)] tracking-[0.18em]">
-              {STAGE.width} PX · LG
-            </span>
+              {/* The frame, measured. This number is the width the page inside is laid out at. */}
+              <div aria-hidden="true" className="mt-4 flex items-center gap-3">
+                <span className="ms-dim flex-1" data-ms-rule />
+                <span className="font-mono text-[10px] text-[var(--ms-l-ink-soft)] tracking-[0.18em]">
+                  {STAGE.width} PX · LG
+                </span>
+              </div>
+
+              <HeroReel />
+            </div>
           </div>
         </div>
       </div>

@@ -3,7 +3,6 @@ import type { Dictionary } from '../../dictionary'
 export const nav: Dictionary['nav'] = {
   brand: 'Motion Studio',
   main: 'Главное меню',
-  studio: 'Студия',
   playground: 'Песочница',
   blocks: 'Блоки',
   docs: 'Документация',
