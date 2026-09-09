@@ -259,6 +259,8 @@ e2e/
 │   ├── live-regions.spec.ts
 │   ├── reduced-motion.spec.ts
 │   └── zoom-200.spec.ts
+├── gallery/
+│   └── card-stage.spec.ts        the measured block heights `/blocks` sizes its cards from
 ├── perf/
 │   ├── canvas-200-nodes.spec.ts
 │   ├── scrub-no-rerender.spec.ts

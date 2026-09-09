@@ -24,7 +24,7 @@ You compose on the canvas, tune the props in a generated inspector, and take the
 source. There is no runtime to install, no account, and nothing of this project is left in the code
 it prints.
 
-It is built as a product rather than as a demo: 8,367 unit tests, 215 end-to-end tests across three
+It is built as a product rather than as a demo: 8,478 unit tests, 217 end-to-end tests across three
 browsers, 208 screenshot baselines, budgets enforced in CI, and a document for every subsystem in
 [`docs/`](docs/).
 
@@ -166,8 +166,8 @@ Rationale per choice, including the ones that were rejected:
 | --- | --- | --- |
 | Blocks | 72 | 13 of them effect layers, across nine categories |
 | Motion presets | 51 | entrance 13, hover 11, scroll 9, continuous 8, cursor 5, exit 5 |
-| Unit tests | 8,370 | in 469 files |
-| End-to-end tests | 215 | in 45 specs; 453 runs across the three browser projects |
+| Unit tests | 8,478 | in 474 files |
+| End-to-end tests | 217 | in 46 specs; 451 runs across the three browser projects |
 | Screenshot baselines | 208 | a separate suite and a separate config — `e2e/visual.config.ts` |
 | Coverage — editor / schema / codegen | 99.5 % / 95.9 % / 96.7 % | lines; branch floors are enforced per package in CI |
 | Studio first-load JS | 250.4 KiB gzip | budget 250 KiB — **430 B over**, and the gate says so ([ADR-371](docs/DECISIONS.md)) |
