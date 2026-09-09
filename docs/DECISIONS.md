@@ -16084,3 +16084,40 @@ keyboard should reach the card, not the seven controls inside the picture.* The 
   would mean rendering something other than the shipped component, which is the one thing this frame
   must not do.
 
+## ADR-389 — A stage table entry is the tallest the block has been measured at
+
+**Date** 2026-09-09 · **Prompt** 67 · **Status** Accepted
+
+### Question
+`gallery/card-stage.spec.ts` failed in CI on one block: `testimonial-marquee`, block 642, stage 640.
+The table (ADR-386) says 562. The same spec passes on the author's machine. Is the table wrong, the
+spec wrong, or the runner wrong?
+
+### Measurement
+All three browsers are Chrome; the two machines disagree about the font, and one testimonial wraps
+onto an extra line on the runner — **562 px here, 642 px there, a drift of 80 px**. The stage the
+table picks for 562 is 640, which the taller layout overruns by 2 px and is clipped.
+
+Nine of the 59 blocks with a height have less than 80 px of room before their stage clips them:
+`hero-aurora` 51, `feature-grid` 56, `accordion` 56, `container` 64, `hero-video` 70, `logo-cloud` 72,
+`newsletter-form` 73, `contact-form` 75, `testimonial-marquee` 78. Only the marquee actually clipped,
+so the drift on the others is smaller than theirs.
+
+### Decision
+**A table entry is the tallest height the block has been measured at, not the height it happens to be
+on the machine the table was written on.** `testimonial-marquee` becomes 642, which puts it on the 760
+step: 198 px of air here against a 300 px ceiling, 118 px on the runner. The safe direction is air —
+the same argument `cardStage` already makes for a block with no entry at all.
+
+The spec's drift annotation is now one-directional: it names a block whose measurement is *above* its
+entry, because that is the direction that clips. An entry above the measurement is the table doing its
+job on a narrower font, and the air it produces is already caught by the `tooMuchAir` assertion.
+
+### Consequences
+- One card is a step taller. Nothing else moves.
+- The eight other blocks with less than 80 px of room stay as they are. A systematic allowance —
+  picking the step for `height + 48 + 80` rather than `height + 48` — was measured as an alternative:
+  it moves 29 of 59 stages, grows the catalogue from 24 860 to 28 340 stage pixels, and stays under the
+  air ceiling (worst case 256). That is a visible change to a surface the owner has already accepted,
+  so it is his call rather than a measurement's, and it is recorded here rather than taken.
+

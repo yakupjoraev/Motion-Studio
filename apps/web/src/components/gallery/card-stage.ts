@@ -29,9 +29,16 @@ const MIN_AIR = 48
  * How tall each block lays out at `CARD_STAGE_WIDTH`, measured in a browser — ADR-386. Zero means the
  * block reports no height of its own, which is what an effect layer does.
  *
- * These are measurements, not preferences, and `e2e/blocks/card-stage.spec.ts` fails when a block's
+ * These are measurements, not preferences, and `e2e/gallery/card-stage.spec.ts` fails when a block's
  * real height moves away from its entry: a stage taller than its block is the wall of air this table
  * exists to remove, and a shorter one cuts the block off.
+ *
+ * **An entry is the tallest height the block has been measured at, not the height it happens to be
+ * here.** A block's height is a function of the font it is laid out in, and two machines running the
+ * same browser do not agree about the font: `testimonial-marquee` lays out at 562 on the author's
+ * machine and 642 on the runner — one extra line inside a testimonial — which put it two pixels past
+ * a 640 stage and cut it off in CI while passing locally. The stage has to hold the tallest of them,
+ * because the safe direction is air.
  */
 const BLOCK_HEIGHT: Readonly<Record<string, number>> = {
   section: 304,
@@ -61,7 +68,7 @@ const BLOCK_HEIGHT: Readonly<Record<string, number>> = {
   'bento-grid': 482,
   'pricing-table': 499,
   'testimonial-card': 188,
-  'testimonial-marquee': 562,
+  'testimonial-marquee': 642,
   'logo-cloud': 208,
   'cta-banner': 387,
   'cta-split': 305,

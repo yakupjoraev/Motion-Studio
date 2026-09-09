@@ -94,7 +94,13 @@ test.describe('the card stage table', () => {
       return out
     }, AIR_CEILING)
 
-    const drifted = rows.filter((row) => Math.abs(row.declared - row.measured) > 8)
+    /*
+     * One direction only. A table entry is the tallest height the block has been measured at, so an
+     * entry above what this machine lays out is the table doing its job on a machine with a narrower
+     * font — the wall of air that produces is caught below, by `tooMuchAir`. An entry *under* the
+     * measurement is the one that cuts blocks off, and it is the one worth naming with its number.
+     */
+    const drifted = rows.filter((row) => row.measured - row.declared > 8)
 
     if (drifted.length > 0) {
       // An annotation rather than a log: it lands in the report next to the run it came from, and
