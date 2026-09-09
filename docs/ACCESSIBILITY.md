@@ -179,6 +179,14 @@ The alternative is an `iframe` per preview, which does scope the outline. It is 
 with the measurement: a document per card, a theme that no longer cascades in, and a resize observer
 where a container query now does the work.
 
+**A preview that is a picture rather than the subject is `aria-hidden inert` instead.** The two are
+told apart by what the reader is there to do. On `/blocks/<id>` the component *is* the page, so it is
+reachable. A catalogue card is a picture of it (`gallery-card.tsx`), and so is the running page inside
+the landing hero's frame: what that one demonstrates is a gesture, and the gesture is announced by the
+draggable card's own label and by the live readout of its coordinates under the frame. Left in the
+tree, that frame gave the first screen a second `h1` and 24 tab stops inside a demonstration —
+ADR-388.
+
 ## Reduced motion
 
 Two independent signals, both honoured:

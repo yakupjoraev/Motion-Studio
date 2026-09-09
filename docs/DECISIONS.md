@@ -16043,3 +16043,44 @@ transition on the subject, so there is no per-frame JavaScript.
   120 KiB), and 27 accessibility specs across `a11y/landing`, `a11y/reduced-motion` and `a11y/zoom-200`
   — including the reduced-motion assertion that no transform animation exists on the page at all, and
   the 320 px reflow assertion.
+
+## ADR-388 — The page inside the hero frame is a picture: out of the reading, out of the tab order
+
+**Date** 2026-09-09 · **Prompt** 67 · **Status** Accepted
+
+### Question
+The first screen runs a real page inside its frame — `navbar`, `feature-grid`, `footer` and the
+`hero-aurora` ghost, rendered by the shipped components. Those components carry a document's worth of
+semantics with them. Does that page take part in the landing page's own document, or is it a picture
+of a page that happens to be running?
+
+### Measurement
+With the island mounted, the landing page announces **two first-level headings**: its own, and the
+`hero-aurora` ghost's ("Build the thing you keep sketching"). The frame also holds **24 links**, all
+of them in the tab order ahead of the card the visitor is meant to reach.
+
+`flows/language.spec.ts` failed on the second heading — `strict mode violation: getByRole('heading',
+{ level: 1 }) resolved to 2 elements`. It had been passing, and it was passing by luck: the island
+mounts on `requestIdleCallback` with a 1 200 ms timeout (`use-island-mount.ts`), so a spec that reads
+the heading immediately after a navigation sees one heading or two depending on how busy the machine
+is. Nothing in the hero's markup changed to cause it — the frame moving into the first screen changed
+the timing, not the tree.
+
+### Decision
+The page in the frame is wrapped in `aria-hidden="true" inert`, which is the idiom the catalogue card
+already uses for the same reason (`gallery-card.tsx`): *a card is a picture of a component, and a
+keyboard should reach the card, not the seven controls inside the picture.* The draggable card is
+**outside** that wrapper, because the card is the one thing on this stage a visitor is meant to reach.
+
+### Consequences
+- One first-level heading on the page, and `Tab` from the hero's last link lands on the demo card —
+  measured, both directions, in Chrome.
+- The demonstration is no longer readable by a screen reader. That is the intent: what it demonstrates
+  is a gesture, and the gesture is announced by the card's own label and by the live readout under the
+  frame, which prints the block's coordinates as it moves.
+- Two assertions added to `a11y/landing.spec.ts`: the frame carries an `<h1>` of its own *and* the page
+  announces exactly one, and the tab step from the copy lands on the card.
+- The 24 links are still in the HTML, so a crawler running JavaScript sees a second `<h1>`. Removing it
+  would mean rendering something other than the shipped component, which is the one thing this frame
+  must not do.
+

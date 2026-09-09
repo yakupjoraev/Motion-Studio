@@ -113,6 +113,20 @@ test.describe('the landing page', () => {
 
       await expect(page.locator(':focus')).toHaveText('Skip to content')
     })
+
+    test('steps from the hero copy onto the demo card, not into the demonstration', async ({
+      page,
+    }) => {
+      await open(page)
+      await settled(page)
+
+      // The last link of the hero's copy. What follows it in the DOM is the frame with the running
+      // page in it, and that page carries 24 links of its own.
+      await page.locator('#hero').getByRole('link').last().focus()
+      await page.keyboard.press('Tab')
+
+      await expect(page.getByRole('button', { name: /Hero block/ })).toBeFocused()
+    })
   })
 
   test('reaches the hero demo with the keyboard and moves it with the arrow keys', async ({
@@ -132,6 +146,20 @@ test.describe('the landing page', () => {
 
     // The readout under the frame is the node's position, so it is the proof that the key landed.
     await expect(page.getByRole('figure').first()).not.toHaveText(before ?? '')
+  })
+
+  test('keeps the page inside the hero frame out of the reading', async ({ page }) => {
+    await open(page)
+    await settled(page)
+
+    /*
+     * The frame runs shipped components, so the page in it carries a heading of its own — the point
+     * of the demonstration is that it is not a picture. What it must not do is announce itself: two
+     * first-level headings on one screen is two pages as far as a screen reader is concerned, and the
+     * navbar and footer in there would hand a keyboard a dozen stops inside a demonstration.
+     */
+    await expect(page.locator('[data-testid="hero-stage"] h1')).not.toHaveCount(0)
+    await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1)
   })
 
   test('is readable with no JavaScript: every section, and the demo as a static node', async ({

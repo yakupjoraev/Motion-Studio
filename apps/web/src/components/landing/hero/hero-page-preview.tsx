@@ -181,80 +181,89 @@ export function HeroPagePreview({ fallback }: HeroPagePreviewProps) {
             width={STAGE.width}
           >
             <div className="relative h-full w-full" ref={stage}>
-              {pageProps === null
-                ? fallback
-                : STAGE_PAGE.map((block, index) => (
-                    <div key={block.id}>
-                      {/*
+              {/*
+                The page is a picture of a page — `gallery-card.tsx` § inert. It is built out of the
+                shipped components, so it carries a navbar's links, a footer's links and the hero's
+                own `<h1>`: left in the tree, the first screen announces two first-level headings and
+                hands a keyboard twenty tab stops inside a demonstration. The card below is not in
+                here, because the card is the one thing on this stage a visitor is meant to reach.
+              */}
+              <div aria-hidden="true" inert>
+                {pageProps === null
+                  ? fallback
+                  : STAGE_PAGE.map((block, index) => (
+                      <div key={block.id}>
+                        {/*
                         Each block stands up inside its own plan: the dashed outline first, then the
                         real component in it. The index staggers them, so the page is drawn in the
                         order it is read — `landing.css` § The page, built.
                       */}
-                      <div
-                        className="ms-build"
-                        style={{
-                          ['--ms-build-index' as string]: String(index === 0 ? 0 : index + 1),
-                        }}
-                      >
-                        <BlockRender
-                          category={block.category}
-                          fallback={<span className="block h-24" />}
-                          id={block.id}
-                          props={pageProps[index] ?? {}}
-                        />
-                      </div>
-
-                      {/* The hero's place in the page, immediately under the navbar. */}
-                      {index === 0 ? (
                         <div
-                          className="ms-build relative"
-                          ref={slotRef}
-                          style={{ ['--ms-build-index' as string]: '1' }}
+                          className="ms-build"
+                          style={{
+                            ['--ms-build-index' as string]: String(index === 0 ? 0 : index + 1),
+                          }}
                         >
-                          <div
-                            className={`transition-opacity duration-[--ms-duration-base] ease-[--ms-ease-standard] ${ghost}`}
-                          >
-                            {heroProps === null ? (
-                              <span className="block h-[420px]" />
-                            ) : (
-                              <BlockRender
-                                category={DRAGGED_BLOCK.category}
-                                fallback={<span className="block h-[420px]" />}
-                                id={DRAGGED_BLOCK.id}
-                                props={heroProps[0] ?? {}}
-                              />
-                            )}
-                          </div>
+                          <BlockRender
+                            category={block.category}
+                            fallback={<span className="block h-24" />}
+                            id={block.id}
+                            props={pageProps[index] ?? {}}
+                          />
+                        </div>
 
-                          {/*
+                        {/* The hero's place in the page, immediately under the navbar. */}
+                        {index === 0 ? (
+                          <div
+                            className="ms-build relative"
+                            ref={slotRef}
+                            style={{ ['--ms-build-index' as string]: '1' }}
+                          >
+                            <div
+                              className={`transition-opacity duration-[--ms-duration-base] ease-[--ms-ease-standard] ${ghost}`}
+                            >
+                              {heroProps === null ? (
+                                <span className="block h-[420px]" />
+                              ) : (
+                                <BlockRender
+                                  category={DRAGGED_BLOCK.category}
+                                  fallback={<span className="block h-[420px]" />}
+                                  id={DRAGGED_BLOCK.id}
+                                  props={heroProps[0] ?? {}}
+                                />
+                              )}
+                            </div>
+
+                            {/*
                           The empty slot wears the canvas's own marks rather than a caption: a dashed
                           outline and a node chip at its top-left, exactly where the studio draws the
                           name of the thing under the pointer. Armed, both take the accent.
                         */}
-                          {placed ? null : (
-                            <span
-                              aria-hidden="true"
-                              className={`pointer-events-none absolute inset-2 rounded-md border border-dashed transition-colors duration-[--ms-duration-fast] ${
-                                armed
-                                  ? 'border-accent bg-accent-muted/25'
-                                  : 'border-border-strong bg-surface-0/55'
-                              }`}
-                            >
+                            {placed ? null : (
                               <span
-                                className={`absolute top-0 left-0 rounded-tl-md rounded-br-md px-2.5 py-1 font-mono text-[13px] uppercase tracking-[0.16em] transition-colors duration-[--ms-duration-fast] ${
+                                aria-hidden="true"
+                                className={`pointer-events-none absolute inset-2 rounded-md border border-dashed transition-colors duration-[--ms-duration-fast] ${
                                   armed
-                                    ? 'bg-accent text-foreground-onAccent'
-                                    : 'bg-surface-2 text-foreground-muted'
+                                    ? 'border-accent bg-accent-muted/25'
+                                    : 'border-border-strong bg-surface-0/55'
                                 }`}
                               >
-                                {hero.demoSlot}
+                                <span
+                                  className={`absolute top-0 left-0 rounded-tl-md rounded-br-md px-2.5 py-1 font-mono text-[13px] uppercase tracking-[0.16em] transition-colors duration-[--ms-duration-fast] ${
+                                    armed
+                                      ? 'bg-accent text-foreground-onAccent'
+                                      : 'bg-surface-2 text-foreground-muted'
+                                  }`}
+                                >
+                                  {hero.demoSlot}
+                                </span>
                               </span>
-                            </span>
-                          )}
-                        </div>
-                      ) : null}
-                    </div>
-                  ))}
+                            )}
+                          </div>
+                        ) : null}
+                      </div>
+                    ))}
+              </div>
 
               {guides.map((guide) => (
                 <span
