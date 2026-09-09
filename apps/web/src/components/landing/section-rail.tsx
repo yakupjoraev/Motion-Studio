@@ -16,12 +16,17 @@ export interface SectionProps {
 }
 
 /**
- * Every band of the page, hung off a ruler.
+ * Every band of the page, opened the way the first screen is: an origin.
  *
- * The rail is the page's one structural device and it is not decoration: this product is an editor
- * with rulers down two edges of its canvas, and the landing page is laid out on one. The label is
- * the section's coordinate. Below `lg` the rail has nowhere to go, so it becomes the same label above
- * the section — the information survives, the device does not pretend to.
+ * The rail used to hang the label in the left margin, small and vertically centred against a display
+ * heading — which reads as a stray note rather than as a coordinate, and on a narrow screen it moved
+ * somewhere else entirely. The first screen already had the right device and only used it once: a tick
+ * at the corner, a rule run out from it left to right, and the coordinate sitting on the rule. Every
+ * band now opens with that mark, so the page is one drawing with eight origins rather than a stack of
+ * sections with notes beside them.
+ *
+ * The mark carries the section's own border: a band that drew both had a hairline under the rule.
+ * The rule is `--ms-l-line-strong` because it is now the structure rather than a divider.
  *
  * The region is named by its heading first and its coordinate second, so a reader moving by landmark
  * hears "Fifteen packages, one direction. 05 / shape" rather than "05 / shape" — ADR-299.
@@ -30,18 +35,36 @@ export function Section({ label, id, children, bleed }: SectionProps) {
   return (
     <section
       aria-labelledby={`${id}-heading ${id}-label`}
-      className="relative scroll-mt-14 border-border-subtle border-t"
+      className="relative scroll-mt-14"
       id={id}
     >
-      <div className="mx-auto w-full max-w-[76rem] px-5 sm:px-8 lg:pl-[7.5rem]">
-        <p
-          className="pt-8 font-mono text-foreground-muted text-xs uppercase tracking-[0.16em] lg:absolute lg:top-20 lg:left-8 lg:w-[5rem] lg:pt-0 lg:text-right"
-          id={`${id}-label`}
-        >
-          {label}
-        </p>
-        {children}
+      {/*
+        The origin runs the container's full width, outside the reading column's rail inset: the mark
+        opens the sheet, the content sits in from it. `pt-9` is the room the coordinate needs above the
+        rule.
+      */}
+      <div className="mx-auto w-full max-w-[76rem] px-5 pt-9 sm:px-8">
+        <div className="relative">
+          <span
+            aria-hidden="true"
+            className="absolute -top-4 left-0 h-4 w-px origin-top bg-[var(--ms-l-line-strong)]"
+            data-ms-tick
+          />
+          <span
+            aria-hidden="true"
+            className="absolute -top-px right-0 left-0 h-px origin-left bg-[var(--ms-l-line-strong)]"
+            data-ms-run
+          />
+          <p
+            className="absolute -top-7 left-2 font-mono text-[10px] text-[var(--ms-l-ink-soft)] uppercase tracking-[0.2em]"
+            id={`${id}-label`}
+          >
+            {label}
+          </p>
+        </div>
       </div>
+
+      <div className="mx-auto w-full max-w-[76rem] px-5 sm:px-8 lg:pl-[7.5rem]">{children}</div>
       {bleed}
     </section>
   )

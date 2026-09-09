@@ -227,6 +227,24 @@
       animation-timeline: view();
       animation-range: entry 6% cover 34%;
     }
+
+    /*
+     * A band's origin draws itself as the band arrives: the tick first, then the rule out from it,
+     * left to right — the same mark the first screen makes once, made by every band on its own way in.
+     * `entry 0% entry 90%` so it is finished by the time the heading under it is readable rather than
+     * still crawling halfway down the screen.
+     */
+    [data-ms-tick] {
+      animation: ms-hero-column linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 55%;
+    }
+
+    [data-ms-run] {
+      animation: ms-hero-rule linear both;
+      animation-timeline: view();
+      animation-range: entry 10% entry 90%;
+    }
   }
 }
 
