@@ -16121,3 +16121,79 @@ job on a narrower font, and the air it produces is already caught by the `tooMuc
   air ceiling (worst case 256). That is a visible change to a surface the owner has already accepted,
   so it is his call rather than a measurement's, and it is recorded here rather than taken.
 
+## ADR-390 — The answer to a press is the rule on the link, not the route's fallback
+
+**Date** 2026-09-09 · **Prompt** 67 · **Status** Accepted
+
+### Question
+`flows/open-studio.spec.ts` presses "Open the studio" and asserts that the studio's own fallback
+appears. It has been red in CI across several commits while passing locally. Is the product failing to
+answer the press, or is the gate asserting the wrong answer?
+
+### Measurement
+With the route's payload held for 1 500 ms, in Chrome against the production build:
+
+| What | First seen after the press |
+| --- | --- |
+| The rule on the link (`nav-pending`) | **62 ms** |
+| The route's own frame (`studio-loading`) | 1 699 ms |
+| `canvas-placeholder` inside it | 1 700 ms |
+| The canvas | 1 943 ms |
+
+Nothing on this page prefetches, so the router cannot commit — and `loading.tsx` cannot render —
+until the payload lands. The fallback is therefore not an answer to the press; it is the first frame
+of the destination. Which one a spec sees depends on whether the landing page had hydrated when the
+click arrived: an un-hydrated page follows the link as a document request, the browser owns the wait,
+and no fallback renders at all. That is the CI failure, and it is ADR-280 again — a gate that only
+holds on one machine is measuring the machine.
+
+### Decision
+The spec asserts the rule (`nav-link.tsx`, `useLinkStatus`) as the answer to the press, after waiting
+for a state that proves hydration rather than for a duration: the hero's card is an island, so its
+button standing there is React having run. The route's own frame keeps its own test — a cold visit to
+`/studio`, where it is what the visitor waits in (measured: frame at 1 641 ms, canvas at 2 034 ms).
+
+### Consequences
+- Two tests instead of one, and each names a single thing: the press is answered, and the wait has the
+  shell's shape.
+- The spec now depends on the hero island, which is a coupling worth stating: if the hero stops being
+  an island, the hydration wait has to be re-stated rather than deleted.
+
+## ADR-391 — A public route has no `loading.tsx`: it would be the whole page for a reader with no JavaScript
+
+**Date** 2026-09-09 · **Prompt** 67 · **Status** Accepted
+
+### Question
+`/playground`, `/blocks`, `/blocks/[slug]` and `/docs` were given a `loading.tsx` each, so that a press
+is answered before the page arrives. Two accessibility specs went red on the same commit. Is the
+loading frame worth what it costs?
+
+### Measurement
+With JavaScript blocked — the method ACCESSIBILITY.md § Testing already uses — every one of those four
+routes rendered **the skeleton and nothing else**, in both Chrome and Firefox. The page's own markup is
+in the document, but behind the streaming boundary `loading.tsx` creates: the swap from fallback to
+content is performed by an inline script, and there is no script. Measured on `/docs`: 5 tables and 87
+links present, none of them visible, and the first text in the body is
+`requestAnimationFrame(function(){$RT=performance.now()})`.
+
+Every one of these routes is statically prerendered (`●`), so nothing was gained in exchange: the
+fallback is not covering a slow render, it is covering a network hop that the streaming form itself
+introduced. `a11y/docs.spec.ts` ("marks the current page in the nav with JavaScript blocked") and
+`a11y/gallery.spec.ts` ("is readable with no JavaScript") both failed on the runner and both pass with
+the file removed.
+
+### Decision
+The four public routes have no `loading.tsx`. The press is still answered — by the rule on the link
+(`nav-link.tsx`, measured at 62 ms after the press in ADR-390), which is the signal that arrives
+*before* the router commits and therefore the one the owner's complaint was about. `/studio` keeps its
+frame: it is a route whose whole subject is a canvas that needs a browser, so there is no reading of it
+without JavaScript to protect, and its frame is ADR-353.
+
+### Consequences
+- `route-loading.tsx` is deleted rather than kept for later. It has one caller shape and that shape is
+  the defect.
+- Between the router committing and the page painting, a public route shows the previous page rather
+  than a skeleton. That is the state a statically prerendered page is in for a few milliseconds; the
+  answer to the press is already on the link the reader pressed.
+- The rule generalises: **a `loading.tsx` on a route that has to be readable without JavaScript is that
+  route's entire content for that reader.** Any future one gets the no-JavaScript pass before it lands.

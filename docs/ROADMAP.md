@@ -328,6 +328,7 @@ out to be different claims.
 | ✅ | `prompts/67`, surface 1 of 5 — the landing. Six of the skills' nine findings were this product's own decisions and are retired with the measurement that retired them; the three that were real were a five-element hero, a page written at 10-11 px including its own navigation, and six identical effect cards | ADR-383 |
 | ✅ | Dragging a node with the keyboard picked up and never stepped, so nothing moved. Three defects, one gesture: an arrow moved 8 px where a position is ~570 px away, `Enter` both picked the node up and isolated it, and the canvas and the layers tree registered the drag under one id — so the drop resolved against the layers panel's coordinates. Operation 4 has a spec at last, in both directions | ADR-381 |
 | ✅ | A band aligned its children, so everything inside it was drawn 0 px wide: six of the eight templates read as a navbar and nothing else on the canvas, and a heading or a paragraph placed straight into a band was invisible **in the exported page too**. The canvas now matches the exported markup box for box | ADR-379, ADR-380 |
+| ✅ | The press on a link was unanswered until the route committed — 1 966 ms of a page that looked like it had missed the click. The answer is a rule on the link itself while its payload is in flight, measured at 62 ms. The loading frames added to the public routes alongside it were removed again: on a route that has to be readable without JavaScript, a `loading.tsx` **is** the page for that reader | ADR-390, ADR-391 |
 
 ### Open, in the order it is being done
 
@@ -340,17 +341,7 @@ Each is a prompt in `prompts/`, so a session picks one up without re-deriving it
    of ADR-133 in the panel's coordinates while the drag's own box is in the viewport's. That
    comparison is the next measurement. The keyboard path a user is given — `Mod+↑`/`↓` — reorders and
    announces, so this is a second route to a function that works.
-2. **The press is unanswered for the first 1.7 s.** `flows/open-studio.spec.ts` fails, and the spec is
-   right: measured on a 400 kbit/s, 300 ms connection, pressing **Open the studio** on the landing
-   leaves the landing on screen with no sign of anything happening until **1 966 ms**, when the route
-   commits and `CanvasPlaceholder` appears; the canvas itself lands after 4.5 s. Once the route
-   commits ADR-353 holds — a direct cold load of `/studio` at the same throttle shows the placeholder
-   at 1 864 ms and holds it — so what is missing is feedback on the **press**, before the router can
-   commit anything. Two candidates measured and one rejected: turning the CTA's `prefetch` back on
-   changes nothing, because what is slow is the payload the router is waiting for. The remaining shape
-   is pending state on the link itself (`useLinkStatus`), which makes it a client component and a
-   visual decision — so it belongs with `prompts/67` rather than to a passing fix.
-3. **`prompts/67`, surfaces 2 to 5 — the design pass, continued.** Surface 1 (the landing) is done
+2. **`prompts/67`, surfaces 2 to 5 — the design pass, continued.** Surface 1 (the landing) is done
    (ADR-383). The order and the bar per surface come from `DESIGN_REFERENCES.md` § Applying it per
    surface, which is loudness, not standard of finish:
    - **the studio chrome** — low loudness, high craft. Its own test is in that document: screenshot
@@ -366,9 +357,9 @@ Each is a prompt in `prompts/`, so a session picks one up without re-deriving it
    One question is already open and belongs to surface 2: `SectionIntro` puts a big headline left and
    a small explainer right on every band, which `tasteskill` § 4.7 bans as a split header. It is the
    page's structural rhythm, so changing it is a composition decision rather than a polish item.
-4. **`prompts/68` — the code panel beside the canvas**, collapsible. What makes this not a page
+3. **`prompts/68` — the code panel beside the canvas**, collapsible. What makes this not a page
    builder currently lives behind a dialog nobody is told to open.
-5. **`prompts/69` — findability and ownership.** SEO, the privacy and terms pages, the domain, and
+4. **`prompts/69` — findability and ownership.** SEO, the privacy and terms pages, the domain, and
    the three coupled decisions below. Raised by the owner 2026-09-05.
 
 ### The four questions in prompt 69, and why they are one decision

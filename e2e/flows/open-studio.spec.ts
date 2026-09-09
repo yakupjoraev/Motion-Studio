@@ -1,4 +1,6 @@
-import { expect, test } from '@playwright/test'
+import { type Page, expect, test } from '@playwright/test'
+
+import { settled } from '../fixtures/settle'
 
 /**
  * ADR-353 — what the landing page shows between the press and the studio.
@@ -9,31 +11,63 @@ import { expect, test } from '@playwright/test'
  */
 const HOLD_MS = 1500
 
-test.describe('opening the studio', () => {
-  test('answers the press with the shell before the shell exists', async ({ page }) => {
-    // Hold the route's own payload, not the chunks: this is the request the segment suspends on, and
-    // holding `**/*` would also hold the fallback's stylesheet.
-    await page.route(/\/studio(\?|$)/, async (route) => {
-      await new Promise((resolve) => setTimeout(resolve, HOLD_MS))
-      await route.continue()
-    })
+/**
+ * Hold the route's own payload, not the chunks: this is the request the segment suspends on, and
+ * holding every request would also hold the fallback's own stylesheet.
+ */
+const holdStudio = async (page: Page): Promise<void> => {
+  await page.route(/\/studio(\?|$)/, async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, HOLD_MS))
+    await route.continue()
+  })
+}
 
+test.describe('opening the studio', () => {
+  test('answers the press while the route is still in flight', async ({ page }) => {
+    await holdStudio(page)
     await page.goto('/')
+
+    /*
+     * The press has to be a *client* navigation, and that is a state rather than a delay: an
+     * un-hydrated page follows the link as a document request, the browser owns the wait, and the
+     * assertion below would be reporting how loaded the runner was. The hero's card is an island, so
+     * it standing there is React having run, and `settled` is the network quiet on top of that.
+     *
+     * The spec asserted the route's own fallback instead, and failed in CI while passing locally for
+     * exactly this reason — ADR-280: a gate that only holds on one machine is measuring the machine.
+     */
+    await page.getByRole('button', { name: /Hero block/ }).waitFor()
+    await settled(page)
 
     await page.getByRole('link', { name: 'Open the studio' }).first().click()
 
     /*
-     * Whichever of the two fallbacks the router reaches first, the answer on screen is the same one —
-     * which is the point of them sharing a component. The route's own fallback is the one that also
-     * carries `aria-busy`, and it is absent once the shell has painted, so it is not asserted here:
-     * the router prefetches `/studio` from the landing page and which fallback wins is its business.
+     * The answer is the rule on the link — `nav-link.tsx`. Nothing on this page prefetches, so at
+     * this point the router has not committed and `loading.tsx` has not rendered: measured at 62 ms
+     * after the press, against 1 699 ms for the route's own fallback.
      */
-    await expect(page.getByTestId('canvas-placeholder')).toBeVisible()
-    await expect(page.getByText('Opening the studio…')).toBeVisible()
+    await expect(page.getByTestId('nav-pending')).toBeVisible()
+
+    // And it is an answer, not the destination: the shell is not there while the rule is.
     expect(await page.locator('[data-testid="canvas-root"]').count()).toBe(0)
 
-    // And it is a fallback, not a destination: the studio replaces it.
     await expect(page.getByTestId('canvas-root')).toBeVisible({ timeout: 30_000 })
-    await expect(page.getByTestId('canvas-placeholder')).toBeHidden()
+    await expect(page.getByTestId('nav-pending')).toHaveCount(0)
+  })
+
+  test('waits in the shell’s own frame rather than in an empty one', async ({ page }) => {
+    /*
+     * The other half of ADR-353: the visitor who arrives at `/studio` directly. The frame is the
+     * shell's grid rather than a spinner, so the layout waited in is the layout that arrives —
+     * measured at 1 641 ms for the frame and 2 034 ms for the canvas with the payload held.
+     */
+    await holdStudio(page)
+    await page.goto('/studio')
+
+    await expect(page.getByTestId('canvas-placeholder').first()).toBeVisible()
+    await expect(page.getByText('Opening the studio…').first()).toBeVisible()
+
+    await expect(page.getByTestId('canvas-root')).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByTestId('canvas-placeholder').first()).toBeHidden()
   })
 })
