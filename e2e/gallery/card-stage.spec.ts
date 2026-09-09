@@ -6,19 +6,24 @@ import { expect, test } from '@playwright/test'
  * the thing that quietly stops being true: a block gains a line of copy, its card either grows a wall
  * of air or cuts the block off, and nothing else in the suite notices.
  *
- * So this spec measures the blocks. Each card publishes the height the table claims for it as
- * `data-block-height`; this compares that with what the block actually lays out at and names every
- * block that has moved, with the number to write into the table.
+ * **What this asserts is the property, not the number.** The first version compared the table against
+ * what the blocks measured and allowed eight pixels of drift. It failed on the runner with seven
+ * blocks out by 18 to 80 px while passing on the machine the table was taken on: a block's height is
+ * a function of the font it is laid out in, and the two browsers did not agree about the font. A gate
+ * that only holds on one machine is measuring the machine (ADR-280).
  *
- * Eight pixels of tolerance, because a font that loads a frame late can move a line box by one or two
- * and the stage rounds to a step anyway.
+ * The table exists so that no card cuts its block off and no card is mostly air. That is what is
+ * checked here, on whatever font the browser actually used. The measured heights are printed either
+ * way, so a table that has drifted far enough to be worth rewriting says so with the numbers to write.
  */
-const TOLERANCE = 8
+
+/** Air above and below the block, in stage pixels: `MIN_AIR` doubled plus the widest step of the scale. */
+const AIR_CEILING = 300
 
 test.describe('the card stage table', () => {
   test.slow()
 
-  test('matches the height every block really lays out at', async ({ page }) => {
+  test('gives every block a stage that fits it and does not drown it', async ({ page }) => {
     await page.goto('/blocks')
 
     // Mount every preview: the stage only exists once its card has been scrolled near.
@@ -41,8 +46,16 @@ test.describe('the card stage table', () => {
       )
       .toBe(0)
 
-    const drifted = await page.evaluate((tolerance) => {
-      const out: { id: string; declared: number; measured: number }[] = []
+    const rows = await page.evaluate((ceiling) => {
+      const out: {
+        id: string
+        declared: number
+        measured: number
+        stage: number
+        clipped: boolean
+        air: number
+        tooMuchAir: boolean
+      }[] = []
 
       for (const card of document.querySelectorAll('[data-block-card]')) {
         const id = card.getAttribute('data-block-card') ?? ''
@@ -63,16 +76,50 @@ test.describe('the card stage table', () => {
           continue
         }
 
-        out.push({ id, declared, measured: Math.round(wrapper.offsetHeight - air * 2) })
+        const stageHeight = Number.parseFloat(getComputedStyle(stage).height)
+        const measured = Math.round(wrapper.offsetHeight - air * 2)
+        const spare = Math.round(stageHeight - measured)
+
+        out.push({
+          id,
+          declared,
+          measured,
+          stage: Math.round(stageHeight),
+          clipped: measured > stageHeight + 1,
+          air: spare,
+          tooMuchAir: spare > ceiling,
+        })
       }
 
-      return out.filter((row) => Math.abs(row.declared - row.measured) > tolerance)
-    }, TOLERANCE)
+      return out
+    }, AIR_CEILING)
+
+    const drifted = rows.filter((row) => Math.abs(row.declared - row.measured) > 8)
+
+    if (drifted.length > 0) {
+      // An annotation rather than a log: it lands in the report next to the run it came from, and
+      // the numbers are what a person would paste into the table.
+      test.info().annotations.push({
+        type: 'card-stage drift',
+        description: drifted.map((row) => `${row.id}: ${row.measured}`).join(', '),
+      })
+    }
+
+    const clipped = rows.filter((row) => row.clipped)
 
     expect(
-      drifted,
-      `these blocks no longer lay out at the height card-stage.ts records:\n${drifted
-        .map((row) => `  ${row.id}: table says ${row.declared}, measured ${row.measured}`)
+      clipped,
+      `these blocks are taller than the stage they are shown on, so the card cuts them off:\n${clipped
+        .map((row) => `  ${row.id}: block ${row.measured}, stage ${row.stage}`)
+        .join('\n')}`,
+    ).toEqual([])
+
+    const airy = rows.filter((row) => row.tooMuchAir)
+
+    expect(
+      airy,
+      `these blocks sit in more air than the scale allows, which is the wall of air ADR-386 removed:\n${airy
+        .map((row) => `  ${row.id}: block ${row.measured}, stage ${row.stage}, air ${row.air}`)
         .join('\n')}`,
     ).toEqual([])
   })

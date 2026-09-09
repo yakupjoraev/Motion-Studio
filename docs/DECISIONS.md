@@ -15949,9 +15949,18 @@ pixels). They read as a small block centred in a small plate rather than as an e
 
 ### Consequences
 - **A table of measurements goes stale silently**, so `e2e/gallery/card-stage.spec.ts` measures every
-  block and fails with the number to write down. Proved by putting 200 in `navbar`'s row: *"navbar:
-  table says 200, measured 65"*. The `gallery/` directory is added to the CI e2e command; Firefox and
-  WebKit are unaffected, since `playwright.config.ts` limits them to `flows/` and `a11y/`.
+  block. The `gallery/` directory is added to the CI e2e command; Firefox and WebKit are unaffected,
+  since `playwright.config.ts` limits them to `flows/` and `a11y/`.
+
+  **What that spec asserts had to change once, and the reason is worth keeping.** It first compared the
+  table against the measurement and allowed 8 px of drift, which was proved as a gate by putting 200 in
+  `navbar`'s row (*"navbar: table says 200, measured 65"*) — and then failed on the runner with seven
+  blocks out by 18 to 80 px while passing on the machine the table was taken on. `text` measured 80
+  here and 54 there: a block's height is a function of the font it is laid out in, and the two browsers
+  did not agree about the font. A gate that only holds on one machine measures the machine (ADR-280).
+  It now asserts the property the table exists for — no card cuts its block off, and no card holds more
+  than 300 stage pixels of air — on whatever font the browser used, and annotates the run with the
+  measured heights so a table worth rewriting says so.
 - The card publishes its expected height as `data-block-height`, because `e2e` is a package and
   reaching into `apps/web/src` across that boundary is banned — and a spec holding its own copy of 72
   numbers is two tables that disagree by the second edit.
