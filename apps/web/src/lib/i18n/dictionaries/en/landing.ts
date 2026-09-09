@@ -55,6 +55,7 @@ export const landing = {
     heading: 'Every effect is a component with a schema.',
     intro:
       'Not a snippet to paste and patch. Each one is parameterised, tunable in the inspector, correct under reduced motion, and exportable as source you can read.',
+    stackTitle: 'Effect stack',
     auroraName: 'Aurora',
     auroraDescription: 'Two-hue blurred fields drifting on unrelated periods behind the content.',
     meshName: 'Mesh gradient',
@@ -76,16 +77,20 @@ export const landing = {
     rail: '03 / inspector',
     heading: 'Change a value; watch the component, not a preview of one.',
     intro:
-      'Controls come from each block’s Zod schema, so a prop that exists has a control and a prop that does not cannot be set. Scrub one and the canvas is already the answer.',
-    note: 'One control, two ends of its range. The studio scrubs it with a drag; this page scrubs it with the scroll.',
+      'Controls come from each block’s Zod schema, so a prop that exists has a control and a prop that does not cannot be set. Add one and the canvas is already the answer.',
+    note: 'The stack goes on one row at a time and comes off the same way. In the studio you add the rows; here the band walks through them.',
     before: 'before',
     after: 'after',
-    panelTitle: 'Inspector · Style',
-    radius: 'Radius',
-    glow: 'Glow',
+    panelTitle: 'Inspector · Style and motion',
     card: 'Card',
-    /** `{percent}` is how far the section has travelled through the viewport. */
-    scrollPosition: 'scroll position {percent}%',
+    stepRadius: 'Radius',
+    /* The presets' and the effect's own names, as the studio's own panels print them. */
+    stepFlip: 'Flip in',
+    stepScale: 'Scale in',
+    stepFloat: 'Float',
+    stepGlow: 'Glow',
+    /** `{applied}` of `{total}` rows are on the subject. */
+    applied: '{applied} of {total} applied',
   },
 
   export: {

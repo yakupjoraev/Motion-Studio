@@ -15967,3 +15967,70 @@ pixels). They read as a small block centred in a small plate rather than as an e
   nothing is stored), so light mode is reachable only through a stored choice. That is ADR-318's
   recorded open question and this entry does not settle it; both modes were checked by storing the
   preference.
+
+## ADR-387 — Two bands rebuilt: the effects get one plate and a cycle, the inspector gets a stack
+
+**Date** 2026-09-09 · **Prompt** 67 · **Status** Accepted
+
+### Question
+The owner's verdict on three parts of the landing, in his own order:
+
+1. the coordinate on every band was "impossible to tell where or how it is placed", while the first
+   screen's origin mark — a tick, a rule run out from it, the coordinate sitting on the rule — was
+   right;
+2. the effects band was not showing effects: "where are the super effects, where is the cycle";
+3. the inspector band should put styles on the subject one at a time, let the subject turn, shrink,
+   grow and glow, then take them off one at a time and start again.
+
+### Measurement
+**The bands' coordinates.** Nothing to measure: the mark the owner named as correct already existed
+on the first screen and was used once. Every band now opens with it.
+
+**The effects band.** Measured over five frames a second apart, three of its six tiles were
+byte-identical every time: `spotlight` is written from the pointer and a band being scrolled past has
+none, `dot-grid` is a texture with nothing to animate, and `shine` spends four fifths of its cycle
+waiting. Of the thirteen effects in the catalogue, five move on their own at any moment
+(`aurora-background`, `mesh-gradient`, `beams`, `border-beam`, `particles`) and `shine` moves in
+bursts; the other seven are still by construction.
+
+The second measurement was the ground. These effects are made of light, and the band showed them on
+vellum: a beam at the catalogue's own intensity over a near-white surface is a smudge. The `particles`
+field on the old rail was 80 points of 2 px at 24 % opacity over paper — measured invisible, in both
+colour modes, which is what the prompt had recorded as "nearly invisible in light mode".
+
+### Decision
+**One plate, one layer at a time, and the plate is blueprint in both modes.** The band was a
+horizontal pin with six tiles travelling sideways; it is now a single artboard with the stack beside
+it, and the six effects that carry themselves take it in turn for 5.2 s each. The plate keeps the dark
+values in light mode as well (`.ms-stage`), because it is the print the light is shown on rather than
+a section inverting its theme — the taste pass bans the latter and this is not it.
+
+The stack rows are real buttons: picking one holds it and stops the cycle, since an animation a reader
+has taken hold of must not keep moving under them. The active row is marked by the accent rule down
+its left edge, by weight, and by being the one on the plate — never by colour alone.
+
+**The inspector band is a stack going on and coming off.** It used to scrub one value with the scroll,
+which made the claim depend on the reader's scroll speed and showed a single property moving. The
+inspector's actual job is a stack, so the band applies five real things in order — the block's
+`radius`, then the `flip-in`, `scale-in` and `float` presets, then the `glow` effect — holds the full
+set, and takes them off in reverse. One integer changes per step at 900 ms; the movement is a CSS
+transition on the subject, so there is no per-frame JavaScript.
+
+### Consequences
+- **The horizontal pin is gone**, and with it 97 lines of `landing.css` and the `scrollable-region`
+  tab stop it needed. `ms-hpin-fill`'s keyframes outlived it — the split band's seam draws itself with
+  them — and are kept as `ms-rule-fill`, named for what they do rather than for the band that is gone.
+- The band mounts one effect instead of six, so the plate can afford the values a full-width surface
+  needs: blur 120 on the aurora against the tile's 56, a 5 px arc on the border beam against 2.
+  `particles` asked for 130 points against a schema whose ceiling is 80 and nothing rejected it,
+  because a card renders props directly rather than through `parse`.
+- The aurora's grain stays off. It was measured off for the small tile and the reason holds at every
+  size a phone shows: the grain is the loudest thing on the plate and it reads as noise, not light.
+- `spotlight` and `dot-grid` are shown in the catalogue instead, where a reader has a pointer.
+- The inspector's rows are the presets' own names as the studio prints them, translated (ADR-368), not
+  their ids: a page that shows `flip-in` where the product says "Переворот" is showing a different
+  product.
+- Verified: 8 478 unit tests, `lint`, `typecheck`, `build`, size-limit (landing 116.24 kB against
+  120 KiB), and 27 accessibility specs across `a11y/landing`, `a11y/reduced-motion` and `a11y/zoom-200`
+  — including the reduced-motion assertion that no transform animation exists on the page at all, and
+  the 320 px reflow assertion.

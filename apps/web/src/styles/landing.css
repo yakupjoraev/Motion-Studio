@@ -132,6 +132,53 @@
 }
 
 /*
+ * THE STAGE: ONE DARK PLATE, IN BOTH MODES
+ *
+ * The effects are light. On vellum they were washed out — a beam at 8 % over a near-white ground is a
+ * smudge, and half the catalogue's best work is invisible on paper. So the band that shows them owns a
+ * plate of blueprint, and it stays blueprint in both colour modes: this is the print the light is being
+ * shown on, not a section that flipped theme (§ 4.11 of the taste pass bans that, and it is right —
+ * what is banned is a *section* inverting, not a framed artefact keeping its own material).
+ *
+ * The values are the dark mode's own, so the plate is the same world rather than a third palette. The
+ * Tailwind bridge is re-declared for the reason ADR-385 records: a custom property resolves on the
+ * element it is declared on, so overriding `--ms-color-*` here changes nothing a utility class reads
+ * unless `--color-*` is re-declared alongside it.
+ */
+.ms-stage {
+  --ms-color-surface-0: oklch(0.205 0.05 258);
+  --ms-color-surface-1: oklch(0.245 0.048 258);
+  --ms-color-surface-2: oklch(0.185 0.045 258);
+  --ms-color-surface-3: oklch(0.3 0.055 255);
+  --ms-color-foreground: oklch(0.955 0.008 250);
+  --ms-color-foreground-muted: oklch(0.8 0.03 240);
+  --ms-color-foreground-subtle: oklch(0.8 0.03 240);
+  --ms-color-border: oklch(0.4 0.06 250);
+  --ms-color-border-strong: oklch(0.52 0.07 245);
+  --ms-color-border-subtle: oklch(0.32 0.055 255);
+  --ms-color-accent: oklch(0.685 0.19 36);
+  --ms-color-accent-hover: oklch(0.72 0.185 38);
+  --ms-color-accent-muted: oklch(0.685 0.19 36 / 0.22);
+  --ms-color-accent-ring: oklch(0.72 0.185 38);
+  --ms-color-foreground-onAccent: oklch(0.16 0.04 258);
+
+  --color-surface-0: var(--ms-color-surface-0);
+  --color-surface-1: var(--ms-color-surface-1);
+  --color-surface-2: var(--ms-color-surface-2);
+  --color-surface-3: var(--ms-color-surface-3);
+  --color-foreground: var(--ms-color-foreground);
+  --color-foreground-muted: var(--ms-color-foreground-muted);
+  --color-foreground-subtle: var(--ms-color-foreground-subtle);
+  --color-border: var(--ms-color-border);
+  --color-border-strong: var(--ms-color-border-strong);
+  --color-border-subtle: var(--ms-color-border-subtle);
+  --color-accent: var(--ms-color-accent);
+
+  background-color: var(--ms-color-surface-0);
+  color: var(--ms-color-foreground);
+}
+
+/*
  * The sheet itself: a millimetre grid with a heavier rule every ten squares, which is graph paper and
  * is also the canvas's own grid at the canvas's own sizes (CANVAS.md § Grid: 8 px, heavier at 80).
  */
@@ -142,77 +189,6 @@
     linear-gradient(to bottom, var(--ms-l-grid-fine) 1px, transparent 1px);
   background-size: 80px 80px, 80px 80px, 8px 8px, 8px 8px;
   background-position: 0 0;
-}
-
-/*
- * A HORIZONTAL PIN, IN CSS
- *
- * The section stands still while its track travels sideways, and there is no JavaScript in it at all:
- * the runway carries a `view-timeline`, the track's animation is driven by that timeline, and the
- * browser does the arithmetic on the compositor. The taste pass bans `window.addEventListener`
- * ('scroll') for this, GSAP is not in this project by decision (ADR-349), and the product's own scroll
- * bus measures the *document*, not a section, so it cannot drive a pin.
- *
- * **The fallback is the base state, not an afterthought.** Where the timeline is unsupported, and
- * wherever reduced motion is asked for, none of the rules below apply and what is left is a track you
- * scroll by hand with snap points. That is the same answer the shipped `horizontal-scroll` preset
- * gives under reduced motion: the track, at its start, scrollable by hand.
- */
-.ms-hpin {
-  --ms-hpin-card: clamp(17rem, 24vw, 25rem);
-  --ms-hpin-gap: 1.5rem;
-  --ms-hpin-edge: max(1.25rem, 5vw);
-  --ms-hpin-track: calc(
-    var(--ms-hpin-count) *
-    var(--ms-hpin-card) +
-    (var(--ms-hpin-count) - 1) *
-    var(--ms-hpin-gap) +
-    2 *
-    var(--ms-hpin-edge)
-  );
-  /*
-   * `100vw`, not `100%`: this value is used in `height` and in a transform, and a percentage inside a
-   * custom property resolves against whatever the *use site* means by it — in `height` that is the
-   * parent's height, which collapsed the runway to one viewport and the travel to nothing (measured:
-   * the track sat at 0 at every scroll position). The cost is the scrollbar's width of travel.
-   */
-  --ms-hpin-travel: max(0px, calc(var(--ms-hpin-track) - 100vw));
-
-  position: relative;
-  /*
-   * Full width of the page, not of the reading column: the section hands this element out through its
-   * own `bleed` slot, so there is no negative margin to get wrong. `100vw` would count the scrollbar
-   * and put the page into horizontal scroll.
-   */
-  width: 100%;
-}
-
-.ms-hpin-stage {
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
-}
-
-.ms-hpin-stage::-webkit-scrollbar {
-  display: none;
-}
-
-.ms-hpin-track {
-  display: flex;
-  gap: var(--ms-hpin-gap);
-  padding-inline: var(--ms-hpin-edge);
-  align-items: stretch;
-}
-
-.ms-hpin-card {
-  flex: 0 0 var(--ms-hpin-card);
-  scroll-snap-align: center;
-}
-
-@keyframes ms-hpin-travel {
-  to {
-    transform: translate3d(calc(var(--ms-hpin-travel) * -1), 0, 0);
-  }
 }
 
 /*
@@ -330,68 +306,6 @@
   }
 }
 
-@keyframes ms-hpin-fill {
-  from {
-    transform: scaleX(0);
-  }
-  to {
-    transform: scaleX(1);
-  }
-}
-
-/*
- * The head of the pinned stage. A reader held in one place for two viewports of scrolling has lost
- * the section's heading off the top of the screen, so the coordinate stays with them and a rule fills
- * as the track travels. It exists only where the pin does; a scrolled-by-hand track has its own
- * scrollbar-shaped answer already.
- */
-.ms-hpin-head {
-  display: none;
-}
-
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .ms-hpin {
-      height: calc(100svh + var(--ms-hpin-travel));
-      view-timeline-name: --ms-hpin-scroll;
-      view-timeline-axis: block;
-    }
-
-    .ms-hpin-stage {
-      position: sticky;
-      top: 0;
-      display: flex;
-      align-items: center;
-      height: 100svh;
-      overflow-x: clip;
-      scroll-snap-type: none;
-    }
-
-    .ms-hpin-track {
-      width: max-content;
-      /*
-       * `contain` is the range where a subject taller than the scrollport covers it completely, which
-       * is exactly the stretch the stage is pinned for.
-       */
-      animation: ms-hpin-travel linear both;
-      animation-timeline: --ms-hpin-scroll;
-      animation-range: contain 0% contain 100%;
-      will-change: transform;
-    }
-
-    .ms-hpin-head {
-      display: flex;
-    }
-
-    .ms-hpin-fill {
-      transform-origin: left center;
-      animation: ms-hpin-fill linear both;
-      animation-timeline: --ms-hpin-scroll;
-      animation-range: contain 0% contain 100%;
-    }
-  }
-}
-
 /*
  * THE GAP, DRAWN
  *
@@ -442,7 +356,7 @@
 
     .ms-split-seam {
       transform-origin: left center;
-      animation: ms-hpin-fill linear both;
+      animation: ms-rule-fill linear both;
       animation-timeline: --ms-split;
       animation-range: entry 45% contain 45%;
     }
@@ -501,6 +415,16 @@
   }
   to {
     transform: none;
+  }
+}
+
+/* A rule drawing itself left to right, driven by whatever timeline the caller attaches. */
+@keyframes ms-rule-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
   }
 }
 

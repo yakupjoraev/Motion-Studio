@@ -4,73 +4,44 @@ import { Section } from '../section-rail'
 
 import { effectCards } from './effect-cards'
 import { EffectGridIsland } from './effect-grid-island'
-import { EffectShell } from './effect-shell'
+import { EffectStack } from './effect-stack'
+import { EffectStage } from './effect-stage'
 
 /**
- * Thirteen effects ship; six are on the rail. Each panel is a real surface with the real effect
- * painted on it — a still picture of an effect, on a page about motion, is the wrong argument.
+ * Thirteen effects ship; six take the plate in turn.
  *
- * **The section is a horizontal pin.** It stands still while the track travels sideways, which buys
- * every effect most of a viewport instead of the 128 px a three-column grid could give it. The
- * mechanism is a CSS view timeline and nothing else: no scroll listener, no animation library, and a
- * track you scroll by hand wherever the timeline is unsupported or reduced motion is asked for.
+ * **One subject, not a catalogue.** The band used to be a horizontal pin with six tiles travelling
+ * sideways, and it failed the thing it exists to do twice over: a third of a column is not enough
+ * surface for an effect made of light, and vellum is not enough dark for one to read on. Three of the
+ * six were also measured standing still. So the band is now a single artboard of blueprint with the
+ * stack beside it, and the layers take it one at a time — which is also how the studio applies them.
  *
- * The server renders every panel complete, with its name and its description. The island paints the
- * live effect over that after mount, so the section is finished before any of it arrives and finished
- * still if none of it does.
+ * The server renders the plate with the first layer's name and description already on it, so the
+ * section is finished before any JavaScript arrives and finished still if none of it does. The island
+ * paints the live effect over that and starts the cycle.
  */
 export function EffectGrid() {
   const { effects } = getRequestDictionary().landing
   const cards = effectCards(effects)
+  const first = cards[0]
 
   return (
-    <Section
-      bleed={
-        <div className="ms-hpin" style={{ ['--ms-hpin-count' as string]: String(cards.length) }}>
-          {/*
-            Where the timeline is unsupported and under reduced motion this track is scrolled by
-            hand, which makes it a scrollable region — and a scrollable region without a tab stop
-            leaves everything past its right edge unreachable from the keyboard. Same rule, same
-            reason as the export sample's `pre` (ADR-298); axe names it `scrollable-region-focusable`.
-          */}
-          <div
-            aria-labelledby="effects-heading"
-            className="relative ms-hpin-stage"
-            // biome-ignore lint/a11y/useSemanticElements: a region that scrolls is a div with a role, not a landmark element
-            role="region"
-            // biome-ignore lint/a11y/noNoninteractiveTabindex: the tab stop is what makes the far end of the track reachable
-            tabIndex={0}
-          >
-            {/* The coordinate stays with a reader the pin has held for two viewports, and the rule
-                fills as the track travels. Both live only where the pin does. */}
-            <div
-              aria-hidden="true"
-              className="ms-hpin-head absolute inset-x-0 top-0 items-center gap-4 px-[max(1.25rem,5vw)] pt-8"
-            >
-              <span className="font-mono text-[10px] text-foreground-muted uppercase tracking-[0.22em]">
-                {effects.rail}
-              </span>
-              <span className="relative h-px flex-1 bg-border">
-                <span className="ms-hpin-fill absolute inset-0 block bg-[var(--ms-l-accent)]" />
-              </span>
-            </div>
-
-            <EffectGridIsland
-              className="ms-hpin-track"
-              fallback={cards.map((card, index) => (
-                <EffectShell card={card} index={index} key={card.id} total={cards.length} />
-              ))}
-            />
-          </div>
-        </div>
-      }
-      id="effects"
-      label={effects.rail}
-    >
-      <div className="flex flex-col gap-10 pt-16 pb-16 lg:pt-24">
+    <Section id="effects" label={effects.rail}>
+      <div className="flex flex-col gap-10 py-16 lg:py-24">
         <SectionIntro heading={effects.heading} id="effects-heading">
           {effects.intro}
         </SectionIntro>
+
+        <EffectGridIsland
+          fallback={
+            first === undefined ? null : (
+              <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,15rem)_minmax(0,1fr)] lg:gap-8">
+                <EffectStack active={0} cards={cards} title={effects.stackTitle} />
+                <EffectStage card={first} />
+              </div>
+            )
+          }
+        />
       </div>
     </Section>
   )

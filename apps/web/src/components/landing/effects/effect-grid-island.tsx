@@ -5,23 +5,21 @@ import { type ReactNode, Suspense, lazy } from 'react'
 import { useIslandMount } from '../use-island-mount'
 
 /**
- * The live grid is a chunk of its own and it arrives when the section does. Six effects on screen at
- * once is the largest concurrent load on this page, and PERFORMANCE.md § Public pages gives `/` 120 kB
- * of first-load JS and a 2.0 s LCP — neither of which a section below the fold may spend.
+ * The live band is a chunk of its own and it arrives when the section does. PERFORMANCE.md § Public
+ * pages gives `/` 120 kB of first-load JS and a 2.0 s LCP, neither of which a section below the fold
+ * may spend. One effect is mounted at a time, which is also why the plate can afford the big values.
  */
 const Live = lazy(async () => ({ default: (await import('./effect-grid-live')).EffectGridLive }))
 
 export interface EffectGridIslandProps {
   readonly fallback: ReactNode
-  /** The island's own element is the track, so the rail's class belongs to it and not to a wrapper. */
-  readonly className?: string
 }
 
-export function EffectGridIsland({ fallback, className }: EffectGridIslandProps) {
+export function EffectGridIsland({ fallback }: EffectGridIslandProps) {
   const { ref, mounted } = useIslandMount()
 
   return (
-    <div className={className} ref={ref}>
+    <div className="min-w-0" ref={ref}>
       {mounted ? <Suspense fallback={fallback}>{<Live />}</Suspense> : fallback}
     </div>
   )

@@ -4,17 +4,19 @@ import { Section } from '../section-rail'
 
 import { WalkthroughBand } from './walkthrough-band'
 import { WalkthroughIsland } from './walkthrough-island'
-import { END, START, WalkthroughRows, WalkthroughSubject } from './walkthrough-values'
+import { WalkthroughPair, WalkthroughRows } from './walkthrough-panel'
+import { STEPS } from './walkthrough-steps'
 
 /**
  * The inspector, doing the thing the inspector does — VISION.md § The product: "the inspector is
  * generated from each component's schema".
  *
  * The panel stays under the hand while the subject beside it is watched, which is the studio's own
- * arrangement and the only one in which the claim reads. Two variants, both designed: the
- * scroll-driven one scrubs a value as the band passes; the reduced-motion one is a **before/after
- * pair**, which `prompts/51` asks for by name — "Not a broken half-state, a designed alternative."
- * The pair is also what the server renders, so the section is complete before any JavaScript arrives.
+ * arrangement and the only one in which the claim reads. Two variants, both designed: the cycling one
+ * puts the stack on the subject a row at a time and takes it off again; the reduced-motion one is a
+ * **before/after pair**, which `prompts/51` asks for by name — "Not a broken half-state, a designed
+ * alternative." The pair is also what the server renders, so the section is complete before any
+ * JavaScript arrives.
  *
  * The pair takes half the band each, so both variants come to the same height (ADR-295).
  */
@@ -22,9 +24,12 @@ export function InspectorWalkthrough() {
   const { inspector } = getRequestDictionary().landing
   const labels = {
     panelTitle: inspector.panelTitle,
-    radius: inspector.radius,
-    glow: inspector.glow,
     card: inspector.card,
+    stepRadius: inspector.stepRadius,
+    stepFlip: inspector.stepFlip,
+    stepScale: inspector.stepScale,
+    stepFloat: inspector.stepFloat,
+    stepGlow: inspector.stepGlow,
   }
 
   return (
@@ -38,17 +43,13 @@ export function InspectorWalkthrough() {
           fallback={
             <WalkthroughBand
               note={inspector.note}
-              rows={<WalkthroughRows labels={labels} values={END} />}
+              rows={<WalkthroughRows applied={STEPS.length} labels={labels} />}
               subject={
-                <>
-                  <WalkthroughSubject
-                    caption={inspector.before}
-                    half
-                    labels={labels}
-                    values={START}
-                  />
-                  <WalkthroughSubject caption={inspector.after} half labels={labels} values={END} />
-                </>
+                <WalkthroughPair
+                  after={inspector.after}
+                  before={inspector.before}
+                  labels={labels}
+                />
               }
             />
           }

@@ -1,14 +1,16 @@
 import type { Dictionary } from '../../../lib/i18n/dictionary'
 
 /**
- * Six of the thirteen, and the criterion is that each one moves on its own.
+ * Six of the thirteen, on two criteria: each one moves on its own, and no two neighbours in the order
+ * are the same kind of mark.
  *
- * The row used to be chosen for range and included `spotlight` and `dot-grid`. Measured over five
- * frames a second apart, three of the six tiles were byte-identical every time: the spotlight is
- * written from the pointer and there is no pointer on a card being scrolled past, and the dot grid is
- * a texture with nothing to animate. A rail whose subject is motion cannot spend half its tiles
- * standing still, so those two are shown in the catalogue instead and the rail takes the effects that
- * carry themselves — `mesh-gradient` and `shine`, both measured moving.
+ * The band used to include `spotlight` and `dot-grid`. Measured over five frames a second apart,
+ * three of the six were byte-identical every time: the spotlight is written from the pointer and
+ * there is no pointer on a band being scrolled past, and the dot grid is a texture with nothing to
+ * animate. A band whose subject is motion cannot spend half its turns standing still.
+ *
+ * The order alternates field, line, sweep, field, band, point, so the plate does not show two washes
+ * of colour in a row while the reader waits to see something else.
  *
  * The copy says what the registry's own description says, in the language the page is being read in.
  */
@@ -25,11 +27,6 @@ export const effectCards = (effects: Dictionary['landing']['effects']): readonly
     description: effects.auroraDescription,
   },
   {
-    id: 'mesh-gradient',
-    name: effects.meshName,
-    description: effects.meshDescription,
-  },
-  {
     id: 'border-beam',
     name: effects.borderBeamName,
     description: effects.borderBeamDescription,
@@ -38,6 +35,11 @@ export const effectCards = (effects: Dictionary['landing']['effects']): readonly
     id: 'shine',
     name: effects.shineName,
     description: effects.shineDescription,
+  },
+  {
+    id: 'mesh-gradient',
+    name: effects.meshName,
+    description: effects.meshDescription,
   },
   {
     id: 'beams',

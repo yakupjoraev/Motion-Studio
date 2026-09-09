@@ -1,77 +1,119 @@
 'use client'
 
-import { createScrollBus, windowScrollSource } from '@motion-studio/motion'
-import { clamp, lerp } from '@motion-studio/utils'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { useLanding } from '../../../lib/i18n/surfaces'
+import { useInView } from '../use-in-view'
 
 import { WalkthroughBand } from './walkthrough-band'
-import { END, START, WalkthroughRows, WalkthroughSubject } from './walkthrough-values'
+import { WalkthroughPair, WalkthroughRows, WalkthroughSubject } from './walkthrough-panel'
+import { STEPS } from './walkthrough-steps'
 
-/**
- * The value follows the scroll — `prompts/51`: "as the visitor scrolls, a value in a mock inspector
- * changes and the preview beside it responds."
- *
- * It reads the shared scroll bus rather than adding a listener of its own: one passive listener per
- * page, one measurement per frame, handed to every subscriber (ANIMATION_SYSTEM.md § Scheduler). The
- * element's own progress is computed from its rect inside that one callback.
- */
 export interface WalkthroughLiveProps {
   readonly note: string
 }
 
+/** One row on or off. Long enough to read the row that changed, short enough to hold a whole pass. */
+const STEP_MS = 900
+
+/** The pause at each end of the pass, so the full stack and the bare subject are both legible. */
+const HOLD_MS = 1400
+
+const prefersReducedMotion = (): boolean =>
+  typeof window !== 'undefined' &&
+  typeof window.matchMedia === 'function' &&
+  window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+/**
+ * The stack goes on one row at a time, and then comes off the same way.
+ *
+ * The band used to scrub one value with the scroll, which made the claim depend on the reader
+ * scrolling at the right speed and showed one property changing. The inspector's actual job is a
+ * stack: properties and presets land on a subject in order, each one visible as it lands, and the
+ * subject goes back to what it was when they come off. That is what this cycles through.
+ *
+ * `setInterval` at 900 ms rather than a frame loop: what changes is one integer per step, and the
+ * movement itself is a CSS transition on the subject — no per-frame JavaScript and no re-render on the
+ * frames that matter. Under reduced motion the cycle never starts and the designed pair renders
+ * instead, which is the same alternative the server sends.
+ */
 export function WalkthroughLive({ note }: WalkthroughLiveProps) {
   const { inspector } = useLanding()
-  const frame = useRef<HTMLDivElement | null>(null)
-  const [progress, setProgress] = useState(0)
+  const { ref, seen } = useInView()
+  const [applied, setApplied] = useState(0)
+  const [reduced, setReduced] = useState(false)
 
   useEffect(() => {
-    const bus = createScrollBus({ source: windowScrollSource() })
+    setReduced(prefersReducedMotion())
+  }, [])
 
-    const read = (): void => {
-      const element = frame.current
+  useEffect(() => {
+    if (!seen || reduced) {
+      return
+    }
 
-      if (element === null) {
+    let cancelled = false
+    let current = 0
+    let direction = 1
+    let timer = 0
+
+    const tick = (): void => {
+      if (cancelled) {
         return
       }
 
-      const rect = element.getBoundingClientRect()
-      const span = window.innerHeight + rect.height
+      current += direction
 
-      // 0 when the panel's top edge enters from below, 1 when its bottom edge leaves at the top.
-      setProgress(clamp((window.innerHeight - rect.top) / span, 0, 1))
+      // Both ends of the pass are held, so the bare subject and the full stack are both legible.
+      const atEnd = current >= STEPS.length || current <= 0
+
+      if (current >= STEPS.length) {
+        current = STEPS.length
+        direction = -1
+      } else if (current <= 0) {
+        current = 0
+        direction = 1
+      }
+
+      setApplied(current)
+      timer = window.setTimeout(tick, atEnd ? HOLD_MS : STEP_MS)
     }
 
-    read()
+    timer = window.setTimeout(tick, HOLD_MS)
 
-    return bus.subscribe(read)
-  }, [])
+    return () => {
+      cancelled = true
+      window.clearTimeout(timer)
+    }
+  }, [reduced, seen])
 
-  // The middle half of the pass carries the whole change, so the ends are settled rather than moving.
-  const eased = clamp((progress - 0.25) / 0.5, 0, 1)
   const labels = {
     panelTitle: inspector.panelTitle,
-    radius: inspector.radius,
-    glow: inspector.glow,
     card: inspector.card,
-  }
-  const values = {
-    radius: Math.round(lerp(START.radius, END.radius, eased)),
-    glow: lerp(START.glow, END.glow, eased),
+    stepRadius: inspector.stepRadius,
+    stepFlip: inspector.stepFlip,
+    stepScale: inspector.stepScale,
+    stepFloat: inspector.stepFloat,
+    stepGlow: inspector.stepGlow,
   }
 
   return (
-    <div ref={frame}>
+    <div ref={ref}>
       <WalkthroughBand
         note={note}
-        rows={<WalkthroughRows labels={labels} values={values} />}
+        rows={<WalkthroughRows applied={reduced ? STEPS.length : applied} labels={labels} />}
         subject={
-          <WalkthroughSubject
-            caption={inspector.scrollPosition.replace('{percent}', String(Math.round(eased * 100)))}
-            labels={labels}
-            values={values}
-          />
+          reduced ? (
+            <WalkthroughPair after={inspector.after} before={inspector.before} labels={labels} />
+          ) : (
+            <WalkthroughSubject
+              applied={applied}
+              caption={inspector.applied
+                .replace('{applied}', String(applied))
+                .replace('{total}', String(STEPS.length))}
+              labels={labels}
+            />
+          )
         }
       />
     </div>
