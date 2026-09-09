@@ -37,11 +37,36 @@ const PROPS: Readonly<Record<string, Record<string, unknown>>> = {
     grain: false,
     scrim: false,
   },
-  spotlight: { tint: 'accent', intensity: 1, reach: 70, followPointer: true },
-  'border-beam': { tint: 'accent', intensity: 1, speed: 1, borderWidth: 2, arc: 55 },
-  'dot-grid': { tint: 'foreground', intensity: 0.75, spacing: 14, dotSize: 2, fade: true },
+  'mesh-gradient': {
+    tint: 'accent',
+    secondaryTint: 'info',
+    tertiaryTint: 'success',
+    intensity: 0.9,
+    speed: 1.3,
+    blur: 72,
+    spread: 68,
+    scrim: false,
+  },
+  /*
+   * A 2 px arc was measured for a 128 px card and reads as nothing on a tile this size: the beam is
+   * the only mark on the tile and it was a hairline crossing a sheet of vellum. Four pixels and a
+   * wider arc give it the same weight on the tile that two gave it on the card.
+   */
+  'border-beam': { tint: 'accent', intensity: 1, speed: 1.2, borderWidth: 4, arc: 75 },
+  /*
+   * `speed` is the one value here that is not about size. The shine travels in the first fifth of its
+   * cycle and waits out the rest — deliberately, and correct on a card a reader is sitting in front
+   * of. On a rail being scrolled past, a tile is on screen for a couple of seconds, so at the default
+   * speed most readers meet it during the wait: measured over five frames a second apart, the tile was
+   * byte-identical every time. Doubling the speed shortens the wait, not the travel.
+   */
+  shine: { tint: 'accent', intensity: 0.7, speed: 2, width: 46, angle: 20 },
   beams: { tint: 'accent', intensity: 1, speed: 0.8, count: 3, width: 56, angle: -18 },
-  particles: { tint: 'accent', intensity: 1, speed: 0.6, count: 130, size: 2.5, seed: 7 },
+  /*
+   * `count` was 130 against a schema whose ceiling is 80 — the card renders props directly rather
+   * than through `parse`, so nothing rejected it. Eighty is the cap for the reason the schema gives.
+   */
+  particles: { tint: 'accent', intensity: 1, speed: 1.3, count: 80, size: 3, seed: 7 },
 }
 
 /**

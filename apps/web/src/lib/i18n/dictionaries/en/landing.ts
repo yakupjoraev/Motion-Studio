@@ -57,14 +57,15 @@ export const landing = {
       'Not a snippet to paste and patch. Each one is parameterised, tunable in the inspector, correct under reduced motion, and exportable as source you can read.',
     auroraName: 'Aurora',
     auroraDescription: 'Two-hue blurred fields drifting on unrelated periods behind the content.',
-    spotlightName: 'Spotlight',
-    spotlightDescription:
-      'A soft light that follows the pointer, written from the shared pointer bus.',
+    meshName: 'Mesh gradient',
+    meshDescription:
+      'Four colour stops orbiting each other, blurred into one another and never repeating.',
     borderBeamName: 'Border beam',
     borderBeamDescription:
       'A lit arc travelling around the node’s own border, masked from a conic gradient.',
-    dotGridName: 'Dot grid',
-    dotGridDescription: 'A tiled dot lattice, faded at the edges, as surface texture.',
+    shineName: 'Shine',
+    shineDescription:
+      'One tilted highlight crossing the surface and then waiting — a material catching the light.',
     beamsName: 'Beams',
     beamsDescription: 'Tilted bands of light sweeping across the surface on staggered cycles.',
     particlesName: 'Particles',

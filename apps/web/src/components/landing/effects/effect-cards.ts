@@ -1,9 +1,16 @@
 import type { Dictionary } from '../../../lib/i18n/dictionary'
 
 /**
- * Six of the thirteen, chosen so the row shows the range rather than the catalogue: an ambient field,
- * a pointer-driven light, a border treatment, a texture, a sweep and a particle field. The copy says
- * what the registry's own description says, in the language the page is being read in.
+ * Six of the thirteen, and the criterion is that each one moves on its own.
+ *
+ * The row used to be chosen for range and included `spotlight` and `dot-grid`. Measured over five
+ * frames a second apart, three of the six tiles were byte-identical every time: the spotlight is
+ * written from the pointer and there is no pointer on a card being scrolled past, and the dot grid is
+ * a texture with nothing to animate. A rail whose subject is motion cannot spend half its tiles
+ * standing still, so those two are shown in the catalogue instead and the rail takes the effects that
+ * carry themselves — `mesh-gradient` and `shine`, both measured moving.
+ *
+ * The copy says what the registry's own description says, in the language the page is being read in.
  */
 export interface EffectCard {
   readonly id: string
@@ -18,9 +25,9 @@ export const effectCards = (effects: Dictionary['landing']['effects']): readonly
     description: effects.auroraDescription,
   },
   {
-    id: 'spotlight',
-    name: effects.spotlightName,
-    description: effects.spotlightDescription,
+    id: 'mesh-gradient',
+    name: effects.meshName,
+    description: effects.meshDescription,
   },
   {
     id: 'border-beam',
@@ -28,9 +35,9 @@ export const effectCards = (effects: Dictionary['landing']['effects']): readonly
     description: effects.borderBeamDescription,
   },
   {
-    id: 'dot-grid',
-    name: effects.dotGridName,
-    description: effects.dotGridDescription,
+    id: 'shine',
+    name: effects.shineName,
+    description: effects.shineDescription,
   },
   {
     id: 'beams',
