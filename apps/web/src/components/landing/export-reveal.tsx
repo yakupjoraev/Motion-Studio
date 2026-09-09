@@ -45,8 +45,15 @@ export function ExportReveal() {
           {copy.intro}
         </SectionIntro>
 
+        {/*
+          `min-w-0` on both panes, for the reason `gallery/detail/block-workbench.tsx` records: a grid
+          track defaults to `auto`, which resolves to max-content, and the source pane's `pre` reports
+          its longest line as that — `white-space: pre` does not wrap and `overflow: auto` does not
+          hide the contribution. Measured at 320 px as a 409 px pane inside a 280 px track, which is a
+          page that scrolls sideways (ADR-386).
+        */}
         <div className="grid items-start gap-6 lg:grid-cols-2 lg:gap-8">
-          <figure className="m-0 flex flex-col gap-3">
+          <figure className="m-0 flex min-w-0 flex-col gap-3">
             <figcaption className="flex items-center gap-3 font-mono text-[10px] text-foreground-muted uppercase tracking-[0.2em]">
               <span className="h-px w-6 bg-[var(--ms-l-accent)]" />
               {copy.paneRendered}
@@ -58,7 +65,7 @@ export function ExportReveal() {
             </div>
           </figure>
 
-          <figure className="m-0 flex flex-col gap-3">
+          <figure className="m-0 flex min-w-0 flex-col gap-3">
             <figcaption className="flex items-center gap-3 font-mono text-[10px] text-foreground-muted uppercase tracking-[0.2em]">
               <span className="h-px w-6 bg-[var(--ms-l-accent)]" />
               {copy.paneSource}

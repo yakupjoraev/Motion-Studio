@@ -514,26 +514,41 @@
   }
 }
 
-[data-ms-rise] {
-  animation: ms-hero-rise var(--ms-duration-slower) var(--ms-ease-decelerate) both;
-  animation-delay: var(--ms-hero-delay, 0ms);
-}
-
 [data-ms-rule] {
   transform-origin: left center;
-  animation: ms-hero-rule var(--ms-duration-slowest) var(--ms-ease-standard) both;
-  animation-delay: var(--ms-hero-delay, 0ms);
 }
 
 [data-ms-column] {
   transform-origin: center top;
-  animation: ms-hero-column var(--ms-duration-slowest) var(--ms-ease-standard) both;
-  animation-delay: var(--ms-hero-delay, 0ms);
 }
 
-[data-ms-write] {
-  animation: ms-hero-write var(--ms-duration-slower) var(--ms-ease-standard) both;
-  animation-delay: var(--ms-hero-delay, 0ms);
+/*
+ * The page assembles itself only where movement is wanted. Every rule above draws its element in its
+ * finished state, so the attributes are inert here rather than needing a second set of overrides —
+ * and `both` outside this query is what made the first screen animate under reduced motion anyway:
+ * `getAnimations()` still reported ten transform effects, finished but present, which ACCESSIBILITY.md
+ * § Reduced motion and the contract's sixth non-negotiable both forbid.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  [data-ms-rise] {
+    animation: ms-hero-rise var(--ms-duration-slower) var(--ms-ease-decelerate) both;
+    animation-delay: var(--ms-hero-delay, 0ms);
+  }
+
+  [data-ms-rule] {
+    animation: ms-hero-rule var(--ms-duration-slowest) var(--ms-ease-standard) both;
+    animation-delay: var(--ms-hero-delay, 0ms);
+  }
+
+  [data-ms-column] {
+    animation: ms-hero-column var(--ms-duration-slowest) var(--ms-ease-standard) both;
+    animation-delay: var(--ms-hero-delay, 0ms);
+  }
+
+  [data-ms-write] {
+    animation: ms-hero-write var(--ms-duration-slower) var(--ms-ease-standard) both;
+    animation-delay: var(--ms-hero-delay, 0ms);
+  }
 }
 
 /*
