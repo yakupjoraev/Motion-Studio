@@ -159,8 +159,16 @@ export function HeroPagePreview({ fallback }: HeroPagePreviewProps) {
               {card.placed ? null : (
                 <button
                   aria-label={hero.demoBlockLabel}
-                  className={`${CARD_SURFACE} ms-card-in cursor-grab touch-none active:cursor-grabbing motion-safe:transition-[left,top] motion-safe:duration-[--ms-duration-instant]`}
+                  className={`${CARD_SURFACE} ms-card-in cursor-grab touch-none select-none active:cursor-grabbing motion-safe:transition-[left,top] motion-safe:duration-[--ms-duration-instant]`}
                   data-dragging={String(card.dragging)}
+                  /*
+                   * The card carries the block's thumbnail, and an image is something a browser drags
+                   * by itself. WebKit did: `dragstart` fired two `pointermove`s in, the pointer stream
+                   * stopped, and the card halted 61 px from where it started. The gesture here is a
+                   * pointer gesture, so the native one is refused in both places it can begin.
+                   */
+                  draggable={false}
+                  onDragStart={(event) => event.preventDefault()}
                   onKeyDown={(event) => {
                     const step = event.shiftKey ? 10 : 1
                     const moves: Readonly<Record<string, readonly [number, number]>> = {

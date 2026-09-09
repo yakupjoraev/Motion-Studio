@@ -11,28 +11,12 @@ import { settled } from '../fixtures/settle'
  */
 test.describe('the landing demo', () => {
   /*
-   * Chrome only, and the reason is a defect in the product rather than in the engines' input
-   * handling — measured, both of them, against this build:
-   *
-   * **Firefox** never scales a preview at all. `PreviewFrame` scales its stage with
-   * `calc(100cqw / 1280px)`, and Firefox does not divide a length by a length: `CSS.supports('width',
-   * 'calc(100cqw / 2px * 1px)')` is `false` there, so the whole `transform` is dropped and the stage
-   * is drawn at 1280 px inside a 542 px frame. The card ends up 248 px wide at x 1450 — outside a
-   * 1440 px window, so there is nothing to press. This is the catalogue's 72 cards as well, not only
-   * the hero.
-   *
-   * **WebKit** scales correctly and then starts a native drag on the card: `dragstart` fires after
-   * two `pointermove`s and the pointer stream stops, leaving the card 61 px from where it began.
-   *
-   * Both are recorded in ROADMAP.md § Open. The `atan2` trick that divides lengths elsewhere was
-   * measured too and is not the fix: Firefox drops it as well, and WebKit computes it wrong
-   * (-0.19 where the ratio is 0.4).
+   * All three engines, deliberately. Writing this spec found two defects only a second engine
+   * could have shown, and both are fixed rather than skipped past: Firefox drew every preview at
+   * full size because it does not divide a length by a length (ADR-392), and WebKit ended the drag
+   * two `pointermove`s in by starting a native one on the card's thumbnail (ADR-393). A Chrome-only
+   * spec here would have gone on passing through both.
    */
-  test.skip(
-    ({ browserName }) => browserName !== 'chromium',
-    'the preview does not scale in Firefox',
-  )
-
   test('drops the card into the slot and the page takes the block', async ({ page }) => {
     await page.goto('/')
 

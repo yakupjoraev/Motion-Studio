@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @import '../src/styles/theme.css';
 @import '../src/styles/landing.css';
+@import '../src/styles/preview-scale.css';
 @import '@motion-studio/ui/styles.css';
 @import '@motion-studio/blocks/styles.css';
 

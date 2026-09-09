@@ -329,32 +329,20 @@ out to be different claims.
 | ✅ | Dragging a node with the keyboard picked up and never stepped, so nothing moved. Three defects, one gesture: an arrow moved 8 px where a position is ~570 px away, `Enter` both picked the node up and isolated it, and the canvas and the layers tree registered the drag under one id — so the drop resolved against the layers panel's coordinates. Operation 4 has a spec at last, in both directions | ADR-381 |
 | ✅ | A band aligned its children, so everything inside it was drawn 0 px wide: six of the eight templates read as a navbar and nothing else on the canvas, and a heading or a paragraph placed straight into a band was invisible **in the exported page too**. The canvas now matches the exported markup box for box | ADR-379, ADR-380 |
 | ✅ | The press on a link was unanswered until the route committed — 1 966 ms of a page that looked like it had missed the click. The answer is a rule on the link itself while its payload is in flight, measured at 62 ms. The loading frames added to the public routes alongside it were removed again: on a route that has to be readable without JavaScript, a `loading.tsx` **is** the page for that reader | ADR-390, ADR-391 |
+| ✅ | Every preview in the product drew at full size in Firefox: the scale was a length divided by a length and Firefox does not do that division, so the declaration was dropped — the hero frame and all 72 catalogue cards showed a block's top-left corner, and the card the first screen asks you to drag sat outside the window. The scale is a ratio of two numbers now, and the card refuses the native drag WebKit was starting on its thumbnail | ADR-392, ADR-393 |
 
 ### Open, in the order it is being done
 
 Each is a prompt in `prompts/`, so a session picks one up without re-deriving it.
 
-1. **Firefox draws every preview at full size, and WebKit takes the drag away.** Measured on the
-   production build at 1440 px. `PreviewFrame` scales its stage with `calc(100cqw / <width>px)`,
-   and **Firefox does not divide a length by a length** — `CSS.supports('width', 'calc(100cqw /
-   2px * 1px)')` is `false`, so the declaration is dropped and computed `transform` is `none`.
-   The hero frame and all 72 catalogue cards therefore show the top-left corner of a 1024–1280 px
-   block at full size, clipped by a 542 px frame. In the hero that also puts the draggable card at
-   x 1450 — off the window, so the gesture cannot be started at all. The `tan(atan2(a, b))` trick
-   that divides lengths elsewhere is not the fix: Firefox drops it too, and WebKit computes it
-   wrong (-0.19 for a ratio of 0.4). WebKit scales correctly but starts a **native drag** on the
-   card — `dragstart` after two `pointermove`s — so the card moves 61 px and stops. Both need a
-   measured candidate list the way ADR-386 did it; `e2e/flows/landing-demo.spec.ts` is Chrome-only
-   until then.
-
-2. **A tree row still cannot choose a position inside its drag** — ADR-327, the one case left of the
+1. **A tree row still cannot choose a position inside its drag** — ADR-327, the one case left of the
    four operations. Re-measured under ADR-381 rather than re-assumed: the step is computed, the zone
    is the row's parent and both sibling boxes are supplied, and the announcement still does not move.
    The canvas path with the same code works, so the difference is that `layerRects` reports the strip
    of ADR-133 in the panel's coordinates while the drag's own box is in the viewport's. That
    comparison is the next measurement. The keyboard path a user is given — `Mod+↑`/`↓` — reorders and
    announces, so this is a second route to a function that works.
-3. **`prompts/67`, surfaces 2 to 5 — the design pass, continued.** Surface 1 (the landing) is done
+2. **`prompts/67`, surfaces 2 to 5 — the design pass, continued.** Surface 1 (the landing) is done
    (ADR-383). The order and the bar per surface come from `DESIGN_REFERENCES.md` § Applying it per
    surface, which is loudness, not standard of finish:
    - **the studio chrome** — low loudness, high craft. Its own test is in that document: screenshot
@@ -370,9 +358,9 @@ Each is a prompt in `prompts/`, so a session picks one up without re-deriving it
    One question is already open and belongs to surface 2: `SectionIntro` puts a big headline left and
    a small explainer right on every band, which `tasteskill` § 4.7 bans as a split header. It is the
    page's structural rhythm, so changing it is a composition decision rather than a polish item.
-4. **`prompts/68` — the code panel beside the canvas**, collapsible. What makes this not a page
+3. **`prompts/68` — the code panel beside the canvas**, collapsible. What makes this not a page
    builder currently lives behind a dialog nobody is told to open.
-5. **`prompts/69` — findability and ownership.** SEO, the privacy and terms pages, the domain, and
+4. **`prompts/69` — findability and ownership.** SEO, the privacy and terms pages, the domain, and
    the three coupled decisions below. Raised by the owner 2026-09-05.
 
 ### The four questions in prompt 69, and why they are one decision

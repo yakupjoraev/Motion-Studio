@@ -30,10 +30,10 @@ export interface CardPreviewProps {
  * The block's chunk is fetched half a viewport before the card arrives and never before that, so a
  * visitor who reads two rows downloads two rows.
  *
- * **The container query context is created on mount, not before.** `PreviewFrame` scales its stage
- * with `100cqw`, which costs a containment context per card, and seventy-two of them on first paint
- * measured as 545 ms of Style & Layout and a 250 ms TBT — ADR-304. An unmounted card is an
- * aspect-ratio box, which is the same geometry and none of the work.
+ * **The container query context is created on mount, not before.** `PreviewFrame` reads its width
+ * through container queries, which costs a containment context per card, and seventy-two of them on
+ * first paint measured as 545 ms of Style & Layout and a 250 ms TBT — ADR-304. An unmounted card is
+ * an aspect-ratio box, which is the same geometry and none of the work.
  *
  * **The stage is as tall as its block, from `card-stage.ts`.** One stage for every block put half the
  * catalogue behind a wall of air — a `divider` filled 2 % of its card, a `heading` 8 % — while

@@ -1,0 +1,835 @@
+/*
+ * The scale a preview's stage is drawn at, as a ratio of two **numbers**.
+ *
+ * `PreviewFrame` used to write `scale(min(1, calc(100cqw / <width>px)))`, and that is a length
+ * divided by a length. Firefox does not do that division — `CSS.supports('width', 'calc(100cqw /
+ * 2px * 1px)')` is `false` there — so the declaration was dropped and every preview in that browser
+ * drew a 1024–1280 px block at full size inside its frame (ADR-392).
+ *
+ * Dividing a number by a number is understood everywhere, so the container's width arrives as a
+ * number instead: each step below names the width its band starts at, `--ms-stage-w` is the width
+ * the stage is laid out at, and the scale is one over the other.
+ *
+ * The steps are finer where an error would show: 4 px up to 400, 8 px to 800, 16 px to 1440. The
+ * worst case is a stage 1.5 % narrower than its frame — under 4 px at a catalogue card's size, split
+ * either side by the centring — and never wider, so nothing clips.
+ */
+
+.ms-preview-frame {
+  container-type: inline-size;
+}
+
+.ms-preview-stage {
+  /* Narrower than the first step: the smallest frame this table covers. */
+  --ms-cq: 120;
+
+  transform: scale(min(1, calc(var(--ms-cq) / var(--ms-stage-w))));
+  transform-origin: top center;
+}
+
+/* The table. One band per step, in ascending order, so the widest match wins. */
+@container (min-width: 120px) {
+  .ms-preview-stage {
+    --ms-cq: 120;
+  }
+}
+@container (min-width: 124px) {
+  .ms-preview-stage {
+    --ms-cq: 124;
+  }
+}
+@container (min-width: 128px) {
+  .ms-preview-stage {
+    --ms-cq: 128;
+  }
+}
+@container (min-width: 132px) {
+  .ms-preview-stage {
+    --ms-cq: 132;
+  }
+}
+@container (min-width: 136px) {
+  .ms-preview-stage {
+    --ms-cq: 136;
+  }
+}
+@container (min-width: 140px) {
+  .ms-preview-stage {
+    --ms-cq: 140;
+  }
+}
+@container (min-width: 144px) {
+  .ms-preview-stage {
+    --ms-cq: 144;
+  }
+}
+@container (min-width: 148px) {
+  .ms-preview-stage {
+    --ms-cq: 148;
+  }
+}
+@container (min-width: 152px) {
+  .ms-preview-stage {
+    --ms-cq: 152;
+  }
+}
+@container (min-width: 156px) {
+  .ms-preview-stage {
+    --ms-cq: 156;
+  }
+}
+@container (min-width: 160px) {
+  .ms-preview-stage {
+    --ms-cq: 160;
+  }
+}
+@container (min-width: 164px) {
+  .ms-preview-stage {
+    --ms-cq: 164;
+  }
+}
+@container (min-width: 168px) {
+  .ms-preview-stage {
+    --ms-cq: 168;
+  }
+}
+@container (min-width: 172px) {
+  .ms-preview-stage {
+    --ms-cq: 172;
+  }
+}
+@container (min-width: 176px) {
+  .ms-preview-stage {
+    --ms-cq: 176;
+  }
+}
+@container (min-width: 180px) {
+  .ms-preview-stage {
+    --ms-cq: 180;
+  }
+}
+@container (min-width: 184px) {
+  .ms-preview-stage {
+    --ms-cq: 184;
+  }
+}
+@container (min-width: 188px) {
+  .ms-preview-stage {
+    --ms-cq: 188;
+  }
+}
+@container (min-width: 192px) {
+  .ms-preview-stage {
+    --ms-cq: 192;
+  }
+}
+@container (min-width: 196px) {
+  .ms-preview-stage {
+    --ms-cq: 196;
+  }
+}
+@container (min-width: 200px) {
+  .ms-preview-stage {
+    --ms-cq: 200;
+  }
+}
+@container (min-width: 204px) {
+  .ms-preview-stage {
+    --ms-cq: 204;
+  }
+}
+@container (min-width: 208px) {
+  .ms-preview-stage {
+    --ms-cq: 208;
+  }
+}
+@container (min-width: 212px) {
+  .ms-preview-stage {
+    --ms-cq: 212;
+  }
+}
+@container (min-width: 216px) {
+  .ms-preview-stage {
+    --ms-cq: 216;
+  }
+}
+@container (min-width: 220px) {
+  .ms-preview-stage {
+    --ms-cq: 220;
+  }
+}
+@container (min-width: 224px) {
+  .ms-preview-stage {
+    --ms-cq: 224;
+  }
+}
+@container (min-width: 228px) {
+  .ms-preview-stage {
+    --ms-cq: 228;
+  }
+}
+@container (min-width: 232px) {
+  .ms-preview-stage {
+    --ms-cq: 232;
+  }
+}
+@container (min-width: 236px) {
+  .ms-preview-stage {
+    --ms-cq: 236;
+  }
+}
+@container (min-width: 240px) {
+  .ms-preview-stage {
+    --ms-cq: 240;
+  }
+}
+@container (min-width: 244px) {
+  .ms-preview-stage {
+    --ms-cq: 244;
+  }
+}
+@container (min-width: 248px) {
+  .ms-preview-stage {
+    --ms-cq: 248;
+  }
+}
+@container (min-width: 252px) {
+  .ms-preview-stage {
+    --ms-cq: 252;
+  }
+}
+@container (min-width: 256px) {
+  .ms-preview-stage {
+    --ms-cq: 256;
+  }
+}
+@container (min-width: 260px) {
+  .ms-preview-stage {
+    --ms-cq: 260;
+  }
+}
+@container (min-width: 264px) {
+  .ms-preview-stage {
+    --ms-cq: 264;
+  }
+}
+@container (min-width: 268px) {
+  .ms-preview-stage {
+    --ms-cq: 268;
+  }
+}
+@container (min-width: 272px) {
+  .ms-preview-stage {
+    --ms-cq: 272;
+  }
+}
+@container (min-width: 276px) {
+  .ms-preview-stage {
+    --ms-cq: 276;
+  }
+}
+@container (min-width: 280px) {
+  .ms-preview-stage {
+    --ms-cq: 280;
+  }
+}
+@container (min-width: 284px) {
+  .ms-preview-stage {
+    --ms-cq: 284;
+  }
+}
+@container (min-width: 288px) {
+  .ms-preview-stage {
+    --ms-cq: 288;
+  }
+}
+@container (min-width: 292px) {
+  .ms-preview-stage {
+    --ms-cq: 292;
+  }
+}
+@container (min-width: 296px) {
+  .ms-preview-stage {
+    --ms-cq: 296;
+  }
+}
+@container (min-width: 300px) {
+  .ms-preview-stage {
+    --ms-cq: 300;
+  }
+}
+@container (min-width: 304px) {
+  .ms-preview-stage {
+    --ms-cq: 304;
+  }
+}
+@container (min-width: 308px) {
+  .ms-preview-stage {
+    --ms-cq: 308;
+  }
+}
+@container (min-width: 312px) {
+  .ms-preview-stage {
+    --ms-cq: 312;
+  }
+}
+@container (min-width: 316px) {
+  .ms-preview-stage {
+    --ms-cq: 316;
+  }
+}
+@container (min-width: 320px) {
+  .ms-preview-stage {
+    --ms-cq: 320;
+  }
+}
+@container (min-width: 324px) {
+  .ms-preview-stage {
+    --ms-cq: 324;
+  }
+}
+@container (min-width: 328px) {
+  .ms-preview-stage {
+    --ms-cq: 328;
+  }
+}
+@container (min-width: 332px) {
+  .ms-preview-stage {
+    --ms-cq: 332;
+  }
+}
+@container (min-width: 336px) {
+  .ms-preview-stage {
+    --ms-cq: 336;
+  }
+}
+@container (min-width: 340px) {
+  .ms-preview-stage {
+    --ms-cq: 340;
+  }
+}
+@container (min-width: 344px) {
+  .ms-preview-stage {
+    --ms-cq: 344;
+  }
+}
+@container (min-width: 348px) {
+  .ms-preview-stage {
+    --ms-cq: 348;
+  }
+}
+@container (min-width: 352px) {
+  .ms-preview-stage {
+    --ms-cq: 352;
+  }
+}
+@container (min-width: 356px) {
+  .ms-preview-stage {
+    --ms-cq: 356;
+  }
+}
+@container (min-width: 360px) {
+  .ms-preview-stage {
+    --ms-cq: 360;
+  }
+}
+@container (min-width: 364px) {
+  .ms-preview-stage {
+    --ms-cq: 364;
+  }
+}
+@container (min-width: 368px) {
+  .ms-preview-stage {
+    --ms-cq: 368;
+  }
+}
+@container (min-width: 372px) {
+  .ms-preview-stage {
+    --ms-cq: 372;
+  }
+}
+@container (min-width: 376px) {
+  .ms-preview-stage {
+    --ms-cq: 376;
+  }
+}
+@container (min-width: 380px) {
+  .ms-preview-stage {
+    --ms-cq: 380;
+  }
+}
+@container (min-width: 384px) {
+  .ms-preview-stage {
+    --ms-cq: 384;
+  }
+}
+@container (min-width: 388px) {
+  .ms-preview-stage {
+    --ms-cq: 388;
+  }
+}
+@container (min-width: 392px) {
+  .ms-preview-stage {
+    --ms-cq: 392;
+  }
+}
+@container (min-width: 396px) {
+  .ms-preview-stage {
+    --ms-cq: 396;
+  }
+}
+@container (min-width: 400px) {
+  .ms-preview-stage {
+    --ms-cq: 400;
+  }
+}
+@container (min-width: 408px) {
+  .ms-preview-stage {
+    --ms-cq: 408;
+  }
+}
+@container (min-width: 416px) {
+  .ms-preview-stage {
+    --ms-cq: 416;
+  }
+}
+@container (min-width: 424px) {
+  .ms-preview-stage {
+    --ms-cq: 424;
+  }
+}
+@container (min-width: 432px) {
+  .ms-preview-stage {
+    --ms-cq: 432;
+  }
+}
+@container (min-width: 440px) {
+  .ms-preview-stage {
+    --ms-cq: 440;
+  }
+}
+@container (min-width: 448px) {
+  .ms-preview-stage {
+    --ms-cq: 448;
+  }
+}
+@container (min-width: 456px) {
+  .ms-preview-stage {
+    --ms-cq: 456;
+  }
+}
+@container (min-width: 464px) {
+  .ms-preview-stage {
+    --ms-cq: 464;
+  }
+}
+@container (min-width: 472px) {
+  .ms-preview-stage {
+    --ms-cq: 472;
+  }
+}
+@container (min-width: 480px) {
+  .ms-preview-stage {
+    --ms-cq: 480;
+  }
+}
+@container (min-width: 488px) {
+  .ms-preview-stage {
+    --ms-cq: 488;
+  }
+}
+@container (min-width: 496px) {
+  .ms-preview-stage {
+    --ms-cq: 496;
+  }
+}
+@container (min-width: 504px) {
+  .ms-preview-stage {
+    --ms-cq: 504;
+  }
+}
+@container (min-width: 512px) {
+  .ms-preview-stage {
+    --ms-cq: 512;
+  }
+}
+@container (min-width: 520px) {
+  .ms-preview-stage {
+    --ms-cq: 520;
+  }
+}
+@container (min-width: 528px) {
+  .ms-preview-stage {
+    --ms-cq: 528;
+  }
+}
+@container (min-width: 536px) {
+  .ms-preview-stage {
+    --ms-cq: 536;
+  }
+}
+@container (min-width: 544px) {
+  .ms-preview-stage {
+    --ms-cq: 544;
+  }
+}
+@container (min-width: 552px) {
+  .ms-preview-stage {
+    --ms-cq: 552;
+  }
+}
+@container (min-width: 560px) {
+  .ms-preview-stage {
+    --ms-cq: 560;
+  }
+}
+@container (min-width: 568px) {
+  .ms-preview-stage {
+    --ms-cq: 568;
+  }
+}
+@container (min-width: 576px) {
+  .ms-preview-stage {
+    --ms-cq: 576;
+  }
+}
+@container (min-width: 584px) {
+  .ms-preview-stage {
+    --ms-cq: 584;
+  }
+}
+@container (min-width: 592px) {
+  .ms-preview-stage {
+    --ms-cq: 592;
+  }
+}
+@container (min-width: 600px) {
+  .ms-preview-stage {
+    --ms-cq: 600;
+  }
+}
+@container (min-width: 608px) {
+  .ms-preview-stage {
+    --ms-cq: 608;
+  }
+}
+@container (min-width: 616px) {
+  .ms-preview-stage {
+    --ms-cq: 616;
+  }
+}
+@container (min-width: 624px) {
+  .ms-preview-stage {
+    --ms-cq: 624;
+  }
+}
+@container (min-width: 632px) {
+  .ms-preview-stage {
+    --ms-cq: 632;
+  }
+}
+@container (min-width: 640px) {
+  .ms-preview-stage {
+    --ms-cq: 640;
+  }
+}
+@container (min-width: 648px) {
+  .ms-preview-stage {
+    --ms-cq: 648;
+  }
+}
+@container (min-width: 656px) {
+  .ms-preview-stage {
+    --ms-cq: 656;
+  }
+}
+@container (min-width: 664px) {
+  .ms-preview-stage {
+    --ms-cq: 664;
+  }
+}
+@container (min-width: 672px) {
+  .ms-preview-stage {
+    --ms-cq: 672;
+  }
+}
+@container (min-width: 680px) {
+  .ms-preview-stage {
+    --ms-cq: 680;
+  }
+}
+@container (min-width: 688px) {
+  .ms-preview-stage {
+    --ms-cq: 688;
+  }
+}
+@container (min-width: 696px) {
+  .ms-preview-stage {
+    --ms-cq: 696;
+  }
+}
+@container (min-width: 704px) {
+  .ms-preview-stage {
+    --ms-cq: 704;
+  }
+}
+@container (min-width: 712px) {
+  .ms-preview-stage {
+    --ms-cq: 712;
+  }
+}
+@container (min-width: 720px) {
+  .ms-preview-stage {
+    --ms-cq: 720;
+  }
+}
+@container (min-width: 728px) {
+  .ms-preview-stage {
+    --ms-cq: 728;
+  }
+}
+@container (min-width: 736px) {
+  .ms-preview-stage {
+    --ms-cq: 736;
+  }
+}
+@container (min-width: 744px) {
+  .ms-preview-stage {
+    --ms-cq: 744;
+  }
+}
+@container (min-width: 752px) {
+  .ms-preview-stage {
+    --ms-cq: 752;
+  }
+}
+@container (min-width: 760px) {
+  .ms-preview-stage {
+    --ms-cq: 760;
+  }
+}
+@container (min-width: 768px) {
+  .ms-preview-stage {
+    --ms-cq: 768;
+  }
+}
+@container (min-width: 776px) {
+  .ms-preview-stage {
+    --ms-cq: 776;
+  }
+}
+@container (min-width: 784px) {
+  .ms-preview-stage {
+    --ms-cq: 784;
+  }
+}
+@container (min-width: 792px) {
+  .ms-preview-stage {
+    --ms-cq: 792;
+  }
+}
+@container (min-width: 800px) {
+  .ms-preview-stage {
+    --ms-cq: 800;
+  }
+}
+@container (min-width: 816px) {
+  .ms-preview-stage {
+    --ms-cq: 816;
+  }
+}
+@container (min-width: 832px) {
+  .ms-preview-stage {
+    --ms-cq: 832;
+  }
+}
+@container (min-width: 848px) {
+  .ms-preview-stage {
+    --ms-cq: 848;
+  }
+}
+@container (min-width: 864px) {
+  .ms-preview-stage {
+    --ms-cq: 864;
+  }
+}
+@container (min-width: 880px) {
+  .ms-preview-stage {
+    --ms-cq: 880;
+  }
+}
+@container (min-width: 896px) {
+  .ms-preview-stage {
+    --ms-cq: 896;
+  }
+}
+@container (min-width: 912px) {
+  .ms-preview-stage {
+    --ms-cq: 912;
+  }
+}
+@container (min-width: 928px) {
+  .ms-preview-stage {
+    --ms-cq: 928;
+  }
+}
+@container (min-width: 944px) {
+  .ms-preview-stage {
+    --ms-cq: 944;
+  }
+}
+@container (min-width: 960px) {
+  .ms-preview-stage {
+    --ms-cq: 960;
+  }
+}
+@container (min-width: 976px) {
+  .ms-preview-stage {
+    --ms-cq: 976;
+  }
+}
+@container (min-width: 992px) {
+  .ms-preview-stage {
+    --ms-cq: 992;
+  }
+}
+@container (min-width: 1008px) {
+  .ms-preview-stage {
+    --ms-cq: 1008;
+  }
+}
+@container (min-width: 1024px) {
+  .ms-preview-stage {
+    --ms-cq: 1024;
+  }
+}
+@container (min-width: 1040px) {
+  .ms-preview-stage {
+    --ms-cq: 1040;
+  }
+}
+@container (min-width: 1056px) {
+  .ms-preview-stage {
+    --ms-cq: 1056;
+  }
+}
+@container (min-width: 1072px) {
+  .ms-preview-stage {
+    --ms-cq: 1072;
+  }
+}
+@container (min-width: 1088px) {
+  .ms-preview-stage {
+    --ms-cq: 1088;
+  }
+}
+@container (min-width: 1104px) {
+  .ms-preview-stage {
+    --ms-cq: 1104;
+  }
+}
+@container (min-width: 1120px) {
+  .ms-preview-stage {
+    --ms-cq: 1120;
+  }
+}
+@container (min-width: 1136px) {
+  .ms-preview-stage {
+    --ms-cq: 1136;
+  }
+}
+@container (min-width: 1152px) {
+  .ms-preview-stage {
+    --ms-cq: 1152;
+  }
+}
+@container (min-width: 1168px) {
+  .ms-preview-stage {
+    --ms-cq: 1168;
+  }
+}
+@container (min-width: 1184px) {
+  .ms-preview-stage {
+    --ms-cq: 1184;
+  }
+}
+@container (min-width: 1200px) {
+  .ms-preview-stage {
+    --ms-cq: 1200;
+  }
+}
+@container (min-width: 1216px) {
+  .ms-preview-stage {
+    --ms-cq: 1216;
+  }
+}
+@container (min-width: 1232px) {
+  .ms-preview-stage {
+    --ms-cq: 1232;
+  }
+}
+@container (min-width: 1248px) {
+  .ms-preview-stage {
+    --ms-cq: 1248;
+  }
+}
+@container (min-width: 1264px) {
+  .ms-preview-stage {
+    --ms-cq: 1264;
+  }
+}
+@container (min-width: 1280px) {
+  .ms-preview-stage {
+    --ms-cq: 1280;
+  }
+}
+@container (min-width: 1296px) {
+  .ms-preview-stage {
+    --ms-cq: 1296;
+  }
+}
+@container (min-width: 1312px) {
+  .ms-preview-stage {
+    --ms-cq: 1312;
+  }
+}
+@container (min-width: 1328px) {
+  .ms-preview-stage {
+    --ms-cq: 1328;
+  }
+}
+@container (min-width: 1344px) {
+  .ms-preview-stage {
+    --ms-cq: 1344;
+  }
+}
+@container (min-width: 1360px) {
+  .ms-preview-stage {
+    --ms-cq: 1360;
+  }
+}
+@container (min-width: 1376px) {
+  .ms-preview-stage {
+    --ms-cq: 1376;
+  }
+}
+@container (min-width: 1392px) {
+  .ms-preview-stage {
+    --ms-cq: 1392;
+  }
+}
+@container (min-width: 1408px) {
+  .ms-preview-stage {
+    --ms-cq: 1408;
+  }
+}
+@container (min-width: 1424px) {
+  .ms-preview-stage {
+    --ms-cq: 1424;
+  }
+}
+@container (min-width: 1440px) {
+  .ms-preview-stage {
+    --ms-cq: 1440;
+  }
+}

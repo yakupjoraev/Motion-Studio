@@ -61,7 +61,7 @@ test.describe('the card stage table', () => {
         const id = card.getAttribute('data-block-card') ?? ''
         const island = card.querySelector('[data-block-height]')
         const declared = Number(island?.getAttribute('data-block-height') ?? '0')
-        const frame = card.querySelector('div[style*="container-type"]')
+        const frame = card.querySelector('.ms-preview-frame')
         const stage = frame?.firstElementChild?.firstElementChild as HTMLElement | null
         const wrapper = stage?.firstElementChild as HTMLElement | null
 

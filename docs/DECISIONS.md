@@ -16197,3 +16197,81 @@ without JavaScript to protect, and its frame is ADR-353.
   answer to the press is already on the link the reader pressed.
 - The rule generalises: **a `loading.tsx` on a route that has to be readable without JavaScript is that
   route's entire content for that reader.** Any future one gets the no-JavaScript pass before it lands.
+
+## ADR-392 — A preview's scale is a ratio of two numbers, from a table of container-query steps
+
+**Date** 2026-09-09 · **Prompt** 67 · **Status** Accepted
+
+### Question
+`PreviewFrame` scaled its stage with `scale(min(1, calc(100cqw / <width>px)))` — a length over a
+length, which is a number. Firefox computes that `transform` as `none`. Every preview in the
+product — the hero's frame and all 72 catalogue cards — therefore drew a 1024–1280 px block at full
+size inside a frame a third of its width, showing its top-left corner. In the hero it also put the
+draggable card at x 1450 in a 1440 px window, so the page's one gesture could not be started at all.
+What replaces the division?
+
+### Criterion (set before measuring)
+The same scale in Chrome, Firefox and WebKit; pointer events still reach a control inside the stage;
+nothing clipped; no measurement in the visitor's browser, because a measured scale cannot be right on
+the server and repaints the preview at the wrong size first (ADR-386 measured that at 0.157 CLS). A
+stage narrower than its frame is acceptable up to 2 % — air, not a cut-off block.
+
+### Measurement
+Four candidates, three engines, a 512 px frame around a 1024 px stage where the right answer is 0.5
+and a button inside must take a click:
+
+| Candidate | Chrome | Firefox | WebKit | Click reaches the button |
+| --- | --- | --- | --- | --- |
+| `calc(100cqw / 1024px)` — today | 0.5 | **1.0** | 0.5 | yes |
+| `tan(atan2(100cqw, 1024px))` | 0.5 | **dropped** | **-0.19** | yes |
+| SVG `viewBox` + `foreignObject` | 0.5 | 0.5 | 0.5 | **no in WebKit** |
+| Container-query steps → a **number** | 0.5 | 0.5 | 0.5 | yes |
+
+`CSS.supports('width', 'calc(100cqw / 2px * 1px)')` is `true` in Chrome and WebKit, `false` in
+Firefox. Dividing a number *by a number* is understood by all three, and the SVG route — which is
+exact — fails the interaction criterion: WebKit does not hit-test through a `foreignObject`, and
+`/blocks/<id>` deliberately keeps its preview interactive (ADR-303).
+
+### Decision
+`preview-scale.css` holds one ascending table of container-query steps; each sets `--ms-cq` to the
+width its band starts at, as a plain number. `PreviewFrame` writes `--ms-stage-w` — also a number —
+and the stylesheet scales by one over the other. Steps are 4 px apart to 400, 8 px to 800 and 16 px
+to 1440, which are finer where a small error would show.
+
+### Consequences
+- Measured after the change, all three engines agree exactly: 0.335938 on a catalogue card (against
+  0.337234 for the ideal ratio — 0.4 % of unused width) and 0.41875 in the hero (against 0.423438 —
+  1.1 %, six pixels split either side of a 542 px frame). Nothing clips, because the step is never
+  above the frame's width.
+- The table is 161 lines of generated-looking CSS that a person has to regenerate if the range of
+  frame widths ever leaves 120–1440 px. The comment says so, and the arithmetic to regenerate it is
+  three lines.
+- `container-type` moves from an inline style to the `.ms-preview-frame` class. The containment
+  context is still created only when a card mounts (ADR-304), because the class is on the component.
+- `e2e/gallery/card-stage.spec.ts` looked the frame up by its inline `container-type`; it now looks it
+  up by the class.
+
+## ADR-393 — The card refuses the browser's own drag
+
+**Date** 2026-09-09 · **Prompt** 67 · **Status** Accepted
+
+### Question
+With the scale fixed, WebKit still lost the hero's drag: the card moved 61 px and stopped.
+
+### Measurement
+Listening on the card in WebKit: `pointerdown`, two `pointermove`s, then **`dragstart`** — and no
+further pointer events. The card's face is the block's catalogue thumbnail, and an image is something
+a browser drags out of a page by itself. Chrome does it too, in a smaller way: its `pointercancel`
+arrived mid-gesture and dropped the block before the pointer was released, so the card was placed by a
+move rather than by the visitor letting go.
+
+### Decision
+`draggable={false}` on the card and on the thumbnail inside it, plus `onDragStart` refusing the event
+and `select-none` on the card. The gesture is a pointer gesture; the native one is refused where it
+can begin.
+
+### Consequences
+- Measured after: all three engines carry the card from x 986 to the slot and place it **on release**,
+  not before. Chrome's premature drop is gone as well, which nobody had noticed because the block
+  still ended up in the right place.
+- `e2e/flows/landing-demo.spec.ts` runs in all three engines rather than Chrome alone.

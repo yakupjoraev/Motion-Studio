@@ -33,6 +33,9 @@ export function HeroCardFace({ name, category }: HeroCardFaceProps) {
         <Image
           alt=""
           className="h-full w-full object-cover"
+          // The card is dragged by pointer events; a browser dragging the image out of it instead
+          // ends that gesture — measured in WebKit, `dragstart` after two `pointermove`s.
+          draggable={false}
           height={HERO_THUMBNAIL.height}
           sizes="260px"
           src={HERO_THUMBNAIL.src}
