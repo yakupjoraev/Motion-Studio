@@ -16275,3 +16275,38 @@ can begin.
   not before. Chrome's premature drop is gone as well, which nobody had noticed because the block
   still ended up in the right place.
 - `e2e/flows/landing-demo.spec.ts` runs in all three engines rather than Chrome alone.
+
+## ADR-394 — A heading on a documentation page states its own colour and weight
+
+**Date** 2026-09-11 · **Prompt** 67 · **Status** Accepted
+
+### Question
+`/docs` renders its article inside a container painted `text-foreground-muted`, and no heading level
+declared a colour or a weight of its own. Is the result a legible hierarchy?
+
+### Measurement
+Computed styles on `/docs/architecture`, both colour modes, contrast against the composited ground:
+
+| Element | Colour | Weight | Contrast (dark / light) |
+| --- | --- | --- | --- |
+| Body paragraph | `foreground-muted` | 400 | 7.70 / 6.70 |
+| `h1`, 48 px | `foreground-muted` | 400 | 7.70 / 6.70 |
+| `h2`, 28 px | `foreground-muted` | 400 | 7.70 / 6.70 |
+| `strong` inside a paragraph | `foreground` | 600 | 19.75 / 19.05 |
+
+So a bold phrase inside a paragraph was the strongest text on the page, and the heading above it the
+same colour and weight as the sentence it introduced. `h3` carried `font-medium`, which made it
+heavier than the `h2` above it. The one saturated element on the page was the sidebar's active row.
+
+### Decision
+The criterion was stated before the change: **the heading of a section must not be weaker than an
+emphasised phrase inside it, by either colour or weight.** `h1`, `h2` and `h3` now state
+`text-foreground`; `h1` and `h2` state `font-semibold`. The body keeps `foreground-muted`, which is
+what `DESIGN_SYSTEM.md` calls the secondary role, and `h4` keeps it too — it is a mono label, not a
+heading a reader scans for.
+
+### Consequences
+- Measured after: `h1` and `h2` are 19.75 : 1 at weight 600 in dark and 19.05 : 1 in light, equal to
+  `strong` in colour and weight and ahead of it by size. The size ladder now carries the hierarchy.
+- No token was added and no value was hard-coded: the change spends `foreground` and the existing
+  weights, which is what `DESIGN_SYSTEM.md` § Typography already declares.

@@ -5,10 +5,16 @@ import type { DocHeading } from '../../lib/docs/headings'
 
 import { DocsInline } from './docs-inline'
 
+/**
+ * Colour and weight are stated here rather than inherited from the article, which paints its body in
+ * `foreground-muted`. Inheriting left every heading at the body's colour and weight, so a bold phrase
+ * inside a paragraph outranked the heading above it — measured on `/docs/architecture`: heading
+ * 7.70 : 1 at weight 400 against `strong` 19.75 : 1 at weight 600 (ADR-394).
+ */
 const LEVEL_CLASS: Readonly<Record<number, string>> = {
-  1: 'mt-0 mb-4 font-display text-3xl leading-[1.1] tracking-[-0.03em] sm:text-4xl',
-  2: 'mt-12 mb-3 font-display text-xl tracking-[-0.02em] sm:text-2xl',
-  3: 'mt-8 mb-2 font-medium text-base sm:text-lg',
+  1: 'mt-0 mb-4 font-display font-semibold text-3xl text-foreground leading-[1.1] tracking-[-0.03em] sm:text-4xl',
+  2: 'mt-12 mb-3 font-display font-semibold text-xl text-foreground tracking-[-0.02em] sm:text-2xl',
+  3: 'mt-8 mb-2 font-medium text-base text-foreground sm:text-lg',
   4: 'mt-6 mb-2 font-mono text-2xs uppercase tracking-[0.14em] text-foreground-muted',
 }
 
