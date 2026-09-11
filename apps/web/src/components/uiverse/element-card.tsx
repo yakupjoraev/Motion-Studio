@@ -1,4 +1,5 @@
 import type { UiverseElement } from '@motion-studio/uiverse'
+import Link from 'next/link'
 
 import { getRequestDictionary } from '../../lib/i18n/request-locale'
 
@@ -34,17 +35,15 @@ export function ElementCard({ element, views }: ElementCardProps) {
 
       <div className="flex flex-col gap-1">
         <h3 className="m-0 font-medium text-foreground text-sm">
-          {/* The visible name is the element's; the accessible name says where the link goes, which
-              a list of forty-eight identical "open" links could not. */}
-          <a
-            aria-label={`${element.slug} — ${uiverse.openOnUiverse}`}
+          {/* Stretched over the card with `after:absolute` rather than wrapped around it: the preview
+              is markup with its own anchors and buttons, and a link around that is a link inside a
+              link — the gallery's cards carry the same idiom for the same reason. */}
+          <Link
             className="rounded-sm outline-none after:absolute after:inset-0 focus-visible:shadow-focus"
-            href={`https://uiverse.io/${element.author}/${element.slug}`}
-            rel="noreferrer"
-            target="_blank"
+            href={`/uiverse/${element.id}`}
           >
             {element.slug}
-          </a>
+          </Link>
         </h3>
 
         <p className="m-0 text-foreground-muted text-xs">

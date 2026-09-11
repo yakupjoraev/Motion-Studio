@@ -91,6 +91,17 @@ export const rankCategory = (
     })
 }
 
+/** One element by its catalogue id, or `null` when the id names nothing this catalogue holds. */
+export const findElement = (id: string): UiverseElement | null => {
+  const category = categoryOf(id)
+
+  if (category === null) {
+    return null
+  }
+
+  return readCategory(category).find((element) => element.id === id) ?? null
+}
+
 export const categoryOf = (id: string): UiverseCategory | null => {
   const category = id.split('/')[0] ?? ''
 

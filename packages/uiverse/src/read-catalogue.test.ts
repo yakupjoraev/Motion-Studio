@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   UIVERSE_CATEGORIES,
   categoryOf,
+  findElement,
   isUiverseCategory,
   rankCategory,
   readAll,
@@ -112,5 +113,22 @@ describe('the catalogue-wide author count', () => {
     expect(index.authors).toBe(distinct)
     // The number the page used to print, kept here so the mistake cannot come back unnoticed.
     expect(summed).toBeGreaterThan(distinct)
+  })
+})
+
+describe('finding one element', () => {
+  it('returns the element an id names', () => {
+    const first = readCategory('notifications')[0]
+
+    if (first === undefined) {
+      throw new Error('the notifications category is empty')
+    }
+
+    expect(findElement(first.id)).toEqual(first)
+  })
+
+  it('returns null for an id in no category and for one nothing holds', () => {
+    expect(findElement('widgets/someone_quick-otter-1')).toBeNull()
+    expect(findElement('buttons/nobody_no-such-element-0')).toBeNull()
   })
 })

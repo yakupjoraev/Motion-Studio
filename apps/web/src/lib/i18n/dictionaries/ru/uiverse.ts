@@ -30,6 +30,17 @@ export const uiverse: Dictionary['uiverse'] = {
   next: 'Вперёд',
   showing: 'Показаны {from}–{to} из {total}',
 
+  markup: 'Разметка',
+  styles: 'Стили',
+  tags: 'Теги',
+  copyMarkup: 'Скопировать разметку',
+  copyStyles: 'Скопировать CSS',
+  copied: 'Скопировано',
+  copyFailed: 'Браузер не дал доступ к буферу обмена',
+  copyAnnouncement: 'Скопировано в буфер обмена',
+  tailwindNote: 'Оформлен классами Tailwind, поэтому копировать CSS нечего.',
+  notFound: 'Такого элемента в каталоге нет.',
+
   licence:
     'MIT, © Uiverse.io и авторы элементов. Указание авторства остаётся с элементом и едет со всем, что из него сделано.',
 }

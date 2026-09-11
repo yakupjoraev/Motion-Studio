@@ -9,6 +9,7 @@ export {
 } from './catalogue.types'
 export {
   categoryOf,
+  findElement,
   rankCategory,
   readAll,
   readCategory,

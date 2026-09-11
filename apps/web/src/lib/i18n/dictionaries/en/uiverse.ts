@@ -29,6 +29,17 @@ export const uiverse = {
   next: 'Next',
   showing: 'Showing {from}–{to} of {total}',
 
+  markup: 'Markup',
+  styles: 'Styles',
+  tags: 'Tags',
+  copyMarkup: 'Copy the markup',
+  copyStyles: 'Copy the CSS',
+  copied: 'Copied',
+  copyFailed: 'The browser refused access to the clipboard',
+  copyAnnouncement: 'Copied to the clipboard',
+  tailwindNote: 'Styled with Tailwind classes, so there is no CSS to copy.',
+  notFound: 'No such element in the catalogue.',
+
   licence:
     'MIT, © Uiverse.io and each element’s author. The attribution stays with the element and travels with anything built from it.',
 }
