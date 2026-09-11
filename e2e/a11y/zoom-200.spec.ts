@@ -13,6 +13,8 @@ const PUBLIC_ROUTES = [
   '/blocks/hero-centered',
   '/docs',
   '/docs/accessibility',
+  // The one public route this list forgot, and the only one that had never been measured narrow.
+  '/playground',
 ] as const
 
 const WIDTHS = [
@@ -103,6 +105,38 @@ test.describe('the studio below its minimum width', () => {
     await expect(link).toBeVisible()
     await link.click()
     await expect(page).toHaveURL(/\/blocks/)
+
+    await page.close()
+  })
+})
+
+/**
+ * The playground is three columns inside one screen from `lg` up, and a phone cannot hold that. The
+ * failure it had was not sideways scrolling, which is why the list above never caught it: the page
+ * kept its height and divided it, so each panel was handed 128 px, one property of eight was
+ * reachable, and the presets panel drew itself over the sharing buttons below it — ADR-395.
+ *
+ * So the measurement is vertical: below the breakpoint every panel shows all of its own content, and
+ * the page is what scrolls.
+ */
+test.describe('the playground below its three-column width', () => {
+  test('gives every panel its full height and lets the page scroll', async ({ browser }) => {
+    const context = await browser.newContext({ viewport: { width: 390, height: 844 } })
+    const page = await context.newPage()
+
+    await page.goto('/playground')
+    await page.getByRole('heading', { level: 1 }).first().waitFor()
+    await settled(page)
+
+    const spills = await page.evaluate(() =>
+      [...document.querySelectorAll('aside')].map((panel) => ({
+        panel: panel.getAttribute('aria-label') ?? '(unlabelled)',
+        hidden: panel.scrollHeight - Math.round(panel.getBoundingClientRect().height),
+      })),
+    )
+
+    expect(spills.filter((entry) => entry.hidden > 1)).toEqual([])
+    expect(await page.evaluate(() => document.body.scrollHeight > window.innerHeight)).toBe(true)
 
     await page.close()
   })

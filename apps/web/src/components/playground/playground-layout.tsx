@@ -55,12 +55,25 @@ export function PlaygroundLayout(): ReactElement {
   )
 
   return (
-    <div className="grid h-full grid-rows-[1fr_auto] gap-4 p-4">
-      <div className="grid min-h-0 grid-cols-1 gap-4 lg:grid-cols-[16rem_1fr_16rem]">
-        <aside aria-label={strings.properties} className="min-h-0 overflow-y-auto">
+    <div className="flex flex-col gap-4 p-4 lg:grid lg:h-full lg:grid-rows-[1fr_auto]">
+      <div className="flex flex-col gap-4 lg:grid lg:min-h-0 lg:grid-cols-[16rem_1fr_16rem]">
+        <aside aria-label={strings.properties} className="lg:min-h-0 lg:overflow-y-auto">
           <PropertyList value={property} onValueChange={state.setProperty} />
         </aside>
-        <div className="grid min-h-0 place-items-center overflow-auto">
+        {/*
+         * The target keeps its own scroller at every width: it is sized in pixels on purpose, and a
+         * shape that is wrong at 800 × 200 is the bug this tool exists to surface. Scrolling it is
+         * how WCAG 1.4.10 is met; letting it push the page sideways is not.
+         *
+         * `safe center` and not `center`: a centred item wider than its scroller overflows both ways,
+         * and the half that goes past the start edge is unreachable.
+         *
+         * `contain: paint` is what actually keeps the page straight. `overflow: auto` alone still let
+         * the 640 px target count toward the document's scrollable width — measured at 320 px: 17 px
+         * of sideways scroll in all three engines, which `overflow-x: hidden`, `width: 100%` and a
+         * hidden scrollbar all failed to remove and containment removed completely.
+         */}
+        <div className="grid min-w-0 overflow-auto [contain:paint] [place-items:safe_center] lg:min-h-0">
           <TargetFrame>
             {compare ? (
               <CompareTarget
@@ -81,7 +94,7 @@ export function PlaygroundLayout(): ReactElement {
             )}
           </TargetFrame>
         </div>
-        <aside aria-label={strings.presetsAndSharing} className="flex min-h-0 flex-col gap-4">
+        <aside aria-label={strings.presetsAndSharing} className="flex flex-col gap-4 lg:min-h-0">
           <PresetPanel property={property} value={active.value} onValueChange={active.setValue} />
           <CopyActionsBar actions={copy} />
           <SendToSelection action={send} disabled={active.applied === ''} />

@@ -28,7 +28,13 @@ export default async function PlaygroundPage({ params }: PlaygroundPageProps) {
 
   return (
     <PlaygroundDictionary value={playground}>
-      <main id="main" className="flex h-dvh flex-col bg-surface-0">
+      {/*
+       * `h-dvh` from `lg` up and not below it: the three-column tool is meant to hold one screen, but
+       * a viewport that cannot hold it has to grow instead of dividing what it has. Measured at
+       * 390 px before the breakpoint was added: each panel was handed 128 px of a page that did not
+       * scroll, so one property of eight was reachable — ADR-395.
+       */}
+      <main id="main" className="flex min-h-dvh flex-col bg-surface-0 lg:h-dvh">
         <header className="flex shrink-0 items-baseline gap-3 border-border border-b px-4 py-3">
           <h1 className="m-0 font-semibold text-foreground text-md">{playground.heading}</h1>
           <p className="m-0 text-foreground-subtle text-xs">{playground.subtitle}</p>

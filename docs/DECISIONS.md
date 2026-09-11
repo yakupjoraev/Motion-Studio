@@ -16310,3 +16310,43 @@ heading a reader scans for.
   `strong` in colour and weight and ahead of it by size. The size ladder now carries the hierarchy.
 - No token was added and no value was hard-coded: the change spends `foreground` and the existing
   weights, which is what `DESIGN_SYSTEM.md` § Typography already declares.
+
+## ADR-395 — The playground holds one screen only where a screen can hold it
+
+**Date** 2026-09-11 · **Prompt** 67 · **Status** Accepted
+
+### Question
+`/playground` is a three-column tool inside `h-dvh`: properties, target, presets, with the editor
+along the bottom. What does that layout do on a viewport that cannot contain it?
+
+### Measurement
+At 390 × 844, in the built app:
+
+| What | Measured |
+| --- | --- |
+| `aside` "Свойства" | 128 px tall, 508 px of content — one property of eight reachable |
+| `aside` "Пресеты и обмен" | 128 px tall, 154 px of content, `overflow-y: visible` |
+| The page | `body.scrollHeight === window.innerHeight` — it did not scroll at all |
+
+So the fixed height was divided between the panels rather than exceeded by them, and the presets
+panel painted its swatches over the sharing buttons below it. `/playground` was also missing from
+`zoom-200.spec.ts`'s public routes, which is why a gate that checks every other public route at
+320 px had never looked at this one.
+
+### Decision
+`h-dvh` and the grid that fills it apply from `lg` up, which is where the three columns exist at all.
+Below it the page is a column that grows and scrolls, and each panel shows its own content. The
+target keeps its own scroller at every width: it is sized in pixels on purpose — a `clip-path` that
+is right at 640 × 400 and wrong at 800 × 200 is the bug this tool exists to surface — so it scrolls
+itself rather than pushing the page sideways, which is how WCAG 1.4.10 is met.
+
+### Consequences
+- Measured after, at 320 / 390 / 640 / 1024 / 1440: no panel hides content below `lg`, the page
+  scrolls, and nothing lies outside a scroller at any width. The desktop layout is unchanged.
+- `zoom-200.spec.ts` gains `/playground` and a vertical measurement, because the defect was never a
+  sideways one and the existing assertions would have passed over it.
+- **`overflow: auto` was not enough to contain the target.** At 320 px the page still scrolled 17 px
+  sideways in all three engines, with nothing outside a scroller to blame for it. Four candidates were
+  tried in the browser and measured: `overflow-x: hidden` (17), `width: 100%` (17), a hidden scrollbar
+  (17), `contain: paint` (**0**). The scroller declares containment, which is the idiom the target's
+  own inner frame already uses.
