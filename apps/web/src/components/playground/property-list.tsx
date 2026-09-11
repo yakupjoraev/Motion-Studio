@@ -77,7 +77,9 @@ export function PropertyList({ value, onValueChange }: PropertyListProps): React
             )}
           >
             <span className="font-medium font-mono text-sm">{descriptor.label}</span>
-            <span className="text-foreground-muted text-xs">{descriptor.summary}</span>
+            <span className="text-foreground-muted text-xs">
+              {copy.propertySummaries[property]}
+            </span>
           </button>
         )
       })}

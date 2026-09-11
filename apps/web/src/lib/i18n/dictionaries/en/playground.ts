@@ -57,4 +57,16 @@ export const playground = {
   loop: 'Loop',
   scrub: 'Scrub',
   transitionProgress: 'Transition progress',
+
+  /** One line per sandbox, saying what its target was built to show — PLAYGROUND.md § Property sandboxes. */
+  propertySummaries: {
+    background: 'Gradients and layers on a full-bleed rectangle.',
+    'box-shadow': 'A card on a mid-tone surface, where a shadow is actually visible.',
+    filter: 'A function chain over an image, text and a gradient at once.',
+    'backdrop-filter': 'A glass panel over a busy backdrop, which is the only place it reads.',
+    'mask-image': 'A checkerboard behind the image, so what the mask removed is visible.',
+    'clip-path': 'A grid overlay, so a polygon can be read in percentages.',
+    transform: 'A card inside a perspective container, where 3D transforms mean something.',
+    transition: 'Two states and a scrub, so the curve is watchable rather than guessed.',
+  },
 }
