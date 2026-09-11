@@ -16350,3 +16350,34 @@ itself rather than pushing the page sideways, which is how WCAG 1.4.10 is met.
   tried in the browser and measured: `overflow-x: hidden` (17), `width: 100%` (17), a hidden scrollbar
   (17), `contain: paint` (**0**). The scroller declares containment, which is the idiom the target's
   own inner frame already uses.
+
+## ADR-396 — The documentation list is collapsed on a phone, behind `:target`
+
+**Date** 2026-09-11 · **Prompt** 67 · **Status** Accepted · **Supersedes** the strip in `docs-shell.tsx`
+
+### Question
+Below `lg` the documentation nav was a 176 px scrollable strip above the article — the shape the
+component's own comment chose, to avoid stacking 29 links over the text. Is that the right trade?
+
+### Measurement
+At 390 × 844 on `/docs/architecture`: the strip showed 176 px of a 1 136 px list, so seven of eight
+groups were behind a nested scroller with no affordance, and the article's own `h1` began at **349 px**
+— 41 % of the phone's first screen spent before the document starts.
+
+### Decision
+The list is collapsed behind a link, and the link is `:target`, not `<details>`. Measured in all three
+engines: WebKit renders nothing inside a closed `<details>` regardless of CSS — `display: block` on the
+children, `display: contents` on the element, and `::details-content { content-visibility: visible }`
+all fail there, while Chromium and Firefox honour the first. So a `<details>` that must be open from
+`lg` up cannot exist without script or a second copy of all 29 links. `:target` needs neither: the
+anchor opens it, a link to `#main` closes it and moves reading to the article, and from `lg` up the
+list is simply shown and the toggles are not.
+
+### Consequences
+- Measured after, all three engines: collapsed the nav is 0 px and the `h1` starts at **209 px**;
+  the link expands it to the full 1 136 px; at 1440 px the list is open and the toggles are hidden,
+  so the desktop layout is untouched.
+- The DOM order stays sidebar, article, table of contents, which is what ACCESSIBILITY.md § Manual
+  asks for. Nothing here needs JavaScript, so the page keeps reading with script blocked.
+- The URL carries `#docs-nav` while the list is open. That is the mechanism being honest about itself,
+  and it survives a reload, which a script-held state would not.

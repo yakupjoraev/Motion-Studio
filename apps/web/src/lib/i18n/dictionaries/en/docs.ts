@@ -11,6 +11,8 @@ export const docs = {
   breadcrumbLabel: 'Breadcrumb',
   sidebarLabel: 'Documentation',
   sidebarIndex: 'Index',
+  navExpand: 'All documents',
+  navCollapse: 'Hide the list',
   tocLabel: 'On this page',
   pagerLabel: 'Previous and next document',
   previous: 'Previous',

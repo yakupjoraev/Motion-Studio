@@ -9,6 +9,8 @@ export const docs: Dictionary['docs'] = {
   breadcrumbLabel: 'Хлебные крошки',
   sidebarLabel: 'Документация',
   sidebarIndex: 'Оглавление',
+  navExpand: 'Все документы',
+  navCollapse: 'Свернуть список',
   tocLabel: 'На этой странице',
   pagerLabel: 'Предыдущий и следующий документ',
   previous: 'Назад',

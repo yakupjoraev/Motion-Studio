@@ -101,6 +101,29 @@ test.describe('the documentation site', () => {
     await context.close()
   })
 
+  /**
+   * ADR-396. The strip this replaced hid seven groups of eight behind a nested scroller and pushed
+   * the article's heading to 349 px of an 844 px phone, so the measurement is where the document
+   * starts — not whether the links exist.
+   */
+  test('keeps the document list collapsed on a phone and opens it on request', async ({
+    browser,
+  }) => {
+    const { context, page } = await openNarrow(browser, '/docs/architecture')
+
+    const list = page.locator('#docs-nav nav')
+
+    await expect(list).toBeHidden()
+    await expect(page.getByRole('heading', { level: 1 })).toBeInViewport()
+
+    await page.locator('a[href="#docs-nav"]').click()
+
+    await expect(list).toBeVisible()
+    await expect(page.getByRole('link', { name: 'ARCHITECTURE.md' })).toBeVisible()
+
+    await context.close()
+  })
+
   test('does not scroll the page sideways at 320 px, whatever the tables do', async ({
     browser,
   }) => {
