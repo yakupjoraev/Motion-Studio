@@ -24,7 +24,7 @@ You compose on the canvas, tune the props in a generated inspector, and take the
 source. There is no runtime to install, no account, and nothing of this project is left in the code
 it prints.
 
-It is built as a product rather than as a demo: 8,478 unit tests, 217 end-to-end tests across three
+It is built as a product rather than as a demo: 8,478 unit tests, 225 end-to-end tests across three
 browsers, 208 screenshot baselines, budgets enforced in CI, and a document for every subsystem in
 [`docs/`](docs/).
 
@@ -167,18 +167,22 @@ Rationale per choice, including the ones that were rejected:
 | Blocks | 72 | 13 of them effect layers, across nine categories |
 | Motion presets | 51 | entrance 13, hover 11, scroll 9, continuous 8, cursor 5, exit 5 |
 | Unit tests | 8,478 | in 474 files |
-| End-to-end tests | 217 | in 46 specs; 451 runs across the three browser projects |
+| End-to-end tests | 225 | in 47 specs; 475 runs across the three browser projects |
 | Screenshot baselines | 208 | a separate suite and a separate config — `e2e/visual.config.ts` |
-| Coverage — editor / schema / codegen | 99.5 % / 95.9 % / 96.7 % | lines; branch floors are enforced per package in CI |
-| Studio first-load JS | 250.4 KiB gzip | budget 250 KiB — **430 B over**, and the gate says so ([ADR-371](docs/DECISIONS.md)) |
-| Landing first-load JS | 107.8 KiB gzip | budget 120 KiB |
-| Lighthouse — landing, mobile | 96 / 100 / 100 / 100 | performance · accessibility · best practices · SEO |
+| Coverage — editor / schema / codegen | 99.5 % / 95.9 % / 96.8 % | lines; branch floors are enforced per package in CI |
+| Studio first-load JS | 247.4 KiB gzip | budget 250 KiB |
+| Landing first-load JS | 113.9 KiB gzip | budget 120 KiB |
+| Lighthouse — landing, mobile | 95 / 96 / 100 / 100 | performance · accessibility · best practices · SEO |
 
 Every number above is counted rather than remembered: `pnpm stats` prints the first six from the
 registries, a test run and the build manifest. The Lighthouse row is the median of three throttled
-mobile runs taken on 2026-09-03; `/blocks` scores 99, `/blocks/section` 95 and `/docs` 97 on the same
-run. Scores move with the machine that takes them — [ADR-332](docs/DECISIONS.md) has the measurement
-that says by how much — so treat them as "clears the 95 budget", which is what CI asserts.
+mobile runs taken on 2026-09-11; on the same run `/blocks` scores 95 / 100 / 96 / 100,
+`/blocks/section` 94 / 100 / 96 / 100 and `/docs` 96 / 100 / 100 / 100. LCP is the budget that does
+not clear on that machine — 2 385 ms against 2 000 on the landing page, and an untouched `/docs`
+measures 2 207 ms on the same laptop, which is a late first frame rather than a page composition.
+Scores move with the machine that takes them — [ADR-332](docs/DECISIONS.md) has the measurement that
+says by how much — so treat them as "around the 95 budget", and read the verdict off CI rather than
+off this table.
 
 The four demo GIFs are generated too: `pnpm generate:demos` drives each flow with Playwright against
 a production build and re-encodes the recordings, so a stale screenshot cannot survive a UI change.
