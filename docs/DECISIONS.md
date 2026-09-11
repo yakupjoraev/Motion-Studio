@@ -16381,3 +16381,41 @@ list is simply shown and the toggles are not.
   asks for. Nothing here needs JavaScript, so the page keeps reading with script blocked.
 - The URL carries `#docs-nav` while the list is open. That is the mechanism being honest about itself,
   and it survives a reload, which a script-held state would not.
+
+## ADR-397 — The pipeline is split into what runs on a push and what runs nightly
+
+**Date** 2026-09-11 · **Prompt** 67 · **Status** Accepted
+
+### Question
+CI runs fifteen jobs, nine of them Playwright shards, on three runner services inside one WSL
+distribution — two of which are disabled so the VM keeps its memory. Every job is therefore
+sequential. Is that pipeline still doing its job?
+
+### Measurement
+Over four consecutive pushes on 2026-09-11 (`81d426d`, `ecf6c32`, `e295eaa`, `46a3f76`), the number of
+complete CI runs was **zero**: each push cancelled the previous run through `cancel-in-progress`
+before the queue reached its end. What did complete, repeatedly, were the jobs that fail for reasons
+outside the repository — Lighthouse launching Windows Chrome through interop, `playwright install`
+naming Ubuntu 24.04 packages on a `resolute` distribution, buildx resolving the Windows docker.
+
+Meanwhile every defect fixed that day was found by running the gates locally, and the owner's verdict
+on the pipeline was that it had become noise.
+
+### Decision
+Split by what a job can catch rather than dropping any of it.
+
+- **Every push and pull request:** one `core` job (lint, typecheck, unit, codegen goldens, the three
+  graph checks, compile-exports, build, size-limit) and `e2e` in Chrome. One job rather than five,
+  because five jobs on a sequential runner pay for five installs and buy no parallelism.
+- **Nightly at 03:00 UTC and on `workflow_dispatch`:** Firefox and WebKit across three shards,
+  Storybook, Docker, Lighthouse, the visual suite.
+
+### Consequences
+- A push is answered in minutes, so the answer is read. The cross-engine and cross-machine gates
+  survive — they are what found two `h1`s on the landing page, the clipped marquee, and the stage
+  table that mattered only on another machine (ADR-280) — they simply stop being the thing a commit
+  waits on.
+- Required checks on `main` become `core` and `e2e (chrome)`. A red Docker job caused by a WSL interop
+  setting no longer reads as a statement about the code.
+- If the nightly run is red for a week nobody will notice, which is the real cost here. The mitigation
+  is that it is one dispatch away before anything is released, and `DEVOPS.md` says so.

@@ -116,9 +116,35 @@ The performance specs are not in it. They need `MS_INSTRUMENT=1` and they read f
 a shared runner does not hold still — ADR-332 measured a 27 % swing in `benchmarkIndex` inside one
 Lighthouse run. They stay a local gate, run through `pnpm test:e2e:perf`.
 
+### What runs on a push, and what runs nightly
+
+The pipeline above is the full one. It does not all run on every push, and the reason is the machine
+it runs on: the runners are three services inside one WSL distribution on the owner's laptop, two of
+them disabled so the VM keeps its memory, so **every job in this file is sequential**. Fifteen jobs
+of which nine are Playwright shards took hours, and `cancel-in-progress` meant the next push cancelled
+the run before it finished. Measured over 2026-09-11: four consecutive pushes produced **zero**
+complete runs (ADR-397).
+
+A gate nobody waits for is not a gate. So the pipeline is split by what each job can catch:
+
+| When | Jobs | What it is for |
+| --- | --- | --- |
+| Every push and pull request | `core` (lint, typecheck, unit, codegen goldens, graph checks, compile-exports, build, size-limit) and `e2e` in Chrome | Everything that can fail from the code alone, on a second machine, in minutes rather than hours |
+| Nightly, and on demand | The same plus Firefox and WebKit across three shards, Storybook, Docker, Lighthouse, visual snapshots | Everything that needs a different engine, a container, or a timing measurement |
+
+The nightly half is where this repository's cross-machine defects have always been found — two `h1`
+elements on the landing page, `testimonial-marquee` clipped at 642 px on the runner against 562 in the
+table, a stage table that matched locally and diverged in CI because block height is a function of the
+font. None of that is reachable from one laptop, which is why the split keeps them rather than dropping
+them. What it drops is waiting for them on every commit.
+
+`workflow_dispatch` is on every workflow, so the full pipeline is one click away when a change earns
+it — a codegen change, a responsive change, anything about to be released.
+
 ### Required checks on `main`
 
-`quality`, `graph`, `build`, `compile-exports`, `e2e` (all six), `lighthouse`.
+`core` and `e2e (chrome)`. The nightly jobs report; they do not block a push, because a red Docker
+job caused by a WSL interop setting is not a statement about the code.
 Branch protection: no direct pushes, no force-push, linear history, up-to-date before merge.
 
 ### Custom gates
