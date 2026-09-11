@@ -29,7 +29,7 @@ export function ElementCard({ element, views }: ElementCardProps) {
         className="grid h-44 place-items-center overflow-hidden rounded-lg bg-surface-2"
         inert
       >
-        <ElementPreview css={element.css} html={element.html} />
+        <ElementPreview css={element.css} html={element.html} styling={element.styling} />
       </div>
 
       <div className="flex flex-col gap-1">

@@ -2,6 +2,6 @@
   "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
   "extends": ["./packages/config/biome.json"],
   "files": {
-    "ignore": ["packages/uiverse/data/**"]
+    "ignore": ["packages/uiverse/data/**", "apps/web/public/uiverse-tailwind.css"]
   }
 }
