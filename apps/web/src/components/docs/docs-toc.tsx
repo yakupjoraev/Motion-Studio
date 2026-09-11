@@ -63,7 +63,7 @@ export function DocsToc({ headings }: DocsTocProps) {
   return (
     <nav aria-label={docs.tocLabel} className="flex flex-col gap-2">
       <p className="font-mono text-2xs text-foreground-muted uppercase tracking-[0.14em]">
-        On this page
+        {docs.tocLabel}
       </p>
 
       <ul className="flex flex-col border-border-subtle border-l">

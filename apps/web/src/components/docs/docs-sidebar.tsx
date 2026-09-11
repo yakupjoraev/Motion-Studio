@@ -32,7 +32,7 @@ export function DocsSidebar({ current }: DocsSidebarProps) {
         href="/docs"
         prefetch={false}
       >
-        Index
+        {docs.sidebarIndex}
       </Link>
 
       {groups.map((group) => (

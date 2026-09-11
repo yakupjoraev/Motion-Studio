@@ -10,6 +10,7 @@ export const docs = {
   breadcrumbRoot: 'Docs',
   breadcrumbLabel: 'Breadcrumb',
   sidebarLabel: 'Documentation',
+  sidebarIndex: 'Index',
   tocLabel: 'On this page',
   pagerLabel: 'Previous and next document',
   previous: 'Previous',
