@@ -7,6 +7,7 @@ import { landing } from './landing'
 import { nav } from './nav'
 import { playground } from './playground'
 import { studio } from './studio'
+import { uiverse } from './uiverse'
 
 /**
  * Russian. Typed as `Dictionary`, so the compiler — not a reviewer, and not a missing-string report
@@ -20,4 +21,5 @@ export const ru: Dictionary = {
   docs,
   studio,
   playground,
+  uiverse,
 }

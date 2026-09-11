@@ -186,6 +186,9 @@ importers:
       '@motion-studio/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@motion-studio/uiverse':
+        specifier: workspace:*
+        version: link:../../packages/uiverse
       '@motion-studio/utils':
         specifier: workspace:*
         version: link:../../packages/utils

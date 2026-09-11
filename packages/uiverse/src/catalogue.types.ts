@@ -57,4 +57,6 @@ export interface UiverseIndex {
   readonly imported: string
   readonly categories: readonly UiverseCategorySummary[]
   readonly total: number
+  /** Distinct across the catalogue: the per-category counts overlap and cannot be added. */
+  readonly authors: number
 }

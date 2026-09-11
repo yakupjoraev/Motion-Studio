@@ -34,6 +34,7 @@
     "@motion-studio/theme": "workspace:*",
     "@motion-studio/tokens": "workspace:*",
     "@motion-studio/ui": "workspace:*",
+    "@motion-studio/uiverse": "workspace:*",
     "@motion-studio/utils": "workspace:*",
     "@tanstack/react-virtual": "^3.14.9",
     "jszip": "^3.10.1",

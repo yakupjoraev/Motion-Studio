@@ -5,6 +5,7 @@ import { landing } from './landing'
 import { nav } from './nav'
 import { playground } from './playground'
 import { studio } from './studio'
+import { uiverse } from './uiverse'
 
 /**
  * The English dictionary, and — through `typeof` — the shape every other locale answers. Split by
@@ -19,4 +20,5 @@ export const en = {
   docs,
   studio,
   playground,
+  uiverse,
 }

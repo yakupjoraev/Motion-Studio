@@ -104,6 +104,9 @@ describe('the Russian dictionary answers the English one', () => {
       'studio.export.targetJson',
       'studio.export.typescript',
       'studio.export.javascript',
+      // The two ways a Uiverse element is styled, named after the things themselves.
+      'uiverse.tailwind',
+      'uiverse.css',
     ])
 
     const identical: string[] = []

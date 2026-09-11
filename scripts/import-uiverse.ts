@@ -121,6 +121,9 @@ const serialise = (elements: readonly Element[]): string =>
 mkdirSync(OUT, { recursive: true })
 
 const summary: { category: string; elements: number; tailwind: number; authors: number }[] = []
+/** Across the whole catalogue: an author publishes in several categories, so the per-category counts
+ * cannot be added up — doing that read 1 736 authors where there are 927. */
+const everyAuthor = new Set<string>()
 
 for (const [directory, category] of Object.entries(CATEGORIES)) {
   const path = join(source, directory)
@@ -135,6 +138,10 @@ for (const [directory, category] of Object.entries(CATEGORIES)) {
     .sort((a, b) => a.id.localeCompare(b.id))
 
   writeFileSync(join(OUT, `${category}.json`), serialise(elements), 'utf8')
+
+  for (const element of elements) {
+    everyAuthor.add(element.author)
+  }
 
   summary.push({
     category,
@@ -153,6 +160,7 @@ writeFileSync(
       imported: new Date().toISOString().slice(0, 10),
       categories: summary,
       total: summary.reduce((sum, entry) => sum + entry.elements, 0),
+      authors: everyAuthor.size,
     },
     null,
     2,

@@ -102,3 +102,15 @@ describe('reading a category from an id', () => {
     expect(isUiverseCategory('Loaders')).toBe(false)
   })
 })
+
+describe('the catalogue-wide author count', () => {
+  it('counts each author once across categories, not once per category', () => {
+    const index = readIndex()
+    const distinct = new Set(readAll().map((element) => element.author)).size
+    const summed = index.categories.reduce((total, entry) => total + entry.authors, 0)
+
+    expect(index.authors).toBe(distinct)
+    // The number the page used to print, kept here so the mistake cannot come back unnoticed.
+    expect(summed).toBeGreaterThan(distinct)
+  })
+})
