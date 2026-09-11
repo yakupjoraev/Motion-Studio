@@ -31,6 +31,7 @@ const SCOPES = [
   'hooks',
   'utils',
   'config',
+  'uiverse',
   'e2e',
   'ci',
   'docs',

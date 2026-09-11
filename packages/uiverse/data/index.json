@@ -1,0 +1,74 @@
+{
+  "source": "https://github.com/uiverse-io/galaxy",
+  "licence": "MIT",
+  "imported": "2026-09-11",
+  "categories": [
+    {
+      "category": "buttons",
+      "elements": 1231,
+      "tailwind": 149,
+      "authors": 512
+    },
+    {
+      "category": "cards",
+      "elements": 726,
+      "tailwind": 124,
+      "authors": 306
+    },
+    {
+      "category": "checkboxes",
+      "elements": 171,
+      "tailwind": 14,
+      "authors": 107
+    },
+    {
+      "category": "forms",
+      "elements": 180,
+      "tailwind": 51,
+      "authors": 85
+    },
+    {
+      "category": "inputs",
+      "elements": 226,
+      "tailwind": 36,
+      "authors": 151
+    },
+    {
+      "category": "notifications",
+      "elements": 23,
+      "tailwind": 0,
+      "authors": 23
+    },
+    {
+      "category": "patterns",
+      "elements": 103,
+      "tailwind": 0,
+      "authors": 40
+    },
+    {
+      "category": "radio-buttons",
+      "elements": 102,
+      "tailwind": 6,
+      "authors": 63
+    },
+    {
+      "category": "toggle-switches",
+      "elements": 260,
+      "tailwind": 19,
+      "authors": 135
+    },
+    {
+      "category": "tooltips",
+      "elements": 62,
+      "tailwind": 13,
+      "authors": 53
+    },
+    {
+      "category": "loaders",
+      "elements": 718,
+      "tailwind": 21,
+      "authors": 261
+    }
+  ],
+  "total": 3802
+}

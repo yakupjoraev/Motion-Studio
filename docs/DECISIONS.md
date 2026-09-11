@@ -16419,3 +16419,45 @@ Split by what a job can catch rather than dropping any of it.
   setting no longer reads as a statement about the code.
 - If the nightly run is red for a week nobody will notice, which is the real cost here. The mitigation
   is that it is one dispatch away before anything is released, and `DEVOPS.md` says so.
+
+## ADR-398 — The Uiverse catalogue is imported whole, as data, in its own package
+
+**Date** 2026-09-11 · **Prompt** 67 · **Status** Accepted
+
+### Question
+The owner asked for the whole of uiverse.io — every element, by category, ranked by popularity — as a
+library here. Where does 3 802 pieces of somebody else's HTML and CSS live in a repository whose every
+block is a schema, a thumbnail, a set of controls and a test?
+
+### Measurement
+The upstream repository `uiverse-io/galaxy` is the same catalogue published as files: 3 802 elements,
+927 authors, eleven categories, 10 MB of source, **no scripts at all**, and an attribution comment on
+every single file. Its `LICENSE` is plain MIT, `Copyright (c) 2023 Uiverse.io`, with no Commons Clause
+and no redistribution clause — read in the licence text, not in a summary.
+
+Popularity: the site publishes `viewCount` on each element's page and nothing else. Likes and saves
+appear nowhere in the markup, and `/api/posts` answers 401. So "popular" can only mean "seen".
+
+### Decision
+A separate package, `@motion-studio/uiverse`, holding the import as JSON — one file per category, one
+line per element — plus a reader. It is **not** the block registry and does not feed it: nothing here
+has a Zod schema, control descriptors, a reduced-motion policy or a thumbnail, which is what a Motion
+Studio block is. Promoting an element into `packages/blocks` stays a deliberate act, and
+`packages/uiverse/LICENSES.md` records what that act drags along — MIT's notice condition, in a
+product that prints component source into other people's repositories.
+
+The reader is server-side: 12 MB of markup cannot be bundled, and a `fs` dependency is the barrier
+that says so.
+
+View counts are a second pass, `scripts/enrich-uiverse-views.ts`, writing `data/views.json` with the
+date it was collected. One request per element, one second apart, resumable. It shells out to `curl`
+because Node's own client is refused with identical headers — measured: the difference is the TLS
+handshake, not anything the script can set.
+
+### Consequences
+- Ranking is by views, and an element with no count sorts last rather than as a zero: an uncollected
+  number is not a small one, and treating it as one would bury newly published elements.
+- The catalogue adds 12 MB to the repository. It is text, it compresses, and it is the whole point of
+  the request; `packages/uiverse/biome.json` excludes `data/` so the linter does not read 3 MB files.
+- `uiverse` joins the commit scopes in `CONTRIBUTING.md`, which is what that document's own rule
+  requires of every workspace package.
