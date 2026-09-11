@@ -37,12 +37,22 @@ export function PresetPanel({ property, value, onValueChange }: PresetPanelProps
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
       <div className="flex flex-col gap-1">
-        <h2 className="m-0 font-medium text-foreground text-sm">{copy.presets}</h2>
+        <h2 className="m-0 flex items-baseline gap-2 font-medium text-foreground text-sm">
+          {copy.presets}
+          {/*
+           * The count, because the list scrolls inside a panel that is shorter than it: at 1440 px
+           * five of the eleven background presets are above the fold and nothing said the other six
+           * existed. A number is cheaper than a scroll affordance and it is true at every height.
+           */}
+          <span className="font-mono font-normal text-2xs text-foreground-muted tabular-nums">
+            {presets.length}
+          </span>
+        </h2>
         <p className="m-0 text-foreground-muted text-xs">
           {layerable ? copy.presetReplaceOrAdd : copy.presetReplace}
         </p>
       </div>
-      <ul className="m-0 flex min-h-0 flex-1 list-none flex-col gap-1 overflow-y-auto p-0">
+      <ul className="m-0 flex min-h-0 flex-1 list-none flex-col gap-1 overflow-y-auto p-0 [scrollbar-gutter:stable]">
         {presets.map((preset) => (
           <li key={preset.name}>
             <button
