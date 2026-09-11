@@ -1,21 +1,24 @@
-# The pipeline from docs/DEVOPS.md § CI, with the jobs whose subjects exist today.
+# The pipeline from docs/DEVOPS.md § CI, split into what a push waits for and what runs nightly —
+# ADR-397. The runners are sequential (three services in one WSL distribution, two disabled), so a
+# job costs wall-clock time rather than a core, and four consecutive pushes produced zero complete
+# runs before the split.
 #
-# Job order follows docs/TESTING.md § CI ordering — cheapest first, so a lint error does not wait on a
-# build. `quality` uses the composite action rather than repeating pnpm/node/install inline as the
-# document writes it: the composite is those exact steps, so the pipeline is unchanged and the setup
-# lives in one file.
+# `core` is one job and not five because five jobs on a sequential runner pay for five installs and
+# buy no parallelism. Order inside it follows docs/TESTING.md § CI ordering — cheapest first, so a
+# lint error does not wait on a build.
 name: CI
 
 on:
   pull_request:
   push:
     branches: [main]
-  # So a run can be started by hand — which is what a red pipeline needs after the cause is fixed
-  # somewhere other than in the code.
+  # The full pipeline, one click away when a change earns it.
   workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * *'
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
 
 env:
@@ -25,7 +28,7 @@ env:
   TURBO_TEAM: ${{ vars.TURBO_TEAM }}
 
 jobs:
-  quality:
+  core:
     runs-on: ${{ fromJSON(vars.RUNNER_LABELS) }}
     steps:
       - uses: actions/checkout@v7
@@ -34,17 +37,6 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test:coverage
       - run: pnpm test:codegen # the golden comparisons, which `test:coverage` does not run
-      - uses: codecov/codecov-action@v7
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          # A fork's pull request has no token. Coverage reporting is information, not a gate.
-          fail_ci_if_error: false
-
-  graph:
-    runs-on: ${{ fromJSON(vars.RUNNER_LABELS) }}
-    steps:
-      - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup
       - run: pnpm check:deps # cycles, direction rules, deep imports, undeclared imports
       # Every block has both thumbnails and a manifest entry, and no thumbnail outlives its block.
       # Presence and consistency only: proving a thumbnail still matches what its block renders needs
@@ -54,78 +46,75 @@ jobs:
       # document added without regenerating the index fails here rather than shipping a nav the
       # index contradicts.
       - run: pnpm check:docs-index
-
-  # Every golden export and every committed document exported from the shipped catalogue, through
-  # `tsc`. It runs on every pull request because a codegen change can break compilation without
-  # breaking a golden comparison: the output changes, the golden updates, and the result no longer
-  # compiles.
-  compile-exports:
-    runs-on: ${{ fromJSON(vars.RUNNER_LABELS) }}
-    steps:
-      - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup
+      # Every golden export and every committed document exported from the shipped catalogue, through
+      # `tsc`: a codegen change can break compilation without breaking a golden comparison.
       - run: pnpm test:compile
-
-  build:
-    runs-on: ${{ fromJSON(vars.RUNNER_LABELS) }}
-    steps:
-      - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup
       - run: pnpm build
       # The four route budgets, from the build manifest rather than from a glob — ADR-314. It runs
       # after `pnpm build` because it measures the files that build produced.
       - run: pnpm size-limit
+      - uses: codecov/codecov-action@v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          # A fork's pull request has no token. Coverage reporting is information, not a gate.
+          fail_ci_if_error: false
 
-  # Non-blocking by design — prompt 10 § Verify. A broken story is worth knowing about on every pull
-  # request, and it is not a reason to stop one: the workshop is a development tool, not a shipped
-  # surface. `pnpm build` above already covers everything that ships.
-  storybook:
+  # Chrome on every push, unsharded: the engine the product is developed against, answering in one
+  # job. The other two engines are nightly — see `e2e-engines` below.
+  e2e:
     runs-on: ${{ fromJSON(vars.RUNNER_LABELS) }}
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
-      - run: pnpm build:storybook
-  # The flows, the editor, the export targets, the playground and the accessibility suite — 422 specs
-  # across three engines.
+      # `chrome` is the channel rather than bundled Chromium, for the reason PERFORMANCE.md gives
+      # about where the numbers were taken.
+      - run: pnpm --filter e2e exec playwright install --with-deps chrome
+      - run: pnpm build
+      # One worker, so one browser at a time: the VM is capped at 4 cores and 4 GB (`~/.wslconfig`,
+      # the owner's call — the machine is for working on), and two workers on four cores is
+      # contention rather than parallelism.
+      #
+      # The directories, with the separator: a bare `export` is a regular expression over the path
+      # and matches `visual/export-dialog.spec.ts` as well. The config ignores `visual/**` too — one
+      # of the two would do, and both together mean neither can be quietly undone.
+      - run: pnpm --filter e2e exec playwright test flows/ editor/ export/ playground/ a11y/ gallery/ --project=chrome --workers=1
+      # The trace is the whole point of `retain-on-failure`: a red run with no trace is a re-run.
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-chrome
+          path: e2e/test-results
+          include-hidden-files: true
+          retention-days: 7
+
+  # Everything below runs nightly and on demand, never on a push — ADR-397. These are the gates that
+  # need a different engine, a container or a second machine, and they are where this repository's
+  # cross-machine defects have always been found. What changed is that a commit no longer waits on
+  # them.
   #
-  # Split by **engine** and then in half, rather than into three by test count. Playwright's own
-  # sharding divides the list evenly and the list is not evenly expensive: the first cut put the
-  # WebKit catalogue walk and the accessibility sweep in one shard, which took 16 minutes of testing
-  # against the other two's 6. One engine per job is a division by cost, and it is also the division
-  # a failure is read in — "WebKit is red" is a sentence about a browser.
+  # Split by **engine** and then in three, rather than by test count. Playwright's own sharding
+  # divides the list evenly and the list is not evenly expensive: the first cut put the WebKit
+  # catalogue walk and the accessibility sweep in one shard, which took 16 minutes of testing against
+  # the other two's 6 (ADR-336, ADR-338).
   #
   # `perf` is deliberately not here. Those specs need `MS_INSTRUMENT=1` and read frame timings, and
   # ADR-332 measured what a shared runner does to a timing budget: `benchmarkIndex` moved by 27 %
   # inside a single Lighthouse run. A budget is only comparable to itself — ADR-280.
-  e2e:
+  e2e-engines:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ${{ fromJSON(vars.RUNNER_LABELS) }}
     strategy:
       fail-fast: false
       matrix:
         # firefox and webkit match the flows and the a11y specs only — `playwright.config.ts`.
-        project: [chrome, firefox, webkit]
-        # Three parts rather than two — ADR-338: at two, the slowest job took 10.0 minutes against a
-        # contract of eight, while its sibling on the same engine finished the tests in 4.2.
+        project: [firefox, webkit]
         shard: [1, 2, 3]
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
-      # One engine per job, so one browser per job. `chrome` is the channel rather than bundled
-      # Chromium, for the reason PERFORMANCE.md gives about where the numbers were taken.
       - run: pnpm --filter e2e exec playwright install --with-deps ${{ matrix.project }}
       - run: pnpm build
-      # One worker, so one browser at a time. It was two, which was right when the VM had 28 cores and
-      # 15.8 GB: the constraint was the runner's cores rather than a measurement. The VM is now capped
-      # at 4 cores and 4 GB (`~/.wslconfig`, the owner's call — the machine is for working on), and two
-      # workers on four cores is contention rather than parallelism. The jobs themselves also run one
-      # at a time now: two of the three runner services are disabled, so the queue does the sequencing
-      # and nothing needs to say `max-parallel` here.
-      # The directories, with the separator: a bare `export` is a regular expression over the path and
-      # matches `visual/export-dialog.spec.ts` as well. The config ignores `visual/**` too — one of
-      # the two would do, and both together mean neither can be quietly undone.
       - run: pnpm --filter e2e exec playwright test flows/ editor/ export/ playground/ a11y/ gallery/ --project=${{ matrix.project }} --shard=${{ matrix.shard }}/3 --workers=1
-      # The trace is the whole point of `retain-on-failure`: a red shard with no trace is a re-run.
       - if: failure()
         uses: actions/upload-artifact@v7
         with:
@@ -134,10 +123,23 @@ jobs:
           include-hidden-files: true
           retention-days: 7
 
+  # Non-blocking by design — prompt 10 § Verify. A broken story is worth knowing about, and it is not
+  # a reason to stop a commit: the workshop is a development tool, not a shipped surface. `pnpm build`
+  # in `core` already covers everything that ships.
+  storybook:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ${{ fromJSON(vars.RUNNER_LABELS) }}
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: pnpm build:storybook
+
   # The image DEVOPS.md § Docker specifies, built and actually run. Three claims are checked here
   # because none of them can be checked anywhere else: that the Dockerfile builds at all, that the
   # image stays under its budget, and that the thing inside it answers.
   docker:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ${{ fromJSON(vars.RUNNER_LABELS) }}
     steps:
       - uses: actions/checkout@v7
@@ -213,8 +215,5 @@ jobs:
       - if: always()
         run: docker compose --profile dev down -v
 
-# Lighthouse has its own workflow — `.github/workflows/lighthouse.yml`, prompt 54.
-#
-# Jobs still to come, each with the prompt that creates what it tests:
-#   visual          — prompt 57, non-blocking, main and labelled pull requests
-# Prompt 60 assembles the complete pipeline and reports per-job duration.
+# Lighthouse and the visual suite have their own workflows, both nightly for the same reason
+# (ADR-397): `.github/workflows/lighthouse.yml`, `.github/workflows/visual.yml`.

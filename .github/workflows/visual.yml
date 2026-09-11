@@ -16,11 +16,14 @@
 # pixels, and the suite costs a build of both origins plus two hundred screenshots.
 name: Visual
 
+# Nightly rather than on every push to main — ADR-397. The suite builds both origins and takes two
+# hundred screenshots on a runner that does one job at a time, and it never blocked anything anyway.
+# A pull request still gets it on demand through the `visual` label plus a dispatch.
 on:
-  push:
-    branches: [main]
   pull_request:
     types: [opened, synchronize, reopened, labeled]
+  schedule:
+    - cron: '0 4 * * *'
   workflow_dispatch:
     inputs:
       update-baselines:
