@@ -12,6 +12,7 @@ import { getDictionary } from '../../../src/lib/i18n/dictionary'
 import { DEFAULT_LOCALE, isLocale } from '../../../src/lib/i18n/locales'
 import { setRequestLocale } from '../../../src/lib/i18n/request-locale'
 import { GalleryDictionary } from '../../../src/lib/i18n/surfaces'
+import { alternatesFor } from '../../../src/lib/site'
 
 interface BlocksPageProps {
   readonly params: Promise<{ readonly locale: string }>
@@ -19,9 +20,14 @@ interface BlocksPageProps {
 
 export async function generateMetadata({ params }: BlocksPageProps): Promise<Metadata> {
   const { locale } = await params
-  const { gallery } = getDictionary(isLocale(locale) ? locale : DEFAULT_LOCALE)
+  const resolved = isLocale(locale) ? locale : DEFAULT_LOCALE
+  const { gallery } = getDictionary(resolved)
 
-  return { title: gallery.metaTitle, description: gallery.metaDescription }
+  return {
+    title: gallery.metaTitle,
+    description: gallery.metaDescription,
+    alternates: alternatesFor(resolved, '/blocks'),
+  }
 }
 
 /**

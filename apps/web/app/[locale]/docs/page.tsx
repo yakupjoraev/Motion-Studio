@@ -9,6 +9,7 @@ import { findDoc } from '../../../src/lib/docs/read-docs'
 import { getDictionary } from '../../../src/lib/i18n/dictionary'
 import { DEFAULT_LOCALE, isLocale } from '../../../src/lib/i18n/locales'
 import { setRequestLocale } from '../../../src/lib/i18n/request-locale'
+import { alternatesFor } from '../../../src/lib/site'
 
 interface DocsIndexPageProps {
   readonly params: Promise<{ readonly locale: string }>
@@ -16,9 +17,14 @@ interface DocsIndexPageProps {
 
 export async function generateMetadata({ params }: DocsIndexPageProps): Promise<Metadata> {
   const { locale } = await params
-  const { docs } = getDictionary(isLocale(locale) ? locale : DEFAULT_LOCALE)
+  const resolved = isLocale(locale) ? locale : DEFAULT_LOCALE
+  const { docs } = getDictionary(resolved)
 
-  return { title: docs.metaTitle, description: docs.metaDescription }
+  return {
+    title: docs.metaTitle,
+    description: docs.metaDescription,
+    alternates: alternatesFor(resolved, '/docs'),
+  }
 }
 
 /**

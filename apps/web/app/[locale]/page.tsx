@@ -9,11 +9,14 @@ import { LandingNav } from '../../src/components/landing/landing-nav'
 import { Problem } from '../../src/components/landing/problem'
 import { ProofStrip } from '../../src/components/landing/proof-strip'
 import { Stack } from '../../src/components/landing/stack'
+import { StructuredData } from '../../src/components/landing/structured-data'
 import { InspectorWalkthrough } from '../../src/components/landing/walkthrough/inspector-walkthrough'
 import { getDictionary } from '../../src/lib/i18n/dictionary'
+import { localeHref } from '../../src/lib/i18n/locale-href'
 import { DEFAULT_LOCALE, isLocale } from '../../src/lib/i18n/locales'
 import { setRequestLocale } from '../../src/lib/i18n/request-locale'
 import { LandingDictionary } from '../../src/lib/i18n/surfaces'
+import { alternatesFor } from '../../src/lib/site'
 
 interface HomePageProps {
   readonly params: Promise<{ readonly locale: string }>
@@ -21,11 +24,13 @@ interface HomePageProps {
 
 export async function generateMetadata({ params }: HomePageProps): Promise<Metadata> {
   const { locale } = await params
-  const { landing } = getDictionary(isLocale(locale) ? locale : DEFAULT_LOCALE)
+  const resolved = isLocale(locale) ? locale : DEFAULT_LOCALE
+  const { landing } = getDictionary(resolved)
 
   return {
     title: landing.metaTitle,
     description: landing.metaDescription,
+    alternates: alternatesFor(resolved, '/'),
     openGraph: {
       title: landing.ogTitle,
       description: landing.ogDescription,
@@ -46,11 +51,18 @@ export async function generateMetadata({ params }: HomePageProps): Promise<Metad
 export default async function HomePage({ params }: HomePageProps) {
   const { locale } = await params
   // Every section below reads the locale from the request store rather than from a prop chain.
-  const dictionary = getDictionary(setRequestLocale(locale))
+  const resolved = setRequestLocale(locale)
+  const dictionary = getDictionary(resolved)
   const { nav } = dictionary
 
   return (
     <>
+      <StructuredData
+        description={dictionary.landing.metaDescription}
+        name="Motion Studio"
+        path={localeHref(resolved, '/')}
+      />
+
       <a
         className="sr-only rounded-md bg-surface-2 px-3 py-2 focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-30 focus:shadow-focus"
         href="#main"
@@ -81,6 +93,20 @@ export default async function HomePage({ params }: HomePageProps) {
           <span>{nav.brand}</span>
           <span>{nav.footerLicence}</span>
           <span>{nav.footerTelemetry}</span>
+          {/* The two legal pages are reachable from every visit, which is the point of having them
+              — `prompts/69` § 2. They sit at the end because they are a destination nobody browses to. */}
+          <a
+            className="ms-transition-control hover:text-foreground"
+            href={localeHref(resolved, '/privacy')}
+          >
+            {nav.footerPrivacy}
+          </a>
+          <a
+            className="ms-transition-control hover:text-foreground"
+            href={localeHref(resolved, '/terms')}
+          >
+            {nav.footerTerms}
+          </a>
         </div>
       </footer>
     </>

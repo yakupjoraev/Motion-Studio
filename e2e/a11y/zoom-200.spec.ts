@@ -15,6 +15,9 @@ const PUBLIC_ROUTES = [
   '/docs/accessibility',
   // The one public route this list forgot, and the only one that had never been measured narrow.
   '/playground',
+  // Added with the pages themselves (`prompts/69` § 2), so they are never the route nobody measured.
+  '/privacy',
+  '/terms',
 ] as const
 
 const WIDTHS = [

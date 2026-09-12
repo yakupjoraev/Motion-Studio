@@ -9,4 +9,6 @@ export const nav = {
   language: 'Language',
   footerLicence: 'Your code is yours',
   footerTelemetry: 'No telemetry',
+  footerPrivacy: 'Privacy',
+  footerTerms: 'Terms',
 }

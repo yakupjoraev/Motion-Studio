@@ -11,4 +11,6 @@ export const nav: Dictionary['nav'] = {
   language: 'Язык',
   footerLicence: 'Ваш код — ваш',
   footerTelemetry: 'Без телеметрии',
+  footerPrivacy: 'Конфиденциальность',
+  footerTerms: 'Условия',
 }

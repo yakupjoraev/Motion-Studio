@@ -330,6 +330,7 @@ out to be different claims.
 | ✅ | A band aligned its children, so everything inside it was drawn 0 px wide: six of the eight templates read as a navbar and nothing else on the canvas, and a heading or a paragraph placed straight into a band was invisible **in the exported page too**. The canvas now matches the exported markup box for box | ADR-379, ADR-380 |
 | ✅ | The press on a link was unanswered until the route committed — 1 966 ms of a page that looked like it had missed the click. The answer is a rule on the link itself while its payload is in flight, measured at 62 ms. The loading frames added to the public routes alongside it were removed again: on a route that has to be readable without JavaScript, a `loading.tsx` **is** the page for that reader | ADR-390, ADR-391 |
 | ✅ | Every preview in the product drew at full size in Firefox: the scale was a length divided by a length and Firefox does not do that division, so the declaration was dropped — the hero frame and all 72 catalogue cards showed a block's top-left corner, and the card the first screen asks you to drag sat outside the window. The scale is a ratio of two numbers now, and the card refuses the native drag WebKit was starting on its thumbnail | ADR-392, ADR-393 |
+| ✅ | `prompts/68` — the code panel. What made this not a page builder lived behind a dialog nobody was told to open; it is a column of the canvas now, closed by default, printed on a 250 ms pause so a slider drag does not run Prettier per frame. Measured closed: 253.3 → 253.61 kB of a 256 kB budget | ADR-401 |
 
 ### Open, in the order it is being done
 
@@ -358,9 +359,7 @@ Each is a prompt in `prompts/`, so a session picks one up without re-deriving it
    One question is already open and belongs to surface 2: `SectionIntro` puts a big headline left and
    a small explainer right on every band, which `tasteskill` § 4.7 bans as a split header. It is the
    page's structural rhythm, so changing it is a composition decision rather than a polish item.
-3. **`prompts/68` — the code panel beside the canvas**, collapsible. What makes this not a page
-   builder currently lives behind a dialog nobody is told to open.
-4. **`prompts/69` — findability and ownership.** SEO, the privacy and terms pages, the domain, and
+3. **`prompts/69` — findability and ownership.** SEO, the privacy and terms pages, the domain, and
    the three coupled decisions below. Raised by the owner 2026-09-05.
 
 ### The four questions in prompt 69, and why they are one decision

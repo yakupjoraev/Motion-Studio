@@ -34,6 +34,8 @@ const ROUTES = [
   { path: '/docs', ready: 'heading' },
   { path: '/docs/accessibility', ready: 'heading' },
   { path: '/playground', ready: 'heading' },
+  { path: '/privacy', ready: 'heading' },
+  { path: '/terms', ready: 'heading' },
 ] as const
 
 for (const mode of ['dark', 'light'] as const) {

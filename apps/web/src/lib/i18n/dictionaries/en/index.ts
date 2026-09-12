@@ -2,6 +2,7 @@ import { docs } from './docs'
 import { errors } from './errors'
 import { gallery } from './gallery'
 import { landing } from './landing'
+import { legal } from './legal'
 import { nav } from './nav'
 import { playground } from './playground'
 import { studio } from './studio'
@@ -16,6 +17,7 @@ export const en = {
   nav,
   errors,
   landing,
+  legal,
   gallery,
   docs,
   studio,

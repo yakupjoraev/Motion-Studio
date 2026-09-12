@@ -9,6 +9,7 @@ import { ErrorDictionary } from '../../src/lib/i18n/error-surface'
 import { LocaleProvider } from '../../src/lib/i18n/locale-context'
 import { HTML_LANG, LOCALES, isLocale } from '../../src/lib/i18n/locales'
 import { NavDictionary } from '../../src/lib/i18n/surfaces'
+import { SITE_URL } from '../../src/lib/site'
 import '../globals.css'
 import { ThemeBoot } from '../theme-boot'
 
@@ -44,7 +45,13 @@ const mono = Geist_Mono({
   preload: false,
 })
 
+/**
+ * `metadataBase` is what turns every relative `openGraph.images` and `alternates.canonical` in the
+ * tree into an absolute URL. Without it Next emits relative Open Graph URLs, which no crawler and no
+ * chat client resolves — `prompts/69` § 1.
+ */
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: 'Motion Studio',
   description: 'A visual editor for modern React interfaces.',
 }

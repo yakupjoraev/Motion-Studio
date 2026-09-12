@@ -16613,3 +16613,54 @@ panel above it.
   both directions and failed until the row was added — which is the gate working.
 - Whether the panel is open persists to `localStorage` beside the inspector's open sections (ADR-114),
   and the default on a machine that has never opened it is closed.
+
+## ADR-402 — Findability is built now and switched on by a domain later
+
+**Date** 2026-09-12 · **Prompt** 69 · **Status** Accepted
+
+### Question
+`prompts/69` § 1 opens with a constraint that reads like a blocker: `*.vercel.app` is served
+`X-Robots-Tag: noindex`, so **no SEO work has any effect until there is a custom domain**, and the
+prompt says to buy the domain first. The domain is the owner's purchase, and the rest of the section
+is a session's work. Doing nothing until a card is charged would leave the whole prompt open on a
+step nobody in this session can take.
+
+### Decision
+Build every part that a domain switches on, and put the domain in exactly one place so that switching
+it on is one environment variable and no code.
+
+`src/lib/site.ts` resolves the site's own address: `NEXT_PUBLIC_SITE_URL` first, the platform's
+production hostname second, the current deployment last. It also exports `HAS_CUSTOM_DOMAIN`, which is
+how the codebase states the thing that is otherwise only true in a comment.
+
+Built against it:
+
+- **`app/robots.ts`** — allows the public pages, disallows `/api`, `/fixtures`, and both locales of
+  `/studio` and `/playground`. Those two are excluded because they are applications, not pages: their
+  content is the visitor's own document, and a search result promising one would deliver an empty
+  editor.
+- **`app/sitemap.ts`** — generated from the registry and the docs directory rather than written by
+  hand, because a hand-kept list of 72 block pages is wrong by the next commit. **Measured: 216
+  entries**, 108 routes × 2 locales, each carrying `alternates.languages`.
+- **`/privacy` and `/terms`**, localised, sharing one `LegalPage` component.
+- **`metadataBase`, canonical URLs and `hreflang`** on the indexable routes.
+- **JSON-LD `SoftwareApplication`** on the landing page.
+
+**The Uiverse catalogue is deliberately absent from the sitemap.** Its 3 802 elements are somebody
+else's content (ADR-398); asking a search engine to index a copy of another site's library is how a
+mirror comes to be treated as one, and the MIT notice condition is about redistribution, not about
+competing for the original's search results.
+
+### Consequences
+- **None of this is read by a crawler yet, and that is not a defect.** Until a domain is pointed at
+  the deployment, the platform's `noindex` header overrides `robots.txt` whatever it says, and the
+  Lighthouse SEO audit keeps failing `is-crawlable` for that reason. The owner's remaining step is to
+  buy a domain, point it at Vercel, and set `NEXT_PUBLIC_SITE_URL`.
+- `/privacy` and `/terms` were added to `a11y/zoom-200` and `a11y/axe-all-routes` **in the same
+  commit as the pages**. ADR-395 was a route that existed for months without ever being measured
+  narrow; a new public route joining the gates later is the same defect waiting its turn.
+- The privacy page says the studio collects nothing, which is currently true and is the reason the
+  page is short. If analytics are ever added, that page changes before the code does.
+- `sitemap.ts` imports `@motion-studio/blocks/registry` and not the barrel. The barrel pulls React
+  components into what is a server-only module, and the build fails on the first client block it
+  meets — ADR-107 exists precisely so that metadata can be read without them.
