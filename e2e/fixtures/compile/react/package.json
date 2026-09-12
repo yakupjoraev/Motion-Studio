@@ -12,7 +12,7 @@
   "devDependencies": {
     "@types/node": "^26.1.2",
     "@types/react": "^19.1.13",
-    "@types/react-dom": "^19.1.9",
+    "@types/react-dom": "^19.2.7",
     "typescript": "~5.6.3"
   }
 }
