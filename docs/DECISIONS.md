@@ -16664,3 +16664,61 @@ competing for the original's search results.
 - `sitemap.ts` imports `@motion-studio/blocks/registry` and not the barrel. The barrel pulls React
   components into what is a server-only module, and the build fails on the first client block it
   meets — ADR-107 exists precisely so that metadata can be read without them.
+
+## ADR-403 — The artboard gets an edge, because in dark mode it had none
+
+**Date** 2026-09-12 · **Prompt** 67 (surface 2) · **Status** Accepted
+
+### Question
+Surface 2 of the design pass is the studio chrome. Its own test, from `DESIGN_REFERENCES.md`
+§ Applying it per surface, is: screenshot the studio with a document open, and the user's design
+should be the only thing the eye goes to.
+
+### Measurement
+Taken on a production build at 1440 × 900, both modes, `fixture=export-landing`:
+
+| | Dark | Light |
+| --- | --- | --- |
+| `canvas-root` background | `oklch(0.095 0.006 265)` | same token pair |
+| `canvas-artboard` background | `oklch(0.095 0.006 265)` | — |
+
+**The page and the room it sits in were one colour.** The cause is in the token map rather than in
+the component: `semantic-map.ts` gives dark mode `surface-0: neutral 1000` and
+`canvas-bg: neutral 1000` — the same step — while light mode separates them (50 against 100). The
+artboard's only visible edge was where the dot grid stopped.
+
+### Decision
+`ARTBOARD_CLASS` carries `shadow-md ring-1 ring-border`.
+
+Both, and each for its own reason. The shadow is the depth and it is what `DESIGN_SYSTEM.md`
+§ Elevation prescribes — but its dark set is deliberately a top inner highlight at **0.06 alpha**
+rather than a stronger shadow, because black on near-black is invisible, and 0.06 over an *identical*
+colour is an edge nobody sees. Measured after adding the shadow alone: still no visible boundary. So
+the ring carries the edge: `oklch(0.27 0.012 265)` against a `0.095` field.
+
+**A ring and not a border.** The artboard's width *is* the breakpoint being previewed, and the
+responsive engine, the fit-to-document command and the multi-frame view all measure against that
+number; a border would add two pixels to it. A ring is a box-shadow and costs no layout. It is also
+the "1 px outline" that `CANVAS.md` § Breakpoint frame already specified and nothing implemented.
+
+### Consequences
+- The visual suite's `studio-chrome.spec.ts` baselines move. They have to be regenerated
+  (`visual.yml -f update-baselines=true`) before that job is green again.
+- Fixing the token steps instead was rejected: `surface-0` is the base surface of the whole chrome and
+  `canvas-bg` is already at the darkest step of the neutral scale, so the change would have to move
+  every panel in the studio to separate two of them.
+
+### Open, and not fixed here — the colour mode a user picks does not reach the studio
+
+Measured in the same pass, and it is a bigger thing than this ADR: with `ms-color-mode` set to
+`light` in storage, `document.documentElement.dataset.colorMode` in `/studio` is **`dark`**, in every
+combination tried (fixture and empty document). `ThemeHost` applies `document.theme` to `:root`
+(ADR-172), so the document's theme paints the chrome and overwrites the preference `ThemeBoot` had
+just honoured (ADR-322). The status bar measured `oklch(0.14 …)` on an empty document and
+`oklch(0.095 …)` with a fixture open — the chrome is being coloured by the user's *content*.
+
+The owner has already chosen the direction — the document's theme belongs to the artboard, not to the
+chrome. It is not done here because it is not a one-line move: `MultiFrameView` renders **several**
+artboards, so the theme needs a registry of targets rather than one root, and both write paths
+(`ThemeHost` and `writeThemeChange`'s 60 fps drag path) have to follow the same rule. That is a
+prompt, not a polish item.

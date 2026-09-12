@@ -18,8 +18,24 @@ export const SCENE_CLASS = 'absolute top-0 left-0 origin-top-left'
  * `--ms-reduced-motion`, so the transition is 0 s under a reduced-motion preference and under the
  * studio's own reduced preview without a branch here — ADR-021.
  */
+/**
+ * `shadow-md` is what separates the user's page from the room it sits in — ADR-403.
+ *
+ * Measured before adding it: in dark mode `surface-0` and `canvas-bg` are **the same token step**
+ * (`NEUTRAL[1000]` both), so the artboard and the canvas behind it resolved to one colour and the
+ * page had no edge at all. Light mode already differed (50 against 100).
+ *
+ * The shadow alone was not enough, and the measurement says why: `DESIGN_SYSTEM.md` § Elevation makes
+ * the dark set a top inner highlight at 0.06 alpha rather than a stronger shadow — because black on
+ * near-black is invisible — and 0.06 over an identical colour is an edge nobody sees. So the ring
+ * carries the edge and the shadow carries the depth.
+ *
+ * `ring` and not `border`: the artboard's width **is** the breakpoint being previewed, and a border
+ * would add two pixels to a number the whole responsive engine measures against. A ring is a shadow
+ * and costs no layout. It is also the `1 px outline` CANVAS.md § Breakpoint frame already asked for.
+ */
 export const ARTBOARD_CLASS =
-  'relative min-h-[600px] bg-surface-0 [transition:width_var(--ms-duration-quick)_var(--ms-ease-standard)]'
+  'relative min-h-[600px] bg-surface-0 shadow-md ring-1 ring-border [transition:width_var(--ms-duration-quick)_var(--ms-ease-standard)]'
 
 /**
  * Two radial gradients on one element: the dots and every tenth one stronger. Sized in canvas units,
