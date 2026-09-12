@@ -14,6 +14,7 @@ import { CommandAnnouncer } from './command-announcer'
 
 import { type PanelSide, isCollapsed } from '../../hooks/panel-layout'
 import { usePanelLayout } from '../../hooks/use-panel-layout'
+import { usePersistedCodePanel } from '../../hooks/use-persisted-code-panel'
 import { useViewportGuard } from '../../hooks/use-viewport-guard'
 
 import { DndHost } from './dnd-host'
@@ -32,24 +33,35 @@ export interface StudioShellProps {
   readonly canvas: ReactNode
 }
 
-/** UI_GUIDELINES.md § Focus and keyboard: `F2` cycles canvas → left → inspector → canvas. */
-const FOCUS_CYCLE = ['canvas', 'left', 'inspector'] as const
+/**
+ * UI_GUIDELINES.md § Focus and keyboard: `F2` cycles canvas → left → code → inspector → canvas.
+ *
+ * `code` sits between the canvas and the inspector because that is where it is on screen, and it is
+ * in the cycle **only while it is mounted** — a closed panel that still took a turn would be a press
+ * that moves focus nowhere, which is indistinguishable from a broken key (ADR-401).
+ */
+const FOCUS_CYCLE = ['canvas', 'left', 'code', 'inspector'] as const
 
 type FocusScope = (typeof FOCUS_CYCLE)[number]
 
 const SCOPE_SELECTOR = '[data-shortcut-scope]'
 
+const regionOf = (scope: FocusScope): HTMLElement | null =>
+  document.querySelector<HTMLElement>(`[data-shortcut-scope="${scope}"]`)
+
 const focusScope = (scope: FocusScope): void => {
-  document.querySelector<HTMLElement>(`[data-shortcut-scope="${scope}"]`)?.focus()
+  regionOf(scope)?.focus()
 }
 
 /** Focus anywhere inside a region counts as being in it, so `F2` works from a control, not just the frame. */
 const nextScope = (): FocusScope => {
   const region = document.activeElement?.closest(SCOPE_SELECTOR) ?? null
   const scope = region?.getAttribute('data-shortcut-scope') ?? null
-  const index = FOCUS_CYCLE.indexOf(scope as FocusScope)
+  const present = FOCUS_CYCLE.filter((one) => regionOf(one) !== null)
+  const cycle = present.length === 0 ? FOCUS_CYCLE : present
+  const index = cycle.indexOf(scope as FocusScope)
 
-  return FOCUS_CYCLE[(index + 1) % FOCUS_CYCLE.length] ?? 'canvas'
+  return cycle[(index + 1) % cycle.length] ?? 'canvas'
 }
 
 /**
@@ -76,6 +88,19 @@ const ExportDialog = dynamic(
   { ssr: false },
 )
 
+/**
+ * The printers, Prettier and the tokeniser are the heaviest modules in the app and `PERFORMANCE.md`
+ * § Studio keeps them out of the first load. The panel is behind its own chunk and — unlike the
+ * export dialog — it is **not** prefetched on idle: a studio whose panel has never been opened must
+ * not have paid for it, and the owner's condition is that most sessions never open it (ADR-401).
+ */
+const CodePanel = dynamic(
+  () => import('./code-panel/code-panel').then((module) => module.CodePanel),
+  {
+    ssr: false,
+  },
+)
+
 const REGION_CLASS = 'relative min-w-0 outline-none focus-visible:shadow-focus'
 
 const PANEL_CLASS = 'ms-panel-overlay bg-surface-1'
@@ -91,6 +116,7 @@ export function StudioShell({ canvas }: StudioShellProps) {
   const { href } = useLocale()
   const { layout, setWidth, toggleCollapsed } = usePanelLayout()
   const exportOpen = useStudioStore((state) => state.ui.exportDialogOpen)
+  const codePanelOpen = useStudioStore((state) => state.ui.codePanelOpen)
   const [exportMounted, setExportMounted] = useState(false)
 
   useEffect(() => {
@@ -114,6 +140,10 @@ export function StudioShell({ canvas }: StudioShellProps) {
 
   /** What the user did last, for a crash report — `prompts/58` § Error report. */
   useEffect(() => watchGestures(), [])
+
+  /* Here rather than in the panel: the flag has to be restored before the panel mounts, and the
+     panel only mounts once the flag is true. */
+  usePersistedCodePanel()
 
   /** In memory before the button is pressed, which is what keeps the dialog instant. */
   useEffect(() => {
@@ -215,14 +245,36 @@ export function StudioShell({ canvas }: StudioShellProps) {
               ) : null}
             </aside>
 
-            <main
-              aria-label={chrome.canvas}
-              className={cn(REGION_CLASS, 'overflow-hidden')}
-              data-shortcut-scope="canvas"
-              tabIndex={-1}
-            >
-              {canvas}
-            </main>
+            {/* The middle track, split between the canvas and the code. A wrapper rather than a
+                fourth grid column: the track list is the panel layout's contract (`--ms-panel-left`,
+                `--ms-panel-right`) and the code panel is not resizable, so it has no width to put
+                there. */}
+            <div className="flex min-w-0 overflow-hidden">
+              <main
+                aria-label={chrome.canvas}
+                className={cn(REGION_CLASS, 'flex-1 overflow-hidden')}
+                data-shortcut-scope="canvas"
+                tabIndex={-1}
+              >
+                {canvas}
+              </main>
+
+              {codePanelOpen ? (
+                <aside
+                  aria-label={chrome.codePanel}
+                  className={cn(
+                    REGION_CLASS,
+                    PANEL_CLASS,
+                    'flex w-[var(--ms-code-panel-width)] shrink-0 flex-col border-border border-l',
+                  )}
+                  data-shortcut-scope="code"
+                  data-testid="code-panel-region"
+                  tabIndex={-1}
+                >
+                  <CodePanel />
+                </aside>
+              ) : null}
+            </div>
 
             <aside
               aria-label={chrome.inspector}

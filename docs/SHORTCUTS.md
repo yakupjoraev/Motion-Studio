@@ -129,6 +129,7 @@ Applies to the selection, or to the parent when only one node is selected.
 | `Alt+3` | Effects |
 | `Alt+4` | Theme |
 | `Alt+5` | Layers |
+| `Mod+Alt+C` | Toggle code panel |
 | `Mod+F` | Focus block search |
 | `Mod+Shift+F` | Focus layer search |
 

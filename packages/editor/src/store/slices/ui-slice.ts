@@ -18,6 +18,7 @@ export const INITIAL_UI: UiState = {
   activeDialog: null,
   /** PRODUCT.md § 1: on in development, behind the status-bar toggle in production. */
   fpsVisible: process.env['NODE_ENV'] === 'development',
+  codePanelOpen: false,
 }
 
 /** Panel state is persisted to `localStorage` and is not undoable — STATE_MANAGEMENT.md § ui. */
@@ -89,5 +90,9 @@ export const createUiSlice: () => SliceCreator<UiSlice> = () => (set, get) => ({
 
   setFpsVisible(visible) {
     set({ ui: { ...get().ui, fpsVisible: visible } }, false, 'setFpsVisible')
+  },
+
+  setCodePanelOpen(open) {
+    set({ ui: { ...get().ui, codePanelOpen: open } }, false, 'setCodePanelOpen')
   },
 })

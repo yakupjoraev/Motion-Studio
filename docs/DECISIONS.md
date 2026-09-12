@@ -16552,3 +16552,64 @@ literally the commit `main` ends at.
 - `visual.yml` still runs only on pull requests and nightly, so a `dev` push gets no screenshot
   comparison. That is unchanged by this decision and left as it is: the baselines move with the
   design work, not with every commit.
+
+## ADR-401 — The code panel is a column of the canvas, closed by default, printed on a pause
+
+**Date** 2026-09-12 · **Prompt** 68 · **Status** Accepted
+
+### Question
+Everything that makes this product not a page builder lived behind a dialog nobody is told to open.
+`prompts/68` puts the selected block's generated component beside the canvas, under the owner's
+condition: *«юзеру не всегда нужно видеть, некоторым нужно только итоговый результат»* — collapsible,
+and closed is a first-class state.
+
+### Measurement
+The studio's first-load budget had **2.7 kB of headroom** before this prompt: 253.3 kB against 256.
+The printers, Prettier and the tokeniser are the heaviest modules in the app, so the only question
+that mattered was how much of the panel a studio that never opens it pays for.
+
+**Measured, closed: 253.3 kB → 253.61 kB, +0.31 kB.** That is the store flag, its selector and the
+toolbar toggle. It is not zero and it cannot be: a panel with no visible way to open it is a feature
+nobody finds, which is the defect this prompt exists to fix. Everything else — viewer, printers,
+formatter, highlighter — is behind `dynamic(() => import(...))` and is fetched on the first open.
+
+Unlike the export dialog (ADR-313) the chunk is **not** prefetched on idle. The dialog is prefetched
+because every session ends at it; the panel is not, because the owner's condition says most sessions
+never open it, and prefetching would spend the budget's remaining headroom on the majority who do not.
+
+### Decision
+Four choices, each with an alternative that was rejected for a reason rather than a preference.
+
+**A column inside the middle track, not a fourth grid column.** The track list
+(`--ms-panel-left`, `minmax(0, 1fr)`, `--ms-panel-right`) is the panel layout's contract, and a
+fourth track would put a width there that nothing sets: the code panel is not resizable, so it has no
+width to persist. It takes its 420 px out of the canvas instead. 420 px is derived rather than
+picked — the exporter formats at 100 columns, and the panel's monospace `text-2xs` is ~6 px per
+column plus a 36 px line-number gutter.
+
+**Nothing selected is an empty state, not the document root.** Printing the root would make the panel
+a second, worse copy of the export dialog, which already answers "the whole page". The empty state
+says what selecting a block will do.
+
+**Printed on a pause of 250 ms, not on every `version`.** A prop edit dispatches a command per step,
+so `version` moves on every frame of a slider drag; printing per frame would run the printer and
+Prettier while the pointer is still moving. 250 ms is longer than the gap between two drag frames
+(~16 ms) and shorter than the gap between a click and reading the result. The first print of a
+selection shows a skeleton; later prints replace text with text, because re-entering `generating` on
+every keystroke reads as flicker rather than as work.
+
+**One pipeline with Copy React.** The panel calls `copyEntry` with `scope: 'selection'` — the same
+call the context menu makes (ADR-246). Two printers for one question is how a button drifts from the
+panel above it.
+
+### Consequences
+- `F2` cycles canvas → left → code → inspector, and the code scope is in the cycle **only while the
+  panel is mounted**. A closed panel taking a turn would be a press that moves focus nowhere, which a
+  user cannot tell from a broken key. The cycle is filtered against the DOM rather than against the
+  store, so it is correct while the chunk is still loading.
+- The panel is read-only. Typing into it needs a parser, a mapping back to props and a conflict
+  model; that is a larger feature and `prompts/68` says so explicitly.
+- `Mod+Alt+C` joins `SHORTCUTS.md` § Panels. The registry spec compares the map with that document in
+  both directions and failed until the row was added — which is the gate working.
+- Whether the panel is open persists to `localStorage` beside the inspector's open sections (ADR-114),
+  and the default on a machine that has never opened it is closed.

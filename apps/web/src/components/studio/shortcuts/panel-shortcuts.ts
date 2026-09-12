@@ -32,6 +32,19 @@ export const PANEL_SHORTCUTS: readonly StudioShortcut[] = [
     }),
   ),
   {
+    id: 'toggle-code-panel',
+    keys: 'mod+alt+c',
+    label: 'Toggle code panel',
+    group: 'Panels',
+    scope: 'global',
+    keywords: ['code', 'react', 'source', 'panel'],
+    run: ({ store }) => {
+      const state = store.getState()
+
+      state.setCodePanelOpen(!state.ui.codePanelOpen)
+    },
+  },
+  {
     id: 'focus-block-search',
     keys: 'mod+f',
     label: 'Focus block search',

@@ -1,10 +1,11 @@
 'use client'
 
-import { PanelLeftIcon, PanelRightIcon, SearchIcon } from '@motion-studio/icons'
+import { CodeIcon, PanelLeftIcon, PanelRightIcon, SearchIcon } from '@motion-studio/icons'
 import { Button, Kbd, Separator } from '@motion-studio/ui'
 
 import type { PanelSide } from '../../../hooks/panel-layout'
 import { useStudio } from '../../../lib/i18n/studio-surface'
+import { useStudioStore } from '../../../store/editor-store'
 
 import { BreakpointSwitcher } from './breakpoint-switcher'
 import { EditMenu } from './edit-menu'
@@ -23,6 +24,8 @@ export interface TopBarProps {
 /** § Density scale: 48 px, hairline below, no shadow — depth in the chrome comes from value. */
 export function TopBar({ leftOpen, rightOpen, onTogglePanel }: TopBarProps) {
   const { chrome } = useStudio()
+  const codePanelOpen = useStudioStore((state) => state.ui.codePanelOpen)
+  const setCodePanelOpen = useStudioStore((state) => state.setCodePanelOpen)
 
   return (
     <header className="col-span-3 flex h-[48px] items-center gap-2 border-border border-b bg-surface-1 px-2">
@@ -54,6 +57,20 @@ export function TopBar({ leftOpen, rightOpen, onTogglePanel }: TopBarProps) {
       <Button aria-label={chrome.commandPalette} disabled size="sm" variant="ghost">
         <SearchIcon size={16} />
         <Kbd keys="Mod+K" />
+      </Button>
+
+      {/* Beside the inspector toggle because it toggles the region beside the inspector. Discoverable
+          here rather than only on `Mod+Alt+C`: the code is what makes this not a page builder, and a
+          differentiator nobody is told about is one nobody finds — `prompts/68`. */}
+      <Button
+        aria-label={chrome.toggleCodePanel}
+        aria-pressed={codePanelOpen}
+        data-testid="toggle-code-panel"
+        onClick={() => setCodePanelOpen(!codePanelOpen)}
+        size="icon"
+        variant="ghost"
+      >
+        <CodeIcon size={20} />
       </Button>
 
       <Button

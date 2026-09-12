@@ -177,6 +177,11 @@ export interface UiState {
   readonly exportDialogOpen: boolean
   readonly activeDialog: DialogId | null
   readonly fpsVisible: boolean
+  /**
+   * The code panel beside the canvas. A flag and not a width because the panel is a column of the
+   * studio grid rather than an overlay, and closed is a state the studio opens in — ADR-401.
+   */
+  readonly codePanelOpen: boolean
 }
 
 export interface UiSlice {
@@ -189,6 +194,7 @@ export interface UiSlice {
   setExportDialogOpen(open: boolean): void
   setActiveDialog(dialog: DialogId | null): void
   setFpsVisible(visible: boolean): void
+  setCodePanelOpen(open: boolean): void
 }
 
 /**

@@ -31,6 +31,27 @@ describe('panels', () => {
     expect(store.getState().ui.leftPanel.width).toBe(300)
   })
 
+  it('starts with the code panel closed, and toggles it', () => {
+    const store = createTestStore()
+
+    // Closed is the first-class state the owner asked for: a person composing a page never has to
+    // look at the code, so the studio must not open on it.
+    expect(store.getState().ui.codePanelOpen).toBe(false)
+
+    store.getState().setCodePanelOpen(true)
+
+    expect(store.getState().ui.codePanelOpen).toBe(true)
+  })
+
+  it('leaves the side panels alone when the code panel opens', () => {
+    const store = createTestStore()
+
+    store.getState().setCodePanelOpen(true)
+
+    expect(store.getState().ui.leftPanel.collapsed).toBe(false)
+    expect(store.getState().ui.rightPanel.collapsed).toBe(false)
+  })
+
   it('collapses each side independently', () => {
     const store = createTestStore()
 

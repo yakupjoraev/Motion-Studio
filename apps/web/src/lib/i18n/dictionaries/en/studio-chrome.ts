@@ -22,6 +22,11 @@ export const studioChrome = {
   canvas: 'Canvas',
   inspector: 'Inspector',
   inspectorWidth: 'Inspector width',
+
+  codePanel: 'Code',
+  toggleCodePanel: 'Toggle code panel',
+  codePanelEmpty: 'Select a block to read the component it generates.',
+  codePanelFailed: 'This block could not be printed.',
   tooNarrow: 'Motion Studio needs a wider screen.',
   browseGallery: 'Browse the block gallery instead →',
 

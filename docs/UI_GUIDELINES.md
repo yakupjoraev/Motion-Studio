@@ -41,19 +41,24 @@ Concretely:
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐ 48px  top bar
-├────────────┬──────────────────────────────────────┬──────────────────┤
-│            │                                      │                  │
-│  left      │              canvas                  │   inspector      │
-│  240–360   │              flexible                │   280–420        │
-│  default   │                                      │   default 320    │
-│  280       │                                      │                  │
-│            │                                      │                  │
-├────────────┴──────────────────────────────────────┴──────────────────┤ 28px  status bar
+├────────────┬───────────────────────────┬──────────┬──────────────────┤
+│            │                           │          │                  │
+│  left      │          canvas           │  code    │   inspector      │
+│  240–360   │          flexible         │  420     │   280–420        │
+│  default   │                           │  closed  │   default 320    │
+│  280       │                           │  by      │                  │
+│            │                           │  default │                  │
+├────────────┴───────────────────────────┴──────────┴──────────────────┤ 28px  status bar
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
 - Panels resize by dragging their inner edge; the handle is 4 px wide with an 8 px hit area.
 - Widths persist to `localStorage`.
+- **The code panel is the exception to both.** It has one fixed width and no resize handle, it takes
+  its room out of the canvas rather than out of the grid's track list, and it is **closed by
+  default** — `Mod+Alt+C` or the toolbar toggle opens it, and whether it is open persists like the
+  inspector's sections do. It shows the selected block's generated component, read-only. Closed is a
+  first-class state: composing a page never requires looking at code (ADR-401).
 - Below 1280 px, panels become overlays triggered from the top bar. The studio is a desktop
   tool and says so below 1024 px with a readable notice — it does not pretend to work.
 - The canvas never scrolls the page. `overscroll-behavior: none` on the app root.
@@ -219,7 +224,9 @@ performance.
 - Focus ring: `shadow-focus` (2 px surface offset + 2 px accent). Never `outline: none` without
   a replacement.
 - `:focus-visible` only — no ring on mouse clicks.
-- Every panel is a focus scope. `F2` cycles: canvas → left panel → inspector → canvas.
+- Every panel is a focus scope. `F2` cycles: canvas → left panel → code → inspector → canvas. The
+  code panel takes its turn **only while it is open**; a closed panel is not in the document, and a
+  press that moved focus nowhere would be indistinguishable from a key that does not work.
 - Dialogs trap focus and restore it to the trigger on close.
 - Roving tabindex in the toolbar, tab strips, and layer tree — one tab stop per group, arrows
   navigate inside.

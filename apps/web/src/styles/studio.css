@@ -18,6 +18,13 @@
   --ms-panel-left-size: 280px;
   --ms-panel-right: 320px;
   --ms-panel-right-size: 320px;
+  /*
+   * The code panel is not resizable, so it has one variable and not two — it takes its width out of
+   * the canvas rather than out of the grid's track list. 420 px is the width a printed component
+   * reads at without wrapping: the exporter's Prettier line width is 100 columns, and the panel's
+   * `text-2xs` monospace is ~6 px per column plus the 36 px gutter of line numbers.
+   */
+  --ms-code-panel-width: 420px;
 }
 
 .ms-studio {

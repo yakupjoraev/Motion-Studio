@@ -23,6 +23,12 @@ export const studioChrome: Dictionary['studio']['chrome'] = {
   canvas: 'Канвас',
   inspector: 'Инспектор',
   inspectorWidth: 'Ширина инспектора',
+
+  codePanel: 'Код',
+  toggleCodePanel: 'Показать или скрыть панель кода',
+  codePanelEmpty: 'Выберите блок, чтобы прочитать компонент, который он порождает.',
+  codePanelFailed: 'Этот блок не удалось напечатать.',
+
   tooNarrow: 'Motion Studio нужен экран пошире.',
   browseGallery: 'Открыть каталог блоков →',
 
