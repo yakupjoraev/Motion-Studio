@@ -6,6 +6,7 @@ import { useCallback, useMemo } from 'react'
 
 import { useStudioStore } from '../../../../store/editor-store'
 
+import { themeTargets } from './theme-targets'
 import { writeThemeChange } from './theme-variables'
 
 /**
@@ -60,7 +61,11 @@ export function useThemeEdit(): ThemeEdit {
       return
     }
 
-    writeThemeChange(current, withValue(current, path, value))
+    // Every artboard, not the root — ADR-404. The preview has to land where `ThemeHost` paints, or a
+    // hue drag would tint the chrome and leave the page it is supposed to be previewing untouched.
+    for (const root of themeTargets()) {
+      writeThemeChange(current, withValue(current, path, value), root)
+    }
   }, [])
 
   const commit = useCallback((path: string, value: unknown) => {

@@ -93,10 +93,19 @@
  * the dark ones when the root has been told, and the same dark ones when it has not been told and the
  * system asks for dark.
  */
-.ms-hero-glow {
+/*
+ * The amounts live on the **theme scope** and not on the element — ADR-404. A custom property is
+ * inherited from the nearest ancestor that declares it, so an artboard themed light inside a studio
+ * chromed dark resolves to the light values; a rule like `[data-color-mode='dark'] .ms-hero-glow`
+ * would match on the ancestor `<html>` too and the page inside would light up wrongly.
+ */
+:root,
+[data-color-mode] {
   --ms-hero-glow-core: 16%;
   --ms-hero-glow-halo: 7%;
+}
 
+.ms-hero-glow {
   background-image: radial-gradient(
       45% 45% at 50% 28%,
       color-mix(in oklab, var(--ms-color-accent) var(--ms-hero-glow-core), transparent) 0%,
@@ -109,13 +118,13 @@
     );
 }
 
-:root[data-color-mode='dark'] .ms-hero-glow {
+[data-color-mode='dark'] {
   --ms-hero-glow-core: 45%;
   --ms-hero-glow-halo: 14%;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root:not([data-color-mode]) .ms-hero-glow {
+  :root:not([data-color-mode]) {
     --ms-hero-glow-core: 45%;
     --ms-hero-glow-halo: 14%;
   }
@@ -210,15 +219,26 @@
  * invisible rather than flat; a browser without `backdrop-filter` leaves it unblurred, which would make
  * it a tinted pane over live content. Both land on an opaque `surface-2` with a real border.
  */
-.ms-glass {
-  border: 1px solid var(--ms-glass-border);
-  background-color: var(--ms-glass-background);
-  backdrop-filter: var(--ms-glass-backdrop-filter);
+/*
+ * Resolved on the theme scope for the same reason as the glow above (ADR-404): `data-glass` now
+ * lives on the artboard in the studio, and a descendant selector would still be answering to the
+ * chrome's `<html>`.
+ */
+:root,
+[data-glass] {
+  --ms-glass-border-resolved: var(--ms-glass-border);
+  --ms-glass-background-resolved: var(--ms-glass-background);
 }
 
-:root[data-glass='none'] .ms-glass {
-  border-color: var(--ms-color-border);
-  background-color: var(--ms-color-surface-2);
+[data-glass='none'] {
+  --ms-glass-border-resolved: var(--ms-color-border);
+  --ms-glass-background-resolved: var(--ms-color-surface-2);
+}
+
+.ms-glass {
+  border: 1px solid var(--ms-glass-border-resolved);
+  background-color: var(--ms-glass-background-resolved);
+  backdrop-filter: var(--ms-glass-backdrop-filter);
 }
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
@@ -226,6 +246,15 @@
     border-color: var(--ms-color-border);
     background-color: var(--ms-color-surface-2);
   }
+}
+
+/*
+ * The theme scope in the studio: the artboard, which `ThemeHost` writes the document's theme onto.
+ * The chrome keeps the user's own colour mode on `<html>` — ADR-404.
+ */
+[data-ms-theme-scope] {
+  color: var(--ms-color-foreground);
+  background-color: var(--ms-color-surface-0);
 }
 
 /*

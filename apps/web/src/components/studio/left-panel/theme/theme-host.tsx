@@ -5,10 +5,12 @@ import { useEffect } from 'react'
 
 import { useStudioStore } from '../../../../store/editor-store'
 
+import { watchThemeTargets } from './theme-targets'
+
 /**
- * Applies `document.theme` to the root, and keeps applying it — ADR-172. Until this existed a theme
- * command changed the document without changing a single pixel: nothing in the studio read the
- * document's theme.
+ * Applies `document.theme` to every artboard, and keeps applying it — ADR-172, retargeted by
+ * ADR-404. Until ADR-172 existed a theme command changed the document without changing a single
+ * pixel; until ADR-404 it changed every pixel, including the chrome the user had set to light.
  *
  * The subscription is the store's own, not `useStudioStore(selector)`, and that is the point:
  * `THEME_ENGINE.md` § Rules, 5 requires a theme change to trigger no React render at all, and a hook
@@ -19,24 +21,38 @@ import { useStudioStore } from '../../../../store/editor-store'
  */
 export function ThemeHost() {
   useEffect(() => {
-    applyTheme(useStudioStore.getState().document.theme)
+    let targets: readonly HTMLElement[] = []
+
+    const paint = (): void => {
+      const theme = useStudioStore.getState().document.theme
+
+      for (const root of targets) {
+        applyTheme(theme, { root })
+      }
+    }
+
+    const stopWatching = watchThemeTargets((next) => {
+      targets = next
+      paint()
+    })
 
     const unsubscribe = useStudioStore.subscribe((state, previous) => {
       if (state.document.theme !== previous.document.theme) {
-        applyTheme(state.document.theme)
+        paint()
       }
     })
 
     const media = window.matchMedia('(prefers-color-scheme: dark)')
     const onPreferenceChange = (): void => {
       if (useStudioStore.getState().document.theme.colorMode === 'system') {
-        applyTheme(useStudioStore.getState().document.theme)
+        paint()
       }
     }
 
     media.addEventListener('change', onPreferenceChange)
 
     return () => {
+      stopWatching()
       unsubscribe()
       media.removeEventListener('change', onPreferenceChange)
     }

@@ -1,6 +1,6 @@
 import { createEmptyDocument, nodeId } from '@motion-studio/schema'
 import { PRESETS } from '@motion-studio/theme'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { act, render, renderHook } from '../../../../test/render'
 
 import { ToastProvider } from '@motion-studio/ui'
@@ -14,8 +14,14 @@ const state = () => useStudioStore.getState()
 
 const canvasRenders = (): number => window.__renderCounts?.['canvas-root'] ?? 0
 
-const variable = (name: string): string =>
-  document.documentElement.style.getPropertyValue(name).trim()
+/**
+ * The document's theme is written to the artboards and not to the root — ADR-404 — so the assertions
+ * read from one. A standalone element rather than a rendered canvas: these tests are about where the
+ * variables land, and the canvas brings a scene, a viewport and a resize observer with it.
+ */
+let artboard: HTMLElement
+
+const variable = (name: string): string => artboard.style.getPropertyValue(name).trim()
 
 let counter = 0
 
@@ -32,6 +38,14 @@ beforeEach(() => {
   })
 
   document.documentElement.removeAttribute('style')
+
+  artboard = document.createElement('div')
+  artboard.setAttribute('data-testid', 'canvas-artboard')
+  document.body.append(artboard)
+})
+
+afterEach(() => {
+  artboard.remove()
 })
 
 /**
@@ -131,7 +145,7 @@ describe('applying a preset', () => {
 })
 
 describe('ThemeHost', () => {
-  it('puts the document theme on the root and keeps it there', () => {
+  it('puts the document theme on the artboard and keeps it there', () => {
     render(<ThemeHost />)
 
     expect(variable('--ms-radius-lg')).toBe('12px')
@@ -139,7 +153,35 @@ describe('ThemeHost', () => {
     act(() => state().applyThemePreset('brutal'))
 
     expect(variable('--ms-radius-lg')).toBe('0px')
-    expect(document.documentElement.dataset['colorMode']).toBe('light')
-    expect(document.documentElement.dataset['elevation']).toBe('sharp')
+    expect(artboard.dataset['colorMode']).toBe('light')
+    expect(artboard.dataset['elevation']).toBe('sharp')
+  })
+
+  it('leaves the chrome to the colour mode the user picked', () => {
+    // The defect ADR-404 fixes: a light document used to repaint the whole editor, discarding the
+    // preference `ThemeBoot` had just applied to the root.
+    document.documentElement.dataset['colorMode'] = 'dark'
+
+    render(<ThemeHost />)
+
+    act(() => state().applyThemePreset('brutal'))
+
+    expect(artboard.dataset['colorMode']).toBe('light')
+    expect(document.documentElement.dataset['colorMode']).toBe('dark')
+    expect(document.documentElement.style.getPropertyValue('--ms-radius-lg')).toBe('')
+  })
+
+  it('themes every frame the multi-frame view renders, not just the first', () => {
+    const second = document.createElement('div')
+    second.setAttribute('data-testid', 'canvas-artboard')
+    document.body.append(second)
+
+    render(<ThemeHost />)
+
+    act(() => state().applyThemePreset('brutal'))
+
+    expect(second.style.getPropertyValue('--ms-radius-lg')).toBe('0px')
+
+    second.remove()
   })
 })

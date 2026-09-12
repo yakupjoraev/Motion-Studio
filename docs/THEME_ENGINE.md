@@ -301,6 +301,33 @@ none of them: it receives their output on `PrintedTheme`, because an import woul
 export engine's runtime graph — ADR-232 for the stylesheet, ADR-236 for the four token formats. Each
 is a pure string function: no DOM, no clipboard, no download. The dialog owns those.
 
+## Where the studio writes the document's theme
+
+**The artboard, not the root — ADR-404.** The studio has two themes on screen at once and they answer
+to different people:
+
+| Surface | Theme | Written by |
+| --- | --- | --- |
+| The chrome — panels, top bar, inspector, status bar | `studioDark` plus the colour mode the **user** chose | `ThemeBoot`, on `<html>` |
+| The artboard and everything on it | `document.theme` — the **document's** | `ThemeHost`, on each artboard |
+
+Writing the document's theme to `<html>` made the two one thing: opening a dark document repainted a
+studio the user had set to light, and the preference `ThemeBoot` had just applied was silently
+overwritten. Measured before the fix: with `ms-color-mode: light` in storage,
+`documentElement.dataset.colorMode` in `/studio` read `dark`.
+
+Two consequences the implementation has to respect:
+
+- **Plural targets.** `MultiFrameView` renders one artboard per breakpoint, so the theme is applied to
+  every `[data-testid="canvas-artboard"]` and new ones are picked up by a `MutationObserver` —
+  `theme-targets.ts`. Both write paths use it: `ThemeHost` and the 60 fps preview in `use-theme-edit`.
+- **Block rules select on the scope, not on the root.** A rule like
+  `:root[data-color-mode='dark'] .ms-hero-glow` stops matching when the attribute moves, and the
+  looser `[data-color-mode='dark'] .ms-hero-glow` matches the chrome's ancestor `<html>` as well — a
+  light artboard inside a dark studio would light up wrongly. The values are declared **as custom
+  properties on the scope** instead, because a custom property is inherited from the nearest ancestor
+  that declares it, which is exactly the rule needed.
+
 ## Scoped themes
 
 The block gallery renders many previews, each possibly in a different theme. `applyTheme`

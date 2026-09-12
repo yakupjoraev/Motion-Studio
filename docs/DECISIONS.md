@@ -16722,3 +16722,56 @@ chrome. It is not done here because it is not a one-line move: `MultiFrameView` 
 artboards, so the theme needs a registry of targets rather than one root, and both write paths
 (`ThemeHost` and `writeThemeChange`'s 60 fps drag path) have to follow the same rule. That is a
 prompt, not a polish item.
+
+## ADR-404 — The document's theme goes on the artboards; the chrome keeps the user's colour mode
+
+**Date** 2026-09-12 · **Prompt** 67 (surface 2) · **Status** Accepted · **Revises** ADR-172
+
+### Question
+ADR-403 recorded this as open: the colour mode a user picks does not reach the studio. Measured
+again before fixing, on a production build — with `ms-color-mode: light` in storage,
+`documentElement.dataset.colorMode` on `/studio` was **`dark`**, with a fixture open and on an empty
+document alike. The status bar measured `oklch(0.14 …)` empty and `oklch(0.095 …)` with a document
+open: the chrome was being coloured by the user's *content*.
+
+ADR-172 put `document.theme` on `:root` to fix the opposite defect — a theme command that changed
+nothing on screen. It fixed that and overshot: the document's theme became the studio's theme.
+
+### Decision
+Two themes, two owners. The chrome answers to the user (`ThemeBoot`, on `<html>`); the artboard and
+everything on it answers to the document (`ThemeHost`, on each artboard).
+
+**Targets are plural and watched.** `MultiFrameView` renders one artboard per breakpoint, so a single
+element would theme the first frame and leave the rest on the chrome's variables.
+`theme-targets.ts` collects every `[data-testid="canvas-artboard"]` and a `MutationObserver` picks up
+the ones that arrive with a breakpoint switch. Both write paths go through it — `ThemeHost` and the
+60 fps preview in `use-theme-edit`, because a hue drag that tinted the chrome while leaving the page
+untouched would be the same bug inverted.
+
+**The block stylesheet had to change with it, and the obvious edit was wrong.** Two rules in
+`blocks.css` selected `:root[data-color-mode='dark'] .ms-hero-glow` and `:root[data-glass='none']
+.ms-glass`. Dropping `:root` to make them match the artboard **also** makes them match the chrome's
+`<html>`, so a light artboard inside a dark studio would take the dark values. The fix is to declare
+the values as custom properties on the scope and let inheritance pick the nearest one — that is the
+one mechanism in CSS that means "closest ancestor wins".
+
+### Measured after
+| | Dark chrome | Light chrome |
+| --- | --- | --- |
+| `data-color-mode` on root | `dark` | **`light`** — the preference now survives |
+| Top bar | `oklch(0.14 …)` | `oklch(1 0 0)` |
+| Canvas background | `oklch(0.095 …)` | `oklch(0.965 …)` |
+| Artboard (document is `studio-dark`) | `oklch(0.095 …)` | `oklch(0.095 …)` — unchanged, as it should be |
+
+The last row is the point: the page keeps its own theme while the room around it follows the user.
+
+### Consequences
+- It also settles ADR-403's first finding on its own. The artboard and the canvas behind it are now
+  different colours whenever the two themes differ; the ring and shadow stay, because they are still
+  the only separation when a user's document happens to share the chrome's mode.
+- Block previews in the left palette are rendered in the document's theme, so on a light chrome they
+  read as dark plates. That is correct — a thumbnail shows what the block will look like in *this*
+  document — but it is a visible change from a studio that was dark everywhere.
+- `studio-chrome` visual baselines move again, on top of ADR-403.
+- ADR-172 is not withdrawn: its claim, that a theme command must change pixels, still holds. What
+  changes is which pixels.
