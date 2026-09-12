@@ -17,11 +17,14 @@ Requirements: Node `>=20.11`, pnpm `>=9`. Use `corepack enable` so the pinned pn
 
 1. **Read the relevant doc first.** Every subsystem is specified in `docs/`. If your change
    contradicts a document, change the document in the same PR and say why.
-2. Branch from `main`: `feat/inspector-gradient-editor`, `fix/canvas-zoom-drift`,
-   `docs/export-engine`, `chore/ci-cache`.
+2. **Work lands on `dev`, never on `main`.** Branch from `dev`:
+   `feat/inspector-gradient-editor`, `fix/canvas-zoom-drift`, `docs/export-engine`,
+   `chore/ci-cache`. `main` receives one thing only — a merge of a `dev` whose CI is green — so it
+   is always a state that passed the gate rather than a state on its way to passing it.
 3. Write the test first when there is behaviour to describe. See `docs/TESTING.md`.
 4. Keep the PR focused. One subsystem per PR.
-5. CI must be green: lint, typecheck, unit, e2e, build, Lighthouse budget.
+5. CI must be green: lint, typecheck, unit, e2e, build, Lighthouse budget. It runs on every push to
+   `dev` as well as to `main`, so the answer arrives before the merge rather than after it.
 
 ## Commit convention
 

@@ -16508,3 +16508,47 @@ hundred commits with dates, and the rate at which the project moves — not the 
   the README now opens with the deployment rather than with a clone command.
 - The landing and `LICENSE` needed no edit: ADR-372 removed every MIT claim from both, and the
   proprietary text it put there is exactly what a source-available repository should say.
+
+## ADR-400 — Work lands on `dev`; `main` only ever fast-forwards to a green `dev`
+
+**Date** 2026-09-12 · **Prompt** 69 · **Status** Accepted
+
+### Question
+Until now every commit went straight to `main`, gated by the pre-push hook and answered for by CI
+afterwards. ADR-399 made the repository public, which changes what `main` is: the branch a stranger
+reads first, the branch the README badge reports on, and the branch production deploys from. The
+owner asked for a `dev` branch and for `main` to receive work only once it is green.
+
+### Decision
+`dev` is the working branch. `main` receives a **fast-forward merge of a green `dev`** and nothing
+else.
+
+`ci.yml` now triggers on a push to `main` **and** `dev`. That one line is what makes the rule
+checkable rather than aspirational: the green that authorises the merge is measured on the commit
+being merged, before it moves. Without it a push to `dev` produces no signal at all, and "merge when
+green" would mean "merge, then find out".
+
+The merge is `--ff-only`:
+
+```bash
+git switch main && git merge --ff-only dev && git push
+```
+
+A merge commit would put `main` at a state no gate has ever run against — the two parents were each
+green separately, which is not the same claim. Fast-forward means the commit CI passed on is
+literally the commit `main` ends at.
+
+### Consequences
+- **The pre-push hook stops being the last word.** It runs `unit` without coverage while CI's `core`
+  runs `pnpm test:coverage` against a 95 % line and 90 % branch threshold — the gap that let
+  `@motion-studio/uiverse` reach `main` at 85.71 % and turn the badge red on the day the repository
+  was opened. A landing branch is where that difference is supposed to surface.
+- A push to `dev` and a pull request from it both run CI, so opening a PR from `dev` to `main` costs
+  a second run on a sequential runner. For a single author the merge above is the cheaper path; the
+  PR route stays available and is the one a second contributor would use.
+- Branch protection on `main` is not yet configured — `DEVOPS.md` § Required checks describes the
+  intended shape. Until it is, the rule is a convention this document holds rather than a mechanism
+  the platform enforces.
+- `visual.yml` still runs only on pull requests and nightly, so a `dev` push gets no screenshot
+  comparison. That is unchanged by this decision and left as it is: the baselines move with the
+  design work, not with every commit.

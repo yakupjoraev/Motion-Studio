@@ -11,7 +11,7 @@ summary: CI pipeline, Docker, releases, deploy, quality gates
 ```
 .github/
 ├── workflows/
-│   ├── ci.yml               PR + push to main
+│   ├── ci.yml               PR + push to main and dev
 │   ├── lighthouse.yml       perf + a11y budgets
 │   ├── visual.yml           visual regression, main only
 │   ├── export-smoke.yml     weekly: scaffold, install, build the exported output
@@ -140,6 +140,24 @@ them. What it drops is waiting for them on every commit.
 
 `workflow_dispatch` is on every workflow, so the full pipeline is one click away when a change earns
 it — a codegen change, a responsive change, anything about to be released.
+
+### The two branches
+
+**`dev` is where work lands. `main` receives a merge of a green `dev` and nothing else** — ADR-400.
+The point is not ceremony for a single author: `main` is the branch a stranger reads, the branch the
+README badge reports, and the branch production deploys from, so a state that has not passed the gate
+should never occupy it even briefly.
+
+CI runs on a push to either branch, which is what makes the rule checkable — the green that
+authorises a merge is measured on `dev` before the merge, not inferred from it afterwards.
+
+```bash
+# on dev, work as usual, push, wait for CI
+git switch main && git merge --ff-only dev && git push
+```
+
+`--ff-only` is deliberate. `main` moving only by fast-forward means the commit CI went green on is
+the commit `main` ends up at — a merge commit is a state no gate has ever seen.
 
 ### Required checks on `main`
 

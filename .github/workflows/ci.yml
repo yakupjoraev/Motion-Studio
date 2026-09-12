@@ -10,8 +10,11 @@ name: CI
 
 on:
   pull_request:
+  # `dev` is where work lands and `main` only ever receives a merge of a green `dev` — ADR-400. Both
+  # are listed because the gate has to answer on the branch being worked on, not only on the one
+  # being merged into: a green `dev` is the precondition for the merge, so it cannot arrive after it.
   push:
-    branches: [main]
+    branches: [main, dev]
   # The full pipeline, one click away when a change earns it.
   workflow_dispatch:
   schedule:
