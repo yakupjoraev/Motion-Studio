@@ -159,16 +159,24 @@ export class StudioCanvas {
     })
   }
 
-  /** How many nodes are rounded at all, which is what a radius scale of 0 has to bring to zero. */
+  /**
+   * How many nodes **on the artboard** are rounded at all, which is what a radius scale of 0 has to
+   * bring to zero.
+   *
+   * Scoped to the artboard since ADR-404: the document's theme is written there, while the palette's
+   * thumbnails render outside it. Counting the whole page would ask a radius command to square
+   * previews it does not own.
+   */
   async roundedNodeCount(): Promise<number> {
-    return this.page.evaluate(
-      () =>
-        Array.from(document.querySelectorAll('[data-node-id]')).filter((node) => {
-          const value = getComputedStyle(node).borderRadius
+    return this.page.evaluate(() => {
+      const artboard = document.querySelector('[data-testid="canvas-artboard"]')
 
-          return value !== '' && value !== '0px'
-        }).length,
-    )
+      return Array.from(artboard?.querySelectorAll('[data-node-id]') ?? []).filter((node) => {
+        const value = getComputedStyle(node).borderRadius
+
+        return value !== '' && value !== '0px'
+      }).length
+    })
   }
 
   /** Waits for the artboard to hold exactly this many nodes — a reload's assertion, not a poll. */

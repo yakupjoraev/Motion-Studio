@@ -128,18 +128,26 @@ export class StudioThemePanel {
     return this.page.getByRole('tab', { name: 'Theme' })
   }
 
-  /** One `--ms-*` variable off the root, which is where the engine resolves a theme to. */
+  /**
+   * One `--ms-*` variable off the artboard, which is where the engine resolves the **document's**
+   * theme — ADR-404. It used to be the root; the root now carries the chrome's own theme, which is
+   * the user's colour-mode choice and not what a theme command changes.
+   */
   variable(name: string): Promise<string> {
-    return this.page.evaluate(
-      (property) => getComputedStyle(document.documentElement).getPropertyValue(property).trim(),
-      name,
-    )
+    return this.page.evaluate((property) => {
+      const scope = document.querySelector('[data-testid="canvas-artboard"]')
+
+      return getComputedStyle(scope ?? document.documentElement)
+        .getPropertyValue(property)
+        .trim()
+    }, name)
   }
 
-  /** Every `--ms-*` written on the root, so "the whole theme came back" is assertable, not sampled. */
+  /** Every `--ms-*` written on the artboard, so "the whole theme came back" is assertable, not sampled. */
   variables(): Promise<Record<string, string>> {
     return this.page.evaluate(() => {
-      const style = document.documentElement.style
+      const scope = document.querySelector<HTMLElement>('[data-testid="canvas-artboard"]')
+      const style = (scope ?? document.documentElement).style
       const result: Record<string, string> = {}
 
       for (const name of Array.from(style)) {
