@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   UIVERSE_CATEGORIES,
+  type UiverseCategory,
   categoryOf,
   findElement,
   isUiverseCategory,
@@ -9,6 +10,7 @@ import {
   readAll,
   readCategory,
   readIndex,
+  readViews,
 } from './index'
 
 /**
@@ -59,6 +61,23 @@ describe('the imported catalogue', () => {
     expect(index.licence).toBe('MIT')
     expect(index.source).toBe('https://github.com/uiverse-io/galaxy')
   })
+
+  it('says the import has not run rather than reporting an empty category', () => {
+    // The cast hands the reader a category its type forbids, which is the only way to reach the
+    // missing-file path: every real category has a committed file. ENGINEERING_CONTRACT § 1.1.
+    expect(() => readCategory('widgets' as UiverseCategory)).toThrow(/import-uiverse/)
+  })
+
+  it('reads the view counts collected beside it, with the date they were taken', () => {
+    const views = readViews()
+
+    if (views === null) {
+      throw new Error('data/views.json is committed, so this cannot be null')
+    }
+
+    expect(views.collected).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+    expect(Object.keys(views.views).length).toBeGreaterThan(0)
+  })
 })
 
 describe('ranking a category', () => {
@@ -79,6 +98,22 @@ describe('ranking a category', () => {
     expect(ranked[0]?.views).toBe(900)
     expect(ranked[1]?.element.id).toBe(second.id)
     expect(ranked.at(-1)?.views).toBeNull()
+  })
+
+  it('lifts a counted element over uncounted ones from wherever it started', () => {
+    // The count goes to the element the alphabet puts last, so the comparison meets an uncounted
+    // element from both sides — the ordering must not depend on which one arrives first.
+    const last = readCategory('tooltips').at(-1)
+
+    if (last === undefined) {
+      throw new Error('the tooltips category is empty')
+    }
+
+    const ranked = rankCategory('tooltips', { collected: '2026-09-11', views: { [last.id]: 5 } })
+
+    expect(ranked[0]?.element.id).toBe(last.id)
+    expect(ranked[0]?.views).toBe(5)
+    expect(ranked[1]?.views).toBeNull()
   })
 
   it('falls back to a stable alphabetical order with no counts at all', () => {
