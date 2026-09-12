@@ -377,13 +377,13 @@ Each is a prompt in `prompts/`, so a session picks one up without re-deriving it
 - **Hosting: Vercel is enough.** ISR, image optimisation, previews and the edge network are the
   platform's own; a rented VPS means maintaining all of it by hand for nothing. Point a domain at it.
   Revisit only when there is a backend with state — the v2 account, not v1.
-- **Decided 2026-09-06 (ADR-372): the repository is private and the licence is proprietary.** The
-  owner intends to sell the product, and readable source is what they do not want. Both changed
-  together, because a private repository promising MIT on its landing page is the incoherent
-  combination. The price is the one already documented: Actions minutes are free only for public
-  repositories, and the pipeline stopped for a week the last time billing decided a run. That is now
-  a CI-shape question — which checks run on every push and which run nightly — not a licence
-  question.
+- **Decided 2026-09-06 (ADR-372), half of it revised 2026-09-12 (ADR-399): the licence is
+  proprietary, and the repository is public.** The licence was never the part in question — it grants
+  nothing to a reader and carves out the user's own exported output, which is the only part anyone is
+  meant to take. What changed is the reason the repository exists at all: the return the owner is
+  actually collecting is the one `ENGINEERING_CONTRACT` § 0 named on day one, a reader concluding the
+  author can build systems, and a private repository collects none of it. Actions minutes are free
+  again as a side effect, which turns the pipeline's shape back into a choice rather than a bill.
 - **The design pass has not been run through the skills.** `DESIGN_REFERENCES.md` names
   impeccable.style as the bar for the whole product, and the landing was built against it by eye
   rather than through the process. Verdict to be reported per surface, not "looks fine".

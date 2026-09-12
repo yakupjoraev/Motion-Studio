@@ -65,11 +65,13 @@ Not legal advice — the shape of the decision, for a conversation with someone 
 
 ## 4. Where it lives, and who can see the source
 
-**Two of these three were decided on 2026-09-06 by the owner — ADR-372.** The repository is private
-and the licence is proprietary, with the exported code carved out as the user's. What this section
-still owns is the hosting question and, newly, the shape of a pipeline that now costs money: which
-checks run on every push and which run nightly. The reasoning below is kept because it is what the
-decision was made against.
+**Decided — ADR-372 on 2026-09-06, its visibility half revised by ADR-399 on 2026-09-12.** The
+licence is proprietary, with the exported code carved out as the user's, and the repository is
+**public**: reading it grants nothing, and the portfolio return the § 0 of the contract describes is
+only collected by a repository someone can open. What this section still owns is the hosting question
+and the domain. The reasoning below is kept because it is what both decisions were made against —
+including the paragraph on price, which ADR-399 resolved in the other direction: minutes are free for
+a public repository again.
 
 **Hosting — Vercel is enough, and a rented host would be a downgrade.** This is a Next.js app; ISR,
 image optimisation, the edge network and preview deployments are the platform's own. A VPS means

@@ -427,9 +427,14 @@ request still gets a preview and simply has nowhere to post it.
 
 ### Where the jobs run
 
-GitHub refuses to start a job on GitHub-hosted machines for this repository — it is private and the
-account's billing is unresolved (ADR-374). **Self-hosted runners are not refused and not billed**,
+GitHub refused to start a job on GitHub-hosted machines while the repository was private and the
+account's billing was unresolved (ADR-374). **Self-hosted runners are not refused and not billed**,
 measured rather than assumed (ADR-375), so the pipeline runs on the owner's machine.
+
+ADR-399 made the repository public again, and Actions minutes are free for public repositories — so
+the constraint that shaped this pipeline no longer applies. Whether to move the jobs back onto
+GitHub-hosted machines is its own decision, and it is not made here: the self-hosted path works, and
+the four machine-shaped failure modes below are known rather than surprising.
 
 Every job reads its labels from a repository variable:
 
@@ -628,6 +633,7 @@ the gates is that a dependency upgrade cannot silently regress a perf or a11y bu
 - `CONTRIBUTING.md` with the real rules.
 - `docs/` complete and consistent with the code.
 - `LICENSE` (proprietary, all rights reserved — ADR-372; the exported code is excluded from it).
+  The repository is public and the licence is not: reading it grants nothing (ADR-399).
 - Issue templates for bug, block request, preset request.
 - PR template with the verification checklist.
 - Topics set: `react`, `nextjs`, `typescript`, `design-tools`, `framer-motion`, `tailwindcss`,

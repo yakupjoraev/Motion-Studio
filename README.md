@@ -10,6 +10,11 @@ Infinite canvas · production-grade block registry · live motion engine · real
 [![Lighthouse](https://img.shields.io/badge/Lighthouse-95%2B%20%C3%97%204-0cce6b?style=flat-square)](docs/PERFORMANCE.md)
 [![License](https://img.shields.io/badge/license-proprietary-8b5cf6?style=flat-square)](LICENSE)
 
+### [→ Open the live studio](https://motion-studio-y3dev.vercel.app)
+
+The deployment carries the studio, the 72-block catalogue, the playground and the documentation.
+Nothing to install, and no account to open one.
+
 ![Composing a landing page in the studio: blocks dropped on the canvas, a theme applied, the headline edited, and a Next.js project exported](docs/assets/demos/compose-page.gif)
 
 </div>

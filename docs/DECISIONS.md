@@ -16461,3 +16461,50 @@ handshake, not anything the script can set.
   the request; `packages/uiverse/biome.json` excludes `data/` so the linter does not read 3 MB files.
 - `uiverse` joins the commit scopes in `CONTRIBUTING.md`, which is what that document's own rule
   requires of every workspace package.
+
+## ADR-399 — The repository is public again; the licence stays proprietary
+
+**Date** 2026-09-12 · **Prompt** 69 · **Status** Accepted
+
+### Question
+ADR-372 made the repository private on 2026-09-06, reasoning from an intent to sell the product. The
+owner has since reconsidered what this project is actually for: the primary return is the one
+`ENGINEERING_CONTRACT` § 0 named from the first day — *someone opens the repo and concludes the author
+can build systems, not pages* — and a monetisation model is not chosen. The owner's question was how
+to protect the work from being taken.
+
+### Options put to the owner
+1. **Public, proprietary licence.** Readable by anyone, licensed to no one.
+2. **Private code, public showcase** — a second repository holding `docs/`, screenshots and the demo
+   link, with the source withheld.
+3. **Private, access granted per request** — a reviewer is added as a read collaborator.
+
+Also proposed by the owner and **rejected**: withholding a file so that a stranger cannot run the
+project. Two reasons, and neither is about effort. A defence written inside published source is an
+`if` that deletes in ten minutes, so it does not defend. And a repository that fails to start is not
+read as protected — it is read as broken, or the intent is understood, which is worse than showing
+nothing. The reviewer this project is written for reads; the run is a conversation, not a download.
+
+Option 3 protects against a risk this repository does not have and costs the one it does: with 0
+stars and 0 forks, the exposure is obscurity, not theft, and a reviewer holding fifty CVs does not
+write to ask for access. Option 2 keeps most of the signal — the architecture and the decisions live
+in `docs/`, not in any one component — and remains the fallback if the owner's judgement changes.
+
+### Decision
+Public repository, proprietary licence unchanged. Reading is not a licence to use: `LICENSE` already
+grants nothing and already carves out the user's own exported output, which is the only part anyone
+is meant to take. What actually protects the work is that licence, an authored history of four
+hundred commits with dates, and the rate at which the project moves — not the visibility flag.
+
+### Consequences
+- **The MIT history is now readable, and that is the real exposure.** This repository was public under
+  MIT until 2026-09-06; ADR-372 recorded that the grant cannot be withdrawn from what was already
+  published, and that its holders were very likely nobody (0 forks, 0 stars, `noindex`). Re-opening
+  does not widen the grant — it makes the already-granted commits easy to reach. Rewriting history to
+  close it would destroy the artifact this decision exists to publish, so it is accepted, not fixed.
+- **Actions minutes are free again**, which retires the constraint behind ADR-374. The pipeline can
+  stop being shaped by a bill it no longer receives; whether it should is a separate decision.
+- `ENGINEERING_CONTRACT` § 0's "read as a portfolio artifact" is once more about a public URL, and
+  the README now opens with the deployment rather than with a clone command.
+- The landing and `LICENSE` needed no edit: ADR-372 removed every MIT claim from both, and the
+  proprietary text it put there is exactly what a source-available repository should say.

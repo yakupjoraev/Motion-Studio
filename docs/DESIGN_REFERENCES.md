@@ -12,8 +12,8 @@ which references are used, how they are used, and — importantly — where the 
 
 This matters more here than in most projects. The product's whole premise is that the code it prints
 is trustworthy, and it prints component source into other people's repositories. A licence violation
-buried in an effect block would travel with every export — which is why the rule below is stricter
-than the repository being private would require (ADR-372).
+buried in an effect block would travel with every export — which is why the rule below is written
+against what the product prints rather than against who can read the repository (ADR-399).
 
 ## The references
 
