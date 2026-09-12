@@ -205,3 +205,75 @@ describe('a step of one position', () => {
     expect(press('ArrowUp', { ...PAGE, childIds: [] })).toEqual({ x: 344, y: 104 })
   })
 })
+
+/**
+ * ADR-327: the same step, in the layers tree, where it never moved. The geometry is measured off a
+ * production build rather than invented — `responsive-grid`, the `Grid` container holding two rows of
+ * 26 px: `node_f003` at y 183 and `node_f004` at y 209, the panel 280 px wide.
+ */
+describe('a step of one position in the layers tree', () => {
+  const FIRST = nodeId('node_f003')
+  const SECOND = nodeId('node_f004')
+
+  const ROWS: Readonly<Record<string, PlacementChild>> = {
+    [FIRST]: { id: FIRST, rect: { x: 0, y: 183, width: 280, height: 26 } },
+    [SECOND]: { id: SECOND, rect: { x: 0, y: 209, width: 280, height: 26 } },
+  }
+
+  const GRID_ZONE: DropZone = {
+    parentId: nodeId('node_grid'),
+    slot: 'children',
+    orientation: 'vertical',
+    label: 'Grid',
+    childIds: [FIRST, SECOND],
+    surface: 'tree',
+  }
+
+  const press = (code: string, dragged: EdgeRect) =>
+    canvasAwareCoordinateGetter({
+      zoom: () => 1,
+      // The tree does not scale and a row is the step — `DndHost` passes `DENSITY.layerRow`.
+      gridSize: () => 26,
+      siblings: (asked) => asked.childIds.flatMap((id) => ROWS[id] ?? []),
+    })(new KeyboardEvent('keydown', { code }), {
+      currentCoordinates: { x: 0, y: dragged.top },
+      context: {
+        active: {
+          data: {
+            current: {
+              kind: 'canvas-nodes',
+              blockId: 'heading',
+              nodeIds: [FIRST],
+              labels: ['Heading'],
+            },
+          },
+        },
+        collisionRect: dragged,
+        over: {
+          id: 'tree:node_grid/children',
+          rect: box(0, 183, 280, 52),
+          data: { current: GRID_ZONE },
+        },
+        droppableRects: new Map([['tree:node_grid/children', box(0, 183, 280, 52)]]),
+        droppableContainers: { getEnabled: () => [{ id: 'tree:node_grid/children' }] },
+      },
+    })
+
+  it('moves the dragged row past the sibling it has to clear', () => {
+    // Dragging the first row: the only remaining child is the second, whose midpoint is 222. The
+    // drag sits at 196, so one press has to land past 222 — anything else is the announcement
+    // repeating "position 1 of 2".
+    const moved = press('ArrowDown', box(0, 183, 280, 26))
+
+    expect(moved).not.toBeUndefined()
+    expect(moved?.y).toBeGreaterThan(183)
+  })
+
+  it('comes back the other way', () => {
+    // The dragged row now sits below its sibling; one press up has to cross 222 again.
+    const moved = press('ArrowUp', box(0, 209, 280, 26))
+
+    expect(moved).not.toBeUndefined()
+    expect(moved?.y).toBeLessThan(209)
+  })
+})

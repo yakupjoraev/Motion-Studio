@@ -31,7 +31,7 @@ import type {
   DropZone,
   ZoneRectSource,
 } from './dnd.types'
-import { dragPoint } from './drag-point'
+import { centre, dragPoint } from './drag-point'
 import type { PlacementChild } from './drop-placement'
 import { DropIndicatorLayer } from './indicators/drop-indicator-layer'
 import { createIndicatorHandle } from './indicators/indicator-handle'
@@ -90,12 +90,33 @@ export function DndProvider({
     }),
   )
 
+  /**
+   * Whether the drag is being driven by the keyboard, which decides whether a move is announced.
+   * dnd-kit announces on `over`, and a reorder inside one container never changes it — ADR-381. The
+   * pointer is excluded rather than forgotten: `onDragMove` fires per pixel there, and describing a
+   * drag runs the resolver over the document, which is the per-move cost § Performance rules out.
+   *
+   * It also decides which point the collision reports — ADR-405, below.
+   */
+  const byKeyboard = useRef(false)
+
   const detect = useMemo(() => rectCacheCollision(rects), [rects])
-  /** The collision runs on every move and is the only place the drag point is known. */
+  /**
+   * The collision runs on every move and is the only place the drag point is known.
+   *
+   * **A keyboard drag ignores `pointerCoordinates` — ADR-405.** dnd-kit keeps reporting the position
+   * the pointer was last at, which for a drag started by clicking a row and pressing Enter is the
+   * click that selected it, and it never moves again. Measured in the layers tree: the overlay
+   * translated 27 px on the first arrow while the announcement stayed at "position 1 of 2", because
+   * the resolver was still being handed the click. The box dnd-kit is translating is the only thing
+   * that actually moves, so its centre is the drag.
+   */
   const collisionDetection = useCallback<CollisionDetection>(
     (args) => {
-      point.current = dragPoint(args.pointerCoordinates, args.collisionRect)
-
+      point.current = dragPoint(
+        byKeyboard.current ? null : args.pointerCoordinates,
+        args.collisionRect,
+      )
       return detect(args)
     },
     [detect],
@@ -106,8 +127,20 @@ export function DndProvider({
       const dragged = dragPayload(active.data.current)
       const zone = over === null ? null : dropZone(over.data.current)
       const label = dragged === null ? 'block' : payloadLabel(dragged)
+      /*
+       * On a **keyboard** drag, the box dnd-kit has already translated, in preference to the point
+       * the last collision left behind — ADR-405. The announcement is computed before the collision
+       * that would refresh `point.current`, so reading the ref described the *previous* press:
+       * measured in the layers tree, the drag was at 223 while the announcement was still the one
+       * for 196.
+       *
+       * A pointer drag keeps the cursor. The cursor is where the user is looking and the box is only
+       * where the overlay happens to sit, which is what `provider.test.tsx` pins.
+       */
+      const moving = byKeyboard.current ? active.rect.current.translated : null
+      const now = moving === null ? point.current : centre(moving)
 
-      if (dragged === null || zone === null || point.current === null) {
+      if (dragged === null || zone === null || now === null) {
         return { label, zone: null, target: null, count: 0 }
       }
 
@@ -117,7 +150,7 @@ export function DndProvider({
       return {
         label,
         zone,
-        target: resolveTarget({ payload: dragged, zone, point: point.current }),
+        target: resolveTarget({ payload: dragged, zone, point: now }),
         count: zone.childIds.length + (leaving ? 0 : 1),
       }
     },
@@ -133,14 +166,6 @@ export function DndProvider({
     resolve: () =>
       drag.current === null ? null : describe(drag.current.active, drag.current.over).target,
   })
-
-  /**
-   * Whether the drag is being driven by the keyboard, which decides whether a move is announced.
-   * dnd-kit announces on `over`, and a reorder inside one container never changes it — ADR-381. The
-   * pointer is excluded rather than forgotten: `onDragMove` fires per pixel there, and describing a
-   * drag runs the resolver over the document, which is the per-move cost § Performance rules out.
-   */
-  const byKeyboard = useRef(false)
 
   const announcements = useMemo<Announcements>(
     () => ({

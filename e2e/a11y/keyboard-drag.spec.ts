@@ -149,14 +149,17 @@ test.describe('operation 3 — a layers row to another position', () => {
   })
 
   /*
-   * ADR-327, still open, and re-measured after ADR-381 rather than re-assumed. The step is no longer
-   * the problem: the zone under a tree drag is the row's *parent* (`Grid`, children `f003, f004`),
-   * the surface supplies both boxes, the dragged row is excluded, and the getter computes a
-   * destination past the remaining sibling's midpoint. What does not happen is the move: the
-   * announcement stays at "position 1 of 2" and the getter is called once. The canvas path with the
-   * same code steps and announces (`editor/dnd-canvas.spec.ts`), so what differs is the tree's own
-   * geometry — `layerRects` reports the strip of ADR-133, in the panel's coordinates, while
-   * `collisionRect` is the viewport's. That comparison is the next measurement, not a guess to fix.
+   * ADR-327, narrowed by ADR-405 and still open. The coordinate hypothesis above was measured and is
+   * **wrong**: `layerRects` already reports screen space, and the resolver receives the right boxes —
+   * `f003 {y: 183, h: 26}`, `f004 {y: 209, h: 26}`, so the midpoint to cross is 222.
+   *
+   * Two causes were found and fixed there: a keyboard drag was being handed the pointer's last
+   * position (the click that selected the row), and the announcement was computed before the
+   * collision that refreshes the drag point. With both fixed the point measures **223** — past the
+   * midpoint — and `resolveTarget` still answers `index: 0`.
+   *
+   * So what is left is inside `resolveDropTarget` on the tree surface, with a correct point and
+   * correct boxes. That is the next measurement.
    */
   test.fixme('chooses a different position inside the drag', async ({ page }) => {
     const studio = new StudioPage(page)

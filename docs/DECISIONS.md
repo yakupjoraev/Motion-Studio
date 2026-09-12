@@ -16775,3 +16775,48 @@ The last row is the point: the page keeps its own theme while the room around it
 - `studio-chrome` visual baselines move again, on top of ADR-403.
 - ADR-172 is not withdrawn: its claim, that a theme command must change pixels, still holds. What
   changes is which pixels.
+
+## ADR-405 — A keyboard drag is where the box is, not where the pointer was
+
+**Date** 2026-09-12 · **Prompt** 67 (ADR-327's open case) · **Status** Accepted
+
+### Question
+ADR-327 has been open since prompt 55: a layers row picked up with the keyboard never changes
+position. ADR-381 re-measured it and left a hypothesis — that `layerRects` reports the panel's
+coordinates while `collisionRect` reports the viewport's. This session measured that hypothesis
+instead of building on it.
+
+### Measurement
+On a production build, `responsive-grid`, the `Grid` container with two rows of 26 px — `node_f003`
+at y 183 and `node_f004` at y 209, so the sibling's midpoint is 222.
+
+**The hypothesis was wrong.** `layerRects` already returns screen space, and the resolver was handed
+exactly the right boxes: `f003 {y: 183, h: 26}`, `f004 {y: 209, h: 26}`.
+
+Two real defects were found instead, and both are fixed here:
+
+1. **The pointer never moves on a keyboard drag.** `dragPoint` prefers `pointerCoordinates` when it
+   has them, and dnd-kit keeps reporting the last place the pointer was — for a drag started by
+   clicking a row and pressing Enter, that is the click that selected it. The overlay translated 27 px
+   while the resolver was still being handed the click at y 196.
+2. **The announcement was computed before the collision that refreshes the point.** Reading
+   `point.current` in `describe` therefore described the *previous* press. In a container with one
+   reachable position, that is every press — which is exactly why the tree looked frozen.
+
+### Decision
+`byKeyboard` now decides both. The collision ignores `pointerCoordinates` on a keyboard drag and uses
+the centre of the box dnd-kit is translating; the announcement reads `active.rect.current.translated`
+rather than the ref. A **pointer** drag keeps the cursor for both, because the cursor is where the
+user is looking and the box is only where the overlay happens to sit — `provider.test.tsx` pins that
+and caught the first attempt, which had changed it for both paths.
+
+`keyboard-sensor.test.ts` gains the tree's real geometry as a case: a press from the first row has to
+land past 222, in both directions. It passes, which is what rules the sensor out as the cause.
+
+### What is still open
+With the point now measured at **223** — correctly past the midpoint — `resolveTarget` still returns
+`index: 0`. The remaining defect is inside `resolveDropTarget` for the tree surface, not in the point
+it is given, and that is a narrower question than ADR-327 has ever been reduced to before. The
+`fixme` stays; its diagnosis in `a11y/keyboard-drag.spec.ts` is replaced with this one.
+
+`Mod+↑`/`↓` remains the keyboard path a user is given for reordering, and it works.
