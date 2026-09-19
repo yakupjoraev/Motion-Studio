@@ -16880,3 +16880,67 @@ On the machine, the scheduled task `KeepWSLAwake` is disabled and Docker Desktop
   changing the split is a separate decision with its own evidence.
 - Docker Desktop no longer starts with Windows. `docker compose up --build` still works locally; it
   has to be started first.
+
+## ADR-407 — A drop in the layers tree is measured by the tree's geometry, not the block's
+
+**Date** 2026-09-19 · **Prompt** 55 (ADR-327's open case) · **Status** Accepted
+
+### Question
+ADR-405 closed two of the three defects behind ADR-327 and left the last one named: with the drag
+point measured correctly at 223 — past the sibling's midpoint of 222 — `resolveTarget` still answered
+`index: 0` for a row in the layers tree. The defect is inside `resolveDropTarget` for the tree
+surface. Which part of it?
+
+### Measurement
+Taken as a unit probe over the real numbers from ADR-405 — two 26 px rows at y 183 and y 209 in a
+300 px-wide panel, the first row dragged, the point at the centre of the box being translated
+(x 150, y 223):
+
+| Container block | `orientation` returned | `index` |
+| --- | --- | --- |
+| `grid` | `grid` | **0** |
+| `page` (vertical) | `vertical` | **1** |
+
+Identical geometry, identical point, opposite answers. So the point was never the problem and neither
+were the rects: **step 4 reads the orientation off the block, and step 5 then measures the tree's rows
+with it.** `responsive-grid` lays its children out as a grid on the canvas, so `placeInSlot` took the
+grid branch, and the grid branch decides "before the pointer" in reading order — same row, then
+compare x. Every row of the tree is the same row, and the keyboard point sits at the row's centre, so
+`rect.x + rect.width / 2 < point.x` is `150 < 150`, false for every sibling. The count of preceding
+children is 0, whatever the user presses, forever.
+
+That is also why the defect looked like the tree being frozen rather than the resolver being wrong:
+the answer is stable, not random.
+
+### Decision
+`ResolveDropTargetArgs` gains an optional `orientation`: the surface's own geometry, used when the
+surface draws the children itself rather than showing the block's layout. `DndHost` passes
+`'vertical'` for `zone.surface === 'tree'` and nothing for the canvas, where the block's layout *is*
+what the user sees.
+
+The tree already said so everywhere else: `layer-row-drag.tsx` registers its zone with
+`orientation: 'vertical'`, and `keyboard-sensor.ts` reads `zone.orientation` for both the step and the
+inverse point. That is why ADR-405 measured a correct point — the step was computed with the tree's
+geometry — and then watched the resolver disagree with it. One drag had two answers to the same
+question.
+
+Two alternatives rejected:
+
+- **Pass `zone.orientation` through instead of a surface orientation.** The zone is the container the
+  collision landed in, and `findSlot` may walk *above* it when that container's slot refuses the
+  block — at which point the zone's orientation describes a different node than the one being
+  measured. "The tree is a vertical list" holds for every parent inside it; "this zone is vertical"
+  does not.
+- **Teach `placeInSlot` that a grid whose children share an axis is a list.** It infers a surface
+  from geometry that could equally be a one-column grid on the canvas, and it would answer
+  differently as a document's breakpoint changes.
+
+### Consequences
+- The keyboard case in `a11y/keyboard-drag.spec.ts` stops being `fixme`, which is what closes
+  ADR-327 after eleven prompts.
+- A **pointer** drag in the tree over a grid or a row container was wrong in the same way and is
+  fixed by the same change — it was never reported, because a pointer in the tree usually sits to the
+  right of a row's centre and the wrong branch happened to answer plausibly.
+- `DropTarget.orientation` for a tree drop is now `vertical` rather than the block's, which is what
+  the indicator between two rows has always needed.
+- The canvas path is untouched: no `orientation` is passed there, and `orientationOf` still decides.

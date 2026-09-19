@@ -438,3 +438,57 @@ describe('what the resolver cannot answer', () => {
     expect(resolve({ hitNodeId: nodeId('node_ghost') })).toMatchObject({ parentId: id('root') })
   })
 })
+
+/**
+ * ADR-407. The layers tree draws its children as rows whatever the block lays them out as, so the
+ * geometry the resolver measures is the tree's, not the block's. The numbers are the ones ADR-405
+ * measured on `responsive-grid`: two 26 px rows at y 183 and y 209 in a 300 px-wide panel, the first
+ * row dragged, the point at the centre of the box being translated.
+ */
+describe('a surface that draws the children itself', () => {
+  const gridInATree = () => build({ root: ['a', 'b'] }, { blocks: { root: 'grid' } })
+  const rows = rectsFrom({
+    [id('root')]: rect(0, 157, 300, 104),
+    [id('a')]: rect(0, 183, 300, 26),
+    [id('b')]: rect(0, 209, 300, 26),
+  })
+  const inTheTree = {
+    document: gridInATree(),
+    rects: rows,
+    draggedNodeIds: [id('a')],
+    orientation: 'vertical' as const,
+  }
+
+  it('measures a grid container by the rows the tree drew', () => {
+    const target = resolve({ ...inTheTree, point: { x: 150, y: 223 } })
+
+    expect(target).toMatchObject({ index: 1, orientation: 'vertical' })
+  })
+
+  it('keeps the row above the remaining sibling’s midpoint at index 0', () => {
+    const target = resolve({ ...inTheTree, point: { x: 150, y: 215 } })
+
+    expect(target?.index).toBe(0)
+  })
+
+  it('draws a line between rows rather than a cell', () => {
+    const target = resolve({ ...inTheTree, point: { x: 150, y: 223 } })
+
+    expect(target?.indicator).toEqual({
+      kind: 'line',
+      axis: 'y',
+      rect: { x: 0, y: 234, width: 300, height: 2 },
+    })
+  })
+
+  it('leaves the canvas reading the block’s own layout', () => {
+    const target = resolve({
+      document: gridInATree(),
+      rects: rows,
+      draggedNodeIds: [id('a')],
+      point: { x: 150, y: 223 },
+    })
+
+    expect(target).toMatchObject({ index: 0, orientation: 'grid' })
+  })
+})

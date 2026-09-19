@@ -121,7 +121,9 @@ Algorithm:
 3. If none found → root, or reject if root's slot rejects it
 4. Read the container's layout direction from `SlotDefinition.orientation`, which the block computes
    from its own resolved props (ADR-130) — not from computed style, which would be a forced layout
-   mid-drag, and not from a prop name the drag layer guessed at
+   mid-drag, and not from a prop name the drag layer guessed at. **Unless the surface draws the
+   children itself**: the layers tree is a vertical list of rows whatever the block lays its children
+   out as, so the tree passes its own orientation and the block's is not asked (ADR-407)
 5. Compute the insertion index:
    - vertical:   compare pointer.y against each child's vertical midpoint
    - horizontal: compare pointer.x against each child's horizontal midpoint
@@ -145,6 +147,8 @@ export function resolveDropTarget(args: {
   rects: DragRectSource                 // the cache, narrowed to `get` (ARCHITECTURE.md § Rules 8)
   isolationId: NodeId | null
   breakpoint: BreakpointId              // step 4 resolves props, and resolving needs the breakpoint
+  orientation?: SlotOrientation         // the surface's own geometry, when it draws the children
+                                        // itself — the tree passes 'vertical' (ADR-407)
 }): DropTarget | null
 ```
 

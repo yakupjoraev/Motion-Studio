@@ -149,19 +149,14 @@ test.describe('operation 3 — a layers row to another position', () => {
   })
 
   /*
-   * ADR-327, narrowed by ADR-405 and still open. The coordinate hypothesis above was measured and is
-   * **wrong**: `layerRects` already reports screen space, and the resolver receives the right boxes —
-   * `f003 {y: 183, h: 26}`, `f004 {y: 209, h: 26}`, so the midpoint to cross is 222.
-   *
-   * Two causes were found and fixed there: a keyboard drag was being handed the pointer's last
-   * position (the click that selected the row), and the announcement was computed before the
-   * collision that refreshes the drag point. With both fixed the point measures **223** — past the
-   * midpoint — and `resolveTarget` still answers `index: 0`.
-   *
-   * So what is left is inside `resolveDropTarget` on the tree surface, with a correct point and
-   * correct boxes. That is the next measurement.
+   * ADR-327, closed by ADR-407 after ADR-405 narrowed it to the resolver. The last cause was that
+   * `resolveDropTarget` read the orientation off the block — `responsive-grid` lays its children out
+   * as a grid — and then measured the tree's rows with it. A grid decides "before the pointer" in
+   * reading order, so with the point at a row's own centre the count of preceding children was 0 on
+   * every press. The tree now passes its own vertical geometry, which is what its zone and its
+   * keyboard sensor had been saying all along.
    */
-  test.fixme('chooses a different position inside the drag', async ({ page }) => {
+  test('chooses a different position inside the drag', async ({ page }) => {
     const studio = new StudioPage(page)
 
     await studio.open('responsive-grid')

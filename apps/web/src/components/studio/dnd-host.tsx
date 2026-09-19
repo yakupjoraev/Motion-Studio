@@ -74,6 +74,10 @@ export function DndHost({ children }: DndHostProps) {
 
     return resolveDropTarget({
       point,
+      // The tree draws its children as rows whatever the block lays them out as, so the resolver
+      // measures the rows rather than asking the block — ADR-407. The canvas passes nothing, because
+      // there the block's layout is what the user is pointing at.
+      ...(zone.surface === 'tree' ? { orientation: 'vertical' as const } : {}),
       // The collision already decided which container the pointer is in, by the geometry of ADR-133.
       hitNodeId: zone.parentId,
       draggedBlockId: payload.blockId,

@@ -36,6 +36,12 @@ export interface ResolveDropTargetArgs {
   readonly isolationId: NodeId | null
   /** Step 4 reads the container's resolved props, and resolving them needs the breakpoint. */
   readonly breakpoint: BreakpointId
+  /**
+   * The surface's own geometry, for a surface that draws the children itself rather than showing the
+   * block's layout — the layers tree is a vertical list of rows whatever the block does with them.
+   * Absent on the canvas, where the block's layout is what the user is pointing at (ADR-407).
+   */
+  readonly orientation?: SlotOrientation
 }
 
 /**
@@ -58,6 +64,7 @@ export function resolveDropTarget(args: ResolveDropTargetArgs): DropTarget | nul
   }
 
   const { parent, slot } = found
+  const orientation = args.orientation ?? orientationOf(parent, slot, args.breakpoint)
   const verdict = validateDrop({
     document: args.document,
     registry: args.registry,
@@ -73,12 +80,11 @@ export function resolveDropTarget(args: ResolveDropTargetArgs): DropTarget | nul
       parentId: parent.id,
       slot: slot.name,
       index: 0,
-      orientation: orientationOf(parent, slot, args.breakpoint),
+      orientation,
       indicator: { kind: 'reject', rect: container ?? EMPTY, reason: verdict.reason },
     }
   }
 
-  const orientation = orientationOf(parent, slot, args.breakpoint)
   const siblings = placementChildren(args, parent, slot.name)
   const { position, indicator } = placeInSlot({
     orientation,
