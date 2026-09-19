@@ -16,7 +16,11 @@ import type { StageBlock } from './hero/hero-stage'
  * Nothing is rendered until every one has landed. A page that fills in block by block is three
  * layout shifts on the first screen, which is the one place PERFORMANCE.md § Budgets has no room.
  */
-export function useBlockProps(blocks: readonly StageBlock[]): readonly UnknownProps[] | null {
+export function useBlockProps(
+  // Only what a fetch needs. A caller that shows one block in a frame it clips has no height to
+  // declare, and asking it for one would be the type describing this hook's own neighbours.
+  blocks: readonly Pick<StageBlock, 'id' | 'category'>[],
+): readonly UnknownProps[] | null {
   const [props, setProps] = useState<readonly UnknownProps[] | null>(null)
 
   useEffect(() => {

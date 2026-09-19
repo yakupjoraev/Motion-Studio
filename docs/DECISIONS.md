@@ -16986,3 +16986,57 @@ The wait then either catches the frame or does not, rather than catching it twic
   make two assertions atomic, which was the actual failure.
 - The other spec in the file is untouched: it waits on `nav-pending`, which lives until the route
   commits and is not a frame that can vanish between two lines.
+
+## ADR-409 — A block's placeholder on the first screen is the block's own measured height
+
+**Date** 2026-09-19 · **Prompt** — · **Status** Accepted
+
+### Question
+With Lighthouse able to run again (ADR-406), the landing page failed its CLS budget on desktop:
+0.0265 against 0.02, in every one of three runs. The first run of the night had passed only because
+one of its three readings came in at 0.0095 and LHCI picked that one as representative. Where does a
+landing page that was measured at CLS 0 in September shift?
+
+### Measurement
+Reproduced locally on a production build with a `layout-shift` observer, 0.0239–0.0274 across runs,
+with the offending elements named by the entry's own `sources`:
+
+| Element | Height before | Height after |
+| --- | --- | --- |
+| the hero's ghost slot | 176 px painted | 210 |
+| `feature-grid`'s wrapper | 40 | 144 |
+| `footer`'s wrapper | 40 | 0 → relaid |
+
+In stage units, measured with `offsetHeight` at `STAGE.width` 1280: `navbar` **65**, the ghost slot
+**501**, `feature-grid` **606**, `footer` **376**. The placeholders they replaced were `h-24` — 96 px
+— and `h-[420px]`.
+
+So the shift is not the island swap that ADR-295 dealt with: that one is a frame of fixed aspect
+ratio and it still moves nothing. It is the blocks inside it, each of which is loaded on its own by
+`BlockRender` and each of which was standing behind a placeholder of a height nobody had measured.
+`useBlockProps` already waits for every block's props together — its comment says why — but the
+component chunks arrive separately, and that is the half that was uncovered.
+
+### Decision
+`StageBlock` gains `height`: the block's measured layout height at `STAGE.width`, and the fallback
+for that block is a box of exactly that height. Same discipline as `gallery/card-stage.ts` under
+ADR-386, and the numbers are measurements rather than preferences.
+
+`useBlockProps` now takes `Pick<StageBlock, 'id' | 'category'>`, because a caller that shows one
+block inside a frame it clips has no height to declare, and requiring one would make the type
+describe this hook's neighbours instead of its own argument.
+
+### Measurement after
+CLS **0.0000** on three consecutive runs of the same production build, against 0.0239–0.0274 before.
+
+### Consequences
+- `flows/landing-stability.spec.ts` is the gate, and it asserts the shift rather than the table: a
+  block's height is a function of the font, two machines do not agree about the font, and a gate that
+  pins a number taken here fails there (ADR-280, and the trap `card-stage.spec.ts` fell into first).
+  It is Chromium-only, because `layout-shift` is a Chromium entry type — in Firefox and WebKit it
+  would be a green that means nothing, so it skips there rather than pretending.
+- The table can go stale silently, exactly like `card-stage.ts`'s. The gate catches the consequence
+  (the page moves) rather than the cause (the number drifted), which is the direction that survives a
+  change of machine.
+- Lighthouse still asserts the same budget nightly. This gate answers in the suite a push waits for,
+  and it names the element rather than reporting a number three runs later.

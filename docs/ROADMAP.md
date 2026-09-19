@@ -331,36 +331,28 @@ out to be different claims.
 | ✅ | The press on a link was unanswered until the route committed — 1 966 ms of a page that looked like it had missed the click. The answer is a rule on the link itself while its payload is in flight, measured at 62 ms. The loading frames added to the public routes alongside it were removed again: on a route that has to be readable without JavaScript, a `loading.tsx` **is** the page for that reader | ADR-390, ADR-391 |
 | ✅ | Every preview in the product drew at full size in Firefox: the scale was a length divided by a length and Firefox does not do that division, so the declaration was dropped — the hero frame and all 72 catalogue cards showed a block's top-left corner, and the card the first screen asks you to drag sat outside the window. The scale is a ratio of two numbers now, and the card refuses the native drag WebKit was starting on its thumbnail | ADR-392, ADR-393 |
 | ✅ | `prompts/68` — the code panel. What made this not a page builder lived behind a dialog nobody was told to open; it is a column of the canvas now, closed by default, printed on a 250 ms pause so a slider drag does not run Prettier per frame. Measured closed: 253.3 → 253.61 kB of a 256 kB budget | ADR-401 |
+| ✅ | `prompts/67`, surfaces 2 to 5 — the catalogue's card stage sized from a table of measurements, a documentation heading that is finally louder than the sentence under it, the playground made to fit a screen that cannot hold it, the phone's documentation list collapsed behind `:target`, and the studio chrome given an artboard edge and a theme that stops at the artboard | ADR-386, ADR-394, ADR-395, ADR-396, ADR-403, ADR-404 |
+| ✅ | `prompts/69` — findability built and ready to be switched on: one source of the site address, `robots.ts`, a 216-entry sitemap, privacy and terms in both languages, canonical and hreflang, JSON-LD. The domain itself is the owner's to buy | ADR-402 |
+| ✅ | A tree row could not choose a position inside its drag — open since `prompts/55`. The resolver read the orientation off the block, so `responsive-grid`'s grid geometry was used to measure the tree's rows, and a grid compares x inside a row: with the keyboard point at a row's own centre the answer was index 0 on every press, forever | ADR-405, ADR-407 |
 
 ### Open, in the order it is being done
 
 Each is a prompt in `prompts/`, so a session picks one up without re-deriving it.
 
-1. **A tree row still cannot choose a position inside its drag** — ADR-327, the one case left of the
-   four operations. Re-measured under ADR-381 rather than re-assumed: the step is computed, the zone
-   is the row's parent and both sibling boxes are supplied, and the announcement still does not move.
-   The canvas path with the same code works, so the difference is that `layerRects` reports the strip
-   of ADR-133 in the panel's coordinates while the drag's own box is in the viewport's. That
-   comparison is the next measurement. The keyboard path a user is given — `Mod+↑`/`↓` — reorders and
-   announces, so this is a second route to a function that works.
-2. **`prompts/67`, surfaces 2 to 5 — the design pass, continued.** Surface 1 (the landing) is done
-   (ADR-383). The order and the bar per surface come from `DESIGN_REFERENCES.md` § Applying it per
-   surface, which is loudness, not standard of finish:
-   - **the studio chrome** — low loudness, high craft. Its own test is in that document: screenshot
-     the studio with a document open, and the user's design should be the only thing the eye goes to.
-   - **`/blocks`** — maximum on the previews, restrained around them. `prompts/67` lists four
-     measured defects to resolve here: seven container blocks whose thumbnails render blank, three
-     showing "No image yet", `input-field` shown in its error state, `particles` nearly invisible in
-     light mode, `bento-grid` cells that barely separate, and `testimonial-marquee` clipped by its
-     frame.
-   - **`/docs`** — medium: typographic treatment, surface depth, code-block finish.
-   - **`/playground`** — the smallest, and the one nobody has looked at twice.
+1. **The runtime image is 284 MB against a 260 MB budget** — measured 2026-09-19, the first honest
+   reading since the `docker` job stopped being able to build at all on the old runners (ADR-406).
+   It is not a dependency: `.next/server` grew from 40.6 MB (ADR-344) to 72.7 MB, and **12.9 MB of
+   that is one page**, `/docs/decisions`, at 8.7 MB of HTML and 4.4 MB of RSC per locale. The journal
+   is 408 entries and 17 000 lines, it is served as a single prerendered page, and a reader who opens
+   it downloads 1.1 MB gzipped. Both the budget and the page are the owner's call, and they are the
+   same call.
+2. **The domain, and the ownership questions bound to it** — everything else in `prompts/69` is
+   built and waiting for it (ADR-402). The name is the exposed part; see below.
 
-   One question is already open and belongs to surface 2: `SectionIntro` puts a big headline left and
-   a small explainer right on every band, which `tasteskill` § 4.7 bans as a split header. It is the
-   page's structural rhythm, so changing it is a composition decision rather than a polish item.
-3. **`prompts/69` — findability and ownership.** SEO, the privacy and terms pages, the domain, and
-   the three coupled decisions below. Raised by the owner 2026-09-05.
+   One question is still open from the design pass and belongs to the studio chrome: `SectionIntro`
+   puts a big headline left and a small explainer right on every band, which `tasteskill` § 4.7 bans
+   as a split header. It is the page's structural rhythm, so changing it is a composition decision
+   rather than a polish item.
 
 ### The four questions in prompt 69, and why they are one decision
 

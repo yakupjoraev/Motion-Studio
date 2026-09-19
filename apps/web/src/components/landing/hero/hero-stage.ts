@@ -22,6 +22,20 @@ export const SNAP_THRESHOLD = 10
 export interface StageBlock {
   readonly id: BlockId
   readonly category: BlockCategory
+  /**
+   * How tall the block lays out at `STAGE.width`, measured in a browser — the discipline
+   * `gallery/card-stage.ts` records under ADR-386, for the same reason and a different symptom.
+   *
+   * Each block on this stage arrives on its own, behind its own fallback. A fallback that is not the
+   * block's height moves everything below it when the block lands, and the first screen is the one
+   * page in the product whose layout shift is a public budget: measured at **0.027 CLS** against
+   * 0.02, from placeholders of 96 px standing in for blocks of 606 and 376 (ADR-409).
+   *
+   * `flows/landing-stability.spec.ts` is the gate. It asserts the shift rather than these numbers,
+   * because a block's height is a function of the font and two machines do not agree about the font
+   * — ADR-280, and the same trap `card-stage.spec.ts` fell into first.
+   */
+  readonly height: number
 }
 
 /**
@@ -32,16 +46,20 @@ export interface StageBlock {
  * fails here rather than rendering an empty frame on the front page.
  */
 export const STAGE_PAGE: readonly StageBlock[] = [
-  { id: 'navbar' as BlockId, category: 'navigation' },
-  { id: 'feature-grid' as BlockId, category: 'marketing' },
-  { id: 'footer' as BlockId, category: 'navigation' },
+  { id: 'navbar' as BlockId, category: 'navigation', height: 65 },
+  { id: 'feature-grid' as BlockId, category: 'marketing', height: 606 },
+  { id: 'footer' as BlockId, category: 'navigation', height: 376 },
 ]
 
 /**
  * The block on the card. The page above is deliberately missing its hero, so the gesture the first
  * screen offers is the one the product is for: put a block on a page and watch the page take it.
  */
-export const DRAGGED_BLOCK: StageBlock = { id: 'hero-aurora' as BlockId, category: 'hero' }
+export const DRAGGED_BLOCK: StageBlock = {
+  id: 'hero-aurora' as BlockId,
+  category: 'hero',
+  height: 501,
+}
 
 /**
  * The same block as a list, because `useBlockProps` takes one and a fresh `[DRAGGED_BLOCK]` written

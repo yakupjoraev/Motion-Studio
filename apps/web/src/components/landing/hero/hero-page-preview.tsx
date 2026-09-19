@@ -84,7 +84,9 @@ export function HeroPagePreview({ fallback }: HeroPagePreviewProps) {
                         >
                           <BlockRender
                             category={block.category}
-                            fallback={<span className="block h-24" />}
+                            // The block's own measured height, so the page does not move when it
+                            // lands — `hero-stage.ts` § StageBlock.height, ADR-409.
+                            fallback={<span className="block" style={{ height: block.height }} />}
                             id={block.id}
                             props={pageProps[index] ?? {}}
                           />
@@ -101,11 +103,16 @@ export function HeroPagePreview({ fallback }: HeroPagePreviewProps) {
                               className={`transition-opacity duration-[--ms-duration-base] ease-[--ms-ease-standard] ${ghost}`}
                             >
                               {heroProps === null ? (
-                                <span className="block h-[420px]" />
+                                <span className="block" style={{ height: DRAGGED_BLOCK.height }} />
                               ) : (
                                 <BlockRender
                                   category={DRAGGED_BLOCK.category}
-                                  fallback={<span className="block h-[420px]" />}
+                                  fallback={
+                                    <span
+                                      className="block"
+                                      style={{ height: DRAGGED_BLOCK.height }}
+                                    />
+                                  }
                                   id={DRAGGED_BLOCK.id}
                                   props={heroProps[0] ?? {}}
                                 />
