@@ -8,11 +8,9 @@ runs:
   steps:
     # Before setup-node, so `cache: pnpm` has a package manager to find a store path for.
     #
-    # `dest` is per-runner, and that is the whole point: the three self-hosted runners run as root and
-    # share one `$HOME`, so the action's default `~/setup-pnpm` is a single directory that every
-    # parallel job installs into and cleans up behind. Measured across nine e2e shards plus docker and
-    # quality: `ENOTEMPTY: directory not empty, rmdir '/root/setup-pnpm/node_modules/.pnpm'`, every
-    # time, in the install step before any real work. `RUNNER_TEMP` is one per runner.
+    # `dest` keeps the install out of `$HOME`. It was written for the self-hosted runners, which ran
+    # as root out of one home directory and collided there (ADR-382); ADR-406 moved the jobs onto
+    # GitHub-hosted machines, where `RUNNER_TEMP` is simply the right place for it.
     - uses: pnpm/action-setup@v4
       with:
         dest: ${{ runner.temp }}/setup-pnpm
@@ -20,37 +18,8 @@ runs:
     - uses: actions/setup-node@v4
       with:
         node-version-file: .nvmrc
-        # The store is cached where it would otherwise be thrown away, and not where it survives.
-        #
-        # A GitHub-hosted runner is new every job, so the cache is what makes an install fast there.
-        # The self-hosted one keeps its store on disk between jobs — and asking for the cache there
-        # fails the job *after every real step has passed*: WSL puts the Windows `pnpm` on PATH
-        # through /mnt/c, so `setup-node` resolves that one and reads back a store path that exists
-        # on neither side (measured: `/root/setup-pnpm/node_modules/.bin/store/v11`), which its post
-        # step then reports as "Path Validation Error". ADR-382 replaces the `mkdir` of ADR-375,
-        # which created that path and so hid the mismatch rather than fixing it.
-        cache: ${{ runner.environment == 'self-hosted' && '' || 'pnpm' }}
+        # A runner is a new machine every job, so the cache is what makes an install fast.
+        cache: pnpm
 
     - run: pnpm install --frozen-lockfile
       shell: bash
-
-    # The three runners share one host, so they share one `localhost`, and every suite that serves the
-    # app binds the same default 3000. Measured on `b874db3`: seven of nine e2e shards ended before
-    # their first spec with `http://localhost:3000/studio is already used`, and the same collision is
-    # available to `Visual` and to both Lighthouse legs whenever they overlap.
-    #
-    # A runner runs one job at a time, so a port derived from the runner cannot collide — including
-    # with a job written later, which is why this is here and not nine numbers in a matrix.
-    # `playwright.config.ts`, `visual.config.ts` and `lighthouserc.cjs` all read these two, and
-    # `next start` reads `PORT` itself. 3000 and 6006 are left free: the `docker` job publishes the
-    # image on the ports DEVOPS.md prints, and it does not run this action.
-    - name: A port per runner
-      shell: bash
-      run: |
-        index=$(printf '%s' "$RUNNER_NAME" | grep -oE '[0-9]+$' || true)
-        # The first runner's name ends in no digit at all, and `08` read as octal is an arithmetic
-        # error rather than a port.
-        index=$((10#${index:-1}))
-        echo "PORT=$((3000 + index))" >> "$GITHUB_ENV"
-        echo "STORYBOOK_PORT=$((6006 + index))" >> "$GITHUB_ENV"
-        echo "this runner serves on $((3000 + index)), Storybook on $((6006 + index))"

@@ -118,12 +118,17 @@ Lighthouse run. They stay a local gate, run through `pnpm test:e2e:perf`.
 
 ### What runs on a push, and what runs nightly
 
-The pipeline above is the full one. It does not all run on every push, and the reason is the machine
-it runs on: the runners are three services inside one WSL distribution on the owner's laptop, two of
-them disabled so the VM keeps its memory, so **every job in this file is sequential**. Fifteen jobs
-of which nine are Playwright shards took hours, and `cancel-in-progress` meant the next push cancelled
-the run before it finished. Measured over 2026-09-11: four consecutive pushes produced **zero**
-complete runs (ADR-397).
+The pipeline above is the full one. It does not all run on every push. The reason it was split was
+the machine it ran on then — three runner services inside one WSL distribution on the owner's laptop,
+two of them disabled so the VM kept its memory, so every job was sequential. Fifteen jobs of which
+nine are Playwright shards took hours, and `cancel-in-progress` meant the next push cancelled the run
+before it finished. Measured over 2026-09-11: four consecutive pushes produced **zero** complete runs
+(ADR-397).
+
+The jobs have since moved to GitHub-hosted runners (ADR-406), so that constraint is gone. The split
+stays, because the other half of ADR-397's reasoning does: a commit should be answered in minutes,
+and the gates that need a different engine or a container are worth running once a night rather than
+six times a day.
 
 A gate nobody waits for is not a gate. So the pipeline is split by what each job can catch:
 
@@ -161,8 +166,8 @@ the commit `main` ends up at — a merge commit is a state no gate has ever seen
 
 ### Required checks on `main`
 
-`core` and `e2e (chrome)`. The nightly jobs report; they do not block a push, because a red Docker
-job caused by a WSL interop setting is not a statement about the code.
+`core` and `e2e (chrome)`. The nightly jobs report; they do not block a push, because a job that is
+red for a reason outside the repository is not a statement about the code.
 Branch protection: no direct pushes, no force-push, linear history, up-to-date before merge.
 
 ### Custom gates
@@ -445,100 +450,64 @@ request still gets a preview and simply has nowhere to post it.
 
 ### Where the jobs run
 
-GitHub refused to start a job on GitHub-hosted machines while the repository was private and the
-account's billing was unresolved (ADR-374). **Self-hosted runners are not refused and not billed**,
-measured rather than assumed (ADR-375), so the pipeline runs on the owner's machine.
-
-ADR-399 made the repository public again, and Actions minutes are free for public repositories — so
-the constraint that shaped this pipeline no longer applies. Whether to move the jobs back onto
-GitHub-hosted machines is its own decision, and it is not made here: the self-hosted path works, and
-the four machine-shaped failure modes below are known rather than surprising.
-
-Every job reads its labels from a repository variable:
+On GitHub-hosted `ubuntu-latest`. Every job reads its labels from a repository variable:
 
 ```yaml
 runs-on: ${{ fromJSON(vars.RUNNER_LABELS) }}
 ```
 
-`RUNNER_LABELS` is `["self-hosted","linux"]`. `gh variable set RUNNER_LABELS --body '["ubuntu-latest"]'`
-moves the whole pipeline back to GitHub's machines in one command, the day minutes exist again.
+`RUNNER_LABELS` is `["ubuntu-latest"]`, and that variable is the whole switch: fourteen jobs across
+six workflows change machines with `gh variable set RUNNER_LABELS`, without a workflow file being
+touched.
 
-**Three runners** are installed in the Ubuntu WSL2 distro as systemd services — `motion-studio-wsl`,
-`-2`, `-3` — because the e2e matrix is nine jobs and one runner takes them one at a time. They run as
-root (`RUNNER_ALLOW_RUNASROOT=1`), which ADR-375 argues for.
+It has been set both ways. GitHub refused to start a job on its own machines while the repository was
+private and the account's billing was unresolved (ADR-374), so the pipeline moved onto three
+self-hosted runners inside a WSL2 distribution on the owner's laptop (ADR-375). ADR-399 made the
+repository public, which made minutes free again, and ADR-406 moved the jobs back — because the
+distribution only ran while the laptop was awake and something was holding it open, and seven days
+of nightly gates had produced no result.
 
-Two things keep them online, and both were found by watching jobs sit `queued`:
+The runners stay registered and offline. Nothing routes to them; re-registering takes one token if
+that decision is ever reversed.
 
-- `~/.wslconfig` sets `vmIdleTimeout`, and
-- a Windows scheduled task, **`KeepWSLAwake`**, holds an open session
-  (`wsl.exe -d Ubuntu -u root -e sleep infinity`) at logon. WSL stops a distro nobody is talking to,
-  and a stopped distro takes the runner service with it however healthy `systemctl` says it is.
+### What the self-hosted period left behind (2026-09-19)
 
-To add or replace a runner:
-
-```bash
-gh api -X POST repos/<owner>/<repo>/actions/runners/registration-token --jq .token
-wsl -d Ubuntu -- bash -lc "cd /root/actions-runner && RUNNER_ALLOW_RUNASROOT=1 ./config.sh \
-  --url https://github.com/<owner>/<repo> --token <token> --name <name> \
-  --labels self-hosted,linux,x64,wsl --work _work --unattended --replace"
-wsl -d Ubuntu -- bash -lc "cd /root/actions-runner && ./svc.sh install root && ./svc.sh start"
-```
-
-### What is red on the runners, and why (2026-09-08)
-
-The pipeline runs. What is red is worth separating into "the machine" and "the product", because for
-two days everything looked like the second and was the first.
-
-**Fixed 2026-09-08 (ADR-384), and this is what seven of nine e2e shards were once they installed:**
-
-- Three runners on one host share one `localhost`, and every suite that serves the app defaulted to
-  port 3000: `http://localhost:3000/studio is already used`, before the first spec. The composite
-  setup action now derives `PORT` and `STORYBOOK_PORT` from `RUNNER_NAME` (3001/3002/3003 and
-  6007/6008/6009 here), which cannot collide because a runner runs one job at a time. 3000 and 6006
-  stay free for `docker`, the one job that does not use the action.
-
-**Fixed 2026-09-08 (ADR-382), and this is what nine of fifteen red jobs were:**
-
-- `pnpm/action-setup` installed into `~/setup-pnpm`, and the three runners are installed as root out
-  of one `$HOME`. Parallel jobs installed into and cleaned up one directory: `ENOTEMPTY: directory
-  not empty, rmdir '/root/setup-pnpm/node_modules/.pnpm'`, every time, in the install step. `dest:
-  ${{ runner.temp }}/setup-pnpm` gives each runner its own, and `RUNNER_TEMP` is per runner
-  (`/root/actions-runner{,-2,-3}/_work/_temp`).
-- `Deploy` failed **after** its build and its deployment had both passed. WSL puts the Windows `pnpm`
-  on PATH through `/mnt/c` and there is no Linux one until the action adds it, so `setup-node` asked
-  that binary for a store path and got `/root/setup-pnpm/node_modules/.bin/store/v11`, which exists
-  on neither side. The store is now cached only where a runner would lose it.
-
-**Still red, and none of it is the install:**
+Three of the four jobs that were red for machine reasons were red *because* of that host, and none of
+them said anything about the code. They are recorded because the diagnosis is the useful part, and
+because the next nightly run is what proves they are gone rather than moved:
 
 - **`lighthouse`, both form factors** — `Unable to connect to Chrome`, `ECONNREFUSED
-  127.0.0.1:<port>`, with Chrome's own log written under `/mnt/c/…`. `ChromeLauncher` is starting the
-  **Windows** Chrome through WSL interop and then cannot reach its DevTools port. Same root as the
-  export-smoke failure. The fix is a Chromium inside the distro plus `CHROME_PATH`, or
-  `appendWindowsPath=false` in `/etc/wsl.conf` — which is the owner's machine and every WSL shell on
-  it, so it is a decision rather than a patch.
-- **`docker`** — the job no longer reaches the build. `docker/setup-buildx-action` resolves
-  `/mnt/c/Program Files/Docker/Docker/resources/bin/docker` through interop, and that binary answers
-  `The command 'docker' could not be found in this WSL 2 distro`. Same PATH as the `pnpm` case above,
-  same conclusion: Docker Desktop's WSL integration for this distro, or `appendWindowsPath=false`.
+  127.0.0.1:<port>`, with Chrome's own log written under `/mnt/c/…`: `ChromeLauncher` was starting the
+  **Windows** Chrome through WSL interop and could not reach its DevTools port.
+- **`docker`** — `docker/setup-buildx-action` resolved `/mnt/c/Program Files/Docker/…/docker` through
+  interop, and that binary answered `The command 'docker' could not be found in this WSL 2 distro`.
   (Before the runners lost their Docker, this job failed differently — `ConnectTimeoutError` on the
   corepack download inside the image. That one is the container's network and is still unproven.)
-- **`e2e`, WebKit, intermittently** — `playwright install --with-deps` exits 100 with `Unable to
+- **`e2e`, WebKit, intermittently** — `playwright install --with-deps` exited 100 with `Unable to
   locate package libicu74`, `libvpx9`, `libx264-164`. Playwright names Ubuntu 24.04 packages and the
-  distro is `resolute`; the other WebKit shards install from the same lists on the same distro, so
-  what is intermittent is three jobs sharing `/var/lib/apt`, not the naming.
-- **`e2e`, some shards** — `flows/open-studio.spec.ts`, which is a product defect with its
-  measurement in `ROADMAP.md` § M15, not a runner problem.
+  distribution was `resolute`.
+
+The fourth was never the machine: **`e2e`, some shards** failing on `flows/open-studio.spec.ts` is a
+product defect with its measurement in `ROADMAP.md` § M15.
+
+Two workarounds in the composite setup action came from that host. `dest: ${{ runner.temp }}/setup-pnpm`
+stays — it was written because three runners shared one `$HOME` (ADR-382) and it is correct anywhere.
+The per-runner `PORT` derived from `RUNNER_NAME` (ADR-384) is gone: it existed because three runners
+shared one `localhost`, and a hosted runner is one machine per job. `playwright.config.ts`,
+`visual.config.ts` and `lighthouserc.cjs` fall back to 3000 on their own, and `visual.config.ts` to
+6007 for Storybook.
 
 **A spec that passes here and fails there is usually asserting the machine.** Two keyboard cases did:
 one pinned the announced position to "3 of 3" then "2 of 3", which is a count of how many siblings had
 been measured by the time of the press, and one pressed an arrow immediately after the pick-up,
-before the first collision pass had run. Nine shards on one machine have neither. Both now wait for
-the announcement and compare against the previous value.
+before the first collision pass had run. Both now wait for the announcement and compare against the
+previous value.
 
-**Checks only run while that machine is on.** What the pre-push hook covers on every push regardless:
-`pnpm lint`, `pnpm typecheck`, `pnpm test:unit`, `pnpm build` — about three and a half minutes on a
-warm cache. Everything else is worth running by hand when the machine is off:
+**The pre-push hook is the gate that never queues.** It covers `pnpm lint`, `pnpm typecheck`,
+`pnpm test:unit`, `pnpm build` on every push — about three and a half minutes on a warm cache. Note
+that it runs `test:unit` without coverage while `core` runs `test:coverage` with thresholds, so a new
+package can pass here and fail there. Everything else is worth running by hand before a change that
+earns it:
 
 ```bash
 pnpm test:e2e            # three browsers

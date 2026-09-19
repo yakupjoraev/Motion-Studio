@@ -1,11 +1,11 @@
 # The pipeline from docs/DEVOPS.md § CI, split into what a push waits for and what runs nightly —
-# ADR-397. The runners are sequential (three services in one WSL distribution, two disabled), so a
-# job costs wall-clock time rather than a core, and four consecutive pushes produced zero complete
-# runs before the split.
+# ADR-397. The jobs run on GitHub-hosted runners (ADR-406); the sequential self-hosted ones that
+# forced the split are gone, and the split stays because the owner's reason for it does — a gate
+# nobody waits for is not a gate.
 #
-# `core` is one job and not five because five jobs on a sequential runner pay for five installs and
-# buy no parallelism. Order inside it follows docs/TESTING.md § CI ordering — cheapest first, so a
-# lint error does not wait on a build.
+# `core` is one job and not five, which is how ADR-397 left it on a sequential runner. Order inside
+# it follows docs/TESTING.md § CI ordering — cheapest first, so a lint error does not wait on a
+# build.
 name: CI
 
 on:
@@ -73,9 +73,9 @@ jobs:
       # about where the numbers were taken.
       - run: pnpm --filter e2e exec playwright install --with-deps chrome
       - run: pnpm build
-      # One worker, so one browser at a time: the VM is capped at 4 cores and 4 GB (`~/.wslconfig`,
-      # the owner's call — the machine is for working on), and two workers on four cores is
-      # contention rather than parallelism.
+      # One worker, so one browser at a time. A standard hosted runner has four cores, and these
+      # specs were written and measured against a single worker — ADR-280 on why a suite that passes
+      # under one kind of contention and fails under another is measuring the machine.
       #
       # The directories, with the separator: a bare `export` is a regular expression over the path
       # and matches `visual/export-dialog.spec.ts` as well. The config ignores `visual/**` too — one

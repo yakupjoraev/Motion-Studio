@@ -5,10 +5,9 @@
 # The configuration is `lighthouserc.cjs`; the two legs differ only by `MS_LH_PRESET`.
 name: Lighthouse
 
-# Nightly and on demand rather than on every push — ADR-397. It is the slowest job in the pipeline on
-# a sequential runner, and on this machine it is also the one that fails for a reason outside the
-# repository: `ChromeLauncher` starts Windows Chrome through WSL interop and cannot reach its
-# DevTools port.
+# Nightly and on demand rather than on every push — ADR-397. It is the slowest job in the pipeline,
+# and the one whose numbers are worth least when the machine under them is busy: a budget is only
+# comparable to itself (ADR-280).
 on:
   workflow_dispatch:
   schedule:

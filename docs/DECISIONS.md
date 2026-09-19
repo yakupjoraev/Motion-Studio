@@ -15303,7 +15303,7 @@ checked while the machine is awake.
 
 ## ADR-375 — The pipeline runs on a self-hosted runner inside WSL2
 
-**Date** 2026-09-06 · **Prompt** 66 · **Status** Accepted
+**Date** 2026-09-06 · **Prompt** 66 · **Status** Superseded by ADR-406
 
 ### Question
 ADR-374 left the project with no automated checks and named a self-hosted runner as the way out,
@@ -15771,7 +15771,7 @@ spec sheet, and a spec sheet is not a maximum-loudness surface.
 
 ## ADR-384 — One host, one localhost: a port belongs to a runner, not to a suite
 
-**Date** 2026-09-08 · **Prompt** M15 (infrastructure) · **Status** Accepted
+**Date** 2026-09-08 · **Prompt** M15 (infrastructure) · **Status** Superseded by ADR-406
 
 ### Question
 ADR-382 fixed the install step, and the first pipeline that got past it — `b874db3` — was still red in
@@ -16820,3 +16820,63 @@ it is given, and that is a narrower question than ADR-327 has ever been reduced 
 `fixme` stays; its diagnosis in `a11y/keyboard-drag.spec.ts` is replaced with this one.
 
 `Mod+↑`/`↓` remains the keyboard path a user is given for reordering, and it works.
+
+## ADR-406 — The pipeline moves back to GitHub-hosted runners, and WSL stops starting itself
+
+**Date** 2026-09-19 · **Prompt** — · **Status** Accepted · **Supersedes** ADR-375
+
+### Question
+ADR-375 put the pipeline on three self-hosted runners inside a WSL2 distribution because GitHub
+refused to start a job while the repository was private and billing was unresolved (ADR-374).
+ADR-399 made the repository public, so Actions minutes are free again, and `DEVOPS.md` has carried
+the move back as an open decision ever since. The owner raised it from the other end: the WSL
+distribution starts itself with Windows and holds memory on a machine that is for working on.
+
+### Escalated
+Options presented, recommendation given, owner decided on 2026-09-19. The owner's first instruction
+was to remove WSL and work without it; told that Docker Desktop uses WSL2 as its backend, the owner
+kept WSL installed and asked for its automatic start to be removed instead, then chose to move the
+pipeline to GitHub's machines rather than wake the runners by hand.
+
+### Measurement
+What the self-hosted path was actually delivering, read on 2026-09-19:
+
+- The three runners were `offline`, and had been since the last session. The nightly runs of
+  2026-09-17 and 2026-09-18 — CI, Lighthouse and Visual, six runs — were `cancelled` after roughly
+  24 hours `queued`. The 2026-09-19 run had been `queued` for seven hours.
+- The last run that reached a conclusion was the push of `bb4c242` on 2026-09-12. **Seven days of
+  nightly gates produced no result.**
+- Three of the four jobs that were red for machine reasons are red *because* of this host:
+  `lighthouse` launches Windows Chrome through interop and cannot reach its DevTools port, `docker`
+  resolves the Windows docker binary through `/mnt/c`, and `e2e webkit` installs Ubuntu 24.04
+  packages on a `resolute` distribution. None of them is a statement about the code.
+
+The two runner-shaped workarounds in the composite setup action exist for the same host: a per-runner
+pnpm `dest` (ADR-382) and a per-runner `PORT` (ADR-384), because three runners share one `$HOME` and
+one `localhost`. A GitHub-hosted runner is one machine per job and has neither problem.
+
+### Decision
+`RUNNER_LABELS` becomes `["ubuntu-latest"]`. The variable is what every `runs-on` reads, so the whole
+pipeline — fourteen jobs across six workflows — moves in one command and no workflow file changes its
+shape.
+
+The per-runner `PORT` step is removed: `playwright.config.ts`, `visual.config.ts` and
+`lighthouserc.cjs` already default to 3000, `visual.config.ts` to 6007 for Storybook, and a hosted
+runner cannot collide with another job. The pnpm store cache stops being conditional, because every runner now discards its store.
+`dest: ${{ runner.temp }}/setup-pnpm` stays: it is correct on a hosted runner and it costs nothing.
+
+On the machine, the scheduled task `KeepWSLAwake` is disabled and Docker Desktop is removed from
+`HKCU\...\Run`. WSL and both distributions stay installed; nothing starts them at logon any more.
+
+### Consequences
+- The gates answer again without the owner's laptop being awake, which is the whole point.
+- The three machine-shaped red jobs should go green on a hosted Ubuntu. That is a prediction, not a
+  measurement, until the first nightly run lands — it is stated here so the next session checks it
+  rather than assumes it.
+- The runners stay registered and offline. Nothing routes to them now, and re-registering costs one
+  token if the decision is ever reversed.
+- ADR-397's split into push and nightly is kept as it is. Its reasoning was partly the sequential
+  runner, which is gone, but the owner's reason — a pipeline that had become noise — is not, and
+  changing the split is a separate decision with its own evidence.
+- Docker Desktop no longer starts with Windows. `docker compose up --build` still works locally; it
+  has to be started first.
