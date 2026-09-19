@@ -16944,3 +16944,45 @@ Two alternatives rejected:
 - `DropTarget.orientation` for a tree drop is now `vertical` rather than the block's, which is what
   the indicator between two rows has always needed.
 - The canvas path is untouched: no `orientation` is passed there, and `orientationOf` still decides.
+
+## ADR-408 — One frame is one assertion, or the gate measures how fast the machine is
+
+**Date** 2026-09-19 · **Prompt** — · **Status** Accepted
+
+### Question
+`flows/open-studio.spec.ts` — "waits in the shell's own frame rather than in an empty one" — has been
+failing in CI on WebKit while passing everywhere else, and `ROADMAP.md` § M15 records it as a product
+defect. Is it one?
+
+### Measurement
+From the failing run's own trace (2026-09-19, hosted runner, WebKit):
+
+| Moment | At |
+| --- | --- |
+| `page.goto('/studio')` | 0.12 s |
+| `expect(canvas-placeholder).toBeVisible()` — resolved to the node, passed | 1.83 s |
+| `expect(getByText('Opening the studio…')).toBeVisible()` — started | 2.16 s |
+| The same assertion timed out, node never found | 7.25 s |
+| Screenshot at failure | the studio, fully loaded |
+
+The placeholder existed and was found. It then stopped existing, because the studio arrived. The
+second assertion spent five seconds looking for a node in a frame that had already been replaced.
+
+Reproduced from the other side: locally the same spec passes even with the hold set to **0 ms**,
+because a slower machine leaves the frame up longer. The spec was measuring how fast the server
+answers, which is ADR-280's failure exactly.
+
+`CanvasPlaceholder` renders the skeleton and the wording in one element, so there was never a moment
+where one was true and the other was not.
+
+### Decision
+Assert the frame once: `getByTestId('canvas-placeholder').filter({ hasText: 'Opening the studio…' })`.
+The wait then either catches the frame or does not, rather than catching it twice and racing itself.
+
+### Consequences
+- The product is unchanged, because the product was never wrong. `ROADMAP.md` § M15's entry for this
+  spec is a spec defect, not a product one.
+- The hold in the spec stays at 1 500 ms. It widens the frame on any machine; what it cannot do is
+  make two assertions atomic, which was the actual failure.
+- The other spec in the file is untouched: it waits on `nav-pending`, which lives until the route
+  commits and is not a frame that can vanish between two lines.

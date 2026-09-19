@@ -487,8 +487,10 @@ because the next nightly run is what proves they are gone rather than moved:
   locate package libicu74`, `libvpx9`, `libx264-164`. Playwright names Ubuntu 24.04 packages and the
   distribution was `resolute`.
 
-The fourth was never the machine: **`e2e`, some shards** failing on `flows/open-studio.spec.ts` is a
-product defect with its measurement in `ROADMAP.md` § M15.
+The fourth was neither the machine nor the product: **`e2e`, some shards** failing on
+`flows/open-studio.spec.ts` was the spec asking about one short-lived frame in two separate
+assertions, so the first passed and the second looked for a node the studio had already replaced —
+0.33 s apart on the trace. ADR-408 has the timings and the one-assertion fix.
 
 Two workarounds in the composite setup action came from that host. `dest: ${{ runner.temp }}/setup-pnpm`
 stays — it was written because three runners shared one `$HOME` (ADR-382) and it is correct anywhere.

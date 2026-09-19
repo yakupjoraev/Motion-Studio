@@ -64,8 +64,16 @@ test.describe('opening the studio', () => {
     await holdStudio(page)
     await page.goto('/studio')
 
-    await expect(page.getByTestId('canvas-placeholder').first()).toBeVisible()
-    await expect(page.getByText('Opening the studio…').first()).toBeVisible()
+    /*
+     * One assertion for both halves of the frame, because they are one state and it is short.
+     * Measured on the CI trace of 2026-09-19: the placeholder resolved at 1.83 s and the studio had
+     * replaced it by 2.16 s, so the second `toBeVisible` spent its whole timeout looking for a node
+     * that no longer existed while the first had just passed. The component renders the skeleton and
+     * the wording together — asking for them separately is asking twice about one frame (ADR-408).
+     */
+    await expect(
+      page.getByTestId('canvas-placeholder').filter({ hasText: 'Opening the studio…' }).first(),
+    ).toBeVisible()
 
     await expect(page.getByTestId('canvas-root')).toBeVisible({ timeout: 30_000 })
     await expect(page.getByTestId('canvas-placeholder').first()).toBeHidden()
