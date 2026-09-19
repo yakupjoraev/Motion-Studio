@@ -16944,6 +16944,13 @@ Two alternatives rejected:
 - `DropTarget.orientation` for a tree drop is now `vertical` rather than the block's, which is what
   the indicator between two rows has always needed.
 - The canvas path is untouched: no `orientation` is passed there, and `orientationOf` still decides.
+- **`editor/dnd-mouse.spec.ts` failed on the first run after this change, and it was right to.**
+  `StudioLayers.drag` released the pointer on the target row's **middle line**, which is the boundary
+  between two insertion positions rather than a position: `placeInSlot` counts the siblings whose
+  midpoint the point has passed, so a point exactly on one asks which way the resolver rounds. The
+  grid branch rounded it one way and the vertical branch rounds it the other, and the spec had been
+  reading the wrong branch's answer as the right behaviour. The fixture now aims a quarter into the
+  row from the side the drag came from, which is an unambiguous request in either direction.
 
 ## ADR-408 — One frame is one assertion, or the gate measures how fast the machine is
 

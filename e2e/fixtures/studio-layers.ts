@@ -124,6 +124,13 @@ export class StudioLayers {
   /**
    * Drags one row onto another. `whileHeld` runs with the button still down, which is the window the
    * re-render budget is about.
+   *
+   * The drop lands a quarter into the target row on the side the drag came from, not on its middle
+   * line. A row's midpoint is the **boundary** between two insertion positions — `placeInSlot` counts
+   * the siblings whose midpoint the point has passed — so releasing exactly on it asks the resolver
+   * which way it rounds rather than where the row should go. It rounded one way while the tree was
+   * being measured as a grid and the other once ADR-407 gave it the tree's own geometry, and this
+   * fixture is what noticed.
    */
   async drag(nodeId: string, ontoNodeId: string, whileHeld?: () => Promise<void>): Promise<void> {
     await this.open()
@@ -131,12 +138,16 @@ export class StudioLayers {
     const from = await boxOf(this.row(nodeId), nodeId)
     const onto = await boxOf(this.row(ontoNodeId), ontoNodeId)
     const x = from.x + from.width / 2
+    const upwards = onto.y < from.y
+    const into = upwards ? onto.height / 4 : (onto.height * 3) / 4
+    // A drag released on the row it started on has nowhere unambiguous to aim, and means "no move".
+    const to = ontoNodeId === nodeId ? onto.y + onto.height / 2 : onto.y + into
 
     await this.page.mouse.move(x, from.y + from.height / 2)
     await this.page.mouse.down()
     // Past the 4 px activation first, then to the target: one long move can outrun the collision pass.
     await this.page.mouse.move(x, from.y + from.height / 2 + 12, { steps: 5 })
-    await this.page.mouse.move(x, onto.y + onto.height / 2, { steps: 25 })
+    await this.page.mouse.move(x, to, { steps: 25 })
     await whileHeld?.()
     await this.page.mouse.up()
   }
