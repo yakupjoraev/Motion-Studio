@@ -15,8 +15,8 @@
     "@motion-studio/tokens": "workspace:*",
     "@motion-studio/ui": "workspace:*",
     "@motion-studio/utils": "workspace:*",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
   },
   "devDependencies": {
     "@motion-studio/config": "workspace:*",
@@ -29,8 +29,8 @@
     "@storybook/react-vite": "^8.6.18",
     "@storybook/theming": "^8.6.18",
     "@tailwindcss/postcss": "^4.1.14",
-    "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.4",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "storybook": "^8.6.18",
     "tailwindcss": "^4.1.14",
     "vite": "^6.3.6"
