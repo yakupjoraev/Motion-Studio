@@ -8,7 +8,7 @@ import {
 } from '@motion-studio/schema'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, render, renderHook, screen } from '../../../test/render'
+import { act, cleanup, render, renderHook, screen } from '../../../test/render'
 
 import { useStudioStore } from '../../../store/editor-store'
 
@@ -95,6 +95,25 @@ beforeAll(async () => {
     // eight-second query racing a transform on a loaded runner — it lost twice in one afternoon.
     import('./responsive-hint'),
   ])
+
+  /*
+   * The fourth, which no import above can reach: `ControlRenderer` is a `Suspense` boundary over a
+   * `lazy(() => import('./control-fields'))`, so the fields arrive after the label that names them.
+   * `inspector.test.tsx` warms it the same way and says why an import cannot — the package's
+   * `exports` map has no path to that module and ENGINEERING_CONTRACT § 1.3 forbids reaching past
+   * it. Rendering one control once, inside this hook's own minute, is the way the application itself
+   * gets there.
+   *
+   * Without it the first query of the file waited on that chunk and lost on the hosted runner three
+   * times: 8 747 ms and 8 593 ms against an 8 000 ms budget, then 5 875 ms against a cheaper wait
+   * that found a different control and asked for this one too early.
+   */
+  const warm = insert('section')
+
+  act(() => state().select([warm]))
+  render(<Inspector />)
+  await screen.findByRole('combobox', { name: 'Padding' }, { timeout: 55_000 })
+  cleanup()
 }, 60_000)
 
 describe('where an edit lands', () => {
@@ -166,21 +185,12 @@ describe('what the row says about where its value came from', () => {
     render(<Inspector />)
 
     /*
-     * Poll for the controls cheaply, then ask the expensive question once.
-     *
-     * The wait here is for the block's definition to load, which is what puts the controls in the
-     * tree. Polling for it with `findByRole(..., { name })` made every retry recompute an accessible
-     * name for every candidate in a freshly mounted inspector, and the budget went on the polling
-     * rather than on the render: on the hosted runner it failed twice in a row at 8 747 and 8 593 ms
-     * against an 8 000 ms budget. Raising the number would only buy more expensive passes.
-     *
-     * A role query without a name computes no names, so the polling is cheap; the named query then
-     * runs once, on a tree that is already complete. Every control of a block arrives in the same
-     * render, so "some combobox exists" and "this combobox exists" are the same moment.
+     * Waits for this control and no other. A cheaper query — any combobox, no name — was tried and
+     * is wrong: the inspector has controls the fields chunk does not gate, so it resolves while
+     * `Padding` is still behind its `Suspense`. What made this wait slow was the cold chunk, and
+     * that is warmed in `beforeAll` now rather than raced here.
      */
-    await screen.findAllByRole('combobox', {}, { timeout: 8_000 })
-
-    return screen.getByRole('combobox', { name: 'Padding' })
+    return screen.findByRole('combobox', { name: 'Padding' }, { timeout: 8_000 })
   }
 
   it('marks nothing at base', async () => {
