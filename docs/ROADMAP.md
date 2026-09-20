@@ -339,15 +339,16 @@ out to be different claims.
 
 Each is a prompt in `prompts/`, so a session picks one up without re-deriving it.
 
-1. **The runtime image is 284 MB against a 260 MB budget** — measured 2026-09-19, the first honest
-   reading since the `docker` job stopped being able to build at all on the old runners (ADR-406).
-   It is not a dependency: `.next/server` grew from 40.6 MB (ADR-344) to 72.7 MB, and **12.9 MB of
-   that is one page**, `/docs/decisions`, at 8.7 MB of HTML and 4.4 MB of RSC per locale. The journal
-   is 408 entries and 17 000 lines, it is served as a single prerendered page, and a reader who opens
-   it downloads 1.1 MB gzipped. Both the budget and the page are the owner's call, and they are the
-   same call.
+1. **`/docs/decisions` is a 1.1 MB page, and it grows with every entry.** The budget side of this was
+   settled — ADR-410 raised the image to 300 MB after the page turned out to be 12.9 MB of the
+   runtime image per locale — but the reader's side was not. Four hundred entries are served as one
+   prerendered page. Splitting it, or paging it, is the open question.
 2. **The domain, and the ownership questions bound to it** — everything else in `prompts/69` is
    built and waiting for it (ADR-402). The name is the exposed part; see below.
+3. **`/blocks/section` misses its TBT budget on the hosted runner** — 251–269 ms against 200, stable
+   across runs, 86 ms on the owner's machine. Kept as written by the owner's decision (ADR-411), so
+   the nightly Lighthouse job is red on this page on purpose. The 1.1 s of script evaluation in one
+   chunk is measured and uninvestigated.
 
    One question is still open from the design pass and belongs to the studio chrome: `SectionIntro`
    puts a big headline left and a small explainer right on every band, which `tasteskill` § 4.7 bans

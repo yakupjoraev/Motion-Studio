@@ -297,11 +297,18 @@ services:
 `docker compose up --build` gives a running app. That is the whole point — a reader can run the
 project without installing a toolchain, and `docker compose --profile dev up` adds Storybook.
 
-Image budget: **under 260 MB**, checked in CI so it does not drift, with the breakdown printed beside
+Image budget: **under 300 MB**, checked in CI so it does not drift, with the breakdown printed beside
 the number on every run. ADR-344 has the measurement that replaced the original 180 MB: the base
 image and this application's own server chunks are 188 MB before a single dependency is counted, and
 two rounds of removal — a slimmer runner stage, then excluding three traced packages the server never
 executes — took the image from 274 MB to 248 MB rather than to 180.
+
+ADR-410 raised 260 to 300 in September, and the reason is worth knowing before anyone tries to
+optimise it: the growth is not dependencies. `.next/server` went from 40.6 MB to 72.7 MB, and
+**12.9 MB of that is one prerendered page** — `/docs/decisions`, at 8.7 MB of HTML and 4.4 MB of RSC
+per locale, because the journal it renders is over four hundred entries long. The image therefore
+grows with the decision log. A reader of that page downloads 1.1 MB gzipped, which is the same fact
+wearing different clothes.
 
 Three details in the file above are load-bearing and were each wrong in an earlier version of this
 document:

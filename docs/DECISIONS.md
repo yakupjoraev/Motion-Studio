@@ -17047,3 +17047,82 @@ CLS **0.0000** on three consecutive runs of the same production build, against 0
   change of machine.
 - Lighthouse still asserts the same budget nightly. This gate answers in the suite a push waits for,
   and it names the element rather than reporting a number three runs later.
+
+## ADR-410 — The image budget becomes 300 MB, and what grows it is the decision log
+
+**Date** 2026-09-19 · **Prompt** — · **Status** Accepted · **Supersedes the figure in** ADR-344
+
+### Question
+The `docker` job built the image for the first time since it stopped being able to (ADR-406) and the
+result was **284 MB** against ADR-344's 260 MB budget. Is the image wrong, or is the number?
+
+### Measurement
+Inside the built image, with the job's own breakdown:
+
+| Part | ADR-344 (2026-09-03) | Now |
+| --- | --- | --- |
+| `.next/server` | 40.6 MB | **72.7 MB** |
+| `next` in traced `node_modules` | 30.9 | 31.2 |
+| `@img/sharp-libvips-linuxmusl-x64` | 16.2 | 16.2 |
+| `.next/static` | 6.3 | 6.4 |
+| `public` | 1.0 | 1.5 |
+
+So it is not a dependency: everything below the first row is where it was. Inside `.next/server`,
+`/docs` is 24 MB per locale, and **one page is 12.9 MB of it**: `/docs/decisions` renders at 8.7 MB
+of HTML plus 4.4 MB of RSC, per locale, because `DECISIONS.md` is over four hundred entries and
+17 000 lines. Gzipped, that page is **1.11 MB** for a reader who opens it.
+
+The image therefore grows with this file. Every entry — including this one — adds to it.
+
+### Escalated
+Options presented on 2026-09-19: split the decisions page so the journal is served in parts, drop it
+from the prerender so it is built on request, or raise the budget. The owner chose to raise the
+budget.
+
+### Decision
+**300 MB**, asserted in `ci.yml` and recorded in `DEVOPS.md` § Docker. 284 MB measured, 5 % of
+headroom — the same shape of gate ADR-344 set: a regression catcher, not a target.
+
+### Consequences
+- Accepted, and stated plainly because it is the part that will come back: the budget will be crossed
+  again by writing decisions, not by writing code. At the current rate — the journal grew 32 MB of
+  prerendered output in roughly six months — that is another raise inside a year.
+- Accepted: `/docs/decisions` remains a 1.1 MB page. That is a reader's problem rather than a
+  pipeline's, and it is recorded in `ROADMAP.md` § M15 rather than being quietly fixed here.
+- The breakdown keeps printing on every run, so the next reader sees the composition beside the
+  number rather than rediscovering it.
+
+## ADR-411 — The TBT budget is kept as written, on a runner that has not been calibrated to it
+
+**Date** 2026-09-19 · **Prompt** — · **Status** Accepted
+
+### Question
+On the first Lighthouse runs after the move to GitHub-hosted machines (ADR-406), `/blocks/section`
+reported a total blocking time of 251–269 ms against a 200 ms budget, with a performance score of
+0.92–0.93 against 0.95. Is that a regression?
+
+### Measurement
+Stable rather than noisy, across two runs of three readings each: 251, 263, 265 in the first and 252,
+264, 269 in the second. The same page on the owner's machine, same production build, same mobile
+preset: **86 ms**.
+
+For contrast, the landing page's TBT on the same runner reads 133–244 depending on whether it is the
+first URL of the run — that one *is* noise, and it is why the score assertion for the landing is not
+being treated as a finding.
+
+The budgets in `PERFORMANCE.md` were set against a different machine. A budget is only comparable to
+itself (ADR-280), and nothing has established what this runner reads as normal.
+
+### Escalated
+Options presented on 2026-09-19: re-measure the baseline on the hosted runner and rewrite the budget,
+optimise the page, or leave it. The owner chose to leave it.
+
+### Decision
+The budget stays at 200 ms and the nightly Lighthouse job stays red on this page.
+
+### Consequences
+- Accepted: a red nightly job that is red for a known reason is a job people stop reading. This entry
+  is what makes it checkable — if the reason changes, the entry is wrong and someone can say so.
+- Accepted: a real regression on `/blocks/section` would now arrive inside an already-red job.
+- Not accepted as a finding: the page's 1.1 s of script evaluation in one chunk is measured but not
+  investigated. If the budget is ever revisited, that is where to start.

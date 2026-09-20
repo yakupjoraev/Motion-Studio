@@ -175,9 +175,9 @@ jobs:
           bytes=$(docker image inspect motion-studio:ci --format '{{.Size}}')
           mb=$((bytes / 1024 / 1024))
           echo "image: ${mb} MB"
-          echo "### Docker image: ${mb} MB (budget 260 MB)" >> "$GITHUB_STEP_SUMMARY"
-          if [ "$mb" -gt 260 ]; then
-            echo "over the 260 MB budget in DEVOPS.md § Docker — ADR-344 has the composition"
+          echo "### Docker image: ${mb} MB (budget 300 MB)" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$mb" -gt 300 ]; then
+            echo "over the 300 MB budget in DEVOPS.md § Docker — ADR-410 raised it and says what grows"
             exit 1
           fi
       - name: Run it and wait for the healthcheck

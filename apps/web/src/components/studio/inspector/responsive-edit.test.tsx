@@ -166,11 +166,21 @@ describe('what the row says about where its value came from', () => {
     render(<Inspector />)
 
     /*
-     * A longer budget than the one-second default: the first render in this file mounts the whole
-     * inspector, and a role query with a name computes an accessible name for every candidate. On the
-     * CI runner that has taken over a second since 22 August, which made a real assertion look flaky.
+     * Poll for the controls cheaply, then ask the expensive question once.
+     *
+     * The wait here is for the block's definition to load, which is what puts the controls in the
+     * tree. Polling for it with `findByRole(..., { name })` made every retry recompute an accessible
+     * name for every candidate in a freshly mounted inspector, and the budget went on the polling
+     * rather than on the render: on the hosted runner it failed twice in a row at 8 747 and 8 593 ms
+     * against an 8 000 ms budget. Raising the number would only buy more expensive passes.
+     *
+     * A role query without a name computes no names, so the polling is cheap; the named query then
+     * runs once, on a tree that is already complete. Every control of a block arrives in the same
+     * render, so "some combobox exists" and "this combobox exists" are the same moment.
      */
-    return screen.findByRole('combobox', { name: 'Padding' }, { timeout: 8_000 })
+    await screen.findAllByRole('combobox', {}, { timeout: 8_000 })
+
+    return screen.getByRole('combobox', { name: 'Padding' })
   }
 
   it('marks nothing at base', async () => {
