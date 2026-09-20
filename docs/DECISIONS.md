@@ -17167,9 +17167,11 @@ same machine, one worker, a fresh production build:
 the reason it was written — it is the version the axe integration resolves against, and an exact
 number is what makes a mismatch a lockfile diff rather than a surprise on a runner.
 
-The visual baselines were regenerated after the move, on the owner's instruction. They did not have
-to be: `visual.config.ts` screenshots through `channel: 'chrome'`, the system's stable Chrome, so the
-browser that draws them is not the one Playwright ships.
+The visual baselines were regenerated after the move, on the owner's instruction, and the run
+answered **`baselines unchanged`**: 208 screenshots retaken on 1.63.0, not one byte different. That
+is the prediction confirmed rather than assumed — `visual.config.ts` shoots through
+`channel: 'chrome'`, the system's stable Chrome, so the browser that draws a baseline is not the one
+Playwright ships, and a Playwright bump cannot move it.
 
 ### Consequences
 - Anyone bumping Playwright has to move two lines. Dependabot moves one, so its testing-group PR will
