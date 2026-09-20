@@ -200,7 +200,7 @@ modes, and adds no dependency.
 | **Vitest 2** | Unit + component tests | `jsdom` for components, `node` for pure logic |
 | **Testing Library** | Component queries | Role-based queries only; `getByTestId` is a last resort |
 | **fast-check 3** | Property-based tests | `TESTING.md` § Property-based tests: command sequences, coordinate round-trips |
-| **Playwright 1.48** | E2E | Chromium, Firefox, WebKit. Traces on failure |
+| **Playwright 1.63** | E2E | Chromium, Firefox, WebKit. Traces on failure |
 | **axe-core / @axe-core/playwright** | A11y gate | Zero violations required |
 | **Lighthouse CI** | Perf gate | Budgets in `docs/PERFORMANCE.md` |
 | **size-limit** | Bundle gate | Per-entry byte budgets |

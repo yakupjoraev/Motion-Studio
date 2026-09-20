@@ -17126,3 +17126,54 @@ The budget stays at 200 ms and the nightly Lighthouse job stays red on this page
 - Accepted: a real regression on `/blocks/section` would now arrive inside an already-red job.
 - Not accepted as a finding: the page's 1.1 s of script evaluation in one chunk is measured but not
   investigated. If the budget is ever revisited, that is where to start.
+
+## ADR-412 — Playwright moves as a pair, because `playwright-core` is pinned beside it
+
+**Date** 2026-09-20 · **Prompt** — · **Status** Accepted
+
+### Question
+Dependabot's testing group raised `@playwright/test` from 1.48.2 to 1.63.0 and `core` failed on every
+spec that touches a `Page`. Is 1.63 incompatible with this repository?
+
+### Measurement
+The failure names its own cause:
+
+```
+error TS2741: Property 'accessibility' is missing in type
+  ... playwright-core@1.63.0 ... but required in type ... playwright-core@1.48.2
+```
+
+Two copies in one tree. `e2e/package.json` pins `playwright-core` at an exact `1.48.2` — added in
+`9561959` alongside `@axe-core/playwright`, whose peer it satisfies — and a bump that moves only
+`@playwright/test` leaves the pin behind. `@axe-core/playwright@4.13.0` asks for
+`playwright-core >= 1.0.0`, so the pin was never the constraint; it is a version this repository
+chose and then stopped moving.
+
+With both at 1.63.0, `pnpm why playwright-core` reports one version throughout and `pnpm typecheck`
+passes across all eighteen projects.
+
+**The suite got faster, and by more than a version bump usually explains.** The same 212 specs, the
+same machine, one worker, a fresh production build:
+
+| Playwright | Wall clock |
+| --- | --- |
+| 1.48.2 | 43.1 min |
+| 1.63.0 | **7.8 min** |
+
+212 passed, 0 failed, on both.
+
+### Decision
+`@playwright/test` `^1.63.0` and `playwright-core` `1.63.0`, moved together. The pin stays exact for
+the reason it was written — it is the version the axe integration resolves against, and an exact
+number is what makes a mismatch a lockfile diff rather than a surprise on a runner.
+
+The visual baselines were regenerated after the move, on the owner's instruction. They did not have
+to be: `visual.config.ts` screenshots through `channel: 'chrome'`, the system's stable Chrome, so the
+browser that draws them is not the one Playwright ships.
+
+### Consequences
+- Anyone bumping Playwright has to move two lines. Dependabot moves one, so its testing-group PR will
+  keep failing this way until the group is split or the pin is removed — the diagnosis is in a comment
+  on that PR rather than only here.
+- Accepted: the six-fold speed-up is measured, not explained. It is stated so the next person who
+  sees a 43-minute local suite knows the number is not normal any more.
