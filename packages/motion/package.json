@@ -32,7 +32,7 @@
     "@motion-studio/schema": "workspace:*",
     "@motion-studio/tokens": "workspace:*",
     "@motion-studio/utils": "workspace:*",
-    "motion": "^11.18.2",
+    "motion": "^13.4.0",
     "zod": "^3.25.76"
   },
   "peerDependencies": {
