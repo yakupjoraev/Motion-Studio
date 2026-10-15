@@ -15,10 +15,9 @@ on:
   # being merged into: a green `dev` is the precondition for the merge, so it cannot arrive after it.
   push:
     branches: [main, dev]
-  # The full pipeline, one click away when a change earns it.
+  # The full pipeline, one click away when a change earns it. No nightly schedule: until the project
+  # is shown, the owner wants no runs nobody asked for.
   workflow_dispatch:
-  schedule:
-    - cron: '0 3 * * *'
 
 concurrency:
   group: ci-${{ github.ref }}-${{ github.event_name }}
@@ -90,7 +89,7 @@ jobs:
           include-hidden-files: true
           retention-days: 7
 
-  # Everything below runs nightly and on demand, never on a push — ADR-397. These are the gates that
+  # Everything below runs on demand only, never on a push — ADR-397. These are the gates that
   # need a different engine, a container or a second machine, and they are where this repository's
   # cross-machine defects have always been found. What changed is that a commit no longer waits on
   # them.
